@@ -77,3 +77,6 @@
 ## Lead Data Import
 - [x] Import Margate probate research data (5771 NW 24th Ct, Margate, FL 33063)
 - [x] Import Miramar probate research data (6717 Arbor Dr, Miramar, FL 33023)
+
+## REsimpli Data Import
+- [x] Import property data from REsimpli: 1711 NW 55 AVE LAUDERHILL FL
