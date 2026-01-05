@@ -127,19 +127,30 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
   const occupancy = propertyData.occupancy || "Unknown";
   const monthlyRent = propertyData.monthlyRent || 0;
   
-  // Parse JSON fields
-  const recordsChecked = propertyData.recordsChecked ? JSON.parse(propertyData.recordsChecked) : [];
-  const recordDetails = propertyData.recordDetails ? JSON.parse(propertyData.recordDetails) : [];
-  const propertyCondition = propertyData.propertyCondition ? JSON.parse(propertyData.propertyCondition) : [];
-  const propertyIssues = propertyData.propertyIssues ? JSON.parse(propertyData.propertyIssues) : [];
+  // Safe JSON parse helper
+  const safeJsonParse = <T,>(str: string | null | undefined, fallback: T): T => {
+    if (!str) return fallback;
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      return fallback;
+    }
+  };
+  
+  // Parse JSON fields safely
+  const recordsChecked = safeJsonParse(propertyData.recordsChecked, []);
+  const recordDetails = safeJsonParse(propertyData.recordDetails, []);
+  const parsedCondition = safeJsonParse<{ rating?: string; tags?: string[] } | string[]>(propertyData.propertyCondition, {});
+  const propertyCondition = Array.isArray(parsedCondition) ? parsedCondition : ((parsedCondition as { tags?: string[] }).tags || []);
+  const propertyIssues = safeJsonParse(propertyData.propertyIssues, []);
   const hasLiens = propertyData.hasLiens === 1;
   const hasCodeViolations = propertyData.hasCodeViolation === 1;
   
-  // Parse skiptracing and outreach JSON objects
-  const skiptracingDone = propertyData.skiptracingDone ? JSON.parse(propertyData.skiptracingDone) : {};
+  // Parse skiptracing and outreach JSON objects safely
+  const skiptracingDone = safeJsonParse(propertyData.skiptracingDone, {});
   const skiptracingChecked = Object.entries(skiptracingDone).filter(([_, date]) => date !== null);
   
-  const outreachDone = propertyData.outreachDone ? JSON.parse(propertyData.outreachDone) : {};
+  const outreachDone = safeJsonParse(propertyData.outreachDone, {});
   const outreachChecked = Object.entries(outreachDone).filter(([_, date]) => date !== null);
 
   // Check if property matches active filters
@@ -306,54 +317,87 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Property Condition */}
-          {property.propertyCondition && (
-            <div>
-              <div className="text-xs text-muted-foreground mb-2 font-semibold">Property Condition</div>
-              <div className="flex flex-wrap gap-2">
-                {JSON.parse(property.propertyCondition).map((condition: string) => (
-                  <Badge 
-                    key={condition}
-                    variant="outline"
-                    className={
-                      condition === "Bad" || condition === "Board Up" || condition === "Abandoned" 
-                        ? "bg-red-50 border-red-300 text-red-700"
-                        : condition === "Need New Roof"
-                        ? "bg-orange-50 border-orange-300 text-orange-700"
-                        : "bg-gray-50 border-gray-300"
-                    }
-                  >
-                    {condition === "Bad" && "🔴 "}
-                    {condition === "Board Up" && "🔴 "}
-                    {condition === "Abandoned" && "🔴 "}
-                    {condition === "Need New Roof" && "🟠 "}
-                    {condition}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {property.propertyCondition && (() => {
+            try {
+              const parsed = JSON.parse(property.propertyCondition);
+              // Handle both old array format and new object format { rating, tags }
+              const conditions = Array.isArray(parsed) ? parsed : (parsed.tags || []);
+              const rating = !Array.isArray(parsed) ? parsed.rating : null;
+              if (conditions.length === 0 && !rating) return null;
+              return (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-2 font-semibold">Property Condition</div>
+                  <div className="flex flex-wrap gap-2">
+                    {rating && (
+                      <Badge 
+                        variant="outline"
+                        className={
+                          rating === "Poor" || rating === "Bad"
+                            ? "bg-red-50 border-red-300 text-red-700"
+                            : rating === "Fair" || rating === "Average"
+                            ? "bg-orange-50 border-orange-300 text-orange-700"
+                            : "bg-green-50 border-green-300 text-green-700"
+                        }
+                      >
+                        {rating}
+                      </Badge>
+                    )}
+                    {conditions.map((condition: string) => (
+                      <Badge 
+                        key={condition}
+                        variant="outline"
+                        className={
+                          condition === "Bad" || condition === "Board Up" || condition === "Abandoned" 
+                            ? "bg-red-50 border-red-300 text-red-700"
+                            : condition === "Need New Roof"
+                            ? "bg-orange-50 border-orange-300 text-orange-700"
+                            : "bg-gray-50 border-gray-300"
+                        }
+                      >
+                        {condition === "Bad" && "🔴 "}
+                        {condition === "Board Up" && "🔴 "}
+                        {condition === "Abandoned" && "🔴 "}
+                        {condition === "Need New Roof" && "🟠 "}
+                        {condition}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              );
+            } catch (e) {
+              return null;
+            }
+          })()}
           {/* Property Issues */}
-          {property.issues && (
-            <div>
-              <div className="text-xs text-muted-foreground mb-2 font-semibold">Property Issues</div>
-              <div className="flex flex-wrap gap-2">
-                {JSON.parse(property.issues).map((issue: string) => (
-                  <Badge 
-                    key={issue}
-                    variant="outline"
-                    className={
-                      issue === "Behind mortgage" || issue === "Deferred Maintenance"
-                        ? "bg-red-50 border-red-300 text-red-700"
-                        : "bg-amber-50 border-amber-300 text-amber-700"
-                    }
-                  >
-                    {(issue === "Behind mortgage" || issue === "Deferred Maintenance") && "⚠️ "}
-                    {issue}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {property.issues && (() => {
+            try {
+              const issues = JSON.parse(property.issues);
+              if (!Array.isArray(issues) || issues.length === 0) return null;
+              return (
+                <div>
+                  <div className="text-xs text-muted-foreground mb-2 font-semibold">Property Issues</div>
+                  <div className="flex flex-wrap gap-2">
+                    {issues.map((issue: string) => (
+                      <Badge 
+                        key={issue}
+                        variant="outline"
+                        className={
+                          issue === "Behind mortgage" || issue === "Deferred Maintenance"
+                            ? "bg-red-50 border-red-300 text-red-700"
+                            : "bg-amber-50 border-amber-300 text-amber-700"
+                        }
+                      >
+                        {(issue === "Behind mortgage" || issue === "Deferred Maintenance") && "⚠️ "}
+                        {issue}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              );
+            } catch (e) {
+              return null;
+            }
+          })()}
         </CardContent>
       </Card>
 

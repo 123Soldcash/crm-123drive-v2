@@ -63,4 +63,4 @@
 - [x] Fix validation errors for MLS Status dropdown (invalid_value error)
 - [x] Fix validation errors for Occupancy dropdown (invalid_value error)
 - [x] Fix validation errors for Lease Type dropdown (invalid_value error)
-- [ ] Fix JSON.parse(...).map error on properties page (critical)
+- [x] Fix JSON.parse(...).map error on properties page (critical)

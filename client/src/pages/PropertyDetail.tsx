@@ -56,10 +56,14 @@ export default function PropertyDetail() {
   useEffect(() => {
     const storedIds = localStorage.getItem('propertyNavigationIds');
     if (storedIds) {
-      const ids = JSON.parse(storedIds) as number[];
-      setNavigationIds(ids);
-      const index = ids.indexOf(propertyId);
-      setCurrentIndex(index);
+      try {
+        const ids = JSON.parse(storedIds) as number[];
+        setNavigationIds(ids);
+        const index = ids.indexOf(propertyId);
+        setCurrentIndex(index);
+      } catch (e) {
+        // Ignore parse errors
+      }
     }
   }, [propertyId]);
 
