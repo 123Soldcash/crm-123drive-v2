@@ -64,3 +64,11 @@
 - [x] Fix validation errors for Occupancy dropdown (invalid_value error)
 - [x] Fix validation errors for Lease Type dropdown (invalid_value error)
 - [x] Fix JSON.parse(...).map error on properties page (critical)
+
+## Summary Tab Redesign
+- [x] Reorganize Summary tab to display all data from Overview, Financial, Research, Outreach
+- [x] Create clean, organized layout for easy analysis and reading
+- [x] Show property condition, issues, probate info from Overview
+- [x] Show estimates, MLS status, rent, taxes, mortgage, repairs from Financial
+- [x] Show records checked, skiptracing, deed info from Research
+- [x] Show outreach history from Outreach
