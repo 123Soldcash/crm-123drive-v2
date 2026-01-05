@@ -72,3 +72,8 @@
 - [x] Show estimates, MLS status, rent, taxes, mortgage, repairs from Financial
 - [x] Show records checked, skiptracing, deed info from Research
 - [x] Show outreach history from Outreach
+
+
+## Lead Data Import
+- [x] Import Margate probate research data (5771 NW 24th Ct, Margate, FL 33063)
+- [x] Import Miramar probate research data (6717 Arbor Dr, Miramar, FL 33023)
