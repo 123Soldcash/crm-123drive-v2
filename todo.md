@@ -45,3 +45,11 @@
 
 ## Bug Fixes
 - [x] Add Property/Lead button missing from Properties page
+
+
+## Twilio Integration
+- [x] Configure TWILIO_ACCOUNT_SID
+- [x] Configure TWILIO_AUTH_TOKEN
+- [x] Configure TWILIO_PHONE_NUMBER
+- [x] Configure TWILIO_TWIML_APP_SID
+- [ ] Test calling functionality
