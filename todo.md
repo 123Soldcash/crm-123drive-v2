@@ -57,3 +57,10 @@
 - [x] Fix AccessTokenInvalid (20101) error - API Key credentials now properly configured
 - [ ] Test calling functionality in browser
 - [ ] Update TwiML App URLs to production domain
+
+## Bug Fixes - UI/UX
+- [x] Format currency values with commas (e.g., $451,000 instead of $451000)
+- [x] Fix validation errors for MLS Status dropdown (invalid_value error)
+- [x] Fix validation errors for Occupancy dropdown (invalid_value error)
+- [x] Fix validation errors for Lease Type dropdown (invalid_value error)
+- [ ] Fix JSON.parse(...).map error on properties page (critical)

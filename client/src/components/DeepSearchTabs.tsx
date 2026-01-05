@@ -42,6 +42,19 @@ import { DeepSearchHeader } from "./DeepSearchHeader";
 import { QuickStats } from "./QuickStats";
 import { MiniBlock, TagSelector, RatingSelector, SectionDivider } from "./ui/mini-block";
 
+// Currency formatting helper
+const formatCurrency = (value: string | number): string => {
+  if (!value && value !== 0) return "";
+  const num = typeof value === "string" ? parseInt(value.replace(/,/g, "")) : value;
+  if (isNaN(num)) return "";
+  return num.toLocaleString("en-US");
+};
+
+const parseCurrency = (value: string): string => {
+  // Remove commas and non-numeric characters except digits
+  return value.replace(/[^0-9]/g, "");
+};
+
 interface DeepSearchTabsProps {
   propertyId: number;
 }
@@ -548,6 +561,11 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
 
   // Handle save
   const handleSave = () => {
+    // Only include enum fields if they have valid values
+    const validMlsStatuses = ["Listed", "Not Listed", "Fail", "Expired", "Sold", "Off Market"];
+    const validOccupancies = ["Owner-Occupied", "Abandoned", "Partially Occupied", "Relatives", "Second Home", "Squatters", "Vacant", "Tenant-Occupied"];
+    const validLeaseTypes = ["Annual", "Month to Month"];
+    
     updateMutation.mutate({
       propertyId,
       // Overview
@@ -564,11 +582,11 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
       dealMachineEstimate: dealMachineEstimate ? parseInt(dealMachineEstimate) : null,
       ourEstimate: ourEstimate ? parseInt(ourEstimate) : null,
       estimateNotes,
-      mlsStatus: mlsStatus as "Off Market" | "Listed" | "Not Listed" | "Fail" | "Expired" | "Sold" | undefined,
-      occupancy: occupancy as "Owner-Occupied" | "Abandoned" | "Partially Occupied" | "Relatives" | "Second Home" | "Squatters" | "Vacant" | "Tenant-Occupied" | undefined,
+      mlsStatus: validMlsStatuses.includes(mlsStatus) ? mlsStatus as "Off Market" | "Listed" | "Not Listed" | "Fail" | "Expired" | "Sold" : undefined,
+      occupancy: validOccupancies.includes(occupancy) ? occupancy as "Owner-Occupied" | "Abandoned" | "Partially Occupied" | "Relatives" | "Second Home" | "Squatters" | "Vacant" | "Tenant-Occupied" : undefined,
       annualRent: annualRent ? parseInt(annualRent) : null,
       monthlyRent: monthlyRent ? parseInt(monthlyRent) : null,
-      leaseType: leaseType as "Annual" | "Month to Month" | undefined,
+      leaseType: validLeaseTypes.includes(leaseType) ? leaseType as "Annual" | "Month to Month" : undefined,
       delinquentTax2025: tax2025 ? parseInt(tax2025) : null,
       delinquentTax2024: tax2024 ? parseInt(tax2024) : null,
       delinquentTax2023: tax2023 ? parseInt(tax2023) : null,
@@ -1021,10 +1039,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
                         id="zillowEstimate"
-                        type="number"
+                        type="text"
                         placeholder="0"
-                        value={zillowEstimate}
-                        onChange={(e) => setZillowEstimate(e.target.value)}
+                        value={formatCurrency(zillowEstimate)}
+                        onChange={(e) => setZillowEstimate(parseCurrency(e.target.value))}
                         className="pl-7"
                       />
                     </div>
@@ -1035,10 +1053,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
                         id="dealMachineEstimate"
-                        type="number"
+                        type="text"
                         placeholder="0"
-                        value={dealMachineEstimate}
-                        onChange={(e) => setDealMachineEstimate(e.target.value)}
+                        value={formatCurrency(dealMachineEstimate)}
+                        onChange={(e) => setDealMachineEstimate(parseCurrency(e.target.value))}
                         className="pl-7"
                       />
                     </div>
@@ -1049,10 +1067,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
                         id="ourEstimate"
-                        type="number"
+                        type="text"
                         placeholder="0"
-                        value={ourEstimate}
-                        onChange={(e) => setOurEstimate(e.target.value)}
+                        value={formatCurrency(ourEstimate)}
+                        onChange={(e) => setOurEstimate(parseCurrency(e.target.value))}
                         className="pl-7 border-green-400"
                       />
                     </div>
@@ -1129,10 +1147,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
                         id="monthlyRent"
-                        type="number"
+                        type="text"
                         placeholder="0"
-                        value={monthlyRent}
-                        onChange={(e) => setMonthlyRent(e.target.value)}
+                        value={formatCurrency(monthlyRent)}
+                        onChange={(e) => setMonthlyRent(parseCurrency(e.target.value))}
                         className="pl-7"
                       />
                     </div>
@@ -1143,10 +1161,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
                         id="annualRent"
-                        type="number"
+                        type="text"
                         placeholder="0"
-                        value={annualRent}
-                        onChange={(e) => setAnnualRent(e.target.value)}
+                        value={formatCurrency(annualRent)}
+                        onChange={(e) => setAnnualRent(parseCurrency(e.target.value))}
                         className="pl-7"
                       />
                     </div>
@@ -1186,10 +1204,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
                         <Input
-                          type="number"
+                          type="text"
                           placeholder="0"
-                          value={value}
-                          onChange={(e) => setter(e.target.value)}
+                          value={formatCurrency(value)}
+                          onChange={(e) => setter(parseCurrency(e.target.value))}
                           className="pl-5 h-8 text-sm"
                         />
                       </div>
@@ -1221,10 +1239,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                         <Input
                           id="mortgageAmount"
-                          type="number"
+                          type="text"
                           placeholder="0"
-                          value={mortgageAmount}
-                          onChange={(e) => setMortgageAmount(e.target.value)}
+                          value={formatCurrency(mortgageAmount)}
+                          onChange={(e) => setMortgageAmount(parseCurrency(e.target.value))}
                           className="pl-7"
                         />
                       </div>
@@ -1294,10 +1312,10 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                           <Input
                             id="repairCost"
-                            type="number"
+                            type="text"
                             placeholder="0"
-                            value={repairCost}
-                            onChange={(e) => setRepairCost(e.target.value)}
+                            value={formatCurrency(repairCost)}
+                            onChange={(e) => setRepairCost(parseCurrency(e.target.value))}
                             className="pl-7"
                           />
                         </div>
@@ -1439,13 +1457,13 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                             </td>
                             <td className="p-2">
                               <Input
-                                type="number"
+                                type="text"
                                 className="h-9"
                                 placeholder="$0"
-                                value={entry.amount}
+                                value={formatCurrency(entry.amount)}
                                 onChange={(e) => {
                                   const updated = [...deedEntries];
-                                  updated[index].amount = e.target.value;
+                                  updated[index].amount = parseCurrency(e.target.value);
                                   setDeedEntries(updated);
                                 }}
                               />
