@@ -21,15 +21,21 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Building2, label: "Properties", path: "/properties" },
+  { icon: MapPin, label: "Map View", path: "/map" },
+  { icon: CheckSquare, label: "Tasks", path: "/tasks/kanban" },
+  { icon: Activity, label: "Activity Tracking", path: "/activity" },
+  { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
+  { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },
+  { icon: Users, label: "User Management", path: "/users", adminOnly: true },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -180,7 +186,9 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {menuItems
+                .filter(item => !item.adminOnly || user?.role === 'admin')
+                .map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>

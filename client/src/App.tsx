@@ -4,32 +4,43 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import DashboardLayout from "./components/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
+import MapView from "./pages/MapView";
+import ActivityTracking from "./pages/ActivityTracking";
+import ImportProperties from "./pages/ImportProperties";
+import AgentPerformance from "./pages/AgentPerformance";
+import UserManagement from "./pages/UserManagement";
+import { TasksKanban } from "./pages/TasksKanban";
+import { TasksList } from "./pages/TasksList";
+import { TasksCalendar } from "./pages/TasksCalendar";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
+      <Route path="/properties" component={() => <DashboardLayout><Properties /></DashboardLayout>} />
+      <Route path="/properties/:id" component={() => <DashboardLayout><PropertyDetail /></DashboardLayout>} />
+      <Route path="/map" component={() => <DashboardLayout><MapView /></DashboardLayout>} />
+      <Route path="/activity" component={() => <DashboardLayout><ActivityTracking /></DashboardLayout>} />
+      <Route path="/import" component={() => <DashboardLayout><ImportProperties /></DashboardLayout>} />
+      <Route path="/agent-performance" component={() => <DashboardLayout><AgentPerformance /></DashboardLayout>} />
+      <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
+      <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
+      <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
+      <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
