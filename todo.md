@@ -52,4 +52,8 @@
 - [x] Configure TWILIO_AUTH_TOKEN
 - [x] Configure TWILIO_PHONE_NUMBER
 - [x] Configure TWILIO_TWIML_APP_SID
-- [ ] Test calling functionality
+- [x] Configure TWILIO_API_KEY
+- [x] Configure TWILIO_API_SECRET
+- [x] Fix AccessTokenInvalid (20101) error - API Key credentials now properly configured
+- [ ] Test calling functionality in browser
+- [ ] Update TwiML App URLs to production domain

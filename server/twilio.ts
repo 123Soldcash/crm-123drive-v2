@@ -4,6 +4,8 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID!;
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
 const twimlAppSid = process.env.TWILIO_TWIML_APP_SID!;
+const apiKey = process.env.TWILIO_API_KEY!;
+const apiSecret = process.env.TWILIO_API_SECRET!;
 
 const client = twilio(accountSid, authToken);
 
@@ -42,12 +44,12 @@ export function generateAccessToken(identity: string): string {
   const AccessToken = twilio.jwt.AccessToken;
   const VoiceGrant = AccessToken.VoiceGrant;
 
-  // Create an access token
+  // Create an access token using API Key credentials
   const accessToken = new AccessToken(
     accountSid,
-    process.env.TWILIO_API_KEY || accountSid,
-    process.env.TWILIO_API_SECRET || authToken,
-    { identity }
+    apiKey,
+    apiSecret,
+    { identity, ttl: 3600 }
   );
 
   // Create a Voice grant
