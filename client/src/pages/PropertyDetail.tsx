@@ -87,7 +87,8 @@ export default function PropertyDetail() {
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
   const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
-  const { data: agents } = trpc.users.listAgents.useQuery();
+  const { data: userAgents } = trpc.users.listAgents.useQuery();
+  const { data: agentsList } = trpc.agents.list.useQuery();
   const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
 
   // Get adjacent properties for navigation
@@ -308,7 +309,7 @@ export default function PropertyDetail() {
                         <SelectValue placeholder="Choose an agent..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {agents?.filter((a: { id: number }) => a.id !== user?.id).map((agent: { id: number; name: string | null; openId: string }) => (
+                        {userAgents?.filter((a: { id: number }) => a.id !== user?.id).map((agent: { id: number; name: string | null; openId: string }) => (
                           <SelectItem key={agent.id} value={agent.id.toString()}>
                             {agent.name || agent.openId}
                           </SelectItem>
@@ -449,7 +450,7 @@ export default function PropertyDetail() {
                   <SelectItem value="unassigned">
                     <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
-                  {agents?.map((agent: { id: number; name: string | null; openId: string }) => (
+                  {userAgents?.map((agent: { id: number; name: string | null; openId: string }) => (
                     <SelectItem key={agent.id} value={agent.id.toString()}>
                       {agent.name || agent.openId}
                     </SelectItem>

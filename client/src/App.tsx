@@ -16,6 +16,7 @@ import UserManagement from "./pages/UserManagement";
 import { TasksKanban } from "./pages/TasksKanban";
 import { TasksList } from "./pages/TasksList";
 import { TasksCalendar } from "./pages/TasksCalendar";
+import AgentManagement from "./pages/AgentManagement";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/import" component={() => <DashboardLayout><ImportProperties /></DashboardLayout>} />
       <Route path="/agent-performance" component={() => <DashboardLayout><AgentPerformance /></DashboardLayout>} />
       <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
+      <Route path="/agents" component={AgentManagement} />
       <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
       <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
       <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />

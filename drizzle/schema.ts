@@ -33,6 +33,24 @@ export type SavedSearch = typeof savedSearches.$inferSelect;
 export type InsertSavedSearch = typeof savedSearches.$inferInsert;
 
 /**
+ * Agents table - stores birddog/agent information for property assignments
+ */
+export const agents = mysqlTable("agents", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  role: mysqlEnum("role", ["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]).default("Birddog"),
+  status: mysqlEnum("status", ["Active", "Inactive"]).default("Active"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Agent = typeof agents.$inferSelect;
+export type InsertAgent = typeof agents.$inferInsert;
+
+/**
  * Properties table stores real estate property information
  */
 export const properties = mysqlTable("properties", {

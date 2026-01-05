@@ -80,3 +80,11 @@
 
 ## REsimpli Data Import
 - [x] Import property data from REsimpli: 1711 NW 55 AVE LAUDERHILL FL
+
+## Agent Management Feature
+- [x] Create agents table in database schema
+- [x] Create backend API routes for agent CRUD (create, read, update, delete)
+- [x] Create Agent Management UI page (list, add, edit agents)
+- [x] Add agent assignment dropdown to property details
+- [ ] Show assigned agent in property list and summary
+- [ ] Filter properties by assigned agent
