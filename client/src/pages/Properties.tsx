@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare } from "lucide-react";
+import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -281,12 +281,15 @@ export default function Properties() {
             Browse and filter your property leads ({filteredProperties?.length || 0} properties)
           </p>
         </div>
-        <Link href="/map">
-          <Button>
-            <MapPin className="mr-2 h-4 w-4" />
-            Map View
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <AddPropertyDialog />
+          <Link href="/map">
+            <Button variant="outline">
+              <MapPin className="mr-2 h-4 w-4" />
+              Map View
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -729,6 +732,8 @@ export default function Properties() {
         </CardContent>
       </Card>
 
+      {/* Add Property Dialog is rendered from the AddPropertyDialog component */}
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
@@ -756,5 +761,147 @@ export default function Properties() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Add Property Dialog Component
+function AddPropertyDialog() {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    addressLine1: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    owner1Name: "",
+    leadTemperature: "TBD" as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" | "TBD",
+  });
+
+  const utils = trpc.useUtils();
+  const createProperty = trpc.properties.create.useMutation({
+    onSuccess: (data) => {
+      toast.success("Property created successfully!");
+      utils.properties.list.invalidate();
+      utils.properties.stats.invalidate();
+      setOpen(false);
+      setFormData({
+        addressLine1: "",
+        city: "",
+        state: "",
+        zipcode: "",
+        owner1Name: "",
+        leadTemperature: "TBD",
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to create property: " + error.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.addressLine1.trim()) {
+      toast.error("Address is required");
+      return;
+    }
+    createProperty.mutate(formData);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Property
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add New Property</DialogTitle>
+          <DialogDescription>
+            Enter the property details to add a new lead to your CRM.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="addressLine1">Address *</Label>
+            <Input
+              id="addressLine1"
+              placeholder="123 Main Street"
+              value={formData.addressLine1}
+              onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                placeholder="Miami"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                placeholder="FL"
+                maxLength={2}
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="zipcode">Zipcode</Label>
+              <Input
+                id="zipcode"
+                placeholder="33101"
+                value={formData.zipcode}
+                onChange={(e) => setFormData({ ...formData, zipcode: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="leadTemperature">Lead Temperature</Label>
+              <Select
+                value={formData.leadTemperature}
+                onValueChange={(value) => setFormData({ ...formData, leadTemperature: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SUPER HOT">🔥 Super Hot</SelectItem>
+                  <SelectItem value="HOT">🔴 Hot</SelectItem>
+                  <SelectItem value="WARM">🟠 Warm</SelectItem>
+                  <SelectItem value="COLD">🔵 Cold</SelectItem>
+                  <SelectItem value="DEAD">⚫ Dead</SelectItem>
+                  <SelectItem value="TBD">⚪ TBD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="owner1Name">Owner Name</Label>
+            <Input
+              id="owner1Name"
+              placeholder="John Doe"
+              value={formData.owner1Name}
+              onChange={(e) => setFormData({ ...formData, owner1Name: e.target.value })}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createProperty.isPending}>
+              {createProperty.isPending ? "Creating..." : "Add Property"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

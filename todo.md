@@ -42,3 +42,6 @@
 - [x] Sidebar navigation
 - [x] Property navigation (prev/next)
 - [x] Map view integration
+
+## Bug Fixes
+- [x] Add Property/Lead button missing from Properties page

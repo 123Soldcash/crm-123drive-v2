@@ -286,6 +286,35 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    create: protectedProcedure
+      .input(
+        z.object({
+          addressLine1: z.string().min(1),
+          city: z.string().optional(),
+          state: z.string().optional(),
+          zipcode: z.string().optional(),
+          owner1Name: z.string().optional(),
+          leadTemperature: z.enum(["SUPER HOT", "HOT", "WARM", "COLD", "DEAD", "TBD"]).optional(),
+          status: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new Error("Database not available");
+        
+        const result: any = await dbInstance.insert(properties).values({
+          addressLine1: input.addressLine1,
+          city: input.city || "",
+          state: input.state || "",
+          zipcode: input.zipcode || "",
+          owner1Name: input.owner1Name || null,
+          leadTemperature: input.leadTemperature || "TBD",
+          status: input.status || "New Prospect",
+        });
+        
+        return { success: true, id: Number(result.insertId) };
+      }),
+
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
