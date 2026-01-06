@@ -1454,3 +1454,56 @@ export async function getTasksByPropertyId(propertyId: number) {
     createdByName: r.createdByName,
   }));
 }
+
+
+export async function updateDesk(propertyId: number, deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "ARCHIVED"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = { deskStatus };
+  if (deskName !== undefined) {
+    updateData.deskName = deskName;
+  }
+
+  await db
+    .update(properties)
+    .set(updateData)
+    .where(eq(properties.id, propertyId));
+}
+
+export async function getDeskStats() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const stats = await db
+    .select({
+      deskName: properties.deskName,
+      deskStatus: properties.deskStatus,
+      count: sql<number>`COUNT(*) as count`,
+    })
+    .from(properties)
+    .groupBy(properties.deskName, properties.deskStatus);
+
+  return stats;
+}
+
+export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE" | "ARCHIVED") {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+
+  if (deskName) {
+    conditions.push(eq(properties.deskName, deskName));
+  }
+  if (deskStatus) {
+    conditions.push(eq(properties.deskStatus, deskStatus));
+  }
+
+  let query = db.select().from(properties);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as typeof query;
+  }
+
+  return await query;
+}

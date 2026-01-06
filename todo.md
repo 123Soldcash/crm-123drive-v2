@@ -91,14 +91,23 @@
 
 
 ## REVISÃO V11 - General Updates
-- [ ] Fix critical: Tasks not saving (CRITICAL BUG)
-- [ ] Make Task Title optional (not required)
-- [ ] Add date presets to tasks: Tomorrow, 1 Week, 1 Month, 3 Months, 6 Months
-- [ ] Add Time field to tasks
-- [ ] Replace flags with emojis: DNC 📵, LITIGATOR 🗣, DECEASED 🕊, DECISION MAKER ✍
+- [x] Make Task Title optional (not required)
+- [x] Add date presets to tasks: Tomorrow, 1 Week, 1 Month, 3 Months, 6 Months
+- [x] Add Time field to tasks
+- [x] Replace flags with emojis: DNC 📵, LITIGATOR 🗣, DECEASED 🕊, DECISION MAKER ✍
 - [ ] Add horizontal lines for better flag visualization
 - [ ] Fix phone hide: only hide phone number, not entire contact
 - [ ] Add desk management with BIN and ARCHIVED status
 - [ ] Add column selector to properties list
 - [ ] Add new contact relationship: "Current Resident – NOT on Board" (RED)
 - [ ] Update Call Log form with new fields (Bed/Bath, SF, Roof Age, A/C Age, Overall condition, Reason to sell, How Fast to sell)
+
+## REVISÃO V12 - CRITICAL FIXES NEEDED
+- [x] CRITICAL: Task not saving (gravando mas não fica salvo) - Fixed: Added dueTime and repeatTask fields
+- [x] CRITICAL: Column selector not working (Lead ID, Address, Owner Name, Desk Name) - Implemented
+- [x] CRITICAL: Desk functionality not working (BIN, ARCHIVED, Desk assignment) - Implemented
+- [ ] Fix phone hide to hide ONLY selected number (not entire contact)
+- [ ] Add horizontal lines to Call Tracking table columns
+- [ ] Add "Current Resident - NOT on Board" contact type (RED color)
+- [ ] Update Call Log form: add Bed/Bath, SF, Roof Age, A/C Age, Overall Property, Reason to Sell, How Fast
+- [ ] Add NICE emoji to Call Log

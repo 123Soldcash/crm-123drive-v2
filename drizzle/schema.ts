@@ -113,6 +113,10 @@ export const properties = mysqlTable("properties", {
   taxYear: int("taxYear"),
   taxAmount: int("taxAmount"),
   
+  // Desk management
+  deskName: varchar("deskName", { length: 100 }), // Desk assignment (e.g., "Sales", "Follow-up")
+  deskStatus: mysqlEnum("deskStatus", ["BIN", "ACTIVE", "ARCHIVED"]).default("BIN"), // BIN=new leads, ACTIVE=in progress, ARCHIVED=completed
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -507,7 +511,7 @@ export const tasks = mysqlTable("tasks", {
   id: int("id").autoincrement().primaryKey(),
   
   // Task details
-  title: varchar("title", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }),
   description: text("description"),
   
   // Task type
@@ -543,7 +547,11 @@ export const tasks = mysqlTable("tasks", {
   
   // Dates
   dueDate: timestamp("dueDate"),
+  dueTime: varchar("dueTime", { length: 5 }), // HH:MM format
   completedDate: timestamp("completedDate"),
+  
+  // Repeat settings
+  repeatTask: mysqlEnum("repeatTask", ["Daily", "Weekly", "Monthly", "None"]).default("None"),
   
   // Checklist (stored as JSON array of subtasks)
   checklist: text("checklist"), // JSON: [{"id": 1, "text": "Call owner", "completed": false}, ...]

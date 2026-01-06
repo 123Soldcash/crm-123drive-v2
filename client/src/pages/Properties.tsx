@@ -34,6 +34,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
+import { DeskDialog } from "@/components/DeskDialog";
 
 // Common status tags found in the data
 const STATUS_TAGS = [
@@ -93,6 +95,20 @@ export default function Properties() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [loadDialogOpen, setLoadDialogOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
+  const [columns, setColumns] = useState<ColumnVisibility>({
+    leadId: true,
+    address: true,
+    ownerName: true,
+    deskName: true,
+    statusTags: true,
+    market: true,
+    ownerLocation: true,
+    agents: true,
+    value: true,
+    equity: true,
+  });
+  const [deskDialogOpen, setDeskDialogOpen] = useState(false);
+  const [selectedPropertyForDesk, setSelectedPropertyForDesk] = useState<any>(null);
 
   // Load filters from sessionStorage if navigated from dashboard widget
   useEffect(() => {
@@ -143,6 +159,17 @@ export default function Properties() {
   const utils = trpc.useUtils();
 
   // Bulk reassignment mutation
+  const updateDesk = trpc.properties.updateDesk.useMutation({
+    onSuccess: () => {
+      utils.properties.list.invalidate();
+      toast.success('Desk assignment updated');
+      setDeskDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to update desk: ' + error.message);
+    },
+  });
+
   const bulkReassign = trpc.properties.bulkReassignProperties.useMutation({
     onSuccess: () => {
       utils.properties.list.invalidate();
@@ -622,13 +649,16 @@ export default function Properties() {
                       />
                     </TableHead>
                   )}
-                  <TableHead>Address</TableHead>
-                  <TableHead>Status Tags</TableHead>
-                  <TableHead>Market</TableHead>
-                  <TableHead>Owner Location</TableHead>
-                  <TableHead>Agents</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                  <TableHead className="text-right">Equity %</TableHead>
+                  {columns.leadId && <TableHead className="w-16">Lead ID</TableHead>}
+                  {columns.address && <TableHead>Address</TableHead>}
+                  {columns.ownerName && <TableHead>Owner Name</TableHead>}
+                  {columns.deskName && <TableHead>Desk</TableHead>}
+                  {columns.statusTags && <TableHead>Status Tags</TableHead>}
+                  {columns.market && <TableHead>Market</TableHead>}
+                  {columns.ownerLocation && <TableHead>Owner Location</TableHead>}
+                  {columns.agents && <TableHead>Agents</TableHead>}
+                  {columns.value && <TableHead className="text-right">Value</TableHead>}
+                  {columns.equity && <TableHead className="text-right">Equity %</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -651,7 +681,13 @@ export default function Properties() {
                       />
                     </TableCell>
                   )}
-                  <TableCell>
+                  {columns.leadId && (
+                    <TableCell className="font-mono text-xs">
+                      #{property.id}
+                    </TableCell>
+                  )}
+                  {columns.address && (
+                    <TableCell>
                     <Link href={`/properties/${property.id}`}>
                       <div className="flex items-center gap-2">
                         <div className="font-medium hover:underline cursor-pointer">
@@ -676,21 +712,43 @@ export default function Properties() {
                         {property.city}, {property.state}
                       </div>
                     </Link>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {property.status?.split(", ").slice(0, 3).map((tag, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {property.status && property.status.split(",").length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{property.status.split(",").length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
+                    </TableCell>
+                  )}
+                  {columns.ownerName && (
+                    <TableCell>
+                      {property.owner1Name || property.owner2Name || "Unknown"}
+                    </TableCell>
+                  )}
+                  {columns.deskName && (
+                    <TableCell>
+                      <button
+                        onClick={() => {
+                          setSelectedPropertyForDesk(property);
+                          setDeskDialogOpen(true);
+                        }}
+                        className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 cursor-pointer transition"
+                      >
+                        {property.deskName || "🗑️ BIN"}
+                      </button>
+                    </TableCell>
+                  )}
+                  {columns.statusTags && (
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {property.status?.split(", ").slice(0, 3).map((tag, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {property.status && property.status.split(",").length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{property.status.split(",").length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {columns.market && (
                     <TableCell>
                       <Badge
                         variant={
@@ -704,7 +762,11 @@ export default function Properties() {
                         {property.marketStatus}
                       </Badge>
                     </TableCell>
+                  )}
+                  {columns.ownerLocation && (
                     <TableCell>{property.ownerLocation || "Unknown"}</TableCell>
+                  )}
+                  {columns.agents && (
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {property.agents && property.agents.length > 0 ? (
@@ -718,12 +780,17 @@ export default function Properties() {
                         )}
                       </div>
                     </TableCell>
+                  )}
+                  {columns.value && (
                     <TableCell className="text-right">
                       ${property.estimatedValue?.toLocaleString() || "N/A"}
                     </TableCell>
+                  )}
+                  {columns.equity && (
                     <TableCell className="text-right">
                       {property.equityPercent ? `${property.equityPercent.toFixed(2)}%` : "N/A"}
                     </TableCell>
+                  )}
                   </TableRow>
                 ))}
               </TableBody>

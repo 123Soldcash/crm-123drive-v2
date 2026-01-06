@@ -138,12 +138,14 @@ export function CreateTaskDialog({
     e.preventDefault();
 
     const taskData = {
-      title,
+      title: title || undefined,
       description: description || undefined,
       taskType: taskType as any,
       priority,
       status,
       dueDate: dueDate || undefined,
+      dueTime: dueTime || undefined,
+      repeatTask: (repeatTask as "Daily" | "Weekly" | "Monthly" | "None" | undefined) || undefined,
       assignedToId,
       propertyId: propertyId,
     };

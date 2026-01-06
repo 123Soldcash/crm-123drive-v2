@@ -521,6 +521,20 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return await db.updatePropertyDeepSearch(input);
       }),
+    updateDesk: protectedProcedure
+      .input(z.object({ propertyId: z.number(), deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "ARCHIVED"]) }))
+      .mutation(async ({ input }) => {
+        await db.updateDesk(input.propertyId, input.deskName, input.deskStatus);
+        return { success: true };
+      }),
+    getDeskStats: protectedProcedure.query(async () => {
+      return await db.getDeskStats();
+    }),
+    listByDesk: protectedProcedure
+      .input(z.object({ deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "ARCHIVED"]).optional() }))
+      .query(async ({ input }) => {
+        return await db.listByDesk(input.deskName, input.deskStatus);
+      }),
   }),
 
   users: router({
@@ -1523,6 +1537,8 @@ export const appRouter = router({
           assignedToId: z.number().optional(),
           propertyId: z.number().optional(),
           dueDate: z.string().optional(), // ISO date string
+          dueTime: z.string().optional(), // HH:MM format
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "None"]).optional(),
           checklist: z.string().optional(), // JSON string
         })
       )
@@ -1548,6 +1564,8 @@ export const appRouter = router({
           taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Other"]).optional(),
           priority: z.enum(["High", "Medium", "Low"]).optional(),
           status: z.enum(["To Do", "In Progress", "Done"]).optional(),
+          dueTime: z.string().optional(),
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "None"]).optional(),
           assignedToId: z.number().optional(),
           propertyId: z.number().optional(),
           dueDate: z.string().optional(),

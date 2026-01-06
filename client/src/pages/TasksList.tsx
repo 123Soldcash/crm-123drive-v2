@@ -42,7 +42,7 @@ export function TasksList() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch =
-        task.title.toLowerCase().includes(query) ||
+        task.title?.toLowerCase().includes(query) ||
         task.description?.toLowerCase().includes(query) ||
         task.propertyAddress?.toLowerCase().includes(query);
       if (!matchesSearch) return false;

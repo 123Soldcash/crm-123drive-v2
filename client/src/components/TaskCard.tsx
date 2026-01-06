@@ -7,12 +7,14 @@ import { Link } from "wouter";
 
 interface Task {
   id: number;
-  title: string;
+  title?: string | null;
   description?: string | null;
   taskType: string;
   priority: string;
   status: string;
   dueDate?: Date | null;
+  dueTime?: string | null;
+  repeatTask?: string | null;
   assignedToName?: string | null;
   propertyId?: number | null;
   propertyAddress?: string | null;

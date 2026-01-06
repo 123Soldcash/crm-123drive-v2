@@ -201,7 +201,7 @@ export function TasksCalendar() {
                           <div
                             key={task.id}
                             className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}
-                            title={task.title}
+                            title={task.title || task.description || "Task"}
                           />
                         ))}
                         {dayTasks.length > 3 && (
