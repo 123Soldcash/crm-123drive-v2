@@ -361,6 +361,9 @@ export default function Properties() {
                 </DialogContent>
               </Dialog>
 
+              {/* Column Selector */}
+              <ColumnSelector columns={columns} onColumnChange={setColumns} />
+
               {/* Load Saved Search Button */}
               <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
                 <DialogTrigger asChild>

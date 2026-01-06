@@ -740,7 +740,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         : "hover:bg-muted/50";
                       
                       return (
-                        <TableRow key={`${contact.id}-${phoneIdx}`} className={`border-b ${rowBgClass}`}>
+                        <TableRow key={`${contact.id}-${phoneIdx}`} className={`border-b ${rowBgClass} ${phoneIdx === 0 ? 'border-t-2 border-t-muted' : ''}`}>
                           {phoneIdx === 0 && (
                             <>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-top">
@@ -1051,6 +1051,76 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     </Button>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Property Details Section */}
+            <div className="border-t pt-3 mt-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-3">Property Details (Optional)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Bed/Bath</Label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 3/2"
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">SF</Label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 1,500"
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Roof Age</Label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 5 years"
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">A/C Age</Label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 3 years"
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Overall Condition</Label>
+                  <select className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="">Select...</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Poor">Poor</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Reason to Sell</Label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Relocation"
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1 mt-3">
+                <Label className="text-xs">How Fast to Sell</Label>
+                <select className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                  <option value="">Select...</option>
+                  <option value="ASAP">ASAP</option>
+                  <option value="Within 3 months">Within 3 months</option>
+                  <option value="Within 6 months">Within 6 months</option>
+                  <option value="Within 1 year">Within 1 year</option>
+                  <option value="No rush">No rush</option>
+                </select>
               </div>
             </div>
 

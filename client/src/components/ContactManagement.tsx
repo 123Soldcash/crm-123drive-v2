@@ -222,12 +222,24 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                 </div>
                 <div>
                   <Label htmlFor="relationship">Relationship to Property</Label>
-                  <Input
+                  <select
                     id="relationship"
                     value={formData.relationship}
                     onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
-                    placeholder="e.g., Owner, Son, Daughter, Spouse"
-                  />
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm"
+                  >
+                    <option value="">Select relationship...</option>
+                    <option value="Owner">Owner</option>
+                    <option value="Co-Owner">Co-Owner</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Son">Son</option>
+                    <option value="Daughter">Daughter</option>
+                    <option value="Family Member">Family Member</option>
+                    <option value="Heir">Heir</option>
+                    <option value="Attorney">Attorney</option>
+                    <option value="Tenant">Tenant</option>
+                    <option value="Current Resident - NOT on Board">🔴 Current Resident - NOT on Board</option>
+                  </select>
                 </div>
               </div>
               

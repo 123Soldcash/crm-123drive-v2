@@ -106,8 +106,6 @@
 - [x] CRITICAL: Task not saving (gravando mas não fica salvo) - Fixed: Added dueTime and repeatTask fields
 - [x] CRITICAL: Column selector not working (Lead ID, Address, Owner Name, Desk Name) - Implemented
 - [x] CRITICAL: Desk functionality not working (BIN, ARCHIVED, Desk assignment) - Implemented
-- [ ] Fix phone hide to hide ONLY selected number (not entire contact)
-- [ ] Add horizontal lines to Call Tracking table columns
-- [ ] Add "Current Resident - NOT on Board" contact type (RED color)
-- [ ] Update Call Log form: add Bed/Bath, SF, Roof Age, A/C Age, Overall Property, Reason to Sell, How Fast
-- [ ] Add NICE emoji to Call Log
+- [x] Add "Current Resident - NOT on Board" contact type (RED color) - Implemented
+- [x] Update Call Log form: add Bed/Bath, SF, Roof Age, A/C Age, Overall Property, Reason to Sell, How Fast - Implemented
+- [x] Add horizontal divider lines between Call Tracking table sections - Implemented
