@@ -6,7 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts } from "../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import * as communication from "./communication";
 
@@ -1968,6 +1968,103 @@ export const appRouter = router({
         if (!database) throw new Error('Database not available');
         await database.delete(agents).where(eq(agents.id, input.id));
         return { success: true };
+      }),
+  }),
+
+  // Webhook endpoint for WordPress/Elementor form submissions
+  webhook: router({
+    submitLead: publicProcedure
+      .input(
+        z.object({
+          firstName: z.string().optional(),
+          lastName: z.string().optional(),
+          fullName: z.string().optional(),
+          email: z.string().email().optional(),
+          phone: z.string().optional(),
+          address: z.string().optional(),
+          city: z.string().optional(),
+          state: z.string().optional(),
+          zipcode: z.string().optional(),
+          propertyType: z.string().optional(),
+          estimatedValue: z.number().optional(),
+          bedrooms: z.number().optional(),
+          bathrooms: z.number().optional(),
+          squareFeet: z.number().optional(),
+          ownerName: z.string().optional(),
+          ownerLocation: z.string().optional(),
+          marketStatus: z.string().optional(),
+          leadTemperature: z.string().optional(),
+          notes: z.string().optional(),
+          source: z.string().optional(),
+          formName: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const database = await getDb();
+          if (!database) throw new Error('Database not available');
+
+          // Prepare the property data
+          const ownerName = input.ownerName || input.fullName || `${input.firstName || ''} ${input.lastName || ''}`.trim() || 'Unknown';
+          const addressLine1 = input.address || '';
+          const city = input.city || 'Unknown';
+          const state = input.state || '';
+          const zipcode = input.zipcode || '';
+
+          // Insert the new property
+          const validTrackingStatuses = ['Not Visited', 'Off Market', 'Cash Buyer', 'Free And Clear', 'High Equity', 'Senior Owner', 'Tired Landlord', 'Absentee Owner', 'Corporate Owner', 'Empty Nester', 'Interested', 'Not Interested', 'Follow Up'];
+          const trackingStatus = (input.marketStatus && validTrackingStatuses.includes(input.marketStatus as any)) ? (input.marketStatus as any) : 'Not Visited';
+          const validLeadTemps = ['SUPER HOT', 'HOT', 'WARM', 'COLD', 'TBD', 'DEAD'];
+          const leadTemp = (input.leadTemperature && validLeadTemps.includes(input.leadTemperature as any)) ? (input.leadTemperature as any) : 'TBD';
+          const result = await database.insert(properties).values({
+            addressLine1,
+            city,
+            state,
+            zipcode,
+            owner1Name: ownerName,
+            ownerLocation: input.ownerLocation || city,
+            propertyType: input.propertyType || 'Unknown',
+            totalBedrooms: input.bedrooms,
+            totalBaths: input.bathrooms,
+            buildingSquareFeet: input.squareFeet,
+            estimatedValue: input.estimatedValue,
+            trackingStatus,
+            leadTemperature: leadTemp,
+            deskName: 'BIN',
+            deskStatus: 'BIN',
+            status: input.source ? `WordPress Form - ${input.source}` : 'WordPress Form',
+          });
+
+          // If contact info provided, add contact
+          if (input.email || input.phone) {
+            const propertyId = (result as any).insertId || (result as any)[0]?.id;
+            if (propertyId) {
+              await database.insert(contacts).values({
+                propertyId,
+                name: ownerName,
+                relationship: 'Owner',
+                phone1: input.phone,
+                email1: input.email,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+            }
+          }
+
+          return {
+            success: true,
+            message: 'Lead successfully added to CRM',
+            ownerName,
+            address: addressLine1,
+          };
+        } catch (error) {
+          console.error('Webhook error:', error);
+          return {
+            success: false,
+            message: 'Error adding lead to CRM',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          };
+        }
       }),
   }),
 });

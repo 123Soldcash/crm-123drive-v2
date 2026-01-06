@@ -830,6 +830,25 @@ export default function Properties() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Desk Dialog */}
+      {selectedPropertyForDesk && (
+        <DeskDialog
+          open={deskDialogOpen}
+          onOpenChange={setDeskDialogOpen}
+          propertyId={selectedPropertyForDesk.id}
+          currentDeskName={selectedPropertyForDesk.deskName}
+          currentDeskStatus={selectedPropertyForDesk.deskStatus}
+          onSave={(deskName, deskStatus) => {
+            updateDesk.mutate({
+              propertyId: selectedPropertyForDesk.id,
+              deskName,
+              deskStatus,
+            });
+            setDeskDialogOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

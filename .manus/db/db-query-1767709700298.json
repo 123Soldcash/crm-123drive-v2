@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, ownerLocation, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus) VALUES \n('3750 SW 8th St, Fort Lauderdale, FL 33312', 'Fort Lauderdale', 'FL', '33312', 'Dwayne Christopher Bunsie (Estate)', 'Broward County', 'Single Family Home', 1956, 3, 2, 1272, 275000, 'Off Market', 'HOT', 'BIN', 'BIN'),\n('2321 NW 27th Ave, Fort Lauderdale, FL 33311', 'Fort Lauderdale', 'FL', '33311', 'Willie Mae Wilson (Estate)', 'Broward County', 'Single Family Home', 1970, 3, 2, 1584, 226900, 'Off Market', 'HOT', 'BIN', 'BIN');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, ownerLocation, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus) VALUES \n('3750 SW 8th St, Fort Lauderdale, FL 33312', 'Fort Lauderdale', 'FL', '33312', 'Dwayne Christopher Bunsie (Estate)', 'Broward County', 'Single Family Home', 1956, 3, 2, 1272, 275000, 'Off Market', 'HOT', 'BIN', 'BIN'),\n('2321 NW 27th Ave, Fort Lauderdale, FL 33311', 'Fort Lauderdale', 'FL', '33311', 'Willie Mae Wilson (Estate)', 'Broward County', 'Single Family Home', 1970, 3, 2, 1584, 226900, 'Off Market', 'HOT', 'BIN', 'BIN');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1584
+}
