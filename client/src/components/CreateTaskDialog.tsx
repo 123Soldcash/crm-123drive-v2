@@ -51,9 +51,36 @@ export function CreateTaskDialog({
   const [priority, setPriority] = useState<"High" | "Medium" | "Low">("Medium");
   const [status, setStatus] = useState<"To Do" | "In Progress" | "Done">(defaultStatus);
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
+  const [repeatTask, setRepeatTask] = useState<string | undefined>();
   const [assignedToId, setAssignedToId] = useState<number | undefined>();
   const [propertyId, setPropertyId] = useState<number | undefined>(defaultPropertyId);
   const [propertySearch, setPropertySearch] = useState("");
+
+  // Helper function to calculate due date from preset
+  const setDatePreset = (preset: string) => {
+    const today = new Date();
+    let date = new Date(today);
+    
+    switch(preset) {
+      case 'tomorrow':
+        date.setDate(date.getDate() + 1);
+        break;
+      case '1week':
+        date.setDate(date.getDate() + 7);
+        break;
+      case '1month':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case '3months':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case '6months':
+        date.setMonth(date.getMonth() + 6);
+        break;
+    }
+    setDueDate(date.toISOString().split('T')[0]);
+  };
 
   // Populate form when editing
   useEffect(() => {
@@ -98,6 +125,8 @@ export function CreateTaskDialog({
     setPriority("Medium");
     setStatus(defaultStatus);
     setDueDate("");
+    setDueTime("");
+    setRepeatTask(undefined);
     setAssignedToId(undefined);
     if (!defaultPropertyId) {
       setPropertyId(undefined);
@@ -119,6 +148,12 @@ export function CreateTaskDialog({
       propertyId: propertyId,
     };
 
+    // Validate that either title or description is provided
+    if (!taskData.title && !taskData.description) {
+      alert('Please enter either a task title or description');
+      return;
+    }
+
     if (editingTask) {
       updateTask.mutate({
         taskId: editingTask.id,
@@ -131,7 +166,7 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-w-2xl">
+      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white text-xl">{editingTask ? 'Edit Task' : 'Create New Task'}</DialogTitle>
         </DialogHeader>
@@ -140,14 +175,13 @@ export function CreateTaskDialog({
           {/* Title */}
           <div>
             <Label htmlFor="title" className="text-slate-200">
-              Task Title *
+              Task Title (Optional)
             </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter task title..."
-              required
               className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
@@ -267,6 +301,85 @@ export function CreateTaskDialog({
             </div>
           </div>
 
+          {/* Date Presets */}
+          <div>
+            <Label className="text-slate-200 mb-2 block">Quick Date Presets</Label>
+            <div className="grid grid-cols-5 gap-2">
+              <Button
+                type="button"
+                onClick={() => setDatePreset('tomorrow')}
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700 text-sm"
+              >
+                Tomorrow
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setDatePreset('1week')}
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700 text-sm"
+              >
+                1 Week
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setDatePreset('1month')}
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700 text-sm"
+              >
+                1 Month
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setDatePreset('3months')}
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700 text-sm"
+              >
+                3 Months
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setDatePreset('6months')}
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700 text-sm"
+              >
+                6 Months
+              </Button>
+            </div>
+          </div>
+
+          {/* Time & Repeat */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="dueTime" className="text-slate-200">
+                Time (Optional)
+              </Label>
+              <Input
+                id="dueTime"
+                type="time"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="repeat" className="text-slate-200">
+                Repeat
+              </Label>
+              <Select value={repeatTask || ""} onValueChange={setRepeatTask}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue placeholder="No repeat" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectItem value="" className="text-white hover:bg-slate-600">No repeat</SelectItem>
+                  <SelectItem value="daily" className="text-white hover:bg-slate-600">Daily</SelectItem>
+                  <SelectItem value="weekly" className="text-white hover:bg-slate-600">Weekly</SelectItem>
+                  <SelectItem value="monthly" className="text-white hover:bg-slate-600">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Property Selection */}
           {!defaultPropertyId && (
             <div>
@@ -338,10 +451,10 @@ export function CreateTaskDialog({
             </Button>
             <Button
               type="submit"
-              disabled={createTask.isPending}
+              disabled={createTask.isPending || updateTask.isPending}
               className="bg-green-600 hover:bg-green-700"
             >
-              {createTask.isPending ? "Creating..." : "Create Task"}
+              {createTask.isPending || updateTask.isPending ? "Saving..." : editingTask ? "Update Task" : "Create Task"}
             </Button>
           </div>
         </form>

@@ -88,3 +88,17 @@
 - [x] Add agent assignment dropdown to property details
 - [ ] Show assigned agent in property list and summary
 - [ ] Filter properties by assigned agent
+
+
+## REVISÃO V11 - General Updates
+- [ ] Fix critical: Tasks not saving (CRITICAL BUG)
+- [ ] Make Task Title optional (not required)
+- [ ] Add date presets to tasks: Tomorrow, 1 Week, 1 Month, 3 Months, 6 Months
+- [ ] Add Time field to tasks
+- [ ] Replace flags with emojis: DNC 📵, LITIGATOR 🗣, DECEASED 🕊, DECISION MAKER ✍
+- [ ] Add horizontal lines for better flag visualization
+- [ ] Fix phone hide: only hide phone number, not entire contact
+- [ ] Add desk management with BIN and ARCHIVED status
+- [ ] Add column selector to properties list
+- [ ] Add new contact relationship: "Current Resident – NOT on Board" (RED)
+- [ ] Update Call Log form with new fields (Bed/Bath, SF, Roof Age, A/C Age, Overall condition, Reason to sell, How Fast to sell)

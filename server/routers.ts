@@ -1515,7 +1515,7 @@ export const appRouter = router({
     create: protectedProcedure
       .input(
         z.object({
-          title: z.string().min(1),
+          title: z.string().optional(),
           description: z.string().optional(),
           taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Other"]),
           priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
@@ -1527,6 +1527,10 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
+        // Title is optional, but we need at least a type or description
+        if (!input.title && !input.description) {
+          throw new Error('Either title or description is required');
+        }
         const taskData: any = {
           ...input,
           createdById: ctx.user.id,

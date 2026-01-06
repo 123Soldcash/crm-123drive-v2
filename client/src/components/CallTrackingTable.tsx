@@ -616,28 +616,28 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   checked={flagFilters.dnc}
                   onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, dnc: !!checked }))}
                 />
-                <span>DNC</span>
+                <span>📵 DNC</span>
               </label>
               <label className="flex items-center gap-1 text-sm cursor-pointer">
                 <Checkbox
                   checked={flagFilters.litigator}
                   onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, litigator: !!checked }))}
                 />
-                <span>Litigator</span>
+                <span>🗣 Litigator</span>
               </label>
               <label className="flex items-center gap-1 text-sm cursor-pointer">
                 <Checkbox
                   checked={flagFilters.deceased}
                   onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, deceased: !!checked }))}
                 />
-                <span>Deceased</span>
+                <span>🕊 Deceased</span>
               </label>
               <label className="flex items-center gap-1 text-sm cursor-pointer">
                 <Checkbox
                   checked={flagFilters.decisionMaker}
                   onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, decisionMaker: !!checked }))}
                 />
-                <span>Decision Maker</span>
+                <span>✍ Decision Maker</span>
               </label>
             </div>
 
@@ -709,10 +709,10 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   </TableHead>
                   <TableHead className="w-[150px]">Name</TableHead>
                   <TableHead className="w-[120px]">Relationship</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">DNC</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">Lit</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">Dec</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">DM</TableHead>
+                  <TableHead className="w-[24px] text-center px-0">📵</TableHead>
+                  <TableHead className="w-[24px] text-center px-0">🗣</TableHead>
+                  <TableHead className="w-[24px] text-center px-0">🕊</TableHead>
+                  <TableHead className="w-[24px] text-center px-0">✍</TableHead>
                   <TableHead className="w-[28px] text-center px-0">📱</TableHead>
                   <TableHead className="w-[28px] text-center px-0">📞</TableHead>
                   <TableHead className="w-[28px] text-center px-0">📋</TableHead>
@@ -726,7 +726,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 {filteredContacts?.map((contact: any) => (
                   contact.phones && contact.phones.length > 0 ? (
                     contact.phones
-                      .filter((phone: any) => !hiddenPhones.has(phone.phoneNumber))
                       .map((phone: any, phoneIdx: number) => {
                       const attempts = getCallAttempts(contact.id, phone.phoneNumber);
                       const lastDisposition = getLastDisposition(contact.id, phone.phoneNumber);
@@ -798,7 +797,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 onClick={() => handlePhoneClick(contact, phone)}
                                 className="text-sm text-blue-600 hover:underline font-medium"
                               >
-                                {phone.phoneNumber}
+                                {hiddenPhones.has(phone.phoneNumber) ? "****" : phone.phoneNumber}
                               </button>
                               <button
                                 onClick={() => handleNoteClick(contact.id, phone.phoneNumber)}
@@ -810,14 +809,23 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               <button
                                 onClick={() => {
                                   const newHidden = new Set(hiddenPhones);
-                                  newHidden.add(phone.phoneNumber);
+                                  if (hiddenPhones.has(phone.phoneNumber)) {
+                                    newHidden.delete(phone.phoneNumber);
+                                    toast.success("Phone number shown");
+                                  } else {
+                                    newHidden.add(phone.phoneNumber);
+                                    toast.success("Phone number hidden");
+                                  }
                                   setHiddenPhones(newHidden);
-                                  toast.success("Phone number hidden");
                                 }}
-                                className="text-xs text-gray-400 hover:text-gray-600"
-                                title="Hide this phone number"
+                                className={`text-xs ${
+                                  hiddenPhones.has(phone.phoneNumber)
+                                    ? "text-gray-600 hover:text-gray-400"
+                                    : "text-gray-400 hover:text-gray-600"
+                                }`}
+                                title={hiddenPhones.has(phone.phoneNumber) ? "Show this phone number" : "Hide this phone number"}
                               >
-                                👁️‍🗨️
+                                {hiddenPhones.has(phone.phoneNumber) ? "👁️" : "👁️‍🗨️"}
                               </button>
                             </div>
                           </TableCell>

@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Anthony Trotman",
+    "phone": "9548394813",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "T-Mobile USA, Inc.",
+    "is_prepaid": false
+  },
+  {
+    "name": "Andrea Eulene Trotman",
+    "phone": "7543082807",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "T-Mobile USA, Inc.",
+    "is_prepaid": false
+  },
+  {
+    "name": "Andrea Eulene Trotman",
+    "phone": "3053353150",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "T-Mobile USA, Inc.",
+    "is_prepaid": false
+  },
+  {
+    "name": "Andrea Eulene Trotman",
+    "phone": "9547142630",
+    "is_valid": true,
+    "activity_score": 30,
+    "is_disconnected": true,
+    "is_litigator": false,
+    "line_type": "Landline",
+    "carrier": "BellSouth",
+    "is_prepaid": false
+  },
+  {
+    "name": "Michael Todd Trotman",
+    "phone": "5616356881",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "Verizon Wireless",
+    "is_prepaid": false
+  },
+  {
+    "name": "Michael Todd Trotman",
+    "phone": "9545935693",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "AT&T Wireless",
+    "is_prepaid": false
+  },
+  {
+    "name": "Michael Todd Trotman",
+    "phone": "9549550705",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "AT&T Wireless",
+    "is_prepaid": false
+  },
+  {
+    "name": "Mitchell Thomas Trotman",
+    "phone": "7544227299",
+    "is_valid": true,
+    "activity_score": 100,
+    "is_disconnected": false,
+    "is_litigator": false,
+    "line_type": "Mobile",
+    "carrier": "AT&T Wireless",
+    "is_prepaid": false
+  }
+]
