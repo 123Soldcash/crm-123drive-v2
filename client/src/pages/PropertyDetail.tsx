@@ -300,15 +300,15 @@ export default function PropertyDetail() {
             <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <ArrowRightLeft className="mr-2 h-4 w-4" />
-                  Transfer Lead
+                  <Users className="mr-2 h-4 w-4" />
+                  Assign Agent
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Transfer Lead to Another Agent</DialogTitle>
+                  <DialogTitle>Assign Agent to Lead</DialogTitle>
                   <DialogDescription>
-                    Transfer this property to another agent who can follow up. The new agent will receive access immediately.
+                    Assign this property to one or more agents. Multiple agents can work on the same lead.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -328,9 +328,9 @@ export default function PropertyDetail() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Reason (optional)</label>
+                    <label className="text-sm font-medium">Notes (optional)</label>
                     <Textarea
-                      placeholder="Why are you transferring this lead? (e.g., out of area, too busy, etc.)"
+                      placeholder="Add any notes about this assignment (e.g., specific responsibilities, follow-up instructions, etc.)"
                       value={transferReason}
                       onChange={(e) => setTransferReason(e.target.value)}
                       rows={3}
@@ -342,7 +342,7 @@ export default function PropertyDetail() {
                     Cancel
                   </Button>
                   <Button onClick={handleTransferLead} disabled={transferLead.isPending || !selectedTransferAgent}>
-                    {transferLead.isPending ? "Transferring..." : "Transfer Lead"}
+                    {transferLead.isPending ? "Assigning..." : "Assign Agent"}
                   </Button>
                 </DialogFooter>
               </DialogContent>

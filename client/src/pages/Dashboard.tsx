@@ -1,11 +1,21 @@
-import { trpc } from "@/lib/trpc";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Flame, ThermometerSun, Snowflake, Check, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CallMetricsDashboard } from "@/components/CallMetricsDashboard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("all");
+  const { data: agents } = trpc.agents.list.useQuery();
   const { data: stats, isLoading } = trpc.properties.stats.useQuery();
   const { data: leadStats, isLoading: loadingLeadStats } = trpc.properties.getStats.useQuery();
   const { data: properties } = trpc.properties.list.useQuery();
@@ -26,11 +36,28 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Property CRM Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage and track your property leads for seller outreach
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Property CRM Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage and track your property leads for seller outreach
+          </p>
+        </div>
+        <div className="w-[200px]">
+          <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by Agent" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Agents</SelectItem>
+              {agents?.map((agent: any) => (
+                <SelectItem key={agent.id} value={agent.id.toString()}>
+                  {agent.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Total Properties Card */}

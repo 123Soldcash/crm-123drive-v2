@@ -195,3 +195,14 @@
 - [x] Connect Properties component to transfer lead functionality - FIXED
 - [x] Test transfer lead with reason tracking - WORKING
 - [x] Verify audit history is recorded - IMPLEMENTED
+
+
+## NEW FEATURES - Agent Assignment & Filtering
+- [x] Change "Transfer Lead" to "Assign Agent" - Allow multiple agents per lead - DONE
+- [x] Update PropertyDetail component to show "Assign Agent" instead of "Transfer Lead" - DONE
+- [x] Add agent filter dropdown to Properties screen (similar to "All Agents" in screenshot) - VERIFIED
+- [x] Implement agent filtering logic in Properties list query - WORKING
+- [x] Add agent filter to Dashboard/Reports - DONE
+- [x] Show leads filtered by selected agent in all views - IMPLEMENTED
+- [x] Update lead count metrics to reflect agent filter - READY
+- [x] Test agent assignment with multiple agents per lead - ALL TESTS PASSING
