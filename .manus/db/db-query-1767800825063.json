@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (\n  addressLine1, city, state, zipcode,\n  owner1Name, propertyType, yearBuilt,\n  totalBedrooms, totalBaths, buildingSquareFeet,\n  estimatedValue, trackingStatus, leadTemperature,\n  deskName, deskStatus, status\n) VALUES (\n  '1513 NW 24th Ave', 'Fort Lauderdale', 'FL', '33311',\n  'Billy Dale Williams (Estate)', 'Single-Family Home', 1954,\n  4, 2, 1602,\n  435241, 'Not Visited', 'HOT',\n  'BIN', 'BIN', 'PDF Import - Probate Estate'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO properties (\n  addressLine1, city, state, zipcode,\n  owner1Name, propertyType, yearBuilt,\n  totalBedrooms, totalBaths, buildingSquareFeet,\n  estimatedValue, trackingStatus, leadTemperature,\n  deskName, deskStatus, status\n) VALUES (\n  '1513 NW 24th Ave', 'Fort Lauderdale', 'FL', '33311',\n  'Billy Dale Williams (Estate)', 'Single-Family Home', 1954,\n  4, 2, 1602,\n  435241, 'Not Visited', 'HOT',\n  'BIN', 'BIN', 'PDF Import - Probate Estate'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1571
+}
