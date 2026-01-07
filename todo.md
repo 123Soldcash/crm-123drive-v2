@@ -122,3 +122,9 @@
 - [x] Make desk block clickable to change status
 - [x] Make task title optional
 - [x] Add desk dropdown with all options (BIN, DESK_CHRIS, DESK_1-5, ARCHIVED)
+
+
+## Zapier Integration
+- [x] Fix webhook endpoint 502 error
+- [x] Test Zapier webhook connection
+- [x] Verify webhook data format
