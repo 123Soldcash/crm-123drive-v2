@@ -368,12 +368,12 @@ export function CreateTaskDialog({
               <Label htmlFor="repeat" className="text-slate-200">
                 Repeat
               </Label>
-              <Select value={repeatTask || ""} onValueChange={setRepeatTask}>
+              <Select value={repeatTask || "none"} onValueChange={setRepeatTask}>
                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                   <SelectValue placeholder="No repeat" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-700 border-slate-600">
-                  <SelectItem value="" className="text-white hover:bg-slate-600">No repeat</SelectItem>
+                  <SelectItem value="none" className="text-white hover:bg-slate-600">No repeat</SelectItem>
                   <SelectItem value="daily" className="text-white hover:bg-slate-600">Daily</SelectItem>
                   <SelectItem value="weekly" className="text-white hover:bg-slate-600">Weekly</SelectItem>
                   <SelectItem value="monthly" className="text-white hover:bg-slate-600">Monthly</SelectItem>

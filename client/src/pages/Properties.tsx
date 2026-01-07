@@ -531,7 +531,7 @@ export default function Properties() {
                 <SelectValue placeholder="Filter by Desk" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Desks</SelectItem>
+                <SelectItem value="all">All Desks</SelectItem>
                 {DESK_OPTIONS.map((desk) => (
                   <SelectItem key={desk} value={desk}>
                     {desk === "BIN" ? "🗑️ " + desk : desk === "ARCHIVED" ? "✅ " + desk : desk}
