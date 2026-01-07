@@ -71,7 +71,10 @@ interface FilterState {
   ownerVerified: boolean;
   visited: boolean;
   assignedAgentId: number | null;
+  deskName: string;
 }
+
+const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
 
 export default function Properties() {
   const { user } = useAuth();
@@ -89,24 +92,46 @@ export default function Properties() {
       ownerVerified: params.get('ownerVerified') === 'true',
       visited: params.get('visited') === 'true',
       assignedAgentId: null,
+      deskName: "",
     };
   });
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [loadDialogOpen, setLoadDialogOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
-  const [columns, setColumns] = useState<ColumnVisibility>({
+  // Default columns that are always visible
+  const DEFAULT_COLUMNS: ColumnVisibility = {
     leadId: true,
     address: true,
     ownerName: true,
     deskName: true,
-    statusTags: true,
-    market: true,
-    ownerLocation: true,
-    agents: true,
-    value: true,
-    equity: true,
+    statusTags: false,
+    market: false,
+    ownerLocation: false,
+    agents: false,
+    value: false,
+    equity: false,
+  };
+
+  // Load columns from localStorage or use defaults
+  const [columns, setColumns] = useState<ColumnVisibility>(() => {
+    try {
+      const saved = localStorage.getItem('propertyTableColumns');
+      return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
   });
+
+  // Save columns to localStorage whenever they change
+  const handleColumnChange = (newColumns: ColumnVisibility) => {
+    setColumns(newColumns);
+    try {
+      localStorage.setItem('propertyTableColumns', JSON.stringify(newColumns));
+    } catch (e) {
+      console.error('Failed to save column preferences:', e);
+    }
+  };
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedPropertyForDesk, setSelectedPropertyForDesk] = useState<any>(null);
 
@@ -225,6 +250,11 @@ export default function Properties() {
       }
     }
 
+    // Filter by desk
+    if (filters.deskName) {
+      filtered = filtered.filter((p) => p.deskName === filters.deskName);
+    }
+
     // Filter by status tags
     if (filters.statusTags.length > 0) {
       filtered = filtered.filter((property) => {
@@ -236,7 +266,7 @@ export default function Properties() {
     }
 
     return filtered;
-  }, [properties, filters.statusTags, filters.assignedAgentId]);
+  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName]);
 
   // Store property IDs in localStorage for next/previous navigation
   useEffect(() => {
@@ -266,6 +296,7 @@ export default function Properties() {
       ownerVerified: false,
       visited: false,
       assignedAgentId: null,
+      deskName: "",
     });
   };
 
@@ -274,6 +305,7 @@ export default function Properties() {
     (filters.ownerLocation ? 1 : 0) +
     (filters.minEquity > 0 ? 1 : 0) +
     (filters.marketStatus ? 1 : 0) +
+    (filters.deskName ? 1 : 0) +
     filters.statusTags.length;
 
   const handleSaveSearch = () => {
@@ -362,7 +394,7 @@ export default function Properties() {
               </Dialog>
 
               {/* Column Selector */}
-              <ColumnSelector columns={columns} onColumnChange={setColumns} />
+              <ColumnSelector columns={columns} onColumnChange={handleColumnChange} />
 
               {/* Load Saved Search Button */}
               <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
@@ -484,6 +516,25 @@ export default function Properties() {
                 {MARKET_STATUS_OPTIONS.map((status) => (
                   <SelectItem key={status} value={status}>
                     {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.deskName}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, deskName: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Desk" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Desks</SelectItem>
+                {DESK_OPTIONS.map((desk) => (
+                  <SelectItem key={desk} value={desk}>
+                    {desk === "BIN" ? "🗑️ " + desk : desk === "ARCHIVED" ? "✅ " + desk : desk}
                   </SelectItem>
                 ))}
               </SelectContent>

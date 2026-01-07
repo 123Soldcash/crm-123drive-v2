@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1506,4 +1506,45 @@ export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE
   }
 
   return await query;
+}
+
+
+export async function createAgent(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  status: string;
+  notes?: string;
+}) {
+  const database = await getDb();
+  if (!database) throw new Error('Database not initialized');
+  return await database.insert(agents).values({
+    name: data.name,
+    email: data.email,
+    phone: data.phone || null,
+    role: data.role as any,
+    status: data.status as any,
+    notes: data.notes || null,
+  });
+}
+
+export async function updateAgent(id: number, data: {
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  status: string;
+  notes?: string;
+}) {
+  const database = await getDb();
+  if (!database) throw new Error('Database not initialized');
+  return await database.update(agents).set({
+    name: data.name,
+    email: data.email,
+    phone: data.phone || null,
+    role: data.role as any,
+    status: data.status as any,
+    notes: data.notes || null,
+  }).where(eq(agents.id, id));
 }

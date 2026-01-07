@@ -109,3 +109,9 @@
 - [x] Add "Current Resident - NOT on Board" contact type (RED color) - Implemented
 - [x] Update Call Log form: add Bed/Bath, SF, Roof Age, A/C Age, Overall Property, Reason to Sell, How Fast - Implemented
 - [x] Add horizontal divider lines between Call Tracking table sections - Implemented
+
+## REVISÃO V13 - CRITICAL FIXES NEEDED
+- [x] Column Selector - Fixed: Now has defaults (Lead ID, Address, Owner Name, Desk Name) and persists in localStorage
+- [x] Desk Filtering - Fixed: Added dropdown to filter by desk (BIN, DESK_CHRIS, DESK_1-5, ARCHIVED)
+- [x] Agent Management - Fixed: Created agents router with create, update, delete, list endpoints
+- [x] Task Creation Form - Fixed: Title now required, date presets (Tomorrow, 1 Week, 1 Month, 3 Months, 6 Months), time field, repeat options

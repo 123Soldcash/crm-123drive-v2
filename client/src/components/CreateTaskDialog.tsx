@@ -150,9 +150,9 @@ export function CreateTaskDialog({
       propertyId: propertyId,
     };
 
-    // Validate that either title or description is provided
-    if (!taskData.title && !taskData.description) {
-      alert('Please enter either a task title or description');
+    // Validate that title is provided
+    if (!taskData.title || !taskData.title.trim()) {
+      alert('Task title is required');
       return;
     }
 
@@ -177,7 +177,7 @@ export function CreateTaskDialog({
           {/* Title */}
           <div>
             <Label htmlFor="title" className="text-slate-200">
-              Task Title (Optional)
+              Task Title *
             </Label>
             <Input
               id="title"
