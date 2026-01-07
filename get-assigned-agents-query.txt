@@ -1,0 +1,19 @@
+    getAssignedAgents: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const drizzleDb = getDb();
+        const { leadAssignments, agents: agentsTable } = await import("../drizzle/schema");
+        const assignments = await drizzleDb
+          .select({
+            id: leadAssignments.id,
+            agentId: leadAssignments.agentId,
+            agentName: agentsTable.name,
+            agentType: agentsTable.agentType,
+            assignmentType: leadAssignments.assignmentType,
+            assignedAt: leadAssignments.assignedAt,
+          })
+          .from(leadAssignments)
+          .leftJoin(agentsTable, eq(leadAssignments.agentId, agentsTable.id))
+          .where(eq(leadAssignments.propertyId, input.propertyId));
+        return assignments;
+      }),

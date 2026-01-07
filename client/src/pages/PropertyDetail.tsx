@@ -45,6 +45,7 @@ export default function PropertyDetail() {
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedTransferAgent, setSelectedTransferAgent] = useState<string>("");
+  const [selectedAgents, setSelectedAgents] = useState<number[]>([]);
   const [transferReason, setTransferReason] = useState("");
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
@@ -151,15 +152,27 @@ export default function PropertyDetail() {
   });
 
   const handleTransferLead = () => {
-    if (!selectedTransferAgent) {
-      toast.error("Please select an agent to transfer to");
+    if (selectedAgents.length === 0) {
+      toast.error("Please select at least one agent to assign");
       return;
     }
-    transferLead.mutate({
-      propertyId,
-      toAgentId: Number(selectedTransferAgent),
-      reason: transferReason || undefined,
+    // Assign each selected agent
+    selectedAgents.forEach((agentId) => {
+      transferLead.mutate({
+        propertyId,
+        toAgentId: agentId,
+        reason: transferReason || undefined,
+      });
     });
+    setSelectedAgents([]);
+    setTransferReason("");
+    setTransferDialogOpen(false);
+  };
+
+  const toggleAgentSelection = (agentId: number) => {
+    setSelectedAgents((prev) =>
+      prev.includes(agentId) ? prev.filter((id) => id !== agentId) : [...prev, agentId]
+    );
   };
 
   const addTag = trpc.properties.addTag.useMutation({
@@ -313,19 +326,29 @@ export default function PropertyDetail() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Agent</label>
-                    <Select value={selectedTransferAgent} onValueChange={setSelectedTransferAgent}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose an agent..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {agentsList?.map((agent: any) => (
-                          <SelectItem key={agent.id} value={agent.id.toString()}>
-                            {agent.name} ({agent.agentType})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium">Select Agents (Multiple)</label>
+                    <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {agentsList?.map((agent: any) => (
+                        <div key={agent.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`agent-${agent.id}`}
+                            checked={selectedAgents.includes(agent.id)}
+                            onCheckedChange={() => toggleAgentSelection(agent.id)}
+                          />
+                          <label
+                            htmlFor={`agent-${agent.id}`}
+                            className="text-sm font-medium cursor-pointer flex-1"
+                          >
+                            {agent.name} <Badge variant="outline" className="ml-2">{agent.agentType}</Badge>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    {selectedAgents.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAgents.length} agent(s) selected
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Notes (optional)</label>
@@ -341,8 +364,8 @@ export default function PropertyDetail() {
                   <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleTransferLead} disabled={transferLead.isPending || !selectedTransferAgent}>
-                    {transferLead.isPending ? "Assigning..." : "Assign Agent"}
+                  <Button onClick={handleTransferLead} disabled={transferLead.isPending || selectedAgents.length === 0}>
+                    {transferLead.isPending ? "Assigning..." : `Assign ${selectedAgents.length} Agent(s)`}
                   </Button>
                 </DialogFooter>
               </DialogContent>

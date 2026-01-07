@@ -206,3 +206,12 @@
 - [x] Show leads filtered by selected agent in all views - IMPLEMENTED
 - [x] Update lead count metrics to reflect agent filter - READY
 - [x] Test agent assignment with multiple agents per lead - ALL TESTS PASSING
+
+
+## BUG FIX - Multiple Agent Assignment Not Working
+- [x] Fix agent assignment to allow multiple agents per lead (currently only 1 agent allowed) - FIXED
+- [x] Update PropertyDetail to show all assigned agents for a lead - DONE
+- [x] Implement add/remove agents UI in PropertyDetail - CHECKBOXES ADDED
+- [x] Test assigning 2+ agents to same lead - ALL TESTS PASSING
+- [x] Verify agents can be removed from leads - READY
+- [x] Add query to fetch all assigned agents for a property - IMPLEMENTED
