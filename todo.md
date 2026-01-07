@@ -134,9 +134,3 @@
 - [x] Add/update property in database
 - [x] Add all contacts with complete information
 - [x] Add deep search notes with probate details
-
-## Property Data Update - 6717 Arbor Dr
-- [x] Extract data from PDF (Comprehensive_Probate_and_Property_Research6717ArborDr.Miramar,FL33311.pdf)
-- [x] Update existing property in database
-- [x] Update/add all contacts with complete information
-- [x] Update deep search notes with probate details

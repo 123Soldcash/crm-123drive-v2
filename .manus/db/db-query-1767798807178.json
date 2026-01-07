@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO contacts (\n  propertyId, name, relationship, phone1,\n  createdAt, updatedAt\n) VALUES \n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Len D. Sumlar',\n  'Owner',\n  NULL,\n  NOW(),\n  NOW()\n),\n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Davion Hudson',\n  'Current Resident',\n  '(954) 966-0140',\n  NOW(),\n  NOW()\n),\n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Frona S. Hudson',\n  'Related Resident',\n  '(954) 986-8378',\n  NOW(),\n  NOW()\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (\n  propertyId, name, relationship, phone1,\n  createdAt, updatedAt\n) VALUES \n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Len D. Sumlar',\n  'Owner',\n  NULL,\n  NOW(),\n  NOW()\n),\n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Davion Hudson',\n  'Current Resident',\n  '(954) 966-0140',\n  NOW(),\n  NOW()\n),\n(\n  (SELECT id FROM properties WHERE addressLine1 = '6717 Arbor Dr' AND city = 'Miramar' ORDER BY id DESC LIMIT 1),\n  'Frona S. Hudson',\n  'Related Resident',\n  '(954) 986-8378',\n  NOW(),\n  NOW()\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1547
-}
