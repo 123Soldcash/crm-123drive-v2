@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM properties WHERE addressLine1 = '4700 SW 18th St' AND city = 'West Park' ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id FROM properties WHERE addressLine1 = '4700 SW 18th St' AND city = 'West Park' ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "210003"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n210003\n",
+  "stderr": "",
+  "execution_time_ms": 1564
+}

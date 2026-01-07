@@ -1,0 +1,21 @@
+{
+  "query": "SELECT \n  p.id,\n  p.addressLine1,\n  p.city,\n  p.owner1Name,\n  p.estimatedValue,\n  p.totalBedrooms,\n  p.totalBaths,\n  COUNT(DISTINCT c.id) as contact_count,\n  CASE WHEN pd.id IS NOT NULL THEN 'Yes' ELSE 'No' END as has_deep_search\nFROM properties p\nLEFT JOIN contacts c ON p.id = c.propertyId\nLEFT JOIN propertyDeepSearch pd ON p.id = pd.propertyId\nWHERE p.addressLine1 = '4700 SW 18th St' AND p.city = 'West Park'\nGROUP BY p.id, p.addressLine1, p.city, p.owner1Name, p.estimatedValue, p.totalBedrooms, p.totalBaths, pd.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT \n  p.id,\n  p.addressLine1,\n  p.city,\n  p.owner1Name,\n  p.estimatedValue,\n  p.totalBedrooms,\n  p.totalBaths,\n  COUNT(DISTINCT c.id) as contact_count,\n  CASE WHEN pd.id IS NOT NULL THEN 'Yes' ELSE 'No' END as has_deep_search\nFROM properties p\nLEFT JOIN contacts c ON p.id = c.propertyId\nLEFT JOIN propertyDeepSearch pd ON p.id = pd.propertyId\nWHERE p.addressLine1 = '4700 SW 18th St' AND p.city = 'West Park'\nGROUP BY p.id, p.addressLine1, p.city, p.owner1Name, p.estimatedValue, p.totalBedrooms, p.totalBaths, pd.id;",
+  "rows": [
+    {
+      "id": "210003",
+      "addressLine1": "4700 SW 18th St",
+      "city": "West Park",
+      "owner1Name": "Devin Johnson",
+      "estimatedValue": "430379",
+      "totalBedrooms": "3",
+      "totalBaths": "2",
+      "contact_count": "1",
+      "has_deep_search": "Yes"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tcity\towner1Name\testimatedValue\ttotalBedrooms\ttotalBaths\tcontact_count\thas_deep_search\n210003\t4700 SW 18th St\tWest Park\tDevin Johnson\t430379\t3\t2\t1\tYes\n",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

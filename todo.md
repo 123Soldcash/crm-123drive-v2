@@ -128,3 +128,9 @@
 - [x] Fix webhook endpoint 502 error
 - [x] Test Zapier webhook connection
 - [x] Verify webhook data format
+
+## Property Data Import - 4700 SW 18th St
+- [x] Extract data from PDF (Comprehensive_Probate_and_Property_Research4700Sw18thSt,WestPark,FL,33023.pdf)
+- [x] Add/update property in database
+- [x] Add all contacts with complete information
+- [x] Add deep search notes with probate details

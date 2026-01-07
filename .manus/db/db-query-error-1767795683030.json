@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO contacts (\n  propertyId, name, relationship, phone1, address,\n  createdAt, updatedAt\n) VALUES (\n  (SELECT id FROM properties WHERE addressLine1 = '4700 SW 18th St' AND city = 'West Park' ORDER BY id DESC LIMIT 1),\n  'Devin Johnson',\n  'Owner',\n  '(954) 923-0155',\n  '4700 SW 18th St, West Park, FL 33023',\n  NOW(),\n  NOW()\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (\n  propertyId, name, relationship, phone1, address,\n  createdAt, updatedAt\n) VALUES (\n  (SELECT id FROM properties WHERE addressLine1 = '4700 SW 18th St' AND city = 'West Park' ORDER BY id DESC LIMIT 1),\n  'Devin Johnson',\n  'Owner',\n  '(954) 923-0155',\n  '4700 SW 18th St, West Park, FL 33023',\n  NOW(),\n  NOW()\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'address' in 'field list'"
+  ]
+}
