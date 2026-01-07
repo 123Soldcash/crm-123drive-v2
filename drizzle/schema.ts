@@ -558,7 +558,7 @@ export const tasks = mysqlTable("tasks", {
   completedDate: timestamp("completedDate"),
   
   // Repeat settings
-  repeatTask: mysqlEnum("repeatTask", ["Daily", "Weekly", "Monthly", "None"]).default("None"),
+  repeatTask: mysqlEnum("repeatTask", ["Daily", "Weekly", "Monthly", "No repeat"]).default("No repeat"),
   
   // Checklist (stored as JSON array of subtasks)
   checklist: text("checklist"), // JSON: [{"id": 1, "text": "Call owner", "completed": false}, ...]

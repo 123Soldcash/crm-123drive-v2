@@ -1538,7 +1538,7 @@ export const appRouter = router({
           propertyId: z.number().optional(),
           dueDate: z.string().optional(), // ISO date string
           dueTime: z.string().optional(), // HH:MM format
-          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "None"]).optional(),
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "No repeat"]).optional(),
           checklist: z.string().optional(), // JSON string
         })
       )
@@ -1565,7 +1565,7 @@ export const appRouter = router({
           priority: z.enum(["High", "Medium", "Low"]).optional(),
           status: z.enum(["To Do", "In Progress", "Done"]).optional(),
           dueTime: z.string().optional(),
-          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "None"]).optional(),
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "No repeat"]).optional(),
           assignedToId: z.number().optional(),
           propertyId: z.number().optional(),
           dueDate: z.string().optional(),

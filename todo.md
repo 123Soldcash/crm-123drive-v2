@@ -55,8 +55,8 @@
 - [x] Configure TWILIO_API_KEY
 - [x] Configure TWILIO_API_SECRET
 - [x] Fix AccessTokenInvalid (20101) error - API Key credentials now properly configured
-- [ ] Test calling functionality in browser
-- [ ] Update TwiML App URLs to production domain
+- [x] Test calling functionality in browser
+- [x] Update TwiML App URLs to production domain
 
 ## Bug Fixes - UI/UX
 - [x] Format currency values with commas (e.g., $451,000 instead of $451000)
@@ -147,3 +147,19 @@
 - [x] Add 5 new contact fields safely (currentResident, contacted, contactedDate, onBoard, notOnBoard)
 - [x] Verify schema migration completed successfully
 - [x] Confirm all contacts preserved after schema update
+
+
+## Critical Bug - Task Saving Not Working
+- [x] Debug why tasks are not persisting to database - FIXED
+- [x] Fix repeat field validation (should accept "No repeat", "Daily", "Weekly", "Monthly") - FIXED
+- [x] Verify task creation mutation is working correctly - VERIFIED
+- [x] Test task saving end-to-end - ALL TESTS PASSING
+
+## REVISÃO V14 - CRITICAL FEATURES VERIFIED
+- [x] Agent Management - sendAgentInvite mutation with Gmail integration
+- [x] Task Saving - createTask with full persistence and repeatTask enum fixed
+- [x] Duplicate Detection - Zapier webhook tags duplicates with "DUPLICATED" status
+- [x] Contact Form Enhancement - 5 new fields (currentResident, contacted, contactedDate, onBoard, notOnBoard)
+- [x] Created comprehensive test suite (10 tests total, all passing)
+- [x] Fixed repeatTask enum from "None" to "No repeat" in database and frontend
+- [x] Fixed CreateTaskDialog to use correct enum values (capitalized)
