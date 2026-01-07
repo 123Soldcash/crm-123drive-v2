@@ -115,3 +115,8 @@
 - [x] Desk Filtering - Fixed: Added dropdown to filter by desk (BIN, DESK_CHRIS, DESK_1-5, ARCHIVED)
 - [x] Agent Management - Fixed: Created agents router with create, update, delete, list endpoints
 - [x] Task Creation Form - Fixed: Title now required, date presets (Tomorrow, 1 Week, 1 Month, 3 Months, 6 Months), time field, repeat options
+
+## Current Work
+- [x] Add "Add Task" button to property detail page header - CANCELLED
+- [x] Add Desk status block with color-coded emoji (BIN red, ACTIVE blue, ARCHIVED gray)
+- [x] Make desk block clickable to change status

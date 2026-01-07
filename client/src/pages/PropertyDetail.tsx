@@ -46,6 +46,9 @@ export default function PropertyDetail() {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedTransferAgent, setSelectedTransferAgent] = useState<string>("");
   const [transferReason, setTransferReason] = useState("");
+  const [deskDialogOpen, setDeskDialogOpen] = useState(false);
+  const [selectedDeskName, setSelectedDeskName] = useState<string>("");
+  const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
   const { user } = useAuth();
   const [, navigate] = useRoute("/properties/:id");
 
@@ -427,6 +430,44 @@ export default function PropertyDetail() {
                 Owner Verified
               </label>
             </div>
+            {/* Desk Status Block */}
+            <button
+              onClick={() => setDeskDialogOpen(true)}
+              className={`flex items-center gap-3 rounded-lg px-4 py-2 border-2 cursor-pointer hover:opacity-80 transition-opacity ${
+              property.deskStatus === 'BIN'
+                ? 'bg-red-50 border-red-500'
+                : property.deskStatus === 'ARCHIVED'
+                ? 'bg-gray-50 border-gray-400'
+                : 'bg-blue-50 border-blue-500'
+            }`}>
+              <span className="text-2xl">
+                {property.deskStatus === 'BIN'
+                  ? '🗑️'
+                  : property.deskStatus === 'ARCHIVED'
+                  ? '✅'
+                  : '🔄'}
+              </span>
+              <div className="flex flex-col">
+                <span className={`text-sm font-bold ${
+                  property.deskStatus === 'BIN'
+                    ? 'text-red-700'
+                    : property.deskStatus === 'ARCHIVED'
+                    ? 'text-gray-700'
+                    : 'text-blue-700'
+                }`}>
+                  {property.deskName || 'No Desk'}
+                </span>
+                <span className={`text-xs ${
+                  property.deskStatus === 'BIN'
+                    ? 'text-red-600'
+                    : property.deskStatus === 'ARCHIVED'
+                    ? 'text-gray-600'
+                    : 'text-blue-600'
+                }`}>
+                  {property.deskStatus || 'ACTIVE'}
+                </span>
+              </div>
+            </button>
           </div>
           {user?.role === 'admin' && (
             <div className="flex items-center gap-2">
