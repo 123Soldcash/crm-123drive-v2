@@ -120,3 +120,5 @@
 - [x] Add "Add Task" button to property detail page header - CANCELLED
 - [x] Add Desk status block with color-coded emoji (BIN red, ACTIVE blue, ARCHIVED gray)
 - [x] Make desk block clickable to change status
+- [x] Make task title optional
+- [x] Add desk dropdown with all options (BIN, DESK_CHRIS, DESK_1-5, ARCHIVED)

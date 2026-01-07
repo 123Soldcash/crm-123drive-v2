@@ -150,11 +150,7 @@ export function CreateTaskDialog({
       propertyId: propertyId,
     };
 
-    // Validate that title is provided
-    if (!taskData.title || !taskData.title.trim()) {
-      alert('Task title is required');
-      return;
-    }
+    // Title is now optional
 
     if (editingTask) {
       updateTask.mutate({
@@ -175,10 +171,10 @@ export function CreateTaskDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
-          <div>
-            <Label htmlFor="title" className="text-slate-200">
-              Task Title *
-            </Label>
+            <div>
+              <Label htmlFor="title" className="text-slate-200">
+                Task Title
+              </Label>
             <Input
               id="title"
               value={title}

@@ -184,6 +184,13 @@ export default function PropertyDetail() {
     },
   });
 
+  const updateDesk = trpc.properties.updateDesk.useMutation({
+    onSuccess: () => {
+      utils.properties.getById.invalidate({ id: propertyId });
+      toast.success("Desk updated");
+    },
+  });
+
   const formatCurrency = (value?: number | null) => {
     if (!value) return "$0";
     return new Intl.NumberFormat("en-US", {
@@ -431,43 +438,86 @@ export default function PropertyDetail() {
               </label>
             </div>
             {/* Desk Status Block */}
-            <button
-              onClick={() => setDeskDialogOpen(true)}
-              className={`flex items-center gap-3 rounded-lg px-4 py-2 border-2 cursor-pointer hover:opacity-80 transition-opacity ${
-              property.deskStatus === 'BIN'
-                ? 'bg-red-50 border-red-500'
-                : property.deskStatus === 'ARCHIVED'
-                ? 'bg-gray-50 border-gray-400'
-                : 'bg-blue-50 border-blue-500'
-            }`}>
-              <span className="text-2xl">
-                {property.deskStatus === 'BIN'
-                  ? '🗑️'
+            <Select
+              value={property.deskName || 'BIN'}
+              onValueChange={(value) => {
+                const deskStatus = value === 'ARCHIVED' ? 'ARCHIVED' : value === 'BIN' ? 'BIN' : 'ACTIVE';
+                updateDesk.mutate({
+                  propertyId,
+                  deskName: value,
+                  deskStatus,
+                });
+              }}
+            >
+              <SelectTrigger className={`w-auto border-2 ${
+                property.deskStatus === 'BIN'
+                  ? 'bg-red-50 border-red-500'
                   : property.deskStatus === 'ARCHIVED'
-                  ? '✅'
-                  : '🔄'}
-              </span>
-              <div className="flex flex-col">
-                <span className={`text-sm font-bold ${
-                  property.deskStatus === 'BIN'
-                    ? 'text-red-700'
-                    : property.deskStatus === 'ARCHIVED'
-                    ? 'text-gray-700'
-                    : 'text-blue-700'
-                }`}>
-                  {property.deskName || 'No Desk'}
-                </span>
-                <span className={`text-xs ${
-                  property.deskStatus === 'BIN'
-                    ? 'text-red-600'
-                    : property.deskStatus === 'ARCHIVED'
-                    ? 'text-gray-600'
-                    : 'text-blue-600'
-                }`}>
-                  {property.deskStatus || 'ACTIVE'}
-                </span>
-              </div>
-            </button>
+                  ? 'bg-gray-50 border-gray-400'
+                  : 'bg-blue-50 border-blue-500'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">
+                    {property.deskStatus === 'BIN'
+                      ? '🗑️'
+                      : property.deskStatus === 'ARCHIVED'
+                      ? '✅'
+                      : '🔄'}
+                  </span>
+                  <span className="font-semibold">{property.deskName || 'BIN'}</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BIN">
+                  <div className="flex items-center gap-2">
+                    <span>🗑️</span>
+                    <span>BIN</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_CHRIS">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_CHRIS</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_1">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_1</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_2">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_2</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_3">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_3</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_4">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_4</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="DESK_5">
+                  <div className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>DESK_5</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="ARCHIVED">
+                  <div className="flex items-center gap-2">
+                    <span>✅</span>
+                    <span>ARCHIVED</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {user?.role === 'admin' && (
             <div className="flex items-center gap-2">
