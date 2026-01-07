@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(4, 'James McTurch', 'Personal Representative', 0, '3375 Greenview Ter E, Margate, FL 33063', 1, '', ''),\n(4, 'Cornelius Kea', 'Heir (waived)', 0, '2321 NW 27th Ave, Fort Lauderdale, FL 33311', 1, '', ''),\n(4, 'Kevin Kea', 'Possible Heir', 0, '2321 NW 27th Ave, Fort Lauderdale, FL 33311', 0, '', ''),\n(4, 'Beth M. Lazar, Esq.', 'Estate Attorney', 0, 'THERREL BAISDEN LLP, One SE 3rd Ave, Suite 2950, Miami, FL 33131', 1, '', '');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(4, 'James McTurch', 'Personal Representative', 0, '3375 Greenview Ter E, Margate, FL 33063', 1, '', ''),\n(4, 'Cornelius Kea', 'Heir (waived)', 0, '2321 NW 27th Ave, Fort Lauderdale, FL 33311', 1, '', ''),\n(4, 'Kevin Kea', 'Possible Heir', 0, '2321 NW 27th Ave, Fort Lauderdale, FL 33311', 0, '', ''),\n(4, 'Beth M. Lazar, Esq.', 'Estate Attorney', 0, 'THERREL BAISDEN LLP, One SE 3rd Ave, Suite 2950, Miami, FL 33131', 1, '', '');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1504
+}

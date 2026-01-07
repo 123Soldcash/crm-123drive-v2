@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, addressLine1, owner1Name FROM properties WHERE addressLine1 IN ('285 SW 12 Street', '3750 SW 8th St', '6105 SW 19th St', '2321 NW 27th Ave') ORDER BY id DESC LIMIT 4;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, owner1Name FROM properties WHERE addressLine1 IN ('285 SW 12 Street', '3750 SW 8th St', '6105 SW 19th St', '2321 NW 27th Ave') ORDER BY id DESC LIMIT 4;",
+  "rows": [
+    {
+      "id": "180004",
+      "addressLine1": "2321 NW 27th Ave",
+      "owner1Name": "Estate (Deceased Owner)"
+    },
+    {
+      "id": "180003",
+      "addressLine1": "6105 SW 19th St",
+      "owner1Name": "Violet C. Anthony (Deceased)"
+    },
+    {
+      "id": "180002",
+      "addressLine1": "3750 SW 8th St",
+      "owner1Name": "Dwayne Christopher Bunsie"
+    },
+    {
+      "id": "180001",
+      "addressLine1": "285 SW 12 Street",
+      "owner1Name": "VEACH, DOROTHY L EST"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\towner1Name\n180004\t2321 NW 27th Ave\tEstate (Deceased Owner)\n180003\t6105 SW 19th St\tViolet C. Anthony (Deceased)\n180002\t3750 SW 8th St\tDwayne Christopher Bunsie\n180001\t285 SW 12 Street\tVEACH, DOROTHY L EST\n",
+  "stderr": "",
+  "execution_time_ms": 1468
+}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, phone2, phone3, email1) VALUES \n(3, 'Jerome Anthony', 'PR/Son', 0, '', 1, '(340) 226-9314', '', '', 'jeromeanthony95@yahoo.com'),\n(3, 'Vanroy Anthony', 'Heir/Family', 0, '', 1, '(786) 295-4532', '(754) 610-0680', '(954) 966-1288', ''),\n(3, 'Harriet Anthony', 'Heir/Family', 0, '', 1, '(786) 346-1935', '(305) 253-9741', '', ''),\n(3, 'Anthony Vanroy', 'Possible Heir', 0, '', 0, '(662) 291-0161', '', '', 'vanroyant@yah.com'),\n(3, 'Violet C. Anthony', 'Deceased Owner', 1, '', 0, '', '', '', '');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, phone2, phone3, email1) VALUES \n(3, 'Jerome Anthony', 'PR/Son', 0, '', 1, '(340) 226-9314', '', '', 'jeromeanthony95@yahoo.com'),\n(3, 'Vanroy Anthony', 'Heir/Family', 0, '', 1, '(786) 295-4532', '(754) 610-0680', '(954) 966-1288', ''),\n(3, 'Harriet Anthony', 'Heir/Family', 0, '', 1, '(786) 346-1935', '(305) 253-9741', '', ''),\n(3, 'Anthony Vanroy', 'Possible Heir', 0, '', 0, '(662) 291-0161', '', '', 'vanroyant@yah.com'),\n(3, 'Violet C. Anthony', 'Deceased Owner', 1, '', 0, '', '', '', '');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

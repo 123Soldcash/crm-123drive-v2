@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(2, 'Patrick Jean-Gilles, Esq.', 'Estate Attorney', 0, '20900 NE 30 Ave, Suite 800, Aventura, FL 33180', 1, '', ''),\n(2, 'Cecile A. Moise', 'Personal Representative', 0, 'c/o Attorney, 20900 NE 30 Ave, Suite 800, Aventura, FL 33180', 1, '', ''),\n(2, 'Joan Barbara Burke', 'Grandmother', 0, '3411 NW 21st Ave, Oakland Park, FL 33309', 0, '', ''),\n(2, 'Broward County Clerk', 'Court Records', 0, '201 SE 6th Street, Fort Lauderdale, FL 33301', 0, '(954) 831-6565', '');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(2, 'Patrick Jean-Gilles, Esq.', 'Estate Attorney', 0, '20900 NE 30 Ave, Suite 800, Aventura, FL 33180', 1, '', ''),\n(2, 'Cecile A. Moise', 'Personal Representative', 0, 'c/o Attorney, 20900 NE 30 Ave, Suite 800, Aventura, FL 33180', 1, '', ''),\n(2, 'Joan Barbara Burke', 'Grandmother', 0, '3411 NW 21st Ave, Oakland Park, FL 33309', 0, '', ''),\n(2, 'Broward County Clerk', 'Court Records', 0, '201 SE 6th Street, Fort Lauderdale, FL 33301', 0, '(954) 831-6565', '');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

@@ -1,0 +1,9 @@
+{
+  "query": "SELECT c.id, c.propertyId, c.name, c.relationship, c.phone1, c.email1, p.addressLine1 \nFROM contacts c \nJOIN properties p ON c.propertyId = p.id \nWHERE c.propertyId IN (1,2,3,4) \nORDER BY c.propertyId, c.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.propertyId, c.name, c.relationship, c.phone1, c.email1, p.addressLine1 \nFROM contacts c \nJOIN properties p ON c.propertyId = p.id \nWHERE c.propertyId IN (1,2,3,4) \nORDER BY c.propertyId, c.id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1534
+}

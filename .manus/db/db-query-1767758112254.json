@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(1, 'Charlotte Holland', 'Daughter', 0, '285 SW 12th St., Pompano Beach, FL 33060', 1, 'Research Needed', 'Research Needed'),\n(1, 'Jennifer L. Browning', 'Grandchild (Stepdaughter)', 0, '10545 Winston Ln., Fishers, IN 46037', 0, 'Research Needed', 'Research Needed'),\n(1, 'Sarah M. Froehike', 'Grandchild (Stepdaughter)', 0, '1446 N. Alabama St., Indianapolis, IN 46202', 0, 'Research Needed', 'Research Needed'),\n(1, 'Carrie Nicole Felice, ESQ.', 'Estate Attorney', 0, 'Elder Needs Law, PLLC, 14391 Spring Hill Dr., Ste. 287, Spring Hill, FL 34609', 1, '(954) 357-6830', '');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (propertyId, name, relationship, deceased, currentAddress, isDecisionMaker, phone1, email1) VALUES \n(1, 'Charlotte Holland', 'Daughter', 0, '285 SW 12th St., Pompano Beach, FL 33060', 1, 'Research Needed', 'Research Needed'),\n(1, 'Jennifer L. Browning', 'Grandchild (Stepdaughter)', 0, '10545 Winston Ln., Fishers, IN 46037', 0, 'Research Needed', 'Research Needed'),\n(1, 'Sarah M. Froehike', 'Grandchild (Stepdaughter)', 0, '1446 N. Alabama St., Indianapolis, IN 46202', 0, 'Research Needed', 'Research Needed'),\n(1, 'Carrie Nicole Felice, ESQ.', 'Estate Attorney', 0, 'Elder Needs Law, PLLC, 14391 Spring Hill Dr., Ste. 287, Spring Hill, FL 34609', 1, '(954) 357-6830', '');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1501
+}
