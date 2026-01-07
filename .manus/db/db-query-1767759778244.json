@@ -1,0 +1,14 @@
+{
+  "query": "SELECT propertyId, LEFT(overviewNotes, 100) as notes_preview FROM propertyDeepSearch WHERE propertyId IN (1,2,3,4);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT propertyId, LEFT(overviewNotes, 100) as notes_preview FROM propertyDeepSearch WHERE propertyId IN (1,2,3,4);",
+  "rows": [
+    {
+      "propertyId": "1",
+      "notes_preview": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "propertyId\tnotes_preview\n1\t\n",
+  "stderr": "",
+  "execution_time_ms": 1513
+}

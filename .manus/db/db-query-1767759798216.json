@@ -1,0 +1,9 @@
+{
+  "query": "SELECT p.id, p.addressLine1, LEFT(pd.overviewNotes, 150) as notes_preview \nFROM properties p \nLEFT JOIN propertyDeepSearch pd ON p.id = pd.propertyId \nWHERE p.id IN (1,2,3,4) \nORDER BY p.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT p.id, p.addressLine1, LEFT(pd.overviewNotes, 150) as notes_preview \nFROM properties p \nLEFT JOIN propertyDeepSearch pd ON p.id = pd.propertyId \nWHERE p.id IN (1,2,3,4) \nORDER BY p.id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1541
+}

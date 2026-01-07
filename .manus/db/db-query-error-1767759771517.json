@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO propertyDeepSearch (propertyId, overviewNotes, issues) VALUES (\n1, \n'DECEASED: VEACH, DOROTHY L EST\n\nKEY CONTACTS:\n• Charlotte Holland (Daughter) - 285 SW 12th St., Pompano Beach, FL 33060\n• Jennifer L. Browning (Grandchild) - 10545 Winston Ln., Fishers, IN 46037\n• Sarah M. Froehike (Grandchild) - 1446 N. Alabama St., Indianapolis, IN 46202\n• Carrie Nicole Felice, ESQ. (Attorney) - (954) 357-6830',\n'[\"Probate\"]'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO propertyDeepSearch (propertyId, overviewNotes, issues) VALUES (\n1, \n'DECEASED: VEACH, DOROTHY L EST\n\nKEY CONTACTS:\n• Charlotte Holland (Daughter) - 285 SW 12th St., Pompano Beach, FL 33060\n• Jennifer L. Browning (Grandchild) - 10545 Winston Ln., Fishers, IN 46037\n• Sarah M. Froehike (Grandchild) - 1446 N. Alabama St., Indianapolis, IN 46202\n• Carrie Nicole Felice, ESQ. (Attorney) - (954) 357-6830',\n'[\"Probate\"]'\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1062 (23000) at line 1: Duplicate entry '?' for key 'propertyDeepSearch.propertyDeepSearch_propertyId_unique'"
+  ]
+}
