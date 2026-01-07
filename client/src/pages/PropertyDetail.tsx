@@ -562,37 +562,7 @@ export default function PropertyDetail() {
               </SelectContent>
             </Select>
           </div>
-          {user?.role === 'admin' && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                Assigned Agent:
-              </span>
-              <Select
-                value={property.assignedAgentId?.toString() || "unassigned"}
-                onValueChange={(value) =>
-                  reassignProperty.mutate({
-                    propertyId,
-                    assignedAgentId: value === "unassigned" ? null : Number(value),
-                  })
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select agent..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">
-                    <span className="text-muted-foreground">Unassigned</span>
-                  </SelectItem>
-                  {userAgents?.map((agent: { id: number; name: string | null; openId: string }) => (
-                    <SelectItem key={agent.id} value={agent.id.toString()}>
-                      {agent.name || agent.openId}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+
         </div>
         <div className="mt-4">
           <div className="flex flex-wrap gap-2 items-center">

@@ -215,3 +215,12 @@
 - [x] Test assigning 2+ agents to same lead - ALL TESTS PASSING
 - [x] Verify agents can be removed from leads - READY
 - [x] Add query to fetch all assigned agents for a property - IMPLEMENTED
+
+
+## UI CLEANUP & ENHANCEMENTS - Agent Filtering & Display
+- [x] Remove duplicate "Assigned Agent" field from PropertyDetail (the dropdown showing "Unassigned") - DONE
+- [x] Add agent filter dropdown to Properties screen filters section - VERIFIED (Already exists)
+- [x] Add "Assigned Agents" column to Property List table - VERIFIED (Already exists)
+- [x] Display agent names and types in the new column - READY
+- [x] Test agent filtering on Properties screen - ALL TESTS PASSING
+- [x] Verify agents column shows correctly in list - READY
