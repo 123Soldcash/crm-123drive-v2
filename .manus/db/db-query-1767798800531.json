@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (\n  addressLine1, city, state, zipcode,\n  owner1Name, propertyType, yearBuilt,\n  totalBedrooms, totalBaths, buildingSquareFeet,\n  estimatedValue, trackingStatus, leadTemperature,\n  deskName, deskStatus, status\n) VALUES (\n  '6717 Arbor Dr', 'Miramar', 'FL', '33023',\n  'Len D. Sumlar', 'Single-Family Home', 1965,\n  3, 2, 1544,\n  501936, 'Not Visited', 'WARM',\n  'BIN', 'BIN', 'PDF Import - Research Report'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO properties (\n  addressLine1, city, state, zipcode,\n  owner1Name, propertyType, yearBuilt,\n  totalBedrooms, totalBaths, buildingSquareFeet,\n  estimatedValue, trackingStatus, leadTemperature,\n  deskName, deskStatus, status\n) VALUES (\n  '6717 Arbor Dr', 'Miramar', 'FL', '33023',\n  'Len D. Sumlar', 'Single-Family Home', 1965,\n  3, 2, 1544,\n  501936, 'Not Visited', 'WARM',\n  'BIN', 'BIN', 'PDF Import - Research Report'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1552
+}
