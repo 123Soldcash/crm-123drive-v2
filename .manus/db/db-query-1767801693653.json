@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus, status, createdAt, updatedAt) VALUES ('285 SW 12th St', 'Pompano Beach', 'FL', '33060', 'Dorothy L. Veach', 'Single-Family Home', 1950, 3, 2, 1500, 350000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('3750 SW 8th St', 'Fort Lauderdale', 'FL', '33312', 'Dwayne Christopher Bunsie', 'Single-Family Home', 1960, 3, 2, 1400, 380000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('6105 SW 19th St', 'Miramar', 'FL', '33023', 'Violet C. Anthony', 'Single-Family Home', 1970, 3, 2, 1600, 420000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus, status, createdAt, updatedAt) VALUES ('285 SW 12th St', 'Pompano Beach', 'FL', '33060', 'Dorothy L. Veach', 'Single-Family Home', 1950, 3, 2, 1500, 350000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('3750 SW 8th St', 'Fort Lauderdale', 'FL', '33312', 'Dwayne Christopher Bunsie', 'Single-Family Home', 1960, 3, 2, 1400, 380000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('6105 SW 19th St', 'Miramar', 'FL', '33023', 'Violet C. Anthony', 'Single-Family Home', 1970, 3, 2, 1600, 420000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1504
+}

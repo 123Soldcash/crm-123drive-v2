@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus, status, createdAt, updatedAt) VALUES ('2321 NW 27th Ave', 'Fort Lauderdale', 'FL', '33311', 'James McTurch', 'Single-Family Home', 1955, 3, 2, 1500, 390000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('4700 SW 18th St', 'West Park', 'FL', '33023', 'Devin Johnson', 'Single-Family Home', 1965, 3, 2, 1500, 430000, 'Not Visited', 'WARM', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('6717 Arbor Dr', 'Miramar', 'FL', '33023', 'Len D. Sumlar', 'Single-Family Home', 1965, 3, 2, 1544, 501936, 'Not Visited', 'WARM', 'BIN', 'BIN', 'Batch Import', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO properties (addressLine1, city, state, zipcode, owner1Name, propertyType, yearBuilt, totalBedrooms, totalBaths, buildingSquareFeet, estimatedValue, trackingStatus, leadTemperature, deskName, deskStatus, status, createdAt, updatedAt) VALUES ('2321 NW 27th Ave', 'Fort Lauderdale', 'FL', '33311', 'James McTurch', 'Single-Family Home', 1955, 3, 2, 1500, 390000, 'Not Visited', 'HOT', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('4700 SW 18th St', 'West Park', 'FL', '33023', 'Devin Johnson', 'Single-Family Home', 1965, 3, 2, 1500, 430000, 'Not Visited', 'WARM', 'BIN', 'BIN', 'Batch Import', NOW(), NOW()), ('6717 Arbor Dr', 'Miramar', 'FL', '33023', 'Len D. Sumlar', 'Single-Family Home', 1965, 3, 2, 1544, 501936, 'Not Visited', 'WARM', 'BIN', 'BIN', 'Batch Import', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1552
+}

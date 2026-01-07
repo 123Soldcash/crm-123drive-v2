@@ -134,3 +134,9 @@
 - [x] Add/update property in database
 - [x] Add all contacts with complete information
 - [x] Add deep search notes with probate details
+
+
+## Data Recovery - Re-add 9 Probate Properties
+- [x] Re-insert 9 probate properties that were lost
+- [x] Verify all properties show in dashboard
+- [x] Fix getPropertyStats to show BIN properties
