@@ -34,21 +34,88 @@ export type InsertSavedSearch = typeof savedSearches.$inferInsert;
 
 /**
  * Agents table - stores birddog/agent information for property assignments
+ * Enhanced with agentType to distinguish internal vs external agents
  */
 export const agents = mysqlTable("agents", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).notNull().unique(),
   phone: varchar("phone", { length: 20 }),
-  role: mysqlEnum("role", ["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]).default("Birddog"),
-  status: mysqlEnum("status", ["Active", "Inactive"]).default("Active"),
+  role: mysqlEnum("role", ["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Manager", "Corretor", "Other"]).default("Birddog"),
+  agentType: mysqlEnum("agentType", ["Internal", "External", "Birddog", "Corretor"]).default("Internal"),
+  status: mysqlEnum("status", ["Active", "Inactive", "Suspended"]).default("Active"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Agent = typeof agents.$inferSelect;
-export type InsertAgent = typeof agents.$inferInsert;
+
+
+/**
+ * Agent Permissions table - granular feature access control
+ * Allows admins to grant/revoke specific features per agent
+ */
+export const agentPermissions = mysqlTable("agentPermissions", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agentId").notNull(),
+  feature: mysqlEnum("feature", [
+    "VIEW_LEADS",
+    "MAKE_CALLS",
+    "SEND_EMAILS",
+    "VIEW_DEEP_SEARCH",
+    "EDIT_CONTACTS",
+    "CREATE_TASKS",
+    "TRANSFER_LEADS",
+    "VIEW_AGENT_PERFORMANCE",
+    "MANAGE_AGENTS",
+    "VIEW_ALL_LEADS",
+    "EDIT_LEAD_STATUS",
+    "ADD_NOTES",
+  ]).notNull(),
+  granted: int("granted").default(1).notNull(), // 1=granted, 0=denied
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AgentPermission = typeof agentPermissions.$inferSelect;
+export type InsertAgentPermission = typeof agentPermissions.$inferInsert;
+
+/**
+ * Lead Assignments table - tracks which leads are assigned to which agents
+ * Supports exclusive assignments for external agents
+ */
+export const leadAssignments = mysqlTable("leadAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  agentId: int("agentId").notNull(),
+  assignmentType: mysqlEnum("assignmentType", ["Exclusive", "Shared", "Temporary"]).default("Shared"),
+  assignedBy: int("assignedBy"), // User ID of who assigned it
+  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"), // For temporary assignments
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadAssignment = typeof leadAssignments.$inferSelect;
+export type InsertLeadAssignment = typeof leadAssignments.$inferInsert;
+
+/**
+ * Lead Transfer History table - audit trail for lead transfers
+ */
+export const leadTransferHistory = mysqlTable("leadTransferHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  fromAgentId: int("fromAgentId"),
+  toAgentId: int("toAgentId").notNull(),
+  transferredBy: int("transferredBy").notNull(), // User ID who made the transfer
+  reason: text("reason"), // Why the transfer happened
+  status: mysqlEnum("status", ["Pending", "Accepted", "Rejected", "Completed"]).default("Completed"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LeadTransferHistory = typeof leadTransferHistory.$inferSelect;
+export type InsertLeadTransferHistory = typeof leadTransferHistory.$inferInsert;
 
 /**
  * Properties table stores real estate property information

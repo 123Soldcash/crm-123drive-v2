@@ -35,6 +35,7 @@ import { Plus, Pencil, Trash2, User, Phone, Mail, Users } from "lucide-react";
 
 type AgentRole = "Birddog" | "Acquisition Manager" | "Disposition Manager" | "Admin" | "Other";
 type AgentStatus = "Active" | "Inactive";
+type AgentType = "Internal" | "External" | "Birddog" | "Corretor";
 
 interface AgentFormData {
   name: string;
@@ -42,6 +43,7 @@ interface AgentFormData {
   phone: string;
   role: AgentRole;
   status: AgentStatus;
+  agentType: AgentType;
   notes: string;
 }
 
@@ -51,6 +53,7 @@ const initialFormData: AgentFormData = {
   phone: "",
   role: "Birddog",
   status: "Active",
+  agentType: "Internal",
   notes: "",
 };
 
@@ -60,6 +63,8 @@ export default function AgentManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [formData, setFormData] = useState<AgentFormData>(initialFormData);
+  const [filterType, setFilterType] = useState<"all" | "internal" | "external">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const utils = trpc.useUtils();
   const { data: agents, isLoading } = trpc.agents.list.useQuery();
@@ -112,6 +117,7 @@ export default function AgentManagement() {
       phone: formData.phone || null,
       role: formData.role,
       status: formData.status,
+      agentType: formData.agentType,
       notes: formData.notes || null,
     });
   };
@@ -128,6 +134,7 @@ export default function AgentManagement() {
       phone: formData.phone || null,
       role: formData.role,
       status: formData.status,
+      agentType: formData.agentType,
       notes: formData.notes || null,
     });
   };
@@ -145,6 +152,7 @@ export default function AgentManagement() {
       phone: agent.phone || "",
       role: agent.role || "Birddog",
       status: agent.status || "Active",
+      agentType: agent.agentType || "Internal",
       notes: agent.notes || "",
     });
     setIsEditDialogOpen(true);
@@ -175,6 +183,34 @@ export default function AgentManagement() {
       ? "bg-green-100 text-green-800"
       : "bg-red-100 text-red-800";
   };
+
+  const getAgentTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case "Internal":
+        return "bg-blue-100 text-blue-800";
+      case "External":
+        return "bg-amber-100 text-amber-800";
+      case "Birddog":
+        return "bg-orange-100 text-orange-800";
+      case "Corretor":
+        return "bg-pink-100 text-pink-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const filteredAgents = agents?.filter((agent: any) => {
+    const matchesSearch =
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesType =
+      filterType === "all" ||
+      (filterType === "internal" && agent.agentType === "Internal") ||
+      (filterType === "external" && ["External", "Birddog", "Corretor"].includes(agent.agentType));
+
+    return matchesSearch && matchesType;
+  }) || [];
 
   const AgentForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
     <div className="grid gap-4 py-4">
@@ -210,6 +246,23 @@ export default function AgentManagement() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
+          <Label htmlFor="agentType">Agent Type</Label>
+          <Select
+            value={formData.agentType}
+            onValueChange={(value: AgentType) => setFormData({ ...formData, agentType: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Internal">Internal</SelectItem>
+              <SelectItem value="External">External</SelectItem>
+              <SelectItem value="Birddog">Birddog</SelectItem>
+              <SelectItem value="Corretor">Corretor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="role">Role</Label>
           <Select
             value={formData.role}
@@ -227,21 +280,21 @@ export default function AgentManagement() {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value: AgentStatus) => setFormData({ ...formData, status: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="status">Status</Label>
+        <Select
+          value={formData.status}
+          onValueChange={(value: AgentStatus) => setFormData({ ...formData, status: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="notes">Notes</Label>
@@ -295,6 +348,26 @@ export default function AgentManagement() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex gap-4 mb-6">
+          <Input
+            placeholder='Search agents... (use "@" to mention)'
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value.startsWith("@") ? e.target.value.slice(1) : e.target.value)}
+            className="flex-1"
+          />
+          <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Agents</SelectItem>
+              <SelectItem value="internal">Internal Only</SelectItem>
+              <SelectItem value="external">External Only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Stats Cards */}
@@ -361,6 +434,7 @@ export default function AgentManagement() {
                 <TableHead>Name</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -369,13 +443,13 @@ export default function AgentManagement() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Loading agents...
                   </TableCell>
                 </TableRow>
-              ) : agents?.length === 0 ? (
+              ) : filteredAgents?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
                       <Users className="h-8 w-8 text-muted-foreground" />
                       <p className="text-muted-foreground">No agents yet</p>
@@ -394,7 +468,7 @@ export default function AgentManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                agents?.map((agent: any) => (
+                filteredAgents?.map((agent: any) => (
                   <TableRow key={agent.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -426,6 +500,11 @@ export default function AgentManagement() {
                     <TableCell>
                       <Badge className={getRoleBadgeColor(agent.role)}>
                         {agent.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getAgentTypeBadgeColor(agent.agentType)}>
+                        {agent.agentType}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -9,9 +9,11 @@ import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts } from "../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import * as communication from "./communication";
+import { agentsRouter } from "./routers/agents";
 
 export const appRouter = router({
   system: systemRouter,
+  agents: agentsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
