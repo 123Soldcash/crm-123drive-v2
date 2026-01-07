@@ -319,9 +319,9 @@ export default function PropertyDetail() {
                         <SelectValue placeholder="Choose an agent..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {userAgents?.filter((a: { id: number }) => a.id !== user?.id).map((agent: { id: number; name: string | null; openId: string }) => (
+                        {agentsList?.map((agent: any) => (
                           <SelectItem key={agent.id} value={agent.id.toString()}>
-                            {agent.name || agent.openId}
+                            {agent.name} ({agent.agentType})
                           </SelectItem>
                         ))}
                       </SelectContent>
