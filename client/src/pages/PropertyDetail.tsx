@@ -471,7 +471,7 @@ export default function PropertyDetail() {
                     {property.deskName === 'BIN'
                       ? '🗑️'
                       : property.deskName === 'DESK_CHRIS'
-                      ? '🔴'
+                      ? '🏀'
                       : property.deskName === 'DESK_1'
                       ? '🟡'
                       : property.deskName === 'DESK_2'
@@ -496,7 +496,7 @@ export default function PropertyDetail() {
                 </SelectItem>
                 <SelectItem value="DESK_CHRIS">
                   <div className="flex items-center gap-2">
-                    <span>🔴</span>
+                    <span>🏀</span>
                     <span>DESK_CHRIS</span>
                   </div>
                 </SelectItem>

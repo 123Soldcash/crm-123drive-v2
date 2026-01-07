@@ -535,7 +535,7 @@ export default function Properties() {
                 {DESK_OPTIONS.map((desk) => {
                   const deskEmoji = 
                     desk === "BIN" ? "🗑️" :
-                    desk === "DESK_CHRIS" ? "🔴" :
+                    desk === "DESK_CHRIS" ? "🏀" :
                     desk === "DESK_1" ? "🟡" :
                     desk === "DESK_2" ? "🟢" :
                     desk === "DESK_3" ? "🔵" :
