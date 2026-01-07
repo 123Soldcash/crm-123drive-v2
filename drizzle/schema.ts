@@ -147,14 +147,6 @@ export const contacts = mysqlTable("contacts", {
   isLitigator: int("isLitigator").default(0).notNull(), // 0=NO, 1=YES - Litigator flag
   hidden: int("hidden").default(0).notNull(), // 0=NO, 1=YES - Hide contact from main view
   
-  // Enhanced contact fields
-  equityPercent: decimal("equityPercent", { precision: 5, scale: 2 }), // Equity percentage (e.g., 50.00%)
-  currentResident: int("currentResident").default(0).notNull(), // 0=NO, 1=YES - Currently lives at property
-  contacted: int("contacted").default(0).notNull(), // 0=NO, 1=YES - Has been contacted
-  contactedDate: timestamp("contactedDate"), // When last contacted
-  onBoard: int("onBoard").default(0).notNull(), // 0=NO, 1=YES - On board with deal
-  notOnBoard: int("notOnBoard").default(0).notNull(), // 0=NO, 1=YES - Explicitly not on board
-  
   // Phone numbers (keeping for backward compatibility)
   phone1: varchar("phone1", { length: 20 }),
   phone1Type: varchar("phone1Type", { length: 50 }),

@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Users, Edit, Mail, Trash2, ArrowRightLeft } from "lucide-react";
+import { Users, Edit, Link as LinkIcon, Copy, Check, Trash2, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export default function UserManagement() {
@@ -50,7 +50,7 @@ export default function UserManagement() {
   const [userToDelete, setUserToDelete] = useState<any>(null);
   const [reassignToAgentId, setReassignToAgentId] = useState<string>("");
   const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
-  const [inviteForm, setInviteForm] = useState({ email: "", name: "" });
+  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
 
   // Fetch all agents
   const { data: agents = [], isLoading } = trpc.users.listAgents.useQuery();
@@ -92,18 +92,6 @@ export default function UserManagement() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to reassign properties");
-    },
-  });
-
-  // Send agent invite mutation
-  const sendAgentInvite = trpc.users.sendAgentInvite.useMutation({
-    onSuccess: () => {
-      toast.success("Invite sent successfully!");
-      setInviteDialogOpen(false);
-      setInviteForm({ email: "", name: "" });
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to send invite");
     },
   });
 
@@ -152,21 +140,20 @@ export default function UserManagement() {
     });
   };
 
-  const handleSendInvite = () => {
-    if (!inviteForm.email) {
-      toast.error("Please enter an email address");
-      return;
-    }
-
-    sendAgentInvite.mutate({
-      agentEmail: inviteForm.email,
-      agentName: inviteForm.name || undefined,
-    });
-  };
-
   const handleInviteClick = () => {
     setInviteDialogOpen(true);
-    setInviteForm({ email: "", name: "" });
+    setInviteLinkCopied(false);
+  };
+
+  const handleCopyInviteLink = () => {
+    const inviteLink = window.location.origin;
+    navigator.clipboard.writeText(inviteLink);
+    setInviteLinkCopied(true);
+    toast.success("Invite link copied to clipboard!");
+    
+    setTimeout(() => {
+      setInviteLinkCopied(false);
+    }, 3000);
   };
 
   if (isLoading) {
@@ -189,7 +176,7 @@ export default function UserManagement() {
           </p>
         </div>
         <Button onClick={handleInviteClick}>
-          <Mail className="mr-2 h-4 w-4" />
+          <LinkIcon className="mr-2 h-4 w-4" />
           Invite Agent
         </Button>
       </div>
@@ -396,49 +383,43 @@ export default function UserManagement() {
           <DialogHeader>
             <DialogTitle>Invite Agent to CRM</DialogTitle>
             <DialogDescription>
-              Send an invitation email to a new birddog agent
+              Share this link with your birddog agents (Gonzalo, Rolando, etc.). When they
+              visit the link and sign in, they'll automatically get access to the CRM.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="inviteEmail">Agent Email</Label>
+            <div className="flex items-center gap-2">
               <Input
-                id="inviteEmail"
-                type="email"
-                placeholder="agent@example.com"
-                value={inviteForm.email}
-                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                value={window.location.origin}
+                readOnly
+                className="font-mono text-sm"
               />
-            </div>
-            <div>
-              <Label htmlFor="inviteName">Agent Name (optional)</Label>
-              <Input
-                id="inviteName"
-                placeholder="e.g., Gonzalo, Rolando"
-                value={inviteForm.name}
-                onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCopyInviteLink}
+              >
+                {inviteLinkCopied ? (
+                  <Check className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
             </div>
             <div className="bg-muted p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium">What happens next:</p>
+              <p className="text-sm font-medium">How it works:</p>
               <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>We send an invitation email to the agent</li>
-                <li>Agent clicks the link in the email</li>
-                <li>Agent signs in with their account</li>
+                <li>Copy the invite link above</li>
+                <li>Send it to your agent via WhatsApp, email, or SMS</li>
+                <li>Agent clicks the link and signs in with their account</li>
                 <li>They automatically get access to the CRM</li>
                 <li>You can then assign properties to them</li>
               </ol>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSendInvite}
-              disabled={sendAgentInvite.isPending || !inviteForm.email}
-            >
-              {sendAgentInvite.isPending ? "Sending..." : "Send Invite"}
+            <Button onClick={() => setInviteDialogOpen(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
