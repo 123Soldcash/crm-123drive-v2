@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -41,6 +40,7 @@ async function startServer() {
     try {
       const { getDb } = await import("../db");
       const { properties, contacts } = await import("../../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
       
       const database = await getDb();
       if (!database) {
@@ -54,6 +54,42 @@ async function startServer() {
       const city = data.City || "Unknown";
       const state = data.State || "";
       const zipcode = data.Zipcode || data.Zip || "";
+
+      // Check for duplicates by address
+      const existingProperty = await database
+        .select()
+        .from(properties)
+        .where(
+          and(
+            eq(properties.addressLine1, addressLine1),
+            eq(properties.city, city),
+            eq(properties.state, state)
+          )
+        )
+        .limit(1);
+
+      if (existingProperty.length > 0) {
+        // Property already exists - mark as DUPLICATED
+        const existingId = existingProperty[0].id;
+        const currentStatus = existingProperty[0].status || "";
+        const statusTags = currentStatus.split(",").map(t => t.trim()).filter(t => t);
+        
+        if (!statusTags.includes("DUPLICATED")) {
+          statusTags.push("DUPLICATED");
+          await database
+            .update(properties)
+            .set({ status: statusTags.join(", ") })
+            .where(eq(properties.id, existingId));
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Property already exists - marked as DUPLICATED",
+          isDuplicate: true,
+          existingPropertyId: existingId,
+          address: addressLine1,
+        });
+      }
 
       // Insert the new property
       const result = await database.insert(properties).values({
@@ -113,20 +149,12 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  // Serve static files and Vite
+  serveStatic(app);
+  await setupVite(app, server);
 
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
-
+  const port = await findAvailablePort();
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });

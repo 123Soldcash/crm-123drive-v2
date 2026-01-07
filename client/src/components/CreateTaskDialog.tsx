@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Phone, Mail, Home, Search, MessageSquare, Handshake, FileCheck, ClipboardCheck, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -102,19 +103,31 @@ export function CreateTaskDialog({
     { enabled: propertySearch.length > 2 }
   );
 
+  const utils = trpc.useUtils();
+
   const createTask = trpc.tasks.create.useMutation({
     onSuccess: () => {
+      utils.tasks.invalidate();
       resetForm();
       onOpenChange(false);
       onSuccess?.();
+      toast.success('Task created successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create task');
     },
   });
 
   const updateTask = trpc.tasks.update.useMutation({
     onSuccess: () => {
+      utils.tasks.invalidate();
       resetForm();
       onOpenChange(false);
       onSuccess?.();
+      toast.success('Task updated successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update task');
     },
   });
 

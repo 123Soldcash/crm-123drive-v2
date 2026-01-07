@@ -605,6 +605,30 @@ export const appRouter = router({
         
         return await db.reassignAgentProperties(input.fromAgentId, input.toAgentId);
       }),
+
+    sendAgentInvite: protectedProcedure
+      .input(
+        z.object({
+          agentEmail: z.string().email(),
+          agentName: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== 'admin') {
+          throw new Error('Only admins can send agent invites');
+        }
+
+        try {
+          const { sendInviteEmail } = await import('./_core/gmail');
+          const inviteLink = `${process.env.VITE_APP_URL || 'https://app.manus.space'}/join`;
+          
+          await sendInviteEmail(input.agentEmail, input.agentName || 'Agent', inviteLink);
+          return { success: true, message: 'Invite sent successfully' };
+        } catch (error) {
+          console.error('Failed to send invite:', error);
+          throw new Error('Failed to send invite email');
+        }
+      }),
   }),
 
   contacts: router({
