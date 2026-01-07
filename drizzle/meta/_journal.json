@@ -36,6 +36,27 @@
       "when": 1767669653823,
       "tag": "0004_gigantic_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1767806692422,
+      "tag": "0005_clean_the_anarchist",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1767807778542,
+      "tag": "0006_odd_lucky_pierre",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1767807864374,
+      "tag": "0007_square_war_machine",
+      "breakpoints": true
     }
   ]
 }

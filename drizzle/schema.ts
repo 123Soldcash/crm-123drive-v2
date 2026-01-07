@@ -160,6 +160,13 @@ export const contacts = mysqlTable("contacts", {
   email2: varchar("email2", { length: 255 }),
   email3: varchar("email3", { length: 255 }),
   
+  // Contact tracking & status
+  currentResident: int("currentResident").default(0).notNull(), // 0=NO, 1=YES
+  contacted: int("contacted").default(0).notNull(), // 0=NO, 1=YES
+  contactedDate: timestamp("contactedDate"),
+  onBoard: int("onBoard").default(0).notNull(), // 0=NO, 1=YES
+  notOnBoard: int("notOnBoard").default(0).notNull(), // 0=NO, 1=YES
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
