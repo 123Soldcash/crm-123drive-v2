@@ -450,19 +450,39 @@ export default function PropertyDetail() {
               }}
             >
               <SelectTrigger className={`w-auto border-2 ${
-                property.deskStatus === 'BIN'
+                property.deskName === 'BIN'
+                  ? 'bg-gray-100 border-gray-400'
+                  : property.deskName === 'DESK_CHRIS'
                   ? 'bg-red-50 border-red-500'
-                  : property.deskStatus === 'ARCHIVED'
-                  ? 'bg-gray-50 border-gray-400'
-                  : 'bg-blue-50 border-blue-500'
+                  : property.deskName === 'DESK_1'
+                  ? 'bg-yellow-50 border-yellow-500'
+                  : property.deskName === 'DESK_2'
+                  ? 'bg-green-50 border-green-500'
+                  : property.deskName === 'DESK_3'
+                  ? 'bg-blue-50 border-blue-500'
+                  : property.deskName === 'DESK_4'
+                  ? 'bg-pink-50 border-pink-500'
+                  : property.deskName === 'DESK_5'
+                  ? 'bg-orange-50 border-orange-500'
+                  : 'bg-gray-100 border-gray-400'
               }`}>
                 <div className="flex items-center gap-2">
                   <span className="text-xl">
-                    {property.deskStatus === 'BIN'
+                    {property.deskName === 'BIN'
                       ? '🗑️'
-                      : property.deskStatus === 'ARCHIVED'
-                      ? '✅'
-                      : '🔄'}
+                      : property.deskName === 'DESK_CHRIS'
+                      ? '🔴'
+                      : property.deskName === 'DESK_1'
+                      ? '🟡'
+                      : property.deskName === 'DESK_2'
+                      ? '🟢'
+                      : property.deskName === 'DESK_3'
+                      ? '🔵'
+                      : property.deskName === 'DESK_4'
+                      ? '🩷'
+                      : property.deskName === 'DESK_5'
+                      ? '🟠'
+                      : '🗑️'}
                   </span>
                   <span className="font-semibold">{property.deskName || 'BIN'}</span>
                 </div>
@@ -476,37 +496,37 @@ export default function PropertyDetail() {
                 </SelectItem>
                 <SelectItem value="DESK_CHRIS">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🔴</span>
                     <span>DESK_CHRIS</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="DESK_1">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🟡</span>
                     <span>DESK_1</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="DESK_2">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🟢</span>
                     <span>DESK_2</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="DESK_3">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🔵</span>
                     <span>DESK_3</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="DESK_4">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🩷</span>
                     <span>DESK_4</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="DESK_5">
                   <div className="flex items-center gap-2">
-                    <span>🔄</span>
+                    <span>🟠</span>
                     <span>DESK_5</span>
                   </div>
                 </SelectItem>

@@ -532,11 +532,22 @@ export default function Properties() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Desks</SelectItem>
-                {DESK_OPTIONS.map((desk) => (
-                  <SelectItem key={desk} value={desk}>
-                    {desk === "BIN" ? "🗑️ " + desk : desk === "ARCHIVED" ? "✅ " + desk : desk}
-                  </SelectItem>
-                ))}
+                {DESK_OPTIONS.map((desk) => {
+                  const deskEmoji = 
+                    desk === "BIN" ? "🗑️" :
+                    desk === "DESK_CHRIS" ? "🔴" :
+                    desk === "DESK_1" ? "🟡" :
+                    desk === "DESK_2" ? "🟢" :
+                    desk === "DESK_3" ? "🔵" :
+                    desk === "DESK_4" ? "🩷" :
+                    desk === "DESK_5" ? "🟠" :
+                    desk === "ARCHIVED" ? "✅" : "";
+                  return (
+                    <SelectItem key={desk} value={desk}>
+                      {deskEmoji} {desk}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
