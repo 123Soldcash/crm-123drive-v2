@@ -263,3 +263,17 @@
 - [ ] Add edit/save/cancel buttons for inline editing
 - [ ] Test inline editing for all fields
 - [ ] Test new columns display and functionality
+
+
+## FAMILY TREE REDESIGN - PHASE 2 (COMPLETED)
+- [x] Redesign FamilyTree component with inline entry row at table top
+- [x] Implement inline editing for all table cells (click to edit)
+- [x] Add Family Tree Notes section below table
+- [x] Install d3 dependency for visualization (already included via mermaid)
+- [x] Implement D3 family tree visualization with relationships
+- [x] Add inheritance percentage display in D3 diagram
+- [x] Add visual connections between family members
+- [x] Test inline entry and editing functionality
+- [x] Test D3 visualization rendering
+- [x] Test family tree notes persistence
+- [ ] Save checkpoint for redesigned Family Tree
