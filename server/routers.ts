@@ -6,7 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -555,6 +555,7 @@ export const appRouter = router({
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         const database = await getDb();
+        if (!database) throw new Error('Database not available');
         const assignments = await database
           .select({
             id: leadAssignments.id,
@@ -2032,83 +2033,7 @@ export const appRouter = router({
   }),
 
   // Agents Management
-  agents: router({
-    list: protectedProcedure.query(async () => {
-      const database = await getDb();
-      if (!database) throw new Error('Database not available');
-      return await database.select().from(agents).execute();
-    }),
 
-    getById: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new Error('Database not available');
-        const result = await database
-          .select()
-          .from(agents)
-          .where(eq(agents.id, input.id))
-          .execute();
-        return result[0] || null;
-      }),
-
-    create: protectedProcedure
-      .input(
-        z.object({
-          name: z.string().min(1),
-          email: z.string().email().optional().nullable(),
-          phone: z.string().optional().nullable(),
-          role: z.enum(["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]).optional(),
-          status: z.enum(["Active", "Inactive"]).optional(),
-          notes: z.string().optional().nullable(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new Error('Database not available');
-        const result = await database.insert(agents).values({
-          name: input.name,
-          email: input.email || null,
-          phone: input.phone || null,
-          role: input.role || "Birddog",
-          status: input.status || "Active",
-          notes: input.notes || null,
-        });
-        return { id: Number((result as any).insertId), success: true };
-      }),
-
-    update: protectedProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          name: z.string().min(1).optional(),
-          email: z.string().email().optional().nullable(),
-          phone: z.string().optional().nullable(),
-          role: z.enum(["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]).optional(),
-          status: z.enum(["Active", "Inactive"]).optional(),
-          notes: z.string().optional().nullable(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new Error('Database not available');
-        const { id, ...updateData } = input;
-        await database
-          .update(agents)
-          .set(updateData)
-          .where(eq(agents.id, id));
-        return { success: true };
-      }),
-
-    delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new Error('Database not available');
-        await database.delete(agents).where(eq(agents.id, input.id));
-        return { success: true };
-      }),
-  }),
 
   // Webhook endpoint for WordPress/Elementor form submissions
   webhook: router({

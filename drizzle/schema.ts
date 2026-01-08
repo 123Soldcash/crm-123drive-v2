@@ -757,6 +757,10 @@ export const familyMembers = mysqlTable("familyMembers", {
   isOnBoard: int("isOnBoard").default(0).notNull(), // 0=NO, 1=YES (interested in selling)
   isNotOnBoard: int("isNotOnBoard").default(0).notNull(), // 0=NO, 1=YES (not interested)
   
+  // Additional fields
+  relationshipPercentage: int("relationshipPercentage").default(0), // 0-100% ownership/interest
+  isCurrentResident: int("isCurrentResident").default(0).notNull(), // 0=NO, 1=YES
+  
   // Notes
   notes: text("notes"),
   

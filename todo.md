@@ -249,3 +249,17 @@
 - [x] Add family member form with relationship dropdown
 - [x] Display family members in table with all fields
 - [x] Success toast notification on member addition
+
+
+## ENHANCED FAMILY TREE - NEW FEATURES
+- [ ] Add relationshipPercentage field to familyMembers table
+- [ ] Add isCurrentResident field to familyMembers table
+- [ ] Update database migration for new fields
+- [ ] Add new fields to backend procedures
+- [ ] Add Relationship [%] column to Family Tree table
+- [ ] Add Current Resident checkbox column
+- [ ] Add NOT ON BOARD column to Family Tree table
+- [ ] Implement inline editing for table rows
+- [ ] Add edit/save/cancel buttons for inline editing
+- [ ] Test inline editing for all fields
+- [ ] Test new columns display and functionality

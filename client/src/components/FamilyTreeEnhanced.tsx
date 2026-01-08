@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, Edit2 } from "lucide-react";
+import { Trash2, Plus, Edit2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -56,13 +56,20 @@ interface FamilyMember {
   updatedAt: Date;
 }
 
+interface EditingCell {
+  memberId: number;
+  field: string;
+  value: any;
+}
+
 interface FamilyTreeProps {
   propertyId: number;
 }
 
-export function FamilyTree({ propertyId }: FamilyTreeProps) {
+export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [formData, setFormData] = useState<Partial<FamilyMember>>({
     name: "",
     relationship: "Owner",
@@ -163,6 +170,111 @@ export function FamilyTree({ propertyId }: FamilyTreeProps) {
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to delete this family member?")) {
       deleteMutation.mutate({ id });
+    }
+  };
+
+  const handleInlineEdit = (member: FamilyMember, field: string, value: any) => {
+    setEditingCell({ memberId: member.id, field, value });
+  };
+
+  const handleInlineSave = (member: FamilyMember, field: string, value: any) => {
+    const updates: any = { id: member.id };
+    updates[field] = value;
+    
+    updateMutation.mutate(updates);
+    setEditingCell(null);
+  };
+
+  const handleInlineCancel = () => {
+    setEditingCell(null);
+  };
+
+  const renderCell = (member: FamilyMember, field: string) => {
+    const isEditing = editingCell?.memberId === member.id && editingCell?.field === field;
+    
+    if (isEditing) {
+      return renderEditingCell(member, field);
+    }
+
+    switch (field) {
+      case "name":
+        return member.name;
+      case "relationship":
+        return `${member.relationship} ${member.relationshipPercentage ? `[${member.relationshipPercentage}%]` : ""}`;
+      case "isCurrentResident":
+        return member.isCurrentResident === 1 ? "✓" : "";
+      case "isRepresentative":
+        return member.isRepresentative === 1 ? "✓" : "";
+      case "isDeceased":
+        return member.isDeceased === 1 ? "🕊" : "";
+      case "isContacted":
+        return member.isContacted === 1 ? "✓" : "";
+      case "isOnBoard":
+        return member.isOnBoard === 1 ? (
+          <span className="text-green-600 font-medium">✓</span>
+        ) : null;
+      case "isNotOnBoard":
+        return member.isNotOnBoard === 1 ? (
+          <span className="text-red-600 font-medium">✗</span>
+        ) : null;
+      default:
+        return "";
+    }
+  };
+
+  const renderEditingCell = (member: FamilyMember, field: string) => {
+    const value = editingCell?.value;
+
+    switch (field) {
+      case "relationshipPercentage":
+        return (
+          <div className="flex gap-1 items-center">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={value || 0}
+              onChange={(e) =>
+                setEditingCell({
+                  ...editingCell!,
+                  value: parseInt(e.target.value) || 0,
+                })
+              }
+              className="w-16 h-8"
+            />
+            <button
+              onClick={() => handleInlineSave(member, field, value)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <Check className="h-4 w-4" />
+            </button>
+            <button
+              onClick={handleInlineCancel}
+              className="text-red-600 hover:text-red-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      case "isCurrentResident":
+      case "isRepresentative":
+      case "isDeceased":
+      case "isContacted":
+      case "isOnBoard":
+      case "isNotOnBoard":
+        return (
+          <div className="flex gap-1 items-center">
+            <Checkbox
+              checked={value === 1}
+              onCheckedChange={(checked) => {
+                const newValue = checked ? 1 : 0;
+                handleInlineSave(member, field, newValue);
+              }}
+            />
+          </div>
+        );
+      default:
+        return "";
     }
   };
 
@@ -397,44 +509,81 @@ export function FamilyTree({ propertyId }: FamilyTreeProps) {
                 {familyMembers.map((member) => (
                   <tr key={member.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2 text-sm">{member.name}</td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.relationship} {member.relationshipPercentage ? `[${member.relationshipPercentage}%]` : ""}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(
+                          member,
+                          "relationshipPercentage",
+                          member.relationshipPercentage
+                        )
+                      }
+                    >
+                      {renderCell(member, "relationship")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isCurrentResident === 1 ? (
-                        <Checkbox checked disabled />
-                      ) : (
-                        <Checkbox disabled />
-                      )}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(
+                          member,
+                          "isCurrentResident",
+                          member.isCurrentResident
+                        )
+                      }
+                    >
+                      {renderCell(member, "isCurrentResident")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isRepresentative === 1 ? (
-                        <Checkbox checked disabled />
-                      ) : (
-                        <Checkbox disabled />
-                      )}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(
+                          member,
+                          "isRepresentative",
+                          member.isRepresentative
+                        )
+                      }
+                    >
+                      {renderCell(member, "isRepresentative")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isDeceased === 1 ? (
-                        <span className="text-gray-500">🕊</span>
-                      ) : null}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(member, "isDeceased", member.isDeceased)
+                      }
+                    >
+                      {renderCell(member, "isDeceased")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isContacted === 1 ? (
-                        <Checkbox checked disabled />
-                      ) : (
-                        <Checkbox disabled />
-                      )}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(
+                          member,
+                          "isContacted",
+                          member.isContacted
+                        )
+                      }
+                    >
+                      {renderCell(member, "isContacted")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isOnBoard === 1 ? (
-                        <span className="text-green-600 font-medium">✓</span>
-                      ) : null}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(member, "isOnBoard", member.isOnBoard)
+                      }
+                    >
+                      {renderCell(member, "isOnBoard")}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {member.isNotOnBoard === 1 ? (
-                        <span className="text-red-600 font-medium">✗</span>
-                      ) : null}
+                    <td
+                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                      onClick={() =>
+                        handleInlineEdit(
+                          member,
+                          "isNotOnBoard",
+                          member.isNotOnBoard
+                        )
+                      }
+                    >
+                      {renderCell(member, "isNotOnBoard")}
                     </td>
                     <td className="px-4 py-2 text-sm flex gap-2">
                       <button

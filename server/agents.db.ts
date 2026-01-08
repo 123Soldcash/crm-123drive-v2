@@ -18,13 +18,14 @@ export async function createAgent(data: {
   notes?: string;
 }) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   const result = await db.insert(agents).values({
     name: data.name,
     email: data.email,
     phone: data.phone,
-    role: data.role || "Birddog",
-    agentType: data.agentType || "Internal",
-    status: data.status || "Active",
+    role: (data.role || "Birddog") as any,
+    agentType: (data.agentType || "Internal") as any,
+    status: (data.status || "Active") as any,
     notes: data.notes,
   }).$returningId();
   
@@ -33,25 +34,28 @@ export async function createAgent(data: {
 
 export async function updateAgent(agentId: number, data: Partial<typeof agents.$inferInsert>) {
   const db = await getDb();
-  await db.update(agents).set(data).where(eq(agents.id, agentId));
+  if (!db) throw new Error('Database not available');
+  await db.update(agents).set(data as any).where(eq(agents.id, agentId));
   const updated = await db.select().from(agents).where(eq(agents.id, agentId));
   return updated[0];
 }
 
 export async function getAgent(agentId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   const agent = await db.select().from(agents).where(eq(agents.id, agentId));
   return agent[0];
 }
 
 export async function listAgents(filters?: { status?: string; agentType?: string; role?: string }) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   let query = db.select().from(agents);
   
-  const conditions = [];
-  if (filters?.status) conditions.push(eq(agents.status, filters.status));
-  if (filters?.agentType) conditions.push(eq(agents.agentType, filters.agentType));
-  if (filters?.role) conditions.push(eq(agents.role, filters.role));
+  const conditions: any[] = [];
+  if (filters?.status) conditions.push(eq(agents.status, filters.status as any));
+  if (filters?.agentType) conditions.push(eq(agents.agentType, filters.agentType as any));
+  if (filters?.role) conditions.push(eq(agents.role, filters.role as any));
   
   if (conditions.length > 0) {
     query = query.where(and(...conditions));
@@ -69,12 +73,13 @@ export async function deleteAgent(agentId: number) {
 
 export async function grantPermission(agentId: number, feature: string) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   // Check if permission already exists
   const existing = await db
     .select()
     .from(agentPermissions)
-    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature)));
+    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature as any)));
   
   if (existing.length > 0) {
     // Update existing
@@ -94,11 +99,12 @@ export async function grantPermission(agentId: number, feature: string) {
 
 export async function revokePermission(agentId: number, feature: string) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   const existing = await db
     .select()
     .from(agentPermissions)
-    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature)));
+    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature as any)));
   
   if (existing.length > 0) {
     await db
@@ -110,6 +116,7 @@ export async function revokePermission(agentId: number, feature: string) {
 
 export async function hasPermission(agentId: number, feature: string): Promise<boolean> {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   // Get agent
   const agent = await getAgent(agentId);
@@ -122,13 +129,14 @@ export async function hasPermission(agentId: number, feature: string): Promise<b
   const permission = await db
     .select()
     .from(agentPermissions)
-    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature)));
+    .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature as any)));
   
   return permission.length > 0 && permission[0].granted === 1;
 }
 
 export async function getAgentPermissions(agentId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   return db.select().from(agentPermissions).where(eq(agentPermissions.agentId, agentId));
 }
 
@@ -142,6 +150,7 @@ export async function assignLeadToAgent(
   expiresAt?: Date
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   // Check if already assigned
   const existing = await db
@@ -171,15 +180,17 @@ export async function assignLeadToAgent(
 
 export async function getLeadAssignments(propertyId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   return db.select().from(leadAssignments).where(eq(leadAssignments.propertyId, propertyId));
 }
 
 export async function getAgentLeads(agentId: number, includeShared: boolean = false) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
-  const conditions = [eq(leadAssignments.agentId, agentId)];
+  const conditions: any[] = [eq(leadAssignments.agentId, agentId)];
   if (!includeShared) {
-    conditions.push(eq(leadAssignments.assignmentType, "Exclusive"));
+    conditions.push(eq(leadAssignments.assignmentType, "Exclusive" as any));
   }
   
   const assignments = await db
@@ -196,6 +207,7 @@ export async function getAgentLeads(agentId: number, includeShared: boolean = fa
 
 export async function removeLeadAssignment(propertyId: number, agentId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   await db
     .delete(leadAssignments)
     .where(and(eq(leadAssignments.propertyId, propertyId), eq(leadAssignments.agentId, agentId)));
@@ -211,6 +223,7 @@ export async function transferLead(
   fromAgentId?: number
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   // Record transfer in history
   const result = await db.insert(leadTransferHistory).values({
@@ -238,6 +251,7 @@ export async function transferLead(
 
 export async function getLeadTransferHistory(propertyId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   return db.select().from(leadTransferHistory).where(eq(leadTransferHistory.propertyId, propertyId));
 }
 
@@ -245,11 +259,12 @@ export async function getLeadTransferHistory(propertyId: number) {
 
 export async function searchAgentsByMention(query: string) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   const agents_list = await db
     .select()
     .from(agents)
     .where(or(
-      eq(agents.status, "Active"),
+      eq(agents.status, "Active" as any),
       // Can add more conditions for search
     ));
   
@@ -263,21 +278,24 @@ export async function searchAgentsByMention(query: string) {
 
 export async function getExternalAgents() {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   return db
     .select()
     .from(agents)
-    .where(or(eq(agents.agentType, "External"), eq(agents.agentType, "Birddog"), eq(agents.agentType, "Corretor")));
+    .where(or(eq(agents.agentType, "External" as any), eq(agents.agentType, "Birddog" as any), eq(agents.agentType, "Corretor" as any)));
 }
 
 export async function getInternalAgents() {
   const db = await getDb();
-  return db.select().from(agents).where(eq(agents.agentType, "Internal"));
+  if (!db) throw new Error('Database not available');
+  return db.select().from(agents).where(eq(agents.agentType, "Internal" as any));
 }
 
 // ============ AGENT PERFORMANCE ============
 
 export async function getAgentStats(agentId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database not available');
   
   // Get assigned leads
   const leads = await getAgentLeads(agentId, true);
