@@ -278,3 +278,14 @@
 - [x] Test family tree notes persistence
 - [x] Update PropertyDetail to use FamilyTreeRedesigned component
 - [x] Save checkpoint for redesigned Family Tree
+
+
+## FAMILY TREE TDAH OPTIMIZATION (COMPLETED)
+- [x] Add visual feedback and success indicators (toast notifications with emojis)
+- [x] Ensure auto-clear after save for continuous entry
+- [x] Add focus management for keyboard navigation (auto-focus on name input)
+- [x] Improve form field ordering for TDAH workflow (Name → Relationship → Percentage)
+- [x] Test continuous entry workflow (Enter key support)
+- [x] Add Portuguese labels for better UX
+- [x] Add visual highlighting for entry form (blue background)
+- [x] Save final checkpoint

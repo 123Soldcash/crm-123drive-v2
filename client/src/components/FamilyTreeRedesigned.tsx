@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Check, X } from "lucide-react";
+import { Trash2, Check, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -66,7 +66,9 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
   const [editValue, setEditValue] = useState<any>(null);
   const [treeNotes, setTreeNotes] = useState<string>("");
   const [notesEditing, setNotesEditing] = useState(false);
+  const [lastAddedName, setLastAddedName] = useState<string>("");
   const svgRef = useRef<SVGSVGElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Form state for inline entry row
   const [newMember, setNewMember] = useState({
@@ -87,7 +89,11 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
 
   const createMutation = trpc.properties.createFamilyMember.useMutation({
     onSuccess: () => {
-      toast.success("Family member added!");
+      toast.success("✅ Pessoa adicionada!", {
+        description: `${newMember.name} foi adicionado(a) à árvore genealógica`,
+        duration: 2000,
+      });
+      setLastAddedName(newMember.name);
       refetch();
       setNewMember({
         name: "",
@@ -100,6 +106,10 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
         isOnBoard: 0,
         isNotOnBoard: 0,
       });
+      // Focus back to name input for continuous entry
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
     },
     onError: (error) => {
       toast.error(`Error: ${error.message}`);
@@ -129,8 +139,11 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
   });
 
   const handleAddMember = () => {
-    if (!newMember.name) {
-      toast.error("Name is required");
+    if (!newMember.name.trim()) {
+      toast.error("⚠️ Digite o nome da pessoa", {
+        description: "O campo de nome não pode estar vazio",
+      });
+      nameInputRef.current?.focus();
       return;
     }
 
@@ -138,6 +151,12 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
       propertyId,
       ...newMember,
     } as any);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !createMutation.isPending) {
+      handleAddMember();
+    }
   };
 
   const handleEditStart = (member: FamilyMember, field: string) => {
@@ -347,29 +366,35 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
         <h3 className="text-lg font-semibold mb-4">Family Tree</h3>
 
         {/* Inline Entry Row */}
-        <Card className="p-4 mb-4">
+        <Card className="p-4 mb-4 bg-blue-50 border-2 border-blue-200">
+          <div className="mb-2">
+            <p className="text-xs font-semibold text-blue-900">➕ Adicionar novo membro da família</p>
+          </div>
           <div className="flex gap-2 items-end flex-wrap">
             <div className="flex-1 min-w-[150px]">
-              <label className="text-xs font-medium">Name</label>
+              <label className="text-xs font-medium">Nome *</label>
               <Input
+                ref={nameInputRef}
                 value={newMember.name}
                 onChange={(e) =>
                   setNewMember({ ...newMember, name: e.target.value })
                 }
-                placeholder="Name"
-                className="h-9"
+                onKeyPress={handleKeyPress}
+                placeholder="Digite o nome..."
+                className="h-9 bg-white"
+                autoFocus
               />
             </div>
 
-            <div className="min-w-[150px]">
-              <label className="text-xs font-medium">Relationship</label>
+            <div className="min-w-[140px]">
+              <label className="text-xs font-medium">Relação *</label>
               <Select
                 value={newMember.relationship}
                 onValueChange={(value) =>
                   setNewMember({ ...newMember, relationship: value })
                 }
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 bg-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -382,8 +407,8 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
               </Select>
             </div>
 
-            <div className="min-w-[100px]">
-              <label className="text-xs font-medium">0/%</label>
+            <div className="min-w-[90px]">
+              <label className="text-xs font-medium">Herança %</label>
               <Input
                 type="number"
                 min="0"
@@ -396,7 +421,7 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
                   })
                 }
                 placeholder="0"
-                className="h-9"
+                className="h-9 bg-white"
               />
             </div>
 
@@ -482,16 +507,18 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
               size="sm"
               onClick={handleAddMember}
               disabled={createMutation.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold"
             >
-              Save
+              {createMutation.isPending ? "Salvando..." : "✅ Salvar"}
             </Button>
           </div>
         </Card>
 
         {/* Family Members Table */}
         {familyMembers.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No family members added yet
+          <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <p className="font-medium">Nenhum membro adicionado ainda</p>
+            <p className="text-xs mt-1">Use o formulário acima para adicionar membros da família</p>
           </div>
         ) : (
           <Card className="overflow-hidden">
