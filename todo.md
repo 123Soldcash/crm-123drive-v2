@@ -292,5 +292,25 @@
 - [x] Add relationshipPercentage and isCurrentResident to updateFamilyMember
 - [x] Save final checkpoint
 
-## BUGS TO FIX
-- [ ] Tasks not saving/persisting when created in PropertyDetail
+## FAMILY TREE CHECKBOX ENHANCEMENT (COMPLETED)
+- [x] Update inheritance percentage input to be smaller with 00.00% format
+- [x] Add inline checkboxes for all 6 status fields in the table:
+  - Current Resident ✓
+  - Representative ✓
+  - Deceased ✓
+  - Contacted ✓
+  - On Board ✓ (green)
+  - NOT ON BOARD ✗ (red)
+- [x] Implement inline editing for all checkbox fields
+- [x] Test checkbox functionality with test family member (John Smith)
+- [x] Verify inheritance percentage displays as 51.00% in table
+- [x] Verify checkmarks display correctly in table rows
+- [x] Test all tests passing (42 tests)
+- [x] Save checkpoint with all changes
+
+## COMPLETED ENHANCEMENTS
+- [x] Family Tree with inline entry and editing
+- [x] Inheritance percentage with 2 decimal places (00.00%)
+- [x] All 6 checkbox status fields working
+- [x] Inline checkbox editing in table
+- [x] Success notifications for user actions

@@ -223,16 +223,18 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1 min-w-[100px]">
+                <div className="flex-1 min-w-[80px]">
                   <label className="text-xs font-medium">Inheritance %</label>
                   <Input
                     type="number"
                     min="0"
                     max="100"
-                    placeholder="0"
+                    step="0.01"
+                    placeholder="0.00"
                     value={newMember.relationshipPercentage}
-                    onChange={(e) => setNewMember({ ...newMember, relationshipPercentage: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setNewMember({ ...newMember, relationshipPercentage: parseFloat(e.target.value) || 0 })}
                     onKeyDown={handleKeyDown}
+                    className="text-xs"
                   />
                 </div>
                 <div className="flex gap-1 items-end">
@@ -250,6 +252,38 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                     title="Representative"
                   />
                   <span className="text-xs">Representative</span>
+                </div>
+                <div className="flex gap-1 items-end">
+                  <Checkbox
+                    checked={newMember.isDeceased === 1}
+                    onCheckedChange={(checked) => setNewMember({ ...newMember, isDeceased: checked ? 1 : 0 })}
+                    title="Deceased"
+                  />
+                  <span className="text-xs">Deceased</span>
+                </div>
+                <div className="flex gap-1 items-end">
+                  <Checkbox
+                    checked={newMember.isContacted === 1}
+                    onCheckedChange={(checked) => setNewMember({ ...newMember, isContacted: checked ? 1 : 0 })}
+                    title="Contacted"
+                  />
+                  <span className="text-xs">Contacted</span>
+                </div>
+                <div className="flex gap-1 items-end">
+                  <Checkbox
+                    checked={newMember.isOnBoard === 1}
+                    onCheckedChange={(checked) => setNewMember({ ...newMember, isOnBoard: checked ? 1 : 0 })}
+                    title="On Board"
+                  />
+                  <span className="text-xs">On Board</span>
+                </div>
+                <div className="flex gap-1 items-end">
+                  <Checkbox
+                    checked={newMember.isNotOnBoard === 1}
+                    onCheckedChange={(checked) => setNewMember({ ...newMember, isNotOnBoard: checked ? 1 : 0 })}
+                    title="NOT ON BOARD"
+                  />
+                  <span className="text-xs">NOT ON BOARD</span>
                 </div>
                 <Button
                   onClick={handleSaveNewMember}
@@ -317,12 +351,13 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                               type="number"
                               min="0"
                               max="100"
+                              step="0.01"
                               value={editData.relationshipPercentage !== undefined ? editData.relationshipPercentage : member.relationshipPercentage || 0}
-                              onChange={(e) => setEditData({ ...editData, relationshipPercentage: parseInt(e.target.value) || 0 })}
-                              className="text-sm"
+                              onChange={(e) => setEditData({ ...editData, relationshipPercentage: parseFloat(e.target.value) || 0 })}
+                              className="text-xs w-20"
                             />
                           ) : (
-                            `${member.relationshipPercentage || 0}%`
+                            `${(member.relationshipPercentage || 0).toFixed(2)}%`
                           )}
                         </td>
                         <td className="p-2 text-center">
@@ -346,7 +381,14 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                           )}
                         </td>
                         <td className="p-2 text-center">
-                          {member.isDeceased === 1 && "☠️"}
+                          {editingId === member.id ? (
+                            <Checkbox
+                              checked={editData.isDeceased === 1}
+                              onCheckedChange={(checked) => setEditData({ ...editData, isDeceased: checked ? 1 : 0 })}
+                            />
+                          ) : (
+                            member.isDeceased === 1 && "✓"
+                          )}
                         </td>
                         <td className="p-2 text-center">
                           {editingId === member.id ? (
@@ -359,10 +401,24 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                           )}
                         </td>
                         <td className="p-2 text-center text-green-600">
-                          {member.isOnBoard === 1 && "✓"}
+                          {editingId === member.id ? (
+                            <Checkbox
+                              checked={editData.isOnBoard === 1}
+                              onCheckedChange={(checked) => setEditData({ ...editData, isOnBoard: checked ? 1 : 0 })}
+                            />
+                          ) : (
+                            member.isOnBoard === 1 && "✓"
+                          )}
                         </td>
                         <td className="p-2 text-center text-red-600">
-                          {member.isNotOnBoard === 1 && "✗"}
+                          {editingId === member.id ? (
+                            <Checkbox
+                              checked={editData.isNotOnBoard === 1}
+                              onCheckedChange={(checked) => setEditData({ ...editData, isNotOnBoard: checked ? 1 : 0 })}
+                            />
+                          ) : (
+                            member.isNotOnBoard === 1 && "✗"
+                          )}
                         </td>
                         <td className="p-2 flex gap-1">
                           {editingId === member.id ? (
