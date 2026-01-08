@@ -29,7 +29,8 @@ function Router() {
       <Route path="/import" component={() => <DashboardLayout><ImportProperties /></DashboardLayout>} />
       <Route path="/agent-performance" component={() => <DashboardLayout><AgentPerformance /></DashboardLayout>} />
       <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
-      <Route path="/agents" component={AgentManagement} />
+      <Route path="/agents" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
+      <Route path="/agent-management" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
       <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
       <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
       <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
