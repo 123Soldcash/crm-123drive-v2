@@ -1,0 +1,1 @@
+ALTER TABLE `familyMembers` ADD `parentId` int;

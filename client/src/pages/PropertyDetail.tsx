@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { PropertyCheckIn } from "@/components/PropertyCheckIn";
 import { VisitHistory, PhotoGallery } from "@/components/VisitHistory";
-import { FamilyTreeRedesigned } from "@/components/FamilyTreeRedesigned";
+import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 import { ContactManagement } from "@/components/ContactManagement";
 import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
@@ -780,7 +780,7 @@ export default function PropertyDetail() {
       {/* Family Tree */}
       <Card>
         <CardContent className="pt-6">
-          <FamilyTreeRedesigned propertyId={propertyId} />
+          <FamilyTreeEnhanced propertyId={propertyId} />
         </CardContent>
       </Card>
 

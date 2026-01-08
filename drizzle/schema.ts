@@ -760,6 +760,7 @@ export const familyMembers = mysqlTable("familyMembers", {
   // Additional fields
   relationshipPercentage: int("relationshipPercentage").default(0), // 0-100% ownership/interest
   isCurrentResident: int("isCurrentResident").default(0).notNull(), // 0=NO, 1=YES
+  parentId: int("parentId"), // Reference to parent family member for hierarchical tree
   
   // Notes
   notes: text("notes"),

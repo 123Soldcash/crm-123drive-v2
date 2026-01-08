@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+'use client';
+
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -10,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, Edit2, Check, X } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -51,15 +53,10 @@ interface FamilyMember {
   isNotOnBoard: number;
   relationshipPercentage?: number | null;
   isCurrentResident: number;
+  parentId?: number | null;
   notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-interface EditingCell {
-  memberId: number;
-  field: string;
-  value: any;
 }
 
 interface FamilyTreeProps {
@@ -67,22 +64,23 @@ interface FamilyTreeProps {
 }
 
 export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
-  const [showForm, setShowForm] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
-  const [formData, setFormData] = useState<Partial<FamilyMember>>({
+  const [editData, setEditData] = useState<Partial<FamilyMember>>({});
+  const [treeNotes, setTreeNotes] = useState<string>("");
+  const [notesEditing, setNotesEditing] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const [newMember, setNewMember] = useState({
     name: "",
     relationship: "Owner",
-    phone: "",
-    email: "",
+    relationshipPercentage: 0,
+    isCurrentResident: 0,
     isRepresentative: 0,
     isDeceased: 0,
     isContacted: 0,
     isOnBoard: 0,
     isNotOnBoard: 0,
-    relationshipPercentage: 0,
-    isCurrentResident: 0,
-    notes: "",
   });
 
   const { data: familyMembers = [], refetch } = trpc.properties.getFamilyMembers.useQuery({
@@ -91,231 +89,99 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
 
   const createMutation = trpc.properties.createFamilyMember.useMutation({
     onSuccess: () => {
-      toast.success("Family member added successfully!");
+      toast.success("✅ Pessoa adicionada!", { duration: 2000 });
       refetch();
-      resetForm();
+      setNewMember({
+        name: "",
+        relationship: "Owner",
+        relationshipPercentage: 0,
+        isCurrentResident: 0,
+        isRepresentative: 0,
+        isDeceased: 0,
+        isContacted: 0,
+        isOnBoard: 0,
+        isNotOnBoard: 0,
+      });
+      if (nameInputRef.current) {
+        nameInputRef.current.focus();
+      }
     },
     onError: (error) => {
-      toast.error(`Error: ${error.message}`);
+      toast.error("❌ Erro ao adicionar", { duration: 2000 });
     },
   });
 
   const updateMutation = trpc.properties.updateFamilyMember.useMutation({
     onSuccess: () => {
-      toast.success("Family member updated successfully!");
+      toast.success("✅ Atualizado!", { duration: 1500 });
       refetch();
-      resetForm();
+      setEditingId(null);
     },
     onError: (error) => {
-      toast.error(`Error: ${error.message}`);
+      toast.error("❌ Erro ao atualizar", { duration: 2000 });
     },
   });
 
   const deleteMutation = trpc.properties.deleteFamilyMember.useMutation({
     onSuccess: () => {
-      toast.success("Family member deleted successfully!");
+      toast.success("✅ Deletado!", { duration: 1500 });
       refetch();
     },
     onError: (error) => {
-      toast.error(`Error: ${error.message}`);
+      toast.error("❌ Erro ao deletar", { duration: 2000 });
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      relationship: "Owner",
-      phone: "",
-      email: "",
-      isRepresentative: 0,
-      isDeceased: 0,
-      isContacted: 0,
-      isOnBoard: 0,
-      isNotOnBoard: 0,
-      relationshipPercentage: 0,
-      isCurrentResident: 0,
-      notes: "",
-    });
-    setShowForm(false);
-    setEditingId(null);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name) {
-      toast.error("Name is required");
+  const handleSaveNewMember = async () => {
+    if (!newMember.name.trim()) {
+      toast.error("❌ Nome é obrigatório", { duration: 2000 });
       return;
     }
 
-    if (editingId) {
-      updateMutation.mutate({
-        id: editingId,
-        ...formData,
-      } as any);
-    } else {
-      createMutation.mutate({
-        propertyId,
-        ...formData,
-      } as any);
+    createMutation.mutate({
+      propertyId,
+      name: newMember.name,
+      relationship: newMember.relationship,
+      relationshipPercentage: newMember.relationshipPercentage,
+      isCurrentResident: newMember.isCurrentResident,
+      isRepresentative: newMember.isRepresentative,
+      isDeceased: newMember.isDeceased,
+      isContacted: newMember.isContacted,
+      isOnBoard: newMember.isOnBoard,
+      isNotOnBoard: newMember.isNotOnBoard,
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSaveNewMember();
     }
   };
 
-  const handleEdit = (member: FamilyMember) => {
-    setFormData(member);
-    setEditingId(member.id);
-    setShowForm(true);
+  const handleEditSave = (memberId: number) => {
+    updateMutation.mutate({
+      id: memberId,
+      ...editData,
+    });
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this family member?")) {
-      deleteMutation.mutate({ id });
-    }
-  };
-
-  const handleInlineEdit = (member: FamilyMember, field: string, value: any) => {
-    setEditingCell({ memberId: member.id, field, value });
-  };
-
-  const handleInlineSave = (member: FamilyMember, field: string, value: any) => {
-    const updates: any = { id: member.id };
-    updates[field] = value;
+  const buildHierarchy = (members: FamilyMember[], parentId: number | null = null, depth = 0): JSX.Element[] => {
+    const children = members.filter(m => (m.parentId || null) === parentId);
     
-    updateMutation.mutate(updates);
-    setEditingCell(null);
-  };
-
-  const handleInlineCancel = () => {
-    setEditingCell(null);
-  };
-
-  const renderCell = (member: FamilyMember, field: string) => {
-    const isEditing = editingCell?.memberId === member.id && editingCell?.field === field;
-    
-    if (isEditing) {
-      return renderEditingCell(member, field);
-    }
-
-    switch (field) {
-      case "name":
-        return member.name;
-      case "relationship":
-        return `${member.relationship} ${member.relationshipPercentage ? `[${member.relationshipPercentage}%]` : ""}`;
-      case "isCurrentResident":
-        return member.isCurrentResident === 1 ? "✓" : "";
-      case "isRepresentative":
-        return member.isRepresentative === 1 ? "✓" : "";
-      case "isDeceased":
-        return member.isDeceased === 1 ? "🕊" : "";
-      case "isContacted":
-        return member.isContacted === 1 ? "✓" : "";
-      case "isOnBoard":
-        return member.isOnBoard === 1 ? (
-          <span className="text-green-600 font-medium">✓</span>
-        ) : null;
-      case "isNotOnBoard":
-        return member.isNotOnBoard === 1 ? (
-          <span className="text-red-600 font-medium">✗</span>
-        ) : null;
-      default:
-        return "";
-    }
-  };
-
-  const renderEditingCell = (member: FamilyMember, field: string) => {
-    const value = editingCell?.value;
-
-    switch (field) {
-      case "relationshipPercentage":
-        return (
-          <div className="flex gap-1 items-center">
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              value={value || 0}
-              onChange={(e) =>
-                setEditingCell({
-                  ...editingCell!,
-                  value: parseInt(e.target.value) || 0,
-                })
-              }
-              className="w-16 h-8"
-            />
-            <button
-              onClick={() => handleInlineSave(member, field, value)}
-              className="text-green-600 hover:text-green-800"
-            >
-              <Check className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleInlineCancel}
-              className="text-red-600 hover:text-red-800"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        );
-      case "isCurrentResident":
-      case "isRepresentative":
-      case "isDeceased":
-      case "isContacted":
-      case "isOnBoard":
-      case "isNotOnBoard":
-        return (
-          <div className="flex gap-1 items-center">
-            <Checkbox
-              checked={value === 1}
-              onCheckedChange={(checked) => {
-                const newValue = checked ? 1 : 0;
-                handleInlineSave(member, field, newValue);
-              }}
-            />
-          </div>
-        );
-      default:
-        return "";
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Family Tree</h3>
-        <Button
-          size="sm"
-          onClick={() => setShowForm(!showForm)}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Member
-        </Button>
-      </div>
-
-      {showForm && (
-        <Card className="p-4 space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Name *</label>
+    return children.map((member) => (
+      <div key={member.id} style={{ marginLeft: `${depth * 20}px` }} className="border-l-2 border-blue-200 pl-4 py-2">
+        <div className="flex items-center justify-between bg-blue-50 p-3 rounded mb-2">
+          <div className="flex-1">
+            {editingId === member.id ? (
+              <div className="space-y-2">
                 <Input
-                  value={formData.name || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Family member name"
+                  value={editData.name || member.name}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  placeholder="Nome"
+                  className="mb-1"
                 />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Relationship *</label>
-                <Select
-                  value={formData.relationship || "Owner"}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, relationship: value })
-                  }
-                >
-                  <SelectTrigger>
+                <Select value={editData.relationship || member.relationship} onValueChange={(value) => setEditData({ ...editData, relationship: value })}>
+                  <SelectTrigger className="mb-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,286 +192,193 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <Input
-                  value={formData.phone || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="Phone number"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  value={formData.email || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="Email address"
-                  type="email"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Relationship %</label>
                 <Input
                   type="number"
                   min="0"
                   max="100"
-                  value={formData.relationshipPercentage || 0}
-                  onChange={(e) =>
-                    setFormData({ ...formData, relationshipPercentage: parseInt(e.target.value) || 0 })
-                  }
-                  placeholder="0-100"
+                  value={editData.relationshipPercentage !== undefined ? editData.relationshipPercentage : member.relationshipPercentage || 0}
+                  onChange={(e) => setEditData({ ...editData, relationshipPercentage: parseInt(e.target.value) || 0 })}
+                  placeholder="Herança %"
+                  className="mb-1"
                 />
               </div>
-            </div>
+            ) : (
+              <div>
+                <p className="font-semibold">{member.name}</p>
+                <p className="text-sm text-gray-600">{member.relationship} {member.relationshipPercentage ? `(${member.relationshipPercentage}%)` : ""}</p>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-1">
+            {editingId === member.id ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => handleEditSave(member.id)} className="gap-1">
+                  <Save className="w-3 h-3" /> Salvar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setEditingId(null)} className="gap-1">
+                  <X className="w-3 h-3" /> Cancelar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="sm" variant="outline" onClick={() => { setEditingId(member.id); setEditData(member); }} className="gap-1">
+                  <Edit2 className="w-3 h-3" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate({ id: member.id })} className="gap-1 text-red-600">
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+        {buildHierarchy(members, member.id, depth + 1)}
+      </div>
+    ));
+  };
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isRepresentative === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      isRepresentative: checked ? 1 : 0,
-                    })
-                  }
-                />
-                <label className="text-sm">Representative</label>
-              </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Family Tree</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="gap-2"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                Esconder
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                Mostrar
+              </>
+            )}
+          </Button>
+        </div>
 
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isDeceased === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isDeceased: checked ? 1 : 0 })
-                  }
-                />
-                <label className="text-sm">🕊 Deceased</label>
+        {isExpanded && (
+          <>
+            <Card className="p-4 mb-4 bg-blue-50 border-2 border-blue-200">
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-blue-900">➕ Adicionar novo membro da família</p>
               </div>
+              <div className="flex gap-2 items-end flex-wrap">
+                <div className="flex-1 min-w-[150px]">
+                  <label className="text-xs font-medium">Nome *</label>
+                  <Input
+                    ref={nameInputRef}
+                    placeholder="Digite o nome..."
+                    value={newMember.name}
+                    onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                  />
+                </div>
+                <div className="flex-1 min-w-[120px]">
+                  <label className="text-xs font-medium">Relação *</label>
+                  <Select value={newMember.relationship} onValueChange={(value) => setNewMember({ ...newMember, relationship: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RELATIONSHIPS.map((rel) => (
+                        <SelectItem key={rel} value={rel}>
+                          {rel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 min-w-[100px]">
+                  <label className="text-xs font-medium">Herança %</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="0"
+                    value={newMember.relationshipPercentage}
+                    onChange={(e) => setNewMember({ ...newMember, relationshipPercentage: parseInt(e.target.value) || 0 })}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
+                <Button
+                  onClick={handleSaveNewMember}
+                  disabled={createMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {createMutation.isPending ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </Card>
 
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isContacted === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isContacted: checked ? 1 : 0 })
-                  }
-                />
-                <label className="text-sm">Contacted</label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isOnBoard === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isOnBoard: checked ? 1 : 0 })
-                  }
-                />
-                <label className="text-sm text-green-600">✓ ON BOARD</label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isNotOnBoard === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      isNotOnBoard: checked ? 1 : 0,
-                    })
-                  }
-                />
-                <label className="text-sm text-red-600">✗ NOT ON BOARD</label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={formData.isCurrentResident === 1}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, isCurrentResident: checked ? 1 : 0 })
-                  }
-                />
-                <label className="text-sm">Current Resident</label>
-              </div>
-            </div>
+            {familyMembers.length > 0 ? (
+              <Card className="p-4 mb-4 bg-white">
+                <h4 className="font-semibold mb-4">Árvore Genealógica Hierárquica</h4>
+                <div className="space-y-2">
+                  {buildHierarchy(familyMembers)}
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-8 text-center mb-4">
+                <p className="text-gray-500">Nenhum membro adicionado ainda</p>
+                <p className="text-xs text-gray-400">Use o formulário acima para adicionar membros da família</p>
+              </Card>
+            )}
 
             <div>
-              <label className="text-sm font-medium">Notes</label>
-              <Input
-                value={formData.notes || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
-                placeholder="Additional notes"
-              />
-            </div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold">Family Tree Notes</h4>
+                {!notesEditing && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setNotesEditing(true)}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={
-                  createMutation.isPending || updateMutation.isPending
-                }
-              >
-                {editingId ? "Update Member" : "Add Member"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetForm}
-              >
-                Cancel
-              </Button>
+              {notesEditing ? (
+                <Card className="p-4">
+                  <textarea
+                    value={treeNotes}
+                    onChange={(e) => setTreeNotes(e.target.value)}
+                    placeholder="Add family tree notes..."
+                    className="w-full h-24 p-2 border rounded resize-none"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      onClick={() => setNotesEditing(false)}
+                    >
+                      Done
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setNotesEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-4 min-h-20 bg-gray-50">
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {treeNotes || "No notes added yet"}
+                  </p>
+                </Card>
+              )}
             </div>
-          </form>
-        </Card>
-      )}
-
-      {familyMembers.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No family members added yet
-        </div>
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Relationship [%]
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Current Resident
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Representative
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Deceased
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Contacted
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    ON BOARD
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    NOT ON BOARD
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {familyMembers.map((member) => (
-                  <tr key={member.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm">{member.name}</td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(
-                          member,
-                          "relationshipPercentage",
-                          member.relationshipPercentage
-                        )
-                      }
-                    >
-                      {renderCell(member, "relationship")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(
-                          member,
-                          "isCurrentResident",
-                          member.isCurrentResident
-                        )
-                      }
-                    >
-                      {renderCell(member, "isCurrentResident")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(
-                          member,
-                          "isRepresentative",
-                          member.isRepresentative
-                        )
-                      }
-                    >
-                      {renderCell(member, "isRepresentative")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(member, "isDeceased", member.isDeceased)
-                      }
-                    >
-                      {renderCell(member, "isDeceased")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(
-                          member,
-                          "isContacted",
-                          member.isContacted
-                        )
-                      }
-                    >
-                      {renderCell(member, "isContacted")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(member, "isOnBoard", member.isOnBoard)
-                      }
-                    >
-                      {renderCell(member, "isOnBoard")}
-                    </td>
-                    <td
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                      onClick={() =>
-                        handleInlineEdit(
-                          member,
-                          "isNotOnBoard",
-                          member.isNotOnBoard
-                        )
-                      }
-                    >
-                      {renderCell(member, "isNotOnBoard")}
-                    </td>
-                    <td className="px-4 py-2 text-sm flex gap-2">
-                      <button
-                        onClick={() => handleEdit(member)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(member.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
