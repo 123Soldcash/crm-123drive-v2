@@ -550,6 +550,45 @@ export const appRouter = router({
         const result = await db.assignAgentToProperty(input.propertyId, input.agentId, ctx.user.id);
         return { success: true, result };
       }),
+
+    listFiltered: protectedProcedure
+      .input(z.object({
+        leadTemperature: z.string().optional(),
+        deskName: z.string().optional(),
+        status: z.string().optional(),
+        unassignedOnly: z.boolean().optional(),
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        return await db.getPropertiesWithFilters({
+          leadTemperature: input?.leadTemperature,
+          deskName: input?.deskName,
+          status: input?.status,
+          unassignedOnly: input?.unassignedOnly,
+          userId: ctx.user?.id,
+          userRole: ctx.user?.role,
+        });
+      }),
+
+    bulkAssignAgent: protectedProcedure
+      .input(z.object({
+        agentId: z.number(),
+        filters: z.object({
+          leadTemperature: z.string().optional(),
+          deskName: z.string().optional(),
+          status: z.string().optional(),
+          unassignedOnly: z.boolean().optional(),
+        }),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user?.id) {
+          throw new Error("User not authenticated");
+        }
+        if (ctx.user.role !== "admin") {
+          throw new Error("Only admins can perform bulk assignments");
+        }
+        const result = await db.bulkAssignAgentToProperties(input.agentId, input.filters);
+        return result;
+      }),
   }),
 
   users: router({

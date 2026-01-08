@@ -1578,3 +1578,118 @@ export async function getLeadAssignmentsByProperty(propertyId: number) {
   
   return await database.select().from(leadAssignments).where(eq(leadAssignments.propertyId, propertyId));
 }
+
+
+export async function bulkAssignAgentToProperties(
+  agentId: number,
+  filters: {
+    leadTemperature?: string;
+    deskName?: string;
+    status?: string;
+    unassignedOnly?: boolean;
+  }
+) {
+  const database = await getDb();
+  if (!database) throw new Error('Database not initialized');
+  
+  // Build query based on filters
+  let query = database.select().from(properties);
+  
+  // Apply filters
+  if (filters.leadTemperature && filters.leadTemperature !== 'All') {
+    query = query.where(eq(properties.leadTemperature, filters.leadTemperature));
+  }
+  
+  if (filters.deskName && filters.deskName !== 'All') {
+    query = query.where(eq(properties.deskName, filters.deskName));
+  }
+  
+  if (filters.status && filters.status !== 'All') {
+    query = query.where(eq(properties.trackingStatus, filters.status));
+  }
+  
+  if (filters.unassignedOnly) {
+    query = query.where(eq(properties.assignedAgentId, null));
+  }
+  
+  const propertiesToAssign = await query.execute();
+  
+  // Assign all properties to the agent
+  let assignedCount = 0;
+  for (const prop of propertiesToAssign) {
+    try {
+      await database.insert(leadAssignments).values({
+        propertyId: prop.id,
+        agentId,
+        assignmentType: 'Shared',
+      });
+      
+      await database.update(properties).set({
+        assignedAgentId: agentId,
+      }).where(eq(properties.id, prop.id));
+      
+      assignedCount++;
+    } catch (error) {
+      console.error(`Failed to assign property ${prop.id}:`, error);
+    }
+  }
+  
+  return {
+    success: true,
+    assignedCount,
+    totalFiltered: propertiesToAssign.length,
+  };
+}
+
+
+export async function getPropertiesWithFilters(filters: {
+  leadTemperature?: string;
+  deskName?: string;
+  status?: string;
+  unassignedOnly?: boolean;
+  userId?: number;
+  userRole?: string;
+}) {
+  const database = await getDb();
+  if (!database) {
+    console.warn("[Database] Cannot get properties: database not available");
+    return [];
+  }
+
+  try {
+    let query = database.select().from(properties);
+    const conditions: any[] = [];
+
+    // Filter by lead temperature
+    if (filters.leadTemperature) {
+      conditions.push(eq(properties.leadTemperature, filters.leadTemperature));
+    }
+
+    // Filter by desk name
+    if (filters.deskName) {
+      conditions.push(eq(properties.deskName, filters.deskName));
+    }
+
+    // Filter by status
+    if (filters.status) {
+      conditions.push(eq(properties.status, filters.status));
+    }
+
+    // Filter by unassigned only
+    if (filters.unassignedOnly) {
+      conditions.push(eq(properties.assignedAgentId, null));
+    }
+
+    // Combine all conditions
+    if (conditions.length > 0) {
+      const { and } = await import('drizzle-orm');
+      query = query.where(and(...conditions));
+    }
+
+    const result = await query.limit(1000);
+    return result;
+  } catch (error) {
+    console.error("[Database] Error fetching filtered properties:", error);
+    return [];
+  }
+}
