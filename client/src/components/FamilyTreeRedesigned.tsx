@@ -338,7 +338,9 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
 
     switch (field) {
       case "relationshipPercentage":
-        return member.relationshipPercentage ? `${member.relationshipPercentage}%` : "-";
+        return member.relationshipPercentage !== null && member.relationshipPercentage !== undefined
+          ? `${member.relationshipPercentage}%`
+          : "-";
       case "isCurrentResident":
         return member.isCurrentResident === 1 ? "✓" : "";
       case "isRepresentative":

@@ -288,4 +288,5 @@
 - [x] Test continuous entry workflow (Enter key support)
 - [x] Add Portuguese labels for better UX
 - [x] Add visual highlighting for entry form (blue background)
+- [x] Fix percentage display in table (show 0% instead of dash)
 - [x] Save final checkpoint
