@@ -1711,6 +1711,8 @@ export async function createFamilyMember(data: {
   contactedDate?: Date | null;
   isOnBoard?: number;
   isNotOnBoard?: number;
+  relationshipPercentage?: number | null;
+  isCurrentResident?: number;
   notes?: string | null;
 }) {
   const db = await getDb();
@@ -1731,6 +1733,8 @@ export async function createFamilyMember(data: {
     contactedDate: data.contactedDate || null,
     isOnBoard: data.isOnBoard || 0,
     isNotOnBoard: data.isNotOnBoard || 0,
+    relationshipPercentage: data.relationshipPercentage || 0,
+    isCurrentResident: data.isCurrentResident || 0,
     notes: data.notes || null,
   });
 
@@ -1764,6 +1768,8 @@ export async function updateFamilyMember(id: number, data: {
   contactedDate?: Date | null;
   isOnBoard?: number;
   isNotOnBoard?: number;
+  relationshipPercentage?: number | null;
+  isCurrentResident?: number;
   notes?: string | null;
 }) {
   const db = await getDb();

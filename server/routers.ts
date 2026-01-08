@@ -634,6 +634,8 @@ export const appRouter = router({
         contactedDate: z.date().optional(),
         isOnBoard: z.number().optional(),
         isNotOnBoard: z.number().optional(),
+        relationshipPercentage: z.number().optional(),
+        isCurrentResident: z.number().optional(),
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -661,6 +663,8 @@ export const appRouter = router({
         contactedDate: z.date().optional(),
         isOnBoard: z.number().optional(),
         isNotOnBoard: z.number().optional(),
+        relationshipPercentage: z.number().optional(),
+        isCurrentResident: z.number().optional(),
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {

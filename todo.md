@@ -289,4 +289,8 @@
 - [x] Add Portuguese labels for better UX
 - [x] Add visual highlighting for entry form (blue background)
 - [x] Fix percentage display in table (show 0% instead of dash)
+- [x] Add relationshipPercentage and isCurrentResident to updateFamilyMember
 - [x] Save final checkpoint
+
+## BUGS TO FIX
+- [ ] Tasks not saving/persisting when created in PropertyDetail

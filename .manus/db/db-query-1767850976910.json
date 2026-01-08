@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, relationship, relationshipPercentage FROM familyMembers LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, relationship, relationshipPercentage FROM familyMembers LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "MARY",
+      "relationship": "Grandson",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60034",
+      "name": "maria",
+      "relationship": "Mother",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60035",
+      "name": "silva",
+      "relationship": "Father",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60036",
+      "name": "Silvia",
+      "relationship": "Daughter",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60037",
+      "name": "jose",
+      "relationship": "Grandson",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60038",
+      "name": "ana",
+      "relationship": "Uncle",
+      "relationshipPercentage": "0"
+    },
+    {
+      "id": "60051",
+      "name": "jose",
+      "relationship": "Daughter",
+      "relationshipPercentage": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trelationship\trelationshipPercentage\n1\tMARY\tGrandson\t0\n60034\tmaria\tMother\t0\n60035\tsilva\tFather\t0\n60036\tSilvia\tDaughter\t0\n60037\tjose\tGrandson\t0\n60038\tana\tUncle\t0\n60051\tjose\tDaughter\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1786
+}
