@@ -209,13 +209,13 @@ export function CreateTaskDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="High Priority" className="text-white">
+                    <SelectItem value="High" className="text-white">
                       High Priority
                     </SelectItem>
-                    <SelectItem value="Medium Priority" className="text-white">
+                    <SelectItem value="Medium" className="text-white">
                       Medium Priority
                     </SelectItem>
-                    <SelectItem value="Low Priority" className="text-white">
+                    <SelectItem value="Low" className="text-white">
                       Low Priority
                     </SelectItem>
                   </SelectContent>
