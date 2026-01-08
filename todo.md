@@ -222,3 +222,16 @@
 - [x] listFiltered procedure to fetch properties with filters
 - [x] getPropertiesWithFilters function in db.ts
 - [x] Success toast confirmation on bulk assignment
+
+
+## MULTIPLE AGENTS PER LEAD - NEW FEATURE
+- [x] Remove duplicate "Assigned Agent" field from PropertyDetail
+- [x] Update Assign Agent dialog to allow multiple agent selection
+- [x] Display list of assigned agents below "Assign Agent" button
+- [x] Add ability to remove agents from assignment
+- [x] Test multiple agent assignment and removal
+- [x] Verify leadAssignments table stores multiple agents correctly
+- [x] Implement getAssignedAgents query to fetch assigned agents
+- [x] Add checkbox-based multi-select in Assign Agent dialog
+- [x] Show agent count in "Assign X Agents" button
+- [x] Add notes field for agent assignments

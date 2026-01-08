@@ -551,6 +551,36 @@ export const appRouter = router({
         return { success: true, result };
       }),
 
+    getAssignedAgents: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        const assignments = await database
+          .select({
+            id: leadAssignments.id,
+            agentId: leadAssignments.agentId,
+            assignedAt: leadAssignments.assignedAt,
+          })
+          .from(leadAssignments)
+          .where(eq(leadAssignments.propertyId, input.propertyId));
+
+        const agentsWithDetails = await Promise.all(
+          assignments.map(async (assignment) => {
+            const agent = await database
+              .select()
+              .from(agents)
+              .where(eq(agents.id, assignment.agentId))
+              .limit(1);
+            return {
+              ...assignment,
+              agent: agent[0],
+            };
+          })
+        );
+
+        return agentsWithDetails;
+      }),
+
     listFiltered: protectedProcedure
       .input(z.object({
         leadTemperature: z.string().optional(),
