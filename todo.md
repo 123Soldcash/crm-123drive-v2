@@ -270,10 +270,11 @@
 - [x] Implement inline editing for all table cells (click to edit)
 - [x] Add Family Tree Notes section below table
 - [x] Install d3 dependency for visualization (already included via mermaid)
-- [x] Implement D3 family tree visualization with relationships
+- [x] Implement D3 family tree visualization with relationships (using pure SVG)
 - [x] Add inheritance percentage display in D3 diagram
 - [x] Add visual connections between family members
 - [x] Test inline entry and editing functionality
 - [x] Test D3 visualization rendering
 - [x] Test family tree notes persistence
-- [ ] Save checkpoint for redesigned Family Tree
+- [x] Update PropertyDetail to use FamilyTreeRedesigned component
+- [x] Save checkpoint for redesigned Family Tree

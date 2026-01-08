@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import * as d3 from "d3";
 
 const RELATIONSHIPS = [
   "Owner",
@@ -55,11 +54,6 @@ interface FamilyMember {
   notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-interface FamilyTreeNotes {
-  propertyId: number;
-  notes: string;
 }
 
 interface FamilyTreeProps {
@@ -172,99 +166,94 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
     }
   };
 
-  // Render D3 visualization
+  // Render SVG visualization (pure SVG, no d3)
   useEffect(() => {
     if (familyMembers.length === 0 || !svgRef.current) return;
 
     const width = 1000;
     const height = 600;
+    const svg = svgRef.current;
 
     // Clear previous content
-    d3.select(svgRef.current).selectAll("*").remove();
+    while (svg.firstChild) {
+      svg.removeChild(svg.firstChild);
+    }
 
-    // Create SVG
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height]);
+    // Set SVG attributes
+    svg.setAttribute("width", width.toString());
+    svg.setAttribute("height", height.toString());
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
     // Create nodes from family members
+    const nodeRadius = 40;
     const nodes = familyMembers.map((member, i) => ({
       id: member.id,
       name: member.name,
       relationship: member.relationship,
       percentage: member.relationshipPercentage || 0,
-      x: (i % 4) * 200 + 100,
-      y: Math.floor(i / 4) * 150 + 100,
+      x: (i % 4) * 220 + 100,
+      y: Math.floor(i / 4) * 180 + 100,
     }));
 
-    // Create links (relationships)
-    const links: any[] = [];
+    // Draw links (connections)
     if (nodes.length > 1) {
-      // Connect all to first (Owner)
       for (let i = 1; i < nodes.length; i++) {
-        links.push({ source: nodes[0].id, target: nodes[i].id });
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", nodes[0].x.toString());
+        line.setAttribute("y1", nodes[0].y.toString());
+        line.setAttribute("x2", nodes[i].x.toString());
+        line.setAttribute("y2", nodes[i].y.toString());
+        line.setAttribute("stroke", "#d1d5db");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
       }
     }
 
-    // Draw links
-    svg
-      .selectAll("line")
-      .data(links)
-      .enter()
-      .append("line")
-      .attr("x1", (d: any) => nodes.find((n) => n.id === d.source)?.x || 0)
-      .attr("y1", (d: any) => nodes.find((n) => n.id === d.source)?.y || 0)
-      .attr("x2", (d: any) => nodes.find((n) => n.id === d.target)?.x || 0)
-      .attr("y2", (d: any) => nodes.find((n) => n.id === d.target)?.y || 0)
-      .attr("stroke", "#ccc")
-      .attr("stroke-width", 2);
-
     // Draw nodes
-    const nodeGroups = svg
-      .selectAll("g.node")
-      .data(nodes)
-      .enter()
-      .append("g")
-      .attr("class", "node")
-      .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+    nodes.forEach((node) => {
+      // Circle background
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", node.x.toString());
+      circle.setAttribute("cy", node.y.toString());
+      circle.setAttribute("r", nodeRadius.toString());
+      circle.setAttribute("fill", "#3b82f6");
+      circle.setAttribute("opacity", "0.8");
+      svg.appendChild(circle);
 
-    // Node circles
-    nodeGroups
-      .append("circle")
-      .attr("r", 40)
-      .attr("fill", "#3b82f6")
-      .attr("opacity", 0.8);
+      // Name text
+      const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      nameText.setAttribute("x", node.x.toString());
+      nameText.setAttribute("y", (node.y - 10).toString());
+      nameText.setAttribute("text-anchor", "middle");
+      nameText.setAttribute("fill", "white");
+      nameText.setAttribute("font-size", "12");
+      nameText.setAttribute("font-weight", "bold");
+      nameText.textContent = node.name.length > 12 ? node.name.substring(0, 12) + "..." : node.name;
+      svg.appendChild(nameText);
 
-    // Node labels
-    nodeGroups
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("dy", "-5px")
-      .attr("font-size", "12px")
-      .attr("fill", "white")
-      .attr("font-weight", "bold")
-      .text((d: any) => d.name);
+      // Relationship text
+      const relText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      relText.setAttribute("x", node.x.toString());
+      relText.setAttribute("y", (node.y + 5).toString());
+      relText.setAttribute("text-anchor", "middle");
+      relText.setAttribute("fill", "white");
+      relText.setAttribute("font-size", "10");
+      relText.textContent = node.relationship;
+      svg.appendChild(relText);
 
-    // Relationship labels
-    nodeGroups
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("dy", "15px")
-      .attr("font-size", "10px")
-      .attr("fill", "white")
-      .text((d: any) => d.relationship);
-
-    // Percentage labels
-    nodeGroups
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("dy", "30px")
-      .attr("font-size", "11px")
-      .attr("fill", "#fbbf24")
-      .attr("font-weight", "bold")
-      .text((d: any) => (d.percentage > 0 ? `${d.percentage}%` : ""));
+      // Percentage text
+      if (node.percentage > 0) {
+        const percText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        percText.setAttribute("x", node.x.toString());
+        percText.setAttribute("y", (node.y + 20).toString());
+        percText.setAttribute("text-anchor", "middle");
+        percText.setAttribute("fill", "#fbbf24");
+        percText.setAttribute("font-size", "11");
+        percText.setAttribute("font-weight", "bold");
+        percText.textContent = `${node.percentage}%`;
+        svg.appendChild(percText);
+      }
+    });
   }, [familyMembers]);
 
   const renderEditCell = (member: FamilyMember, field: string) => {
@@ -642,12 +631,12 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
         )}
       </div>
 
-      {/* D3 Family Tree Visualization */}
+      {/* SVG Family Tree Visualization */}
       {familyMembers.length > 0 && (
         <div>
           <h4 className="font-semibold mb-2">Family Tree Visualization</h4>
           <Card className="p-4 bg-gray-50 overflow-x-auto">
-            <svg ref={svgRef} className="w-full" style={{ minHeight: "600px" }} />
+            <svg ref={svgRef} className="w-full" style={{ minHeight: "600px", border: "1px solid #e5e7eb" }} />
           </Card>
         </div>
       )}
