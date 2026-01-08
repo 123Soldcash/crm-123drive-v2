@@ -136,29 +136,27 @@ export default function PropertyDetail() {
     },
   });
 
-  const transferLead = trpc.properties.transferLead.useMutation({
+  const assignAgent = trpc.properties.assignAgent.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
-      utils.properties.getTransferHistory.invalidate({ propertyId });
       setTransferDialogOpen(false);
       setSelectedTransferAgent("");
       setTransferReason("");
-      toast.success("Lead transferred successfully!");
+      toast.success("Agent assigned successfully!");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to transfer lead");
+      toast.error(error.message || "Failed to assign agent");
     },
   });
 
   const handleTransferLead = () => {
     if (!selectedTransferAgent) {
-      toast.error("Please select an agent to transfer to");
+      toast.error("Please select an agent to assign");
       return;
     }
-    transferLead.mutate({
+    assignAgent.mutate({
       propertyId,
-      toAgentId: Number(selectedTransferAgent),
-      reason: transferReason || undefined,
+      agentId: Number(selectedTransferAgent),
     });
   };
 
@@ -341,8 +339,8 @@ export default function PropertyDetail() {
                   <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleTransferLead} disabled={transferLead.isPending || !selectedTransferAgent}>
-                    {transferLead.isPending ? "Assigning..." : "Assign Agent"}
+                  <Button onClick={handleTransferLead} disabled={assignAgent.isPending || !selectedTransferAgent}>
+                    {assignAgent.isPending ? "Assigning..." : "Assign Agent"}
                   </Button>
                 </DialogFooter>
               </DialogContent>

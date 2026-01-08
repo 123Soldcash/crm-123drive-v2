@@ -537,6 +537,19 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.listByDesk(input.deskName, input.deskStatus);
       }),
+
+    assignAgent: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        agentId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user?.id) {
+          throw new Error("User not authenticated");
+        }
+        const result = await db.assignAgentToProperty(input.propertyId, input.agentId, ctx.user.id);
+        return { success: true, result };
+      }),
   }),
 
   users: router({

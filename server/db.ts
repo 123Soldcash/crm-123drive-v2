@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1547,4 +1547,34 @@ export async function updateAgent(id: number, data: {
     status: data.status as any,
     notes: data.notes || null,
   }).where(eq(agents.id, id));
+}
+
+
+// ============ LEAD ASSIGNMENTS ============
+
+export async function assignAgentToProperty(propertyId: number, agentId: number, assignedBy?: number) {
+  const database = await getDb();
+  if (!database) throw new Error('Database not initialized');
+  
+  // Insert into leadAssignments
+  const result = await database.insert(leadAssignments).values({
+    propertyId,
+    agentId,
+    assignmentType: 'Shared',
+    assignedBy: assignedBy || undefined,
+  });
+  
+  // Update property's assignedAgentId
+  await database.update(properties).set({
+    assignedAgentId: agentId,
+  }).where(eq(properties.id, propertyId));
+  
+  return result;
+}
+
+export async function getLeadAssignmentsByProperty(propertyId: number) {
+  const database = await getDb();
+  if (!database) throw new Error('Database not initialized');
+  
+  return await database.select().from(leadAssignments).where(eq(leadAssignments.propertyId, propertyId));
 }
