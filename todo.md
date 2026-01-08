@@ -314,3 +314,11 @@
 - [x] All 6 checkbox status fields working
 - [x] Inline checkbox editing in table
 - [x] Success notifications for user actions
+
+
+## CRITICAL TASK SYSTEM BUGS - FIXED ✅
+- [x] Remove duplicate "Create Task" buttons (header + center of page)
+- [x] Fix task not saving to database (made title required)
+- [x] Implement agent dropdown in "Assign To" field (now shows all agents: John Smith, Maria Garcia)
+- [x] Test task creation end-to-end (successfully created "Schedule Property Visit" task)
+- [x] Verify task persistence in database (tasks appear in list after creation)

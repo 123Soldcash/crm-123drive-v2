@@ -2,6 +2,7 @@ import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { ne } from 'drizzle-orm';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -104,6 +105,7 @@ export async function listAgents() {
       lastSignedIn: users.lastSignedIn,
     })
     .from(users)
+    .where(ne(users.role, 'admin'))
     .orderBy(users.name);
 
   return result;

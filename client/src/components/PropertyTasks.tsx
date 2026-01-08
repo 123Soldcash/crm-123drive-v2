@@ -131,17 +131,8 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
           {!tasks || tasks.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground mb-4">
-                No tasks yet. Create your first task for this property.
+                No tasks yet. Click the "New Task" button above to create your first task.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCreateDialogOpen(true)}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Task
-              </Button>
             </div>
           ) : (
             <div className="space-y-3">
