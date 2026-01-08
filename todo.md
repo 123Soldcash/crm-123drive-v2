@@ -235,3 +235,17 @@
 - [x] Add checkbox-based multi-select in Assign Agent dialog
 - [x] Show agent count in "Assign X Agents" button
 - [x] Add notes field for agent assignments
+
+
+## FAMILY TREE FEATURE - COMPLETED
+- [x] Create familyMembers table in drizzle/schema.ts
+- [x] Add database migration for family members
+- [x] Create backend procedures for family tree CRUD
+- [x] Create FamilyTree component
+- [x] Integrate FamilyTree into PropertyDetail
+- [x] Test family tree add/edit/delete functionality
+- [x] Test family tree display and filtering
+- [x] Verify all tests passing
+- [x] Add family member form with relationship dropdown
+- [x] Display family members in table with all fields
+- [x] Success toast notification on member addition

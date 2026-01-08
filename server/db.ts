@@ -1693,3 +1693,106 @@ export async function getPropertiesWithFilters(filters: {
     return [];
   }
 }
+
+
+/**
+ * Family Members Management
+ */
+
+export async function createFamilyMember(data: {
+  propertyId: number;
+  name: string;
+  relationship: string;
+  phone?: string | null;
+  email?: string | null;
+  isRepresentative?: number;
+  isDeceased?: number;
+  isContacted?: number;
+  contactedDate?: Date | null;
+  isOnBoard?: number;
+  isNotOnBoard?: number;
+  notes?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { familyMembers } = await import("../drizzle/schema");
+  const result = await db.insert(familyMembers).values({
+    propertyId: data.propertyId,
+    name: data.name,
+    relationship: data.relationship,
+    phone: data.phone || null,
+    email: data.email || null,
+    isRepresentative: data.isRepresentative || 0,
+    isDeceased: data.isDeceased || 0,
+    isContacted: data.isContacted || 0,
+    contactedDate: data.contactedDate || null,
+    isOnBoard: data.isOnBoard || 0,
+    isNotOnBoard: data.isNotOnBoard || 0,
+    notes: data.notes || null,
+  });
+
+  return result;
+}
+
+export async function getFamilyMembers(propertyId: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { familyMembers } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.propertyId, propertyId))
+    .orderBy(familyMembers.createdAt);
+}
+
+export async function updateFamilyMember(id: number, data: {
+  name?: string;
+  relationship?: string;
+  phone?: string | null;
+  email?: string | null;
+  isRepresentative?: number;
+  isDeceased?: number;
+  isContacted?: number;
+  contactedDate?: Date | null;
+  isOnBoard?: number;
+  isNotOnBoard?: number;
+  notes?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { familyMembers } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .update(familyMembers)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(familyMembers.id, id));
+}
+
+export async function deleteFamilyMember(id: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { familyMembers } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .delete(familyMembers)
+    .where(eq(familyMembers.id, id));
+}

@@ -711,3 +711,59 @@ export const outreachLogs = mysqlTable("outreachLogs", {
 
 export type OutreachLog = typeof outreachLogs.$inferSelect;
 export type InsertOutreachLog = typeof outreachLogs.$inferInsert;
+
+
+/**
+ * Family Members table - stores family tree information for properties
+ * Tracks family members, their relationships, and contact status
+ */
+export const familyMembers = mysqlTable("familyMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().references(() => properties.id, { onDelete: "cascade" }),
+  
+  // Family member information
+  name: varchar("name", { length: 255 }).notNull(),
+  relationship: mysqlEnum("relationship", [
+    "Owner",
+    "Spouse",
+    "Son",
+    "Daughter",
+    "Father",
+    "Mother",
+    "Brother",
+    "Sister",
+    "Grandfather",
+    "Grandmother",
+    "Grandson",
+    "Granddaughter",
+    "Uncle",
+    "Aunt",
+    "Cousin",
+    "Nephew",
+    "Niece",
+    "In-Law",
+    "Other"
+  ]).notNull(),
+  
+  // Contact information
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  
+  // Status tracking
+  isRepresentative: int("isRepresentative").default(0).notNull(), // 0=NO, 1=YES
+  isDeceased: int("isDeceased").default(0).notNull(), // 0=NO, 1=YES
+  isContacted: int("isContacted").default(0).notNull(), // 0=NO, 1=YES
+  contactedDate: timestamp("contactedDate"),
+  isOnBoard: int("isOnBoard").default(0).notNull(), // 0=NO, 1=YES (interested in selling)
+  isNotOnBoard: int("isNotOnBoard").default(0).notNull(), // 0=NO, 1=YES (not interested)
+  
+  // Notes
+  notes: text("notes"),
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FamilyMember = typeof familyMembers.$inferSelect;
+export type InsertFamilyMember = typeof familyMembers.$inferInsert;

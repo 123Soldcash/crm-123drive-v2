@@ -619,6 +619,61 @@ export const appRouter = router({
         const result = await db.bulkAssignAgentToProperties(input.agentId, input.filters);
         return result;
       }),
+
+    createFamilyMember: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        name: z.string(),
+        relationship: z.string(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        isRepresentative: z.number().optional(),
+        isDeceased: z.number().optional(),
+        isContacted: z.number().optional(),
+        contactedDate: z.date().optional(),
+        isOnBoard: z.number().optional(),
+        isNotOnBoard: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.createFamilyMember(input);
+      }),
+
+    getFamilyMembers: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getFamilyMembers(input.propertyId);
+      }),
+
+    updateFamilyMember: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        relationship: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        isRepresentative: z.number().optional(),
+        isDeceased: z.number().optional(),
+        isContacted: z.number().optional(),
+        contactedDate: z.date().optional(),
+        isOnBoard: z.number().optional(),
+        isNotOnBoard: z.number().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await db.updateFamilyMember(id, data);
+      }),
+
+    deleteFamilyMember: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.deleteFamilyMember(input.id);
+      }),
   }),
 
   users: router({
