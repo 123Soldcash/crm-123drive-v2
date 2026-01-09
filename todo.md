@@ -333,9 +333,10 @@
 ## REVISÃO V15B - NEW FEATURES
 - [x] Entry Date/Time tracking - VERIFIED WORKING (displays in property list)
 - [x] Hide/Show Deep Search toggle - VERIFIED WORKING (button hides/shows Deep Search section)
-- [ ] Edit Lead functionality - IN PROGRESS
-- [ ] Address Autocomplete with Google Places API - PENDING
-- [ ] API Integration prep (Zillow/PropertyStream/DealMachine) - PENDING
+- [x] DealMachine CSV Import - COMPLETED (page at /import-dealmachine with preview and import)
+- [ ] Edit Lead functionality - PENDING
+- [ ] Address Autocomplete - PENDING (requires Google Places API key)
+- [x] API Integration prep (DealMachine) - COMPLETED (CSV parser, duplicate detection, data transformation)
 
 ## SYSTEM AUDIT - PRODUCTION READINESS CHECK
 ### Dashboard & Navigation

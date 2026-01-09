@@ -981,13 +981,10 @@ function AddPropertyDialog() {
           <div className="space-y-2">
             <AddressAutocomplete
               value={formData.addressLine1}
-              onChange={(address, city, state, zipcode) => {
+              onChange={(address: string) => {
                 setFormData({
                   ...formData,
                   addressLine1: address,
-                  city: city || formData.city,
-                  state: state || formData.state,
-                  zipcode: zipcode || formData.zipcode,
                 });
               }}
               onAddressSelect={(details: AddressDetails) => {

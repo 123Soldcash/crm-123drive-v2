@@ -10,10 +10,12 @@ import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs
 import { eq, sql, and } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
+import { dealmachineRouter } from "./routers/dealmachine";
 
 export const appRouter = router({
   system: systemRouter,
   agents: agentsRouter,
+  dealmachine: dealmachineRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

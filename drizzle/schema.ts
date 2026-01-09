@@ -160,6 +160,11 @@ export const properties = mysqlTable("properties", {
   salePrice: int("salePrice"),
   saleDate: timestamp("saleDate"),
   mortgageAmount: int("mortgageAmount"),
+  totalLoanBalance: int("totalLoanBalance"),
+  totalLoanPayment: int("totalLoanPayment"),
+  estimatedRepairCost: int("estimatedRepairCost"),
+  taxYear: int("taxYear"),
+  taxAmount: int("taxAmount"),
   
   // Owner information
   owner1Name: varchar("owner1Name", { length: 255 }),
@@ -177,8 +182,11 @@ export const properties = mysqlTable("properties", {
   apnParcelId: varchar("apnParcelId", { length: 100 }),
   taxDelinquent: varchar("taxDelinquent", { length: 10 }),
   taxDelinquentYear: int("taxDelinquentYear"),
-  taxYear: int("taxYear"),
-  taxAmount: int("taxAmount"),
+  
+  // DealMachine integration
+  dealMachinePropertyId: varchar("dealMachinePropertyId", { length: 100 }),
+  dealMachineLeadId: varchar("dealMachineLeadId", { length: 100 }),
+  dealMachineRawData: text("dealMachineRawData"), // JSON string with all extra DealMachine data
   
   // Desk management
   deskName: varchar("deskName", { length: 100 }), // Desk assignment (e.g., "Sales", "Follow-up")
@@ -250,8 +258,11 @@ export const contactPhones = mysqlTable("contactPhones", {
   contactId: int("contactId").notNull(),
   phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
   phoneType: mysqlEnum("phoneType", ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"]).default("Mobile"),
-  isPrimary: int("isPrimary").default(0).notNull(), // 0=NO, 1=YES
-  dnc: int("dnc").default(0).notNull(), // 0=NO, 1=YES - Do Not Call for this specific number
+  isPrimary: int("isPrimary").default(0).notNull(),
+  dnc: int("dnc").default(0).notNull(),
+  carrier: varchar("carrier", { length: 100 }),
+  activityStatus: varchar("activityStatus", { length: 50 }),
+  isPrepaid: int("isPrepaid").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

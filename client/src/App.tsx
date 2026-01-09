@@ -18,6 +18,7 @@ import { TasksList } from "./pages/TasksList";
 import { TasksCalendar } from "./pages/TasksCalendar";
 import AgentManagement from "./pages/AgentManagement";
 import BulkAgentAssignment from "./pages/BulkAgentAssignment";
+import ImportDealMachine from "./pages/ImportDealMachine";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
       <Route path="/agents" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
       <Route path="/agent-management" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
       <Route path="/bulk-assign-agents" component={() => <DashboardLayout><BulkAgentAssignment /></DashboardLayout>} />
+      <Route path="/import-dealmachine" component={() => <DashboardLayout><ImportDealMachine /></DashboardLayout>} />
       <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
       <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
       <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
