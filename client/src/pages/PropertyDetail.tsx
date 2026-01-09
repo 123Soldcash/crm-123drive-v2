@@ -36,6 +36,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { DeepSearchTabs } from "@/components/DeepSearchTabs";
 import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
+import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function PropertyDetail() {
@@ -51,6 +52,7 @@ export default function PropertyDetail() {
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
+  const [showDeepSearch, setShowDeepSearch] = useState(true);
   const { user } = useAuth();
   const [, navigate] = useRoute("/properties/:id");
 
@@ -311,6 +313,13 @@ export default function PropertyDetail() {
             </div>
           </div>
           <div className="flex gap-2">
+            {property && (
+              <EditPropertyDialog
+                propertyId={propertyId}
+                property={property}
+                onSuccess={() => window.location.reload()}
+              />
+            )}
             <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -829,7 +838,22 @@ export default function PropertyDetail() {
         </Card>
       )}
 
-      <DeepSearchTabs propertyId={propertyId} />
+      {/* Deep Search Section with Hide/Show Toggle */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Deep Search</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeepSearch(!showDeepSearch)}
+            className="text-xs"
+          >
+            {showDeepSearch ? "Hide" : "Show"}
+          </Button>
+        </CardHeader>
+      </Card>
+
+      {showDeepSearch && <DeepSearchTabs propertyId={propertyId} />}
 
       {/* Field Visit Check-In - moved to bottom as less frequently used */}
       <div className="grid gap-6 md:grid-cols-2">

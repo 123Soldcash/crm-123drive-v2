@@ -796,7 +796,8 @@ export async function getPropertiesWithAgents(filters?: {
   const conditions = [];
 
   // Agent filtering: non-admin users only see properties they are assigned to
-  if (filters?.userId && filters?.userRole !== 'admin') {
+  // Admin users see all properties
+  if (filters?.userId && filters?.userRole && filters.userRole !== 'admin') {
     // Get property IDs where this user is assigned
     const assignedPropertyIds = await db
       .select({ propertyId: propertyAgents.propertyId })
@@ -1761,7 +1762,7 @@ export async function getFamilyMembers(propertyId: number) {
 
 export async function updateFamilyMember(id: number, data: {
   name?: string;
-  relationship?: string;
+  relationship?: "Owner" | "Spouse" | "Son" | "Daughter" | "Father" | "Mother" | "Brother" | "Sister" | "Grandfather" | "Grandmother" | "Grandson" | "Granddaughter" | "Uncle" | "Aunt" | "Cousin" | "Nephew" | "Niece" | "In-Law" | "Other";
   phone?: string | null;
   email?: string | null;
   isRepresentative?: number;
@@ -1782,10 +1783,18 @@ export async function updateFamilyMember(id: number, data: {
   const { familyMembers } = await import("../drizzle/schema");
   const { eq } = await import("drizzle-orm");
   
+  // Filter out undefined values to avoid overwriting with undefined
+  const updateData: any = {};
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined) {
+      updateData[key] = value;
+    }
+  });
+  
   return await db
     .update(familyMembers)
     .set({
-      ...data,
+      ...updateData,
       updatedAt: new Date(),
     })
     .where(eq(familyMembers.id, id));

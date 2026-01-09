@@ -654,7 +654,7 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         name: z.string().optional(),
-        relationship: z.string().optional(),
+        relationship: z.enum(["Owner", "Spouse", "Son", "Daughter", "Father", "Mother", "Brother", "Sister", "Grandfather", "Grandmother", "Grandson", "Granddaughter", "Uncle", "Aunt", "Cousin", "Nephew", "Niece", "In-Law", "Other"]).optional(),
         phone: z.string().optional(),
         email: z.string().optional(),
         isRepresentative: z.number().optional(),

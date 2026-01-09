@@ -330,6 +330,13 @@
 - [x] Successfully created "Client Meeting" task with Medium priority
 
 
+## REVISÃO V15B - NEW FEATURES
+- [x] Entry Date/Time tracking - VERIFIED WORKING (displays in property list)
+- [x] Hide/Show Deep Search toggle - VERIFIED WORKING (button hides/shows Deep Search section)
+- [ ] Edit Lead functionality - IN PROGRESS
+- [ ] Address Autocomplete with Google Places API - PENDING
+- [ ] API Integration prep (Zillow/PropertyStream/DealMachine) - PENDING
+
 ## SYSTEM AUDIT - PRODUCTION READINESS CHECK
 ### Dashboard & Navigation
 - [ ] Dashboard metrics loading correctly
@@ -406,3 +413,28 @@
 - [ ] Form submissions not duplicating
 - [ ] Loading states showing
 - [ ] Empty states displaying helpful messages
+
+
+## V4 UPGRADE - TDAH FRIENDLY EDITION (IN PROGRESS)
+- [ ] Multi-user real-time sync (multiple agents using CRM simultaneously)
+- [ ] Address autocomplete with property suggestions
+- [ ] API integrations (Zillow, PropertyStream, DealMachine)
+- [ ] Auto-populate property data (bedrooms, bathrooms, square feet, value, lot size, year built, mortgage)
+- [ ] Edit lead/property functionality
+- [ ] Add date/time when lead entered system
+- [ ] Add date/time to property reports
+- [ ] Add hide/show toggle for Deep Search section
+- [ ] Optimize UI for TDAH accessibility (clean, minimal, focused)
+- [ ] Optimize UI for Dislexia accessibility (readable fonts, good spacing, high contrast)
+- [ ] Test all features end-to-end
+- [ ] Save V4 checkpoint
+
+
+## REVISÃO V15B - NEW FEATURES
+- [ ] Address Autocomplete - Google Places API integration for address suggestions
+- [ ] Edit Lead functionality - Allow editing existing property/lead information
+- [ ] Entry Date/Time tracking - Add timestamp when lead enters the system
+- [ ] Entry Date/Time in Properties Report - Display entry date in properties list
+- [ ] Hide/Show Deep Search - Collapsible Deep Search section like Family Tree
+- [ ] API Integration Prep - Structure for Zillow/PropertyStream/DealMachine integration
+- [ ] Multi-user Real-time Sync - Verify multiple agents can use system simultaneously

@@ -36,6 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
 import { DeskDialog } from "@/components/DeskDialog";
+import { AddressAutocomplete, type AddressDetails } from "@/components/AddressAutocomplete";
 
 // Common status tags found in the data
 const STATUS_TAGS = [
@@ -724,6 +725,7 @@ export default function Properties() {
                   {columns.agents && <TableHead>Agents</TableHead>}
                   {columns.value && <TableHead className="text-right">Value</TableHead>}
                   {columns.equity && <TableHead className="text-right">Equity %</TableHead>}
+                  <TableHead className="w-32">Entry Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -856,6 +858,9 @@ export default function Properties() {
                       {property.equityPercent ? `${property.equityPercent.toFixed(2)}%` : "N/A"}
                     </TableCell>
                   )}
+                  <TableCell className="text-sm text-muted-foreground">
+                    {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : 'N/A'}
+                  </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -974,13 +979,27 @@ function AddPropertyDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="addressLine1">Address *</Label>
-            <Input
-              id="addressLine1"
-              placeholder="123 Main Street"
+            <AddressAutocomplete
               value={formData.addressLine1}
-              onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-              required
+              onChange={(address, city, state, zipcode) => {
+                setFormData({
+                  ...formData,
+                  addressLine1: address,
+                  city: city || formData.city,
+                  state: state || formData.state,
+                  zipcode: zipcode || formData.zipcode,
+                });
+              }}
+              onAddressSelect={(details: AddressDetails) => {
+                setFormData({
+                  ...formData,
+                  addressLine1: details.address,
+                  city: details.city,
+                  state: details.state,
+                  zipcode: details.zipCode,
+                });
+              }}
+              placeholder="123 Main Street"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
