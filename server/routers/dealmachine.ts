@@ -75,7 +75,7 @@ export const dealmachineRouter = router({
 
         // Import new properties with LEAD IDs
         let propertiesCreated = 0;
-        const propertyMap = new Map<string, number>(); // Map address to property ID
+        const dealMachineIdMap = new Map<string, number>(); // Map dealMachinePropertyId to our property ID
         
         for (const prop of parsedProperties) {
           const key = getPropertyKey(prop);
@@ -112,8 +112,8 @@ export const dealmachineRouter = router({
             
             // Store property ID for contact import
             const propertyId = (result as any).insertId || 0;
-            if (propertyId) {
-              propertyMap.set(key, propertyId);
+            if (propertyId && prop.dealMachinePropertyId) {
+              dealMachineIdMap.set(prop.dealMachinePropertyId, propertyId);
               
               // Add status tag for this import batch
               await db.insert(propertyTags).values({
@@ -138,42 +138,15 @@ export const dealmachineRouter = router({
             const parsedContact = transformContact(row);
             if (!parsedContact) continue;
             
-            // Parse property address from associated_property_address_full
-            // Format: "1840 Nw 6th Ave, Pompano Beach, Fl 33060"
-            const fullAddress = row["associated_property_address_full"] || "";
-            if (!fullAddress) continue;
+            // Get the associated_property_id from the contact row
+            const associatedPropertyId = row["associated_property_id"];
+            if (!associatedPropertyId) continue;
             
-            // Split address into components
-            const parts = fullAddress.split(",").map(p => p.trim());
-            if (parts.length < 3) continue;
-            
-            const propertyAddress = parts[0];
-            const propertyCity = parts[1];
-            
-            // Parse state and zipcode from last part (e.g., "Fl 33060")
-            const stateZipParts = parts[2].split(/\s+/);
-            if (stateZipParts.length < 2) continue;
-            
-            let propertyState = stateZipParts[0].toUpperCase();
-            const propertyZipcode = stateZipParts[stateZipParts.length - 1];
-            
-            // Ensure state is max 2 characters
-            if (propertyState) {
-              propertyState = propertyState.substring(0, 2).toUpperCase();
-            }
-            
-            // Find the property ID by matching address
+            // Find the property by dealMachinePropertyId
             const matchingProperty = await db
               .select({ id: properties.id })
               .from(properties)
-              .where(
-                and(
-                  eq(properties.addressLine1, propertyAddress),
-                  eq(properties.city, propertyCity),
-                  eq(properties.state, propertyState),
-                  eq(properties.zipcode, propertyZipcode)
-                )
-              )
+              .where(eq(properties.dealMachinePropertyId, associatedPropertyId))
               .limit(1);
             
             if (matchingProperty.length === 0) continue;
