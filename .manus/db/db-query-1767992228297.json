@@ -1,0 +1,70 @@
+{
+  "query": "SELECT c.id, c.name, COUNT(DISTINCT cp.id) as phone_count, COUNT(DISTINCT ce.id) as email_count FROM contacts c LEFT JOIN contactPhones cp ON c.id = cp.contactId LEFT JOIN contactEmails ce ON c.id = ce.contactId GROUP BY c.id, c.name LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.name, COUNT(DISTINCT cp.id) as phone_count, COUNT(DISTINCT ce.id) as email_count FROM contacts c LEFT JOIN contactPhones cp ON c.id = cp.contactId LEFT JOIN contactEmails ce ON c.id = ce.contactId GROUP BY c.id, c.name LIMIT 10;",
+  "rows": [
+    {
+      "id": "480015",
+      "name": "Jibri Mathis",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480016",
+      "name": "Michael Giroux",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480017",
+      "name": "Dawn Fossati",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480018",
+      "name": "Donald Ferrino",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480019",
+      "name": "Tammi Munn",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480020",
+      "name": "Demi Munn",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480021",
+      "name": "Jessica Mcfadden",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480022",
+      "name": "Janie Cooper",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480023",
+      "name": "Anthony Jennings",
+      "phone_count": "0",
+      "email_count": "0"
+    },
+    {
+      "id": "480024",
+      "name": "La Jennings",
+      "phone_count": "0",
+      "email_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone_count\temail_count\n480015\tJibri Mathis\t0\t0\n480016\tMichael Giroux\t0\t0\n480017\tDawn Fossati\t0\t0\n480018\tDonald Ferrino\t0\t0\n480019\tTammi Munn\t0\t0\n480020\tDemi Munn\t0\t0\n480021\tJessica Mcfadden\t0\t0\n480022\tJanie Cooper\t0\t0\n480023\tAnthony Jennings\t0\t0\n480024\tLa Jennings\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1510
+}

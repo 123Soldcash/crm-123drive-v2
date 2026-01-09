@@ -468,3 +468,11 @@
 - [x] Match associated_property_id with dealMachinePropertyId
 - [x] Test contact import with corrected logic - 155 properties, 288 contacts imported successfully
 - [x] Verify contacts appear in Properties list
+
+## Contact Display - Phone & Email (COMPLETED)
+- [x] Update tRPC procedure to fetch contact phones and emails from database
+- [x] Update frontend component to display phones and emails in contact cards
+- [x] Test contact display with phones and emails
+- [x] Verify data is synced from database
+- [x] Updated ContactManagement component to display phones and emails arrays
+- [x] Confirmed 288 contacts with phones and emails in databasend emails appear in contact detail view

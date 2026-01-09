@@ -271,8 +271,28 @@ export async function getContactsByPropertyId(propertyId: number) {
   const db = await getDb();
   if (!db) return [];
 
-  const results = await db.select().from(contacts).where(eq(contacts.propertyId, propertyId));
-  return results;
+  // Import required modules
+  const { contactPhones, contactEmails } = await import("../drizzle/schema");
+  const { leftJoin } = await import("drizzle-orm");
+
+  // Get contacts with their phones and emails
+  const contactsList = await db.select().from(contacts).where(eq(contacts.propertyId, propertyId));
+  
+  // For each contact, fetch phones and emails
+  const contactsWithDetails = await Promise.all(
+    contactsList.map(async (contact) => {
+      const phones = await db.select().from(contactPhones).where(eq(contactPhones.contactId, contact.id));
+      const emails = await db.select().from(contactEmails).where(eq(contactEmails.contactId, contact.id));
+      
+      return {
+        ...contact,
+        phones: phones || [],
+        emails: emails || [],
+      };
+    })
+  );
+
+  return contactsWithDetails;
 }
 
 // Notes queries
