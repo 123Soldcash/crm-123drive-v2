@@ -461,3 +461,10 @@
 - [x] Fix field length truncation for CSV data (state, zipcode, dealMachinePropertyId)
 - [x] Create vitest test for import with status tags
 - [x] Verify LEAD IDs are assigned to imported properties
+
+
+## DealMachine Contact Import - Bug Fix (IN PROGRESS)
+- [x] Debug contact import logic - found address parsing issue
+- [x] Fix contact matching with properties by address (using associated_property_address_full)
+- [x] Verify contact phones and emails are imported
+- [ ] Test with new CSV files and verify contacts appear in UI

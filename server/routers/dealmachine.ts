@@ -13,7 +13,7 @@ export const dealmachineRouter = router({
         contactsCSV: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .query(async ({ input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -24,57 +24,26 @@ export const dealmachineRouter = router({
           .map(transformProperty)
           .filter((p) => p !== null) as any[];
 
-        // Check for duplicates
-        const existingAddresses = new Set<string>();
-        const allProperties = await db.select().from(properties);
-        for (const prop of allProperties) {
-          const key = `${prop.addressLine1}|${prop.city}|${prop.state}|${prop.zipcode}`.toLowerCase();
-          existingAddresses.add(key);
-        }
-
-        const previewProperties = parsedProperties.slice(0, 5).map((prop) => {
-          const key = getPropertyKey(prop);
-          return {
-            ...prop,
-            isDuplicate: existingAddresses.has(key),
-          };
-        });
-
-        let duplicates = 0;
-        for (const prop of parsedProperties) {
-          if (existingAddresses.has(getPropertyKey(prop))) {
-            duplicates++;
-          }
-        }
-
-        // Parse contacts if provided
-        let previewContacts: any[] = [];
-        let totalContacts = 0;
+        // Parse contacts CSV if provided
+        let parsedContacts = [];
         if (input.contactsCSV) {
           const contactRows = parseCSV(input.contactsCSV);
-          totalContacts = contactRows.length;
-          previewContacts = contactRows
-            .slice(0, 5)
-            .map((row) => ({
-              name: `${row.first_name || ""} ${row.last_name || ""}`.trim(),
-              phone: row.phone_1 || "",
-              email: row.email_address_1 || "",
-              dnc: row.phone_1_do_not_call?.toLowerCase() === "yes",
-            }))
-            .filter((c) => c.name);
+          parsedContacts = contactRows
+            .map(transformContact)
+            .filter((c) => c !== null) as any[];
         }
 
         return {
-          totalProperties: parsedProperties.length,
-          duplicates,
-          newProperties: parsedProperties.length - duplicates,
-          properties: previewProperties,
-          totalContacts,
-          contacts: previewContacts,
+          propertiesCount: parsedProperties.length,
+          contactsCount: parsedContacts.length,
+          preview: {
+            properties: parsedProperties.slice(0, 3),
+            contacts: parsedContacts.slice(0, 3),
+          },
         };
       } catch (error) {
         console.error("Preview error:", error);
-        throw error;
+        throw new Error(`Preview failed: ${(error as Error).message}`);
       }
     }),
 
@@ -169,16 +138,31 @@ export const dealmachineRouter = router({
             const parsedContact = transformContact(row);
             if (!parsedContact) continue;
             
-            // Get property ID from address in the row
-            const propertyAddress = row["property_address_line_1"] || row["address_line_1"];
-            const propertyCity = row["property_address_city"] || row["city"];
-            const propertyState = row["property_address_state"] || row["state"];
-            const propertyZipcode = row["property_address_zipcode"] || row["zipcode"];
+            // Parse property address from associated_property_address_full
+            // Format: "1840 Nw 6th Ave, Pompano Beach, Fl 33060"
+            const fullAddress = row["associated_property_address_full"] || "";
+            if (!fullAddress) continue;
             
-            if (!propertyAddress || !propertyCity || !propertyState || !propertyZipcode) continue;
+            // Split address into components
+            const parts = fullAddress.split(",").map(p => p.trim());
+            if (parts.length < 3) continue;
             
-            // Find the property ID
-            const propKey = `${propertyAddress}|${propertyCity}|${propertyState}|${propertyZipcode}`.toLowerCase();
+            const propertyAddress = parts[0];
+            const propertyCity = parts[1];
+            
+            // Parse state and zipcode from last part (e.g., "Fl 33060")
+            const stateZipParts = parts[2].split(/\s+/);
+            if (stateZipParts.length < 2) continue;
+            
+            let propertyState = stateZipParts[0].toUpperCase();
+            const propertyZipcode = stateZipParts[stateZipParts.length - 1];
+            
+            // Ensure state is max 2 characters
+            if (propertyState) {
+              propertyState = propertyState.substring(0, 2).toUpperCase();
+            }
+            
+            // Find the property ID by matching address
             const matchingProperty = await db
               .select({ id: properties.id })
               .from(properties)
@@ -212,10 +196,17 @@ export const dealmachineRouter = router({
             if (contactId) {
               // Add phone if provided
               if (parsedContact.phone) {
+                // Validate phoneType is one of the allowed enum values
+                const validPhoneTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
+                let phoneType: any = parsedContact.phoneType || "Mobile";
+                if (!validPhoneTypes.includes(phoneType)) {
+                  phoneType = "Mobile";
+                }
+                
                 await db.insert(contactPhones).values({
                   contactId,
                   phoneNumber: parsedContact.phone,
-                  phoneType: "Mobile",
+                  phoneType,
                   dnc: parsedContact.dnc ? 1 : 0,
                   createdAt: new Date(),
                 });
@@ -237,12 +228,14 @@ export const dealmachineRouter = router({
         }
 
         return {
+          success: true,
           propertiesCreated,
           contactsCreated,
+          message: `Imported ${propertiesCreated} properties and ${contactsCreated} contacts`,
         };
       } catch (error) {
         console.error("Import error:", error);
-        throw error;
+        throw new Error(`Import failed: ${(error as Error).message}`);
       }
     }),
 });

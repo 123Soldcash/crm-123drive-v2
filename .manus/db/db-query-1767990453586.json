@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(DISTINCT p.id) as totalProperties, COUNT(DISTINCT pt.propertyId) as propertiesWithTag FROM properties p LEFT JOIN propertyTags pt ON p.id = pt.propertyId WHERE pt.tag = 'dealmachine_deep_search_chris_edsel_zach';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(DISTINCT p.id) as totalProperties, COUNT(DISTINCT pt.propertyId) as propertiesWithTag FROM properties p LEFT JOIN propertyTags pt ON p.id = pt.propertyId WHERE pt.tag = 'dealmachine_deep_search_chris_edsel_zach';",
+  "rows": [
+    {
+      "totalProperties": "0",
+      "propertiesWithTag": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "totalProperties\tpropertiesWithTag\n0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1493
+}
