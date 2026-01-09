@@ -1,8 +1,9 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
-import { properties } from "../../drizzle/schema";
-import { parseCSV, transformProperty, validateProperty, getPropertyKey } from "../dealmachine-import";
+import { getDb, getNextLeadId } from "../db";
+import { properties, contacts, contactPhones, contactEmails } from "../../drizzle/schema";
+import { parseCSV, transformProperty, transformContact, validateProperty, getPropertyKey } from "../dealmachine-import";
+import { eq, and } from "drizzle-orm";
 
 export const dealmachineRouter = router({
   preview: publicProcedure
@@ -103,12 +104,18 @@ export const dealmachineRouter = router({
           existingAddresses.add(key);
         }
 
-        // Import new properties
+        // Import new properties with LEAD IDs
         let propertiesCreated = 0;
+        const propertyMap = new Map<string, number>(); // Map address to property ID
+        
         for (const prop of parsedProperties) {
           const key = getPropertyKey(prop);
           if (!existingAddresses.has(key)) {
-            await db.insert(properties).values({
+            // Get next LEAD ID
+            const nextLeadId = await getNextLeadId();
+            
+            const result = await db.insert(properties).values({
+              leadId: nextLeadId,
               addressLine1: prop.addressLine1,
               addressLine2: prop.addressLine2 || null,
               city: prop.city,
@@ -133,16 +140,97 @@ export const dealmachineRouter = router({
               createdAt: new Date(),
               updatedAt: new Date(),
             });
+            
+            // Store property ID for contact import
+            const propertyId = (result as any).insertId || 0;
+            if (propertyId) {
+              propertyMap.set(key, propertyId);
+            }
+            
             propertiesCreated++;
             existingAddresses.add(key);
           }
         }
 
-        // TODO: Import contacts if needed
-        // For now, just return property count
+        // Import contacts if provided
+        let contactsCreated = 0;
+        if (input.contactsCSV) {
+          const contactRows = parseCSV(input.contactsCSV);
+          
+          for (const row of contactRows) {
+            const parsedContact = transformContact(row);
+            if (!parsedContact) continue;
+            
+            // Get property ID from address in the row
+            const propertyAddress = row["property_address_line_1"] || row["address_line_1"];
+            const propertyCity = row["property_address_city"] || row["city"];
+            const propertyState = row["property_address_state"] || row["state"];
+            const propertyZipcode = row["property_address_zipcode"] || row["zipcode"];
+            
+            if (!propertyAddress || !propertyCity || !propertyState || !propertyZipcode) continue;
+            
+            // Find the property ID
+            const propKey = `${propertyAddress}|${propertyCity}|${propertyState}|${propertyZipcode}`.toLowerCase();
+            const matchingProperty = await db
+              .select({ id: properties.id })
+              .from(properties)
+              .where(
+                and(
+                  eq(properties.addressLine1, propertyAddress),
+                  eq(properties.city, propertyCity),
+                  eq(properties.state, propertyState),
+                  eq(properties.zipcode, propertyZipcode)
+                )
+              )
+              .limit(1);
+            
+            if (matchingProperty.length === 0) continue;
+            
+            const propertyId = matchingProperty[0].id;
+            
+            // Create contact
+            const contactResult = await db.insert(contacts).values({
+              propertyId,
+              name: parsedContact.name,
+              relationship: parsedContact.relationship as any,
+              dnc: parsedContact.dnc ? 1 : 0,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+            
+            // Get the inserted contact ID
+            const contactId = (contactResult as any).insertId || 0;
+            
+            if (contactId) {
+              // Add phone if provided
+              if (parsedContact.phone) {
+                await db.insert(contactPhones).values({
+                  contactId,
+                  phoneNumber: parsedContact.phone,
+                  phoneType: "Mobile",
+                  dnc: parsedContact.dnc ? 1 : 0,
+                  createdAt: new Date(),
+                });
+              }
+              
+              // Add email if provided
+              if (parsedContact.email) {
+                await db.insert(contactEmails).values({
+                  contactId,
+                  email: parsedContact.email,
+                  isPrimary: 1,
+                  createdAt: new Date(),
+                });
+              }
+              
+              contactsCreated++;
+            }
+          }
+        }
+
         return {
           propertiesCreated,
-          contactsCreated: 0,
+          contactsCreated,
         };
       } catch (error) {
         console.error("Import error:", error);

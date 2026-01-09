@@ -1813,3 +1813,32 @@ export async function deleteFamilyMember(id: number) {
     .delete(familyMembers)
     .where(eq(familyMembers.id, id));
 }
+
+
+/**
+ * Get the next LEAD ID for a new property
+ * Starts from 270001 and increments by 1
+ */
+export async function getNextLeadId(): Promise<number> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { max } = await import("drizzle-orm");
+  
+  // Get the maximum leadId currently in the database
+  const result = await db
+    .select({ maxLeadId: max(properties.leadId) })
+    .from(properties);
+
+  const currentMax = result[0]?.maxLeadId;
+  
+  // If no properties exist, start from 270001
+  if (!currentMax) {
+    return 270001;
+  }
+  
+  // Otherwise, increment by 1
+  return currentMax + 1;
+}

@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, leadId, addressLine1, city, leadTemperature, deskStatus FROM properties LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, leadId, addressLine1, city, leadTemperature, deskStatus FROM properties LIMIT 10;",
+  "rows": [
+    {
+      "id": "270002",
+      "leadId": "NULL",
+      "addressLine1": "285 SW 12th St",
+      "city": "Pompano Beach",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "270003",
+      "leadId": "NULL",
+      "addressLine1": "3750 SW 8th St",
+      "city": "Fort Lauderdale",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "270004",
+      "leadId": "NULL",
+      "addressLine1": "6105 SW 19th St",
+      "city": "Miramar",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "270005",
+      "leadId": "NULL",
+      "addressLine1": "2321 NW 27th Ave",
+      "city": "Fort Lauderdale",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "270006",
+      "leadId": "NULL",
+      "addressLine1": "4700 SW 18th St",
+      "city": "West Park",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "300019",
+      "leadId": "NULL",
+      "addressLine1": "3201 S alligator alley , Avon park Fl 33825",
+      "city": "Unknown",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "300020",
+      "leadId": "NULL",
+      "addressLine1": "4700 SW 18th St",
+      "city": " West Park",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "510001",
+      "leadId": "NULL",
+      "addressLine1": "7109 Bonito St",
+      "city": "Tampa",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "510002",
+      "leadId": "NULL",
+      "addressLine1": "9108 Sheldon West Dr",
+      "city": "Tampa",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    },
+    {
+      "id": "510003",
+      "leadId": "NULL",
+      "addressLine1": "6613 Henrich Dr",
+      "city": "Orlando",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcity\tleadTemperature\tdeskStatus\n270002\tNULL\t285 SW 12th St\tPompano Beach\tTBD\tBIN\n270003\tNULL\t3750 SW 8th St\tFort Lauderdale\tTBD\tBIN\n270004\tNULL\t6105 SW 19th St\tMiramar\tTBD\tBIN\n270005\tNULL\t2321 NW 27th Ave\tFort Lauderdale\tTBD\tBIN\n270006\tNULL\t4700 SW 18th St\tWest Park\tTBD\tBIN\n300019\tNULL\t3201 S alligator alley , Avon park Fl 33825\tUnknown\tTBD\tBIN\n300020\tNULL\t4700 SW 18th St\t West Park\tTBD\tBIN\n510001\tNULL\t7109 Bonito St\tTampa\tTBD\tBIN\n510002\tNULL\t9108 Sheldon West Dr\tTampa\tTBD\tBIN\n510003\tNULL\t6613 Henrich Dr\tOrlando\tTBD\tBIN\n",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

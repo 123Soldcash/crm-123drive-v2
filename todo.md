@@ -439,3 +439,15 @@
 - [ ] Hide/Show Deep Search - Collapsible Deep Search section like Family Tree
 - [ ] API Integration Prep - Structure for Zillow/PropertyStream/DealMachine integration
 - [ ] Multi-user Real-time Sync - Verify multiple agents can use system simultaneously
+
+
+## DealMachine CSV Import - V15B (COMPLETED)
+- [x] Implement continuous LEAD IDs - Auto-incrementing from #270007
+- [x] Add BIN desk assignment - Auto-assign imported properties to BIN desk
+- [x] Expand email schema - Allow unlimited emails per contact (like phones)
+- [x] Auto TBD temperature - All imported leads default to TBD
+- [x] Add leadId column to properties table
+- [x] Create getNextLeadId() helper function in db.ts
+- [x] Update DealMachine import to assign LEAD IDs
+- [x] Update DealMachine import to import contacts with phones and emails
+- [x] Update leadTemperature default from COLD to TBD

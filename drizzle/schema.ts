@@ -122,6 +122,7 @@ export type InsertLeadTransferHistory = typeof leadTransferHistory.$inferInsert;
  */
 export const properties = mysqlTable("properties", {
   id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId"), // LEAD ID (e.g., 270001, 270002) - managed by application
   // Address information
   addressLine1: varchar("addressLine1", { length: 255 }).notNull(),
   addressLine2: varchar("addressLine2", { length: 255 }),
@@ -147,7 +148,7 @@ export const properties = mysqlTable("properties", {
     "Not Interested",
     "Follow Up",
   ]).default("Not Visited"),
-  leadTemperature: mysqlEnum("leadTemperature", ["SUPER HOT", "HOT", "WARM", "COLD", "TBD", "DEAD"]).default("COLD"),
+  leadTemperature: mysqlEnum("leadTemperature", ["SUPER HOT", "HOT", "WARM", "COLD", "TBD", "DEAD"]).default("TBD"),
   ownerVerified: int("ownerVerified").default(0).notNull(),
   assignedAgentId: int("assignedAgentId"), // User ID of assigned birddog agent
   marketStatus: varchar("marketStatus", { length: 100 }),
