@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as totalProperties, COUNT(DISTINCT leadId) as propertiesWithLeadId FROM properties WHERE leadId IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as totalProperties, COUNT(DISTINCT leadId) as propertiesWithLeadId FROM properties WHERE leadId IS NOT NULL;",
+  "rows": [
+    {
+      "totalProperties": "107",
+      "propertiesWithLeadId": "107"
+    }
+  ],
+  "messages": [],
+  "stdout": "totalProperties\tpropertiesWithLeadId\n107\t107\n",
+  "stderr": "",
+  "execution_time_ms": 1658
+}

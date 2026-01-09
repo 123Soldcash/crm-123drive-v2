@@ -134,8 +134,18 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
   // Required fields
   const addressLine1 = row["property_address_line_1"] || row["address_line_1"];
   const city = row["property_address_city"] || row["city"];
-  const state = row["property_address_state"] || row["state"];
-  const zipcode = row["property_address_zipcode"] || row["zipcode"];
+  let state = row["property_address_state"] || row["state"];
+  let zipcode = row["property_address_zipcode"] || row["zipcode"];
+  
+  // Ensure state is max 2 characters (state abbreviation)
+  if (state) {
+    state = state.substring(0, 2).toUpperCase();
+  }
+  
+  // Ensure zipcode is max 10 characters
+  if (zipcode) {
+    zipcode = zipcode.substring(0, 10);
+  }
 
   if (!addressLine1 || !city || !state || !zipcode) {
     return null; // Skip invalid rows
@@ -143,15 +153,20 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
 
   // Store all raw data for reference
   const rawData = { ...row };
+  
+  // Helper to truncate strings to max length
+  const truncate = (str: string | undefined, maxLen: number): string | undefined => {
+    return str ? str.substring(0, maxLen) : str;
+  };
 
   return {
-    addressLine1,
-    addressLine2: row["property_address_line_2"] || row["address_line_2"],
-    city,
+    addressLine1: truncate(addressLine1, 255) || addressLine1,
+    addressLine2: truncate(row["property_address_line_2"] || row["address_line_2"], 255),
+    city: truncate(city, 100) || city,
     state,
     zipcode,
-    owner1Name: row["owner_1_name"] || row["owner_name"],
-    propertyType: row["property_type"],
+    owner1Name: truncate(row["owner_1_name"] || row["owner_name"], 255),
+    propertyType: truncate(row["property_type"], 100),
     yearBuilt: parseInteger(row["year_built"]),
     totalBedrooms: parseInteger(row["total_bedrooms"]),
     totalBaths: parseInteger(row["total_baths"]),
@@ -160,9 +175,9 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
     equityPercent: parsePercentage(row["equity_percent"]),
     mortgageAmount: parseCurrency(row["total_loan_balance"]),
     taxAmount: parseCurrency(row["tax_amt"]),
-    marketStatus: row["market_status"] || row["lead_status"],
-    dealMachinePropertyId: row["property_id"],
-    dealMachineLeadId: row["lead_id"],
+    marketStatus: truncate(row["market_status"] || row["lead_status"], 100),
+    dealMachinePropertyId: truncate(row["property_id"], 100),
+    dealMachineLeadId: truncate(row["lead_id"], 100),
     dealMachineRawData: JSON.stringify(rawData),
   };
 }

@@ -1,7 +1,7 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb, getNextLeadId } from "../db";
-import { properties, contacts, contactPhones, contactEmails } from "../../drizzle/schema";
+import { properties, contacts, contactPhones, contactEmails, propertyTags } from "../../drizzle/schema";
 import { parseCSV, transformProperty, transformContact, validateProperty, getPropertyKey } from "../dealmachine-import";
 import { eq, and } from "drizzle-orm";
 
@@ -145,6 +145,14 @@ export const dealmachineRouter = router({
             const propertyId = (result as any).insertId || 0;
             if (propertyId) {
               propertyMap.set(key, propertyId);
+              
+              // Add status tag for this import batch
+              await db.insert(propertyTags).values({
+                propertyId,
+                tag: "dealmachine_deep_search_chris_edsel_zach",
+                createdBy: 1,
+                createdAt: new Date(),
+              });
             }
             
             propertiesCreated++;

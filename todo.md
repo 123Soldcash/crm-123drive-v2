@@ -451,3 +451,13 @@
 - [x] Update DealMachine import to assign LEAD IDs
 - [x] Update DealMachine import to import contacts with phones and emails
 - [x] Update leadTemperature default from COLD to TBD
+
+
+## DealMachine CSV Import - Status Tags (COMPLETED)
+- [x] Add Status Tag auto-assignment to DealMachine import
+- [x] Auto-tag all imports with "dealmachine_deep_search_chris_edsel_zach"
+- [x] Test import with new CSV files
+- [x] Verify Status Tags display in Properties list
+- [x] Fix field length truncation for CSV data (state, zipcode, dealMachinePropertyId)
+- [x] Create vitest test for import with status tags
+- [x] Verify LEAD IDs are assigned to imported properties
