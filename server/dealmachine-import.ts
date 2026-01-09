@@ -1,6 +1,6 @@
 /**
  * DealMachine CSV Import Utilities
- * Simple, robust CSV parsing and data transformation
+ * Following dealmachine-properties-MAP.xlsx field mappings
  */
 
 export interface DealMachinePropertyRow {
@@ -21,6 +21,7 @@ export interface ParsedProperty {
   buildingSquareFeet?: number;
   estimatedValue?: number;
   equityPercent?: number;
+  equityAmount?: number;
   mortgageAmount?: number;
   taxAmount?: number;
   marketStatus?: string;
@@ -129,13 +130,14 @@ function parseInteger(value?: string): number | undefined {
 
 /**
  * Transform DealMachine property row to our schema
+ * Following dealmachine-properties-MAP.xlsx field mappings
  */
 export function transformProperty(row: DealMachinePropertyRow): ParsedProperty | null {
-  // Required fields
-  const addressLine1 = row["property_address_line_1"] || row["address_line_1"];
-  const city = row["property_address_city"] || row["city"];
-  let state = row["property_address_state"] || row["state"];
-  let zipcode = row["property_address_zipcode"] || row["zipcode"];
+  // Required fields (from MAP: PROPERTY ADDRESS section)
+  const addressLine1 = row["property_address_line_1"];
+  const city = row["property_address_city"];
+  let state = row["property_address_state"];
+  let zipcode = row["property_address_zipcode"];
   
   // Ensure state is max 2 characters (state abbreviation)
   if (state) {
@@ -161,21 +163,22 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
 
   return {
     addressLine1: truncate(addressLine1, 255) || addressLine1,
-    addressLine2: truncate(row["property_address_line_2"] || row["address_line_2"], 255),
+    addressLine2: truncate(row["property_address_line_2"], 255),
     city: truncate(city, 100) || city,
     state,
     zipcode,
-    owner1Name: truncate(row["owner_1_name"] || row["owner_name"], 255),
+    owner1Name: truncate(row["owner_1_name"], 255),
     propertyType: truncate(row["property_type"], 100),
     yearBuilt: parseInteger(row["year_built"]),
     totalBedrooms: parseInteger(row["total_bedrooms"]),
     totalBaths: parseInteger(row["total_baths"]),
     buildingSquareFeet: parseInteger(row["building_square_feet"]),
     estimatedValue: parseCurrency(row["estimated_value"]),
+    equityAmount: parseCurrency(row["equity_amount"]),
     equityPercent: parsePercentage(row["equity_percent"]),
-    mortgageAmount: parseCurrency(row["total_loan_balance"]),
+    mortgageAmount: parseCurrency(row["total_loan_amt"]), // MAP: "Mortgage" field
     taxAmount: parseCurrency(row["tax_amt"]),
-    marketStatus: truncate(row["market_status"] || row["lead_status"], 100),
+    marketStatus: truncate(row["lead_status"], 100), // MAP: "Add on the notes of the lead"
     dealMachinePropertyId: truncate(row["property_id"], 100),
     dealMachineLeadId: truncate(row["lead_id"], 100),
     dealMachineRawData: JSON.stringify(rawData),

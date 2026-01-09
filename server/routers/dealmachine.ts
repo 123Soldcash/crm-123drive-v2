@@ -97,6 +97,7 @@ export const dealmachineRouter = router({
               totalBaths: prop.totalBaths || null,
               buildingSquareFeet: prop.buildingSquareFeet || null,
               estimatedValue: prop.estimatedValue || null,
+              equityAmount: prop.equityAmount || null,
               equityPercent: prop.equityPercent || null,
               mortgageAmount: prop.mortgageAmount || null,
               taxAmount: prop.taxAmount || null,

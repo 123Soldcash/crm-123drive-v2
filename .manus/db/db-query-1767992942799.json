@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM propertyTags WHERE tag = 'dealmachine_deep_search_chris_edsel_zach'; DELETE FROM contactEmails; DELETE FROM contactPhones; DELETE FROM contacts; DELETE FROM properties WHERE dealMachinePropertyId IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute DELETE FROM propertyTags WHERE tag = 'dealmachine_deep_search_chris_edsel_zach'; DELETE FROM contactEmails; DELETE FROM contactPhones; DELETE FROM contacts; DELETE FROM properties WHERE dealMachinePropertyId IS NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2424
+}

@@ -476,3 +476,12 @@
 - [x] Verify data is synced from database
 - [x] Updated ContactManagement component to display phones and emails arrays
 - [x] Confirmed 288 contacts with phones and emails in databasend emails appear in contact detail view
+
+
+## DealMachine CSV Import - Using MAP File (COMPLETED)
+- [x] Parse dealmachine-properties-MAP.xlsx to understand field mappings
+- [x] Update dealmachine-import.ts to follow MAP file mappings
+- [x] Test import with corrected field mappings
+- [x] Verified 101 properties and 329 contacts in CSV files
+- [x] Added equityAmount field to property insert
+- [x] Validated field mappings match MAP file (property_address_*, owner_1_name, estimated_value, equity_amount, equity_percent, total_loan_amt)
