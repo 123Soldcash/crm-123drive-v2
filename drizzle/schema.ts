@@ -185,6 +185,7 @@ export const properties = mysqlTable("properties", {
   taxDelinquentYear: int("taxDelinquentYear"),
   
   // DealMachine integration
+  propertyId: varchar("propertyId", { length: 100 }).unique(), // Unique property ID from DealMachine (prevents duplicates)
   dealMachinePropertyId: varchar("dealMachinePropertyId", { length: 100 }),
   dealMachineLeadId: varchar("dealMachineLeadId", { length: 100 }),
   dealMachineRawData: text("dealMachineRawData"), // JSON string with all extra DealMachine data

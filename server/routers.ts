@@ -7,7 +7,7 @@ import * as db from "./db";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
@@ -1107,8 +1107,27 @@ export const appRouter = router({
               return isNaN(parsed.getTime()) ? null : parsed;
             };
             
+            // Get propertyId from dealMachinePropertyId or dealMachineLeadId
+            const propertyId = row['dealMachinePropertyId'] || row['propertyId'] || null;
+            
+            // Check for duplicate propertyId
+            if (propertyId) {
+              const existing = await dbInstance
+                .select({ id: properties.id })
+                .from(properties)
+                .where(eq(properties.propertyId, propertyId))
+                .limit(1);
+              
+              if (existing.length > 0) {
+                errorCount++;
+                errors.push(`Row ${i + 2}: Property with ID ${propertyId} already exists (duplicate)`);
+                continue;
+              }
+            }
+            
             // All property fields from template
             const propertyData: any = {
+              propertyId: propertyId,
               addressLine1: String(addressLine1).trim(),
               addressLine2: row['addressLine2'] || null,
               city: String(city).trim(),
@@ -1162,7 +1181,7 @@ export const appRouter = router({
               throw new Error('Failed to retrieve inserted property');
             }
             
-            const propertyId = insertedProperty.id;
+            const insertedPropertyId = insertedProperty.id;
             
             // Process contacts (up to 2 contacts from template)
             const { contacts } = await import('../drizzle/schema');
@@ -1173,7 +1192,7 @@ export const appRouter = router({
               if (!contactName) continue;
               
               const contactData: any = {
-                propertyId,
+                propertyId: insertedPropertyId,
                 name: String(contactName).trim(),
                 flags: row[`contact${contactNum}_flags`] || null,
                 phone1: row[`contact${contactNum}_phone1`] || null,
