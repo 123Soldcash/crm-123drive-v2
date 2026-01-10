@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  address,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nWHERE address IS NOT NULL AND address != ''\nGROUP BY address\nHAVING count > 1\nORDER BY count DESC\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT \n  address,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nWHERE address IS NOT NULL AND address != ''\nGROUP BY address\nHAVING count > 1\nORDER BY count DESC\nLIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'address' in 'group statement'"
+  ]
+}

@@ -506,3 +506,20 @@
 - [ ] Execute import through UI or API
 - [ ] Verify all data in Properties list and detail views
 - [ ] Confirm contact phones and emails display correctly
+
+
+## DealMachine CSV Import - ISSUES & NEW STRATEGY
+- [x] Parse consolidated CSV with embedded contacts (up to 14 per property)
+- [x] Map contact flags to relationship field (Owner, Resident, Family, etc.)
+- [x] Extract phones and emails from embedded contacts
+- [x] Create vitest tests - ALL PASSED (6/6)
+- [x] Verified: 85 properties with 269 contacts, 183 phones, 199 emails
+- [ ] ISSUE: Duplicate properties detected in database (same address, different LEAD IDs)
+- [ ] ISSUE: Contacts not imported (empty contact section in properties)
+- [ ] NEW STRATEGY: Prepare CRM with field mapping, user does manual Excel import
+- [ ] Phase 1: Diagnose duplicate properties root cause
+- [ ] Phase 2: Clean database and remove all duplicates
+- [ ] Phase 3: Create comprehensive field mapping documentation (169 CRM fields)
+- [ ] Phase 4: Document contact field mapping (up to 9 contacts per property)
+- [ ] Phase 5: Prepare import validation checklist
+- [ ] Phase 6: Test manual import workflow

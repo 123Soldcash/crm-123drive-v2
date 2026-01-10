@@ -1,0 +1,70 @@
+{
+  "query": "SELECT \n  CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nGROUP BY addressLine1, city, state, zipcode\nHAVING count > 1\nORDER BY count DESC\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT \n  CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nGROUP BY addressLine1, city, state, zipcode\nHAVING count > 1\nORDER BY count DESC\nLIMIT 10;",
+  "rows": [
+    {
+      "fullAddress": "5048 Ne 14th Ave, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570004,570006",
+      "leadIds": "270002,270003"
+    },
+    {
+      "fullAddress": "365 Nw 15th St, Pompano Beach, FL 33060",
+      "count": "2",
+      "ids": "570005,570009",
+      "leadIds": "270003,270005"
+    },
+    {
+      "fullAddress": "7255 Nw 54th Ct, Lauderhill, FL 33319",
+      "count": "2",
+      "ids": "570007,570012",
+      "leadIds": "270004,270007"
+    },
+    {
+      "fullAddress": "3750 Sw 8th St, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570008,570015",
+      "leadIds": "270005,270009"
+    },
+    {
+      "fullAddress": "Fort Lauderdale, Solarium, FL 831,2025,$",
+      "count": "2",
+      "ids": "570010,570019",
+      "leadIds": "270006,270010"
+    },
+    {
+      "fullAddress": "4700 Sw 18th St, West Park, FL 33023",
+      "count": "2",
+      "ids": "570011,570022",
+      "leadIds": "270007,270012"
+    },
+    {
+      "fullAddress": "141 Nw 13th Ave, Dania, FL 33004",
+      "count": "2",
+      "ids": "570013,570025",
+      "leadIds": "270008,270014"
+    },
+    {
+      "fullAddress": "6105 Sw 19th St, Miramar, FL 33023",
+      "count": "2",
+      "ids": "570014,570028",
+      "leadIds": "270009,270016"
+    },
+    {
+      "fullAddress": "000,$416, Miramar, FL Solarium",
+      "count": "2",
+      "ids": "570017,570031",
+      "leadIds": "270010,270018"
+    },
+    {
+      "fullAddress": "409 Nw 15th Way, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570020,570034",
+      "leadIds": "270011,270020"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullAddress\tcount\tids\tleadIds\n5048 Ne 14th Ave, Pompano Beach, FL 33064\t2\t570004,570006\t270002,270003\n365 Nw 15th St, Pompano Beach, FL 33060\t2\t570005,570009\t270003,270005\n7255 Nw 54th Ct, Lauderhill, FL 33319\t2\t570007,570012\t270004,270007\n3750 Sw 8th St, Fort Lauderdale, FL 33312\t2\t570008,570015\t270005,270009\nFort Lauderdale, Solarium, FL 831,2025,$\t2\t570010,570019\t270006,270010\n4700 Sw 18th St, West Park, FL 33023\t2\t570011,570022\t270007,270012\n141 Nw 13th Ave, Dania, FL 33004\t2\t570013,570025\t270008,270014\n6105 Sw 19th St, Miramar, FL 33023\t2\t570014,570028\t270009,270016\n000,$416, Miramar, FL Solarium\t2\t570017,570031\t270010,270018\n409 Nw 15th Way, Fort Lauderdale, FL 33311\t2\t570020,570034\t270011,270020\n",
+  "stderr": "",
+  "execution_time_ms": 1499
+}

@@ -1,0 +1,688 @@
+{
+  "query": "SELECT \n  CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nGROUP BY addressLine1, city, state, zipcode\nHAVING count > 1\nORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT \n  CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress,\n  COUNT(*) as count,\n  GROUP_CONCAT(id ORDER BY id) as ids,\n  GROUP_CONCAT(leadId ORDER BY leadId) as leadIds\nFROM properties\nGROUP BY addressLine1, city, state, zipcode\nHAVING count > 1\nORDER BY count DESC;",
+  "rows": [
+    {
+      "fullAddress": "5048 Ne 14th Ave, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570004,570006",
+      "leadIds": "270002,270003"
+    },
+    {
+      "fullAddress": "365 Nw 15th St, Pompano Beach, FL 33060",
+      "count": "2",
+      "ids": "570005,570009",
+      "leadIds": "270003,270005"
+    },
+    {
+      "fullAddress": "7255 Nw 54th Ct, Lauderhill, FL 33319",
+      "count": "2",
+      "ids": "570007,570012",
+      "leadIds": "270004,270007"
+    },
+    {
+      "fullAddress": "3750 Sw 8th St, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570008,570015",
+      "leadIds": "270005,270009"
+    },
+    {
+      "fullAddress": "Fort Lauderdale, Solarium, FL 831,2025,$",
+      "count": "2",
+      "ids": "570010,570019",
+      "leadIds": "270006,270010"
+    },
+    {
+      "fullAddress": "4700 Sw 18th St, West Park, FL 33023",
+      "count": "2",
+      "ids": "570011,570022",
+      "leadIds": "270007,270012"
+    },
+    {
+      "fullAddress": "141 Nw 13th Ave, Dania, FL 33004",
+      "count": "2",
+      "ids": "570013,570025",
+      "leadIds": "270008,270014"
+    },
+    {
+      "fullAddress": "6105 Sw 19th St, Miramar, FL 33023",
+      "count": "2",
+      "ids": "570014,570028",
+      "leadIds": "270009,270016"
+    },
+    {
+      "fullAddress": "000,$416, Miramar, FL Solarium",
+      "count": "2",
+      "ids": "570017,570031",
+      "leadIds": "270010,270018"
+    },
+    {
+      "fullAddress": "409 Nw 15th Way, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570020,570034",
+      "leadIds": "270011,270020"
+    },
+    {
+      "fullAddress": "000,$57, Fort Lauderdale, FL 11 Blk 6,D",
+      "count": "2",
+      "ids": "570021,570037",
+      "leadIds": "270012,270022"
+    },
+    {
+      "fullAddress": "1301 S 16th Ave, Hollywood, FL 33020",
+      "count": "2",
+      "ids": "570023,570040",
+      "leadIds": "270013,270024"
+    },
+    {
+      "fullAddress": "13181 Sw 7th Pl, Davie, FL 33325",
+      "count": "2",
+      "ids": "570024,570043",
+      "leadIds": "270014,270026"
+    },
+    {
+      "fullAddress": "1612 Ne 29th St, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570026,570046",
+      "leadIds": "270015,270028"
+    },
+    {
+      "fullAddress": "000,$22, Pompano Beach, FL 680,2025,$",
+      "count": "2",
+      "ids": "570027,570049",
+      "leadIds": "270016,270030"
+    },
+    {
+      "fullAddress": "723 W 10th St, Riviera Beach, FL 33404",
+      "count": "2",
+      "ids": "570029,570052",
+      "leadIds": "270017,270032"
+    },
+    {
+      "fullAddress": "6358 Nw 20th Ct, Margate, FL 33063",
+      "count": "2",
+      "ids": "570030,570055",
+      "leadIds": "270018,270034"
+    },
+    {
+      "fullAddress": "2300 Nw 23rd Ln, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570032,570058",
+      "leadIds": "270019,270036"
+    },
+    {
+      "fullAddress": "3321 Nw 8th Ct, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570033,570061",
+      "leadIds": "270020,270038"
+    },
+    {
+      "fullAddress": "537 Nw 17th Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570035,570063",
+      "leadIds": "270021,270039"
+    },
+    {
+      "fullAddress": "280 Sw 8th St, Deerfield Beach, FL 33441",
+      "count": "2",
+      "ids": "570036,570066",
+      "leadIds": "270022,270041"
+    },
+    {
+      "fullAddress": "1920 Nw 39th Ave, Coconut Creek, FL 33066",
+      "count": "2",
+      "ids": "570038,570069",
+      "leadIds": "270023,270043"
+    },
+    {
+      "fullAddress": "1280 Nw 58th Ter, Sunrise, FL 33313",
+      "count": "2",
+      "ids": "570039,570072",
+      "leadIds": "270024,270045"
+    },
+    {
+      "fullAddress": "Sunrise, Solarium, FL 531,2025,$",
+      "count": "2",
+      "ids": "570041,570075",
+      "leadIds": "270025,270047"
+    },
+    {
+      "fullAddress": "1513 Nw 24th Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570042,570078",
+      "leadIds": "270026,270049"
+    },
+    {
+      "fullAddress": "000,100.00%,0,0,0,Davis Minnie Est,,, ,,,1513 Nw 24th Ave, Fl 33311,1513 Nw 24th Ave,,Fort Lauderdale,Fl,33311,Absentee Owner,,,1602,4,2,1954,Single Family,Mas, 78 020,$12",
+      "count": "2",
+      "ids": "570044,570081",
+      "leadIds": "270027,270051"
+    },
+    {
+      "fullAddress": "545 Nw 21st Ct, Pompano Beach, FL 33060",
+      "count": "2",
+      "ids": "570045,570084",
+      "leadIds": "270028,270053"
+    },
+    {
+      "fullAddress": "8147 Nw 68th Ave, Tamarac, FL 33321",
+      "count": "2",
+      "ids": "570047,570087",
+      "leadIds": "270029,270055"
+    },
+    {
+      "fullAddress": "370 Nw 14th St, Pompano Beach, FL 33060",
+      "count": "2",
+      "ids": "570048,570090",
+      "leadIds": "270030,270057"
+    },
+    {
+      "fullAddress": "4111 Nw 10th Ter, Fort Lauderdale, FL 33309",
+      "count": "2",
+      "ids": "570050,570093",
+      "leadIds": "270031,270059"
+    },
+    {
+      "fullAddress": "2614 Nw 25th St, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570051,570096",
+      "leadIds": "270032,270061"
+    },
+    {
+      "fullAddress": "106 Nw 11th Ave, Dania, FL 33004",
+      "count": "2",
+      "ids": "570053,570099",
+      "leadIds": "270033,270063"
+    },
+    {
+      "fullAddress": "1207 S 26th Ave, Hollywood, FL 33020",
+      "count": "2",
+      "ids": "570054,570102",
+      "leadIds": "270034,270065"
+    },
+    {
+      "fullAddress": "8831 Nw 11th St, Pembroke Pines, FL 33024",
+      "count": "2",
+      "ids": "570056,570105",
+      "leadIds": "270035,270067"
+    },
+    {
+      "fullAddress": "3400 Nw 7th Ct, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570057,570108",
+      "leadIds": "270036,270069"
+    },
+    {
+      "fullAddress": "7120 Nw 44th Ct, Lauderhill, FL 33319",
+      "count": "2",
+      "ids": "570059,570111",
+      "leadIds": "270037,270071"
+    },
+    {
+      "fullAddress": "2407 Nw 28th Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570060,570114",
+      "leadIds": "270038,270073"
+    },
+    {
+      "fullAddress": "2232 Sw 34th Ter, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570062,570117",
+      "leadIds": "270039,270075"
+    },
+    {
+      "fullAddress": "3801 Nw 4th Ct, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570064,570120",
+      "leadIds": "270040,270077"
+    },
+    {
+      "fullAddress": "600 Sw 38th Ave, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570065,570122",
+      "leadIds": "270041,270079"
+    },
+    {
+      "fullAddress": "4320 Sw 25th St, West Park, FL 33023",
+      "count": "2",
+      "ids": "570067,570125",
+      "leadIds": "270042,270080"
+    },
+    {
+      "fullAddress": "2610 Nw 16th St, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570068,570128",
+      "leadIds": "270043,270082"
+    },
+    {
+      "fullAddress": "2881 Nw 25th St, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570070,570131",
+      "leadIds": "270044,270084"
+    },
+    {
+      "fullAddress": "North Lauderdale, 982,2025,$204, 64 190,$18",
+      "count": "2",
+      "ids": "570071,570134",
+      "leadIds": "270045,270086"
+    },
+    {
+      "fullAddress": "1731 Nw 34th Ave, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570073,570137",
+      "leadIds": "270046,270088"
+    },
+    {
+      "fullAddress": "1071 Nw 25th Way, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570074,570140",
+      "leadIds": "270047,270090"
+    },
+    {
+      "fullAddress": "613 Sw 12th Ave, Dania, FL 33004",
+      "count": "2",
+      "ids": "570076,570143",
+      "leadIds": "270048,270092"
+    },
+    {
+      "fullAddress": "400 Nw 7th Ave, Hallandale Beach, FL 33009",
+      "count": "2",
+      "ids": "570077,570146",
+      "leadIds": "270049,270094"
+    },
+    {
+      "fullAddress": "3120 Sw 58th Pl, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570079,570149",
+      "leadIds": "270050,270096"
+    },
+    {
+      "fullAddress": "609 Ne 2nd Ter, Deerfield Beach, FL 33441",
+      "count": "2",
+      "ids": "570080,570152",
+      "leadIds": "270051,270098"
+    },
+    {
+      "fullAddress": "000,$48, Deerfield Beach, FL Solarium",
+      "count": "2",
+      "ids": "570082,570155",
+      "leadIds": "270052,270100"
+    },
+    {
+      "fullAddress": "756 Nw 15th Ct, Pompano Beach, FL 33060",
+      "count": "2",
+      "ids": "570083,570158",
+      "leadIds": "270053,270102"
+    },
+    {
+      "fullAddress": "1711 Nw 55th Ave, Lauderhill, FL 33313",
+      "count": "2",
+      "ids": "570085,570161",
+      "leadIds": "270054,270104"
+    },
+    {
+      "fullAddress": "519 Ne 8th Ave, Deerfield Beach, FL 33441",
+      "count": "2",
+      "ids": "570086,570164",
+      "leadIds": "270055,270106"
+    },
+    {
+      "fullAddress": "2521 Nw 18th Ct, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570088,570167",
+      "leadIds": "270056,270108"
+    },
+    {
+      "fullAddress": "4298 Nw 51st Ave, Lauderdale Lakes, FL 33319",
+      "count": "2",
+      "ids": "570089,570169",
+      "leadIds": "270057,270110"
+    },
+    {
+      "fullAddress": "35 Chestnut Cir, Hollywood, FL 33026",
+      "count": "2",
+      "ids": "570091,570172",
+      "leadIds": "270058,270111"
+    },
+    {
+      "fullAddress": "21696 N Heritage Cir, Pembroke Pines, FL 33029",
+      "count": "2",
+      "ids": "570092,570175",
+      "leadIds": "270059,270113"
+    },
+    {
+      "fullAddress": "5305 Wiley St, Hollywood, FL 33021",
+      "count": "2",
+      "ids": "570094,570177",
+      "leadIds": "270060,270115"
+    },
+    {
+      "fullAddress": "319 Nw 30th Ter, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570095,570178",
+      "leadIds": "270061,270116"
+    },
+    {
+      "fullAddress": "2526 Wilson St, Hollywood, FL 33020",
+      "count": "2",
+      "ids": "570097,570179",
+      "leadIds": "270062,270117"
+    },
+    {
+      "fullAddress": "6717 Arbor Dr, Miramar, FL 33023",
+      "count": "2",
+      "ids": "570098,570180",
+      "leadIds": "270063,270118"
+    },
+    {
+      "fullAddress": "6875 Nw 17th Ct, Margate, FL 33063",
+      "count": "2",
+      "ids": "570100,570181",
+      "leadIds": "270064,270119"
+    },
+    {
+      "fullAddress": "1860 Nw 33rd Ave, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570101,570182",
+      "leadIds": "270065,270120"
+    },
+    {
+      "fullAddress": "1261 Nw 29th Way, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570103,570183",
+      "leadIds": "270066,270121"
+    },
+    {
+      "fullAddress": "8708 Sw 15th St, Davie, FL 33324",
+      "count": "2",
+      "ids": "570104,570184",
+      "leadIds": "270067,270122"
+    },
+    {
+      "fullAddress": "2140 Sw 52nd St, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570106,570185",
+      "leadIds": "270068,270123"
+    },
+    {
+      "fullAddress": "2712 Sw 12th St, Deerfield Beach, FL 33442",
+      "count": "2",
+      "ids": "570107,570186",
+      "leadIds": "270069,270124"
+    },
+    {
+      "fullAddress": "550,$84, Deerfield Beach, FL 088,2025,$",
+      "count": "2",
+      "ids": "570109,570187",
+      "leadIds": "270070,270125"
+    },
+    {
+      "fullAddress": "2040 Nw 31st Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570110,570188",
+      "leadIds": "270071,270126"
+    },
+    {
+      "fullAddress": "4601 Sw 27th Ter, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570112,570189",
+      "leadIds": "270072,270127"
+    },
+    {
+      "fullAddress": "2510 Rodman St, Hollywood, FL 33020",
+      "count": "2",
+      "ids": "570113,570190",
+      "leadIds": "270073,270128"
+    },
+    {
+      "fullAddress": "129,94.00%,$41, 871,$256,Daniel P Brady,Daniel,Brady, ,,,2656 Nw 79th Ave, MA Fl 33063,2",
+      "count": "2",
+      "ids": "570115,570191",
+      "leadIds": "270074,270129"
+    },
+    {
+      "fullAddress": "2401 Sw 164th Ave, Miramar, FL 33027",
+      "count": "2",
+      "ids": "570116,570192",
+      "leadIds": "270075,270130"
+    },
+    {
+      "fullAddress": "8411 Nw 59th Ct, Tamarac, FL 33321",
+      "count": "2",
+      "ids": "570118,570193",
+      "leadIds": "270076,270131"
+    },
+    {
+      "fullAddress": "534 Nw 3rd Way, Deerfield Beach, FL 33441",
+      "count": "2",
+      "ids": "570119,570194",
+      "leadIds": "270077,270132"
+    },
+    {
+      "fullAddress": "Delray Beach, 961,2025,$274, 51 080,$243",
+      "count": "2",
+      "ids": "570121,570195",
+      "leadIds": "270078,270133"
+    },
+    {
+      "fullAddress": "3431 Ne 11th Ter, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570123,570196",
+      "leadIds": "270079,270134"
+    },
+    {
+      "fullAddress": "2731 Ne 2nd Ter, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570124,570197",
+      "leadIds": "270080,270135"
+    },
+    {
+      "fullAddress": "2500 Nw 87th Ln, Sunrise, FL 33322",
+      "count": "2",
+      "ids": "570126,570198",
+      "leadIds": "270081,270136"
+    },
+    {
+      "fullAddress": "5814 Nw 70th Ave, Tamarac, FL 33321",
+      "count": "2",
+      "ids": "570127,570199",
+      "leadIds": "270082,270137"
+    },
+    {
+      "fullAddress": "6031 Ne 7th Ave, Fort Lauderdale, FL 33334",
+      "count": "2",
+      "ids": "570129,570200",
+      "leadIds": "270083,270138"
+    },
+    {
+      "fullAddress": "1040 Nw 24th Ter, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570130,570201",
+      "leadIds": "270084,270139"
+    },
+    {
+      "fullAddress": "6761 Pershing St, Hollywood, FL 33024",
+      "count": "2",
+      "ids": "570132,570202",
+      "leadIds": "270085,270140"
+    },
+    {
+      "fullAddress": "419 Nw 13th Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570133,570203",
+      "leadIds": "270086,270141"
+    },
+    {
+      "fullAddress": "5226 Sw 24th St, West Park, FL 33023",
+      "count": "2",
+      "ids": "570135,570204",
+      "leadIds": "270087,270142"
+    },
+    {
+      "fullAddress": "8935 Nw 10th St, Pembroke Pines, FL 33024",
+      "count": "2",
+      "ids": "570136,570205",
+      "leadIds": "270088,270143"
+    },
+    {
+      "fullAddress": "102 Marion Rd, West Park, FL 33023",
+      "count": "2",
+      "ids": "570138,570206",
+      "leadIds": "270089,270144"
+    },
+    {
+      "fullAddress": "2235 Nw 9th Ct, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570139,570207",
+      "leadIds": "270090,270145"
+    },
+    {
+      "fullAddress": "Fort Lauderdale, Solarium, FL 463,2025,$",
+      "count": "2",
+      "ids": "570141,570208",
+      "leadIds": "270091,270146"
+    },
+    {
+      "fullAddress": "2651 Nw 63rd Ave, Margate, FL 33063",
+      "count": "2",
+      "ids": "570142,570209",
+      "leadIds": "270092,270147"
+    },
+    {
+      "fullAddress": "3860 Nw 4th Ct, Lauderhill, FL 33311",
+      "count": "2",
+      "ids": "570144,570210",
+      "leadIds": "270093,270148"
+    },
+    {
+      "fullAddress": "540 Nw 214th Ave, Pembroke Pines, FL 33029",
+      "count": "2",
+      "ids": "570145,570211",
+      "leadIds": "270094,270149"
+    },
+    {
+      "fullAddress": "2824 Sw 3rd Ct, Fort Lauderdale, FL 33312",
+      "count": "2",
+      "ids": "570147,570212",
+      "leadIds": "270095,270150"
+    },
+    {
+      "fullAddress": "2511 Nw 27th Ave, Fort Lauderdale, FL 33311",
+      "count": "2",
+      "ids": "570148,570213",
+      "leadIds": "270096,270151"
+    },
+    {
+      "fullAddress": "Glennville, Solarium, FL 987,2025,$",
+      "count": "2",
+      "ids": "570150,570214",
+      "leadIds": "270097,270152"
+    },
+    {
+      "fullAddress": "7804 Nw 68th Ter, Tamarac, FL 33321",
+      "count": "2",
+      "ids": "570151,570215",
+      "leadIds": "270098,270153"
+    },
+    {
+      "fullAddress": "701 Nw 2nd Ter, Deerfield Beach, FL 33441",
+      "count": "2",
+      "ids": "570153,570216",
+      "leadIds": "270099,270154"
+    },
+    {
+      "fullAddress": "1448 Ne 28th St, Pompano Beach, FL 33064",
+      "count": "2",
+      "ids": "570154,570217",
+      "leadIds": "270100,270155"
+    },
+    {
+      "fullAddress": "000,100.00%,0,0,0,Prime Tomahawk Llc,,, ,,,2520 N Mcmullen Booth Rd Ste B419 Ste B419, Fl 33761,2520 N Mcmullen Booth Rd,Ste B419,Clearwater,Fl,33761,Absentee Owner,1,,1256,3,2,1959,Singl, 39 170,,,$405",
+      "count": "2",
+      "ids": "570156,570218",
+      "leadIds": "270101,270156"
+    },
+    {
+      "fullAddress": "304 Nw 16th Ave, Pompano Beach, FL 33069",
+      "count": "2",
+      "ids": "570157,570219",
+      "leadIds": "270102,270157"
+    },
+    {
+      "fullAddress": "2100 E Caracas St, Tampa, FL 33610",
+      "count": "2",
+      "ids": "570159,570220",
+      "leadIds": "270103,270158"
+    },
+    {
+      "fullAddress": "4303 N 39th St, Tampa, FL 33610",
+      "count": "2",
+      "ids": "570160,570221",
+      "leadIds": "270104,270159"
+    },
+    {
+      "fullAddress": "3236 Clifford Sample Dr, Tampa, FL 33619",
+      "count": "2",
+      "ids": "570162,570222",
+      "leadIds": "270105,270160"
+    },
+    {
+      "fullAddress": "2607 E Lake Ave, Tampa, FL 33610",
+      "count": "2",
+      "ids": "570163,570223",
+      "leadIds": "270106,270161"
+    },
+    {
+      "fullAddress": "8438 N Highland Ave, Tampa, FL 33604",
+      "count": "2",
+      "ids": "570165,570224",
+      "leadIds": "270107,270162"
+    },
+    {
+      "fullAddress": "205 E Sadie St, Brandon, FL 33510",
+      "count": "2",
+      "ids": "570166,570225",
+      "leadIds": "270108,270163"
+    },
+    {
+      "fullAddress": "5006 S 85th St, Tampa, FL 33619",
+      "count": "2",
+      "ids": "570168,570226",
+      "leadIds": "270109,270164"
+    },
+    {
+      "fullAddress": "7109 Bonito St, Tampa, FL 33617",
+      "count": "2",
+      "ids": "570170,570227",
+      "leadIds": "270110,270165"
+    },
+    {
+      "fullAddress": "9108 Sheldon West Dr, Tampa, FL 33626",
+      "count": "2",
+      "ids": "570171,570228",
+      "leadIds": "270111,270166"
+    },
+    {
+      "fullAddress": "6613 Henrich Dr, Orlando, FL 32818",
+      "count": "2",
+      "ids": "570173,570229",
+      "leadIds": "270112,270167"
+    },
+    {
+      "fullAddress": "16139 Manorwood Cir, Tampa, FL 33624",
+      "count": "2",
+      "ids": "570174,570230",
+      "leadIds": "270113,270168"
+    },
+    {
+      "fullAddress": "7513 N Hale Ave, Tampa, FL 33614",
+      "count": "2",
+      "ids": "570176,570231",
+      "leadIds": "270114,270169"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullAddress\tcount\tids\tleadIds\n5048 Ne 14th Ave, Pompano Beach, FL 33064\t2\t570004,570006\t270002,270003\n365 Nw 15th St, Pompano Beach, FL 33060\t2\t570005,570009\t270003,270005\n7255 Nw 54th Ct, Lauderhill, FL 33319\t2\t570007,570012\t270004,270007\n3750 Sw 8th St, Fort Lauderdale, FL 33312\t2\t570008,570015\t270005,270009\nFort Lauderdale, Solarium, FL 831,2025,$\t2\t570010,570019\t270006,270010\n4700 Sw 18th St, West Park, FL 33023\t2\t570011,570022\t270007,270012\n141 Nw 13th Ave, Dania, FL 33004\t2\t570013,570025\t270008,270014\n6105 Sw 19th St, Miramar, FL 33023\t2\t570014,570028\t270009,270016\n000,$416, Miramar, FL Solarium\t2\t570017,570031\t270010,270018\n409 Nw 15th Way, Fort Lauderdale, FL 33311\t2\t570020,570034\t270011,270020\n000,$57, Fort Lauderdale, FL 11 Blk 6,D\t2\t570021,570037\t270012,270022\n1301 S 16th Ave, Hollywood, FL 33020\t2\t570023,570040\t270013,270024\n13181 Sw 7th Pl, Davie, FL 33325\t2\t570024,570043\t270014,270026\n1612 Ne 29th St, Pompano Beach, FL 33064\t2\t570026,570046\t270015,270028\n000,$22, Pompano Beach, FL 680,2025,$\t2\t570027,570049\t270016,270030\n723 W 10th St, Riviera Beach, FL 33404\t2\t570029,570052\t270017,270032\n6358 Nw 20th Ct, Margate, FL 33063\t2\t570030,570055\t270018,270034\n2300 Nw 23rd Ln, Fort Lauderdale, FL 33311\t2\t570032,570058\t270019,270036\n3321 Nw 8th Ct, Lauderhill, FL 33311\t2\t570033,570061\t270020,270038\n537 Nw 17th Ave, Fort Lauderdale, FL 33311\t2\t570035,570063\t270021,270039\n280 Sw 8th St, Deerfield Beach, FL 33441\t2\t570036,570066\t270022,270041\n1920 Nw 39th Ave, Coconut Creek, FL 33066\t2\t570038,570069\t270023,270043\n1280 Nw 58th Ter, Sunrise, FL 33313\t2\t570039,570072\t270024,270045\nSunrise, Solarium, FL 531,2025,$\t2\t570041,570075\t270025,270047\n1513 Nw 24th Ave, Fort Lauderdale, FL 33311\t2\t570042,570078\t270026,270049\n000,100.00%,0,0,0,Davis Minnie Est,,, ,,,1513 Nw 24th Ave, Fl 33311,1513 Nw 24th Ave,,Fort Lauderdale,Fl,33311,Absentee Owner,,,1602,4,2,1954,Single Family,Mas, 78 020,$12\t2\t570044,570081\t270027,270051\n545 Nw 21st Ct, Pompano Beach, FL 33060\t2\t570045,570084\t270028,270053\n8147 Nw 68th Ave, Tamarac, FL 33321\t2\t570047,570087\t270029,270055\n370 Nw 14th St, Pompano Beach, FL 33060\t2\t570048,570090\t270030,270057\n4111 Nw 10th Ter, Fort Lauderdale, FL 33309\t2\t570050,570093\t270031,270059\n2614 Nw 25th St, Fort Lauderdale, FL 33311\t2\t570051,570096\t270032,270061\n106 Nw 11th Ave, Dania, FL 33004\t2\t570053,570099\t270033,270063\n1207 S 26th Ave, Hollywood, FL 33020\t2\t570054,570102\t270034,270065\n8831 Nw 11th St, Pembroke Pines, FL 33024\t2\t570056,570105\t270035,270067\n3400 Nw 7th Ct, Lauderhill, FL 33311\t2\t570057,570108\t270036,270069\n7120 Nw 44th Ct, Lauderhill, FL 33319\t2\t570059,570111\t270037,270071\n2407 Nw 28th Ave, Fort Lauderdale, FL 33311\t2\t570060,570114\t270038,270073\n2232 Sw 34th Ter, Fort Lauderdale, FL 33312\t2\t570062,570117\t270039,270075\n3801 Nw 4th Ct, Lauderhill, FL 33311\t2\t570064,570120\t270040,270077\n600 Sw 38th Ave, Fort Lauderdale, FL 33312\t2\t570065,570122\t270041,270079\n4320 Sw 25th St, West Park, FL 33023\t2\t570067,570125\t270042,270080\n2610 Nw 16th St, Fort Lauderdale, FL 33311\t2\t570068,570128\t270043,270082\n2881 Nw 25th St, Fort Lauderdale, FL 33311\t2\t570070,570131\t270044,270084\nNorth Lauderdale, 982,2025,$204, 64 190,$18\t2\t570071,570134\t270045,270086\n1731 Nw 34th Ave, Lauderhill, FL 33311\t2\t570073,570137\t270046,270088\n1071 Nw 25th Way, Fort Lauderdale, FL 33311\t2\t570074,570140\t270047,270090\n613 Sw 12th Ave, Dania, FL 33004\t2\t570076,570143\t270048,270092\n400 Nw 7th Ave, Hallandale Beach, FL 33009\t2\t570077,570146\t270049,270094\n3120 Sw 58th Pl, Fort Lauderdale, FL 33312\t2\t570079,570149\t270050,270096\n609 Ne 2nd Ter, Deerfield Beach, FL 33441\t2\t570080,570152\t270051,270098\n000,$48, Deerfield Beach, FL Solarium\t2\t570082,570155\t270052,270100\n756 Nw 15th Ct, Pompano Beach, FL 33060\t2\t570083,570158\t270053,270102\n1711 Nw 55th Ave, Lauderhill, FL 33313\t2\t570085,570161\t270054,270104\n519 Ne 8th Ave, Deerfield Beach, FL 33441\t2\t570086,570164\t270055,270106\n2521 Nw 18th Ct, Fort Lauderdale, FL 33311\t2\t570088,570167\t270056,270108\n4298 Nw 51st Ave, Lauderdale Lakes, FL 33319\t2\t570089,570169\t270057,270110\n35 Chestnut Cir, Hollywood, FL 33026\t2\t570091,570172\t270058,270111\n21696 N Heritage Cir, Pembroke Pines, FL 33029\t2\t570092,570175\t270059,270113\n5305 Wiley St, Hollywood, FL 33021\t2\t570094,570177\t270060,270115\n319 Nw 30th Ter, Fort Lauderdale, FL 33311\t2\t570095,570178\t270061,270116\n2526 Wilson St, Hollywood, FL 33020\t2\t570097,570179\t270062,270117\n6717 Arbor Dr, Miramar, FL 33023\t2\t570098,570180\t270063,270118\n6875 Nw 17th Ct, Margate, FL 33063\t2\t570100,570181\t270064,270119\n1860 Nw 33rd Ave, Lauderhill, FL 33311\t2\t570101,570182\t270065,270120\n1261 Nw 29th Way, Fort Lauderdale, FL 33311\t2\t570103,570183\t270066,270121\n8708 Sw 15th St, Davie, FL 33324\t2\t570104,570184\t270067,270122\n2140 Sw 52nd St, Fort Lauderdale, FL 33312\t2\t570106,570185\t270068,270123\n2712 Sw 12th St, Deerfield Beach, FL 33442\t2\t570107,570186\t270069,270124\n550,$84, Deerfield Beach, FL 088,2025,$\t2\t570109,570187\t270070,270125\n2040 Nw 31st Ave, Fort Lauderdale, FL 33311\t2\t570110,570188\t270071,270126\n4601 Sw 27th Ter, Fort Lauderdale, FL 33312\t2\t570112,570189\t270072,270127\n2510 Rodman St, Hollywood, FL 33020\t2\t570113,570190\t270073,270128\n129,94.00%,$41, 871,$256,Daniel P Brady,Daniel,Brady, ,,,2656 Nw 79th Ave, MA Fl 33063,2\t2\t570115,570191\t270074,270129\n2401 Sw 164th Ave, Miramar, FL 33027\t2\t570116,570192\t270075,270130\n8411 Nw 59th Ct, Tamarac, FL 33321\t2\t570118,570193\t270076,270131\n534 Nw 3rd Way, Deerfield Beach, FL 33441\t2\t570119,570194\t270077,270132\nDelray Beach, 961,2025,$274, 51 080,$243\t2\t570121,570195\t270078,270133\n3431 Ne 11th Ter, Pompano Beach, FL 33064\t2\t570123,570196\t270079,270134\n2731 Ne 2nd Ter, Pompano Beach, FL 33064\t2\t570124,570197\t270080,270135\n2500 Nw 87th Ln, Sunrise, FL 33322\t2\t570126,570198\t270081,270136\n5814 Nw 70th Ave, Tamarac, FL 33321\t2\t570127,570199\t270082,270137\n6031 Ne 7th Ave, Fort Lauderdale, FL 33334\t2\t570129,570200\t270083,270138\n1040 Nw 24th Ter, Fort Lauderdale, FL 33311\t2\t570130,570201\t270084,270139\n6761 Pershing St, Hollywood, FL 33024\t2\t570132,570202\t270085,270140\n419 Nw 13th Ave, Fort Lauderdale, FL 33311\t2\t570133,570203\t270086,270141\n5226 Sw 24th St, West Park, FL 33023\t2\t570135,570204\t270087,270142\n8935 Nw 10th St, Pembroke Pines, FL 33024\t2\t570136,570205\t270088,270143\n102 Marion Rd, West Park, FL 33023\t2\t570138,570206\t270089,270144\n2235 Nw 9th Ct, Fort Lauderdale, FL 33311\t2\t570139,570207\t270090,270145\nFort Lauderdale, Solarium, FL 463,2025,$\t2\t570141,570208\t270091,270146\n2651 Nw 63rd Ave, Margate, FL 33063\t2\t570142,570209\t270092,270147\n3860 Nw 4th Ct, Lauderhill, FL 33311\t2\t570144,570210\t270093,270148\n540 Nw 214th Ave, Pembroke Pines, FL 33029\t2\t570145,570211\t270094,270149\n2824 Sw 3rd Ct, Fort Lauderdale, FL 33312\t2\t570147,570212\t270095,270150\n2511 Nw 27th Ave, Fort Lauderdale, FL 33311\t2\t570148,570213\t270096,270151\nGlennville, Solarium, FL 987,2025,$\t2\t570150,570214\t270097,270152\n7804 Nw 68th Ter, Tamarac, FL 33321\t2\t570151,570215\t270098,270153\n701 Nw 2nd Ter, Deerfield Beach, FL 33441\t2\t570153,570216\t270099,270154\n1448 Ne 28th St, Pompano Beach, FL 33064\t2\t570154,570217\t270100,270155\n000,100.00%,0,0,0,Prime Tomahawk Llc,,, ,,,2520 N Mcmullen Booth Rd Ste B419 Ste B419, Fl 33761,2520 N Mcmullen Booth Rd,Ste B419,Clearwater,Fl,33761,Absentee Owner,1,,1256,3,2,1959,Singl, 39 170,,,$405\t2\t570156,570218\t270101,270156\n304 Nw 16th Ave, Pompano Beach, FL 33069\t2\t570157,570219\t270102,270157\n2100 E Caracas St, Tampa, FL 33610\t2\t570159,570220\t270103,270158\n4303 N 39th St, Tampa, FL 33610\t2\t570160,570221\t270104,270159\n3236 Clifford Sample Dr, Tampa, FL 33619\t2\t570162,570222\t270105,270160\n2607 E Lake Ave, Tampa, FL 33610\t2\t570163,570223\t270106,270161\n8438 N Highland Ave, Tampa, FL 33604\t2\t570165,570224\t270107,270162\n205 E Sadie St, Brandon, FL 33510\t2\t570166,570225\t270108,270163\n5006 S 85th St, Tampa, FL 33619\t2\t570168,570226\t270109,270164\n7109 Bonito St, Tampa, FL 33617\t2\t570170,570227\t270110,270165\n9108 Sheldon West Dr, Tampa, FL 33626\t2\t570171,570228\t270111,270166\n6613 Henrich Dr, Orlando, FL 32818\t2\t570173,570229\t270112,270167\n16139 Manorwood Cir, Tampa, FL 33624\t2\t570174,570230\t270113,270168\n7513 N Hale Ave, Tampa, FL 33614\t2\t570176,570231\t270114,270169\n",
+  "stderr": "",
+  "execution_time_ms": 1511
+}

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_properties FROM properties;\nSELECT \n  COUNT(*) as duplicate_count\nFROM (\n  SELECT \n    CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress\n  FROM properties\n  GROUP BY addressLine1, city, state, zipcode\n  HAVING COUNT(*) > 1\n) as duplicates;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_properties FROM properties;\nSELECT \n  COUNT(*) as duplicate_count\nFROM (\n  SELECT \n    CONCAT(addressLine1, ', ', city, ', ', state, ' ', zipcode) as fullAddress\n  FROM properties\n  GROUP BY addressLine1, city, state, zipcode\n  HAVING COUNT(*) > 1\n) as duplicates;",
+  "rows": [
+    {
+      "total_properties": "1"
+    },
+    {
+      "total_properties": "duplicate_count"
+    },
+    {
+      "total_properties": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_properties\n1\nduplicate_count\n0\n",
+  "stderr": "",
+  "execution_time_ms": 1739
+}

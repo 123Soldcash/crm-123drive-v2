@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM properties \nWHERE id NOT IN (\n  SELECT MIN(id) \n  FROM (\n    SELECT MIN(id) as id\n    FROM properties\n    GROUP BY addressLine1, city, state, zipcode\n  ) as keep_ids\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute DELETE FROM properties \nWHERE id NOT IN (\n  SELECT MIN(id) \n  FROM (\n    SELECT MIN(id) as id\n    FROM properties\n    GROUP BY addressLine1, city, state, zipcode\n  ) as keep_ids\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1579
+}
