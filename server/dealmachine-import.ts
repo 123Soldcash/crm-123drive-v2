@@ -1,5 +1,6 @@
 /**
- * DealMachine CSV Import Utilities
+ * DealMachine CSV Import Utilities - Consolidated Format
+ * Handles properties with embedded contacts (contact_1 through contact_14)
  * Following dealmachine-properties-MAP.xlsx field mappings
  */
 
@@ -39,6 +40,11 @@ export interface ParsedContact {
   relationship: string;
   flags?: string;
   dealMachineRawData: string; // JSON string with all extra fields
+}
+
+export interface PropertyWithContacts {
+  property: ParsedProperty;
+  contacts: ParsedContact[];
 }
 
 /**
@@ -129,6 +135,39 @@ function parseInteger(value?: string): number | undefined {
 }
 
 /**
+ * Map contact flags to relationship field
+ * Multiple flags can be present (e.g., "Owner, Resident, Likely")
+ * Priority: Owner > Resident > Family > Potential > Renting > Likely > Other
+ */
+function mapFlagsToRelationship(flags?: string): string {
+  if (!flags) return "Owner"; // Default to Owner
+
+  const flagList = flags
+    .split(",")
+    .map(f => f.trim().toLowerCase())
+    .filter(f => f);
+
+  // Priority order
+  const priorities = [
+    "owner",
+    "resident",
+    "family",
+    "potential",
+    "renting",
+    "likely",
+  ];
+
+  for (const priority of priorities) {
+    if (flagList.includes(priority)) {
+      // Capitalize first letter
+      return priority.charAt(0).toUpperCase() + priority.slice(1);
+    }
+  }
+
+  return "Owner"; // Default fallback
+}
+
+/**
  * Transform DealMachine property row to our schema
  * Following dealmachine-properties-MAP.xlsx field mappings
  */
@@ -138,12 +177,12 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
   const city = row["property_address_city"];
   let state = row["property_address_state"];
   let zipcode = row["property_address_zipcode"];
-  
+
   // Ensure state is max 2 characters (state abbreviation)
   if (state) {
     state = state.substring(0, 2).toUpperCase();
   }
-  
+
   // Ensure zipcode is max 10 characters
   if (zipcode) {
     zipcode = zipcode.substring(0, 10);
@@ -155,7 +194,7 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
 
   // Store all raw data for reference
   const rawData = { ...row };
-  
+
   // Helper to truncate strings to max length
   const truncate = (str: string | undefined, maxLen: number): string | undefined => {
     return str ? str.substring(0, maxLen) : str;
@@ -186,29 +225,89 @@ export function transformProperty(row: DealMachinePropertyRow): ParsedProperty |
 }
 
 /**
- * Transform DealMachine contact row to our schema
+ * Extract all contacts from a property row (contact_1 through contact_14)
+ * Each contact can have up to 3 phones and 3 emails
  */
-export function transformContact(row: DealMachinePropertyRow): ParsedContact | null {
-  const firstName = row["first_name"] || "";
-  const lastName = row["last_name"] || "";
-  const name = `${firstName} ${lastName}`.trim();
+export function extractContactsFromProperty(
+  row: DealMachinePropertyRow
+): ParsedContact[] {
+  const contacts: ParsedContact[] = [];
 
-  if (!name) {
-    return null; // Skip if no name
+  // Check each contact slot (contact_1 through contact_14)
+  for (let contactNum = 1; contactNum <= 14; contactNum++) {
+    const contactNameField = `contact_${contactNum}_name`;
+    const contactName = row[contactNameField]?.trim();
+
+    if (!contactName) {
+      continue; // Skip empty contact slots
+    }
+
+    // Get contact flags for relationship mapping
+    const contactFlagsField = `contact_${contactNum}_flags`;
+    const contactFlags = row[contactFlagsField]?.trim();
+    const relationship = mapFlagsToRelationship(contactFlags);
+
+    // Get primary phone (contact_N_phone1)
+    const phone1Field = `contact_${contactNum}_phone1`;
+    const phone1 = row[phone1Field]?.trim();
+    const phone1TypeField = `contact_${contactNum}_phone1_type`;
+    const phone1Type = row[phone1TypeField]?.trim() || "Mobile";
+
+    // Get primary email (contact_N_email1)
+    const email1Field = `contact_${contactNum}_email1`;
+    const email1 = row[email1Field]?.trim();
+
+    // Store all raw contact data
+    const rawData: any = {};
+    for (let phoneNum = 1; phoneNum <= 3; phoneNum++) {
+      const phoneField = `contact_${contactNum}_phone${phoneNum}`;
+      const phoneTypeField = `contact_${contactNum}_phone${phoneNum}_type`;
+      if (row[phoneField]) {
+        rawData[phoneField] = row[phoneField];
+        rawData[phoneTypeField] = row[phoneTypeField];
+      }
+    }
+    for (let emailNum = 1; emailNum <= 3; emailNum++) {
+      const emailField = `contact_${contactNum}_email${emailNum}`;
+      if (row[emailField]) {
+        rawData[emailField] = row[emailField];
+      }
+    }
+
+    // Create contact record with primary phone and email
+    const contact: ParsedContact = {
+      name: contactName,
+      phone: phone1,
+      phoneType: phone1Type,
+      dnc: false, // Default to false, can be updated later
+      email: email1,
+      relationship,
+      flags: contactFlags,
+      dealMachineRawData: JSON.stringify(rawData),
+    };
+
+    contacts.push(contact);
   }
 
-  // Store all raw data for reference
-  const rawData = { ...row };
+  return contacts;
+}
+
+/**
+ * Transform property row with all embedded contacts
+ */
+export function transformPropertyWithContacts(
+  row: DealMachinePropertyRow
+): PropertyWithContacts | null {
+  const property = transformProperty(row);
+  if (!property) {
+    return null;
+  }
+
+  const contacts = extractContactsFromProperty(row);
 
   return {
-    name,
-    phone: row["phone_1"] || row["phone"],
-    phoneType: row["phone_1_type"] || "Mobile",
-    dnc: parseBoolean(row["phone_1_do_not_call"]),
-    email: row["email_address_1"] || row["email"],
-    relationship: "Owner",
-    flags: row["contact_flags"] || "",
-    dealMachineRawData: JSON.stringify(rawData),
+    property,
+    contacts,
   };
 }
 

@@ -485,3 +485,24 @@
 - [x] Verified 101 properties and 329 contacts in CSV files
 - [x] Added equityAmount field to property insert
 - [x] Validated field mappings match MAP file (property_address_*, owner_1_name, estimated_value, equity_amount, equity_percent, total_loan_amt)
+
+
+## DealMachine Consolidated CSV Import (NEW)
+- [ ] Update dealmachine-import.ts to parse embedded contacts (contact_1 through contact_14)
+- [ ] Add contact flags mapping (Owner, Resident, Likely, Family, Potential, Renting, etc.)
+- [ ] Import all 101 properties (including 4 without contacts for skip trace)
+- [ ] Import 325 contacts with 416 phones and 499 emails
+- [ ] Maintain status tag, desk (BIN), and temperature (TBD)
+- [ ] Test import and verify data integrity
+
+
+## DealMachine Consolidated CSV Import - Final (READY FOR IMPORT)
+- [x] Parse consolidated CSV with embedded contacts (up to 14 per property)
+- [x] Map contact flags to relationship field (Owner, Resident, Family, etc.)
+- [x] Extract phones and emails from embedded contacts
+- [x] Create vitest tests - ALL PASSED (6/6)
+- [x] Verified: 85 properties with 269 contacts, 183 phones, 199 emails
+- [x] Verified: 30 properties without contacts (for skip trace)
+- [ ] Execute import through UI or API
+- [ ] Verify all data in Properties list and detail views
+- [ ] Confirm contact phones and emails display correctly

@@ -2,43 +2,38 @@ import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb, getNextLeadId } from "../db";
 import { properties, contacts, contactPhones, contactEmails, propertyTags } from "../../drizzle/schema";
-import { parseCSV, transformProperty, transformContact, validateProperty, getPropertyKey } from "../dealmachine-import";
-import { eq, and } from "drizzle-orm";
+import { parseCSV, transformPropertyWithContacts, validateProperty, getPropertyKey } from "../dealmachine-import";
+import { eq } from "drizzle-orm";
 
 export const dealmachineRouter = router({
   preview: publicProcedure
     .input(
       z.object({
         propertiesCSV: z.string(),
-        contactsCSV: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
       try {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-
-        // Parse properties CSV
+        // Parse properties CSV (consolidated format with embedded contacts)
         const propertyRows = parseCSV(input.propertiesCSV);
-        const parsedProperties = propertyRows
-          .map(transformProperty)
+        const parsedData = propertyRows
+          .map(transformPropertyWithContacts)
           .filter((p) => p !== null) as any[];
 
-        // Parse contacts CSV if provided
-        let parsedContacts = [];
-        if (input.contactsCSV) {
-          const contactRows = parseCSV(input.contactsCSV);
-          parsedContacts = contactRows
-            .map(transformContact)
-            .filter((c) => c !== null) as any[];
+        // Count total contacts
+        let totalContacts = 0;
+        for (const item of parsedData) {
+          totalContacts += item.contacts.length;
         }
 
         return {
-          propertiesCount: parsedProperties.length,
-          contactsCount: parsedContacts.length,
+          propertiesCount: parsedData.length,
+          contactsCount: totalContacts,
           preview: {
-            properties: parsedProperties.slice(0, 3),
-            contacts: parsedContacts.slice(0, 3),
+            properties: parsedData.slice(0, 3).map((d: any) => ({
+              property: d.property,
+              contactCount: d.contacts.length,
+            })),
           },
         };
       } catch (error) {
@@ -51,7 +46,6 @@ export const dealmachineRouter = router({
     .input(
       z.object({
         propertiesCSV: z.string(),
-        contactsCSV: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -59,13 +53,13 @@ export const dealmachineRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        // Parse properties CSV
+        // Parse properties CSV (consolidated format with embedded contacts)
         const propertyRows = parseCSV(input.propertiesCSV);
-        const parsedProperties = propertyRows
-          .map(transformProperty)
+        const parsedData = propertyRows
+          .map(transformPropertyWithContacts)
           .filter((p) => p !== null) as any[];
 
-        // Check for duplicates
+        // Check for duplicate properties
         const existingAddresses = new Set<string>();
         const allProperties = await db.select().from(properties);
         for (const prop of allProperties) {
@@ -73,16 +67,21 @@ export const dealmachineRouter = router({
           existingAddresses.add(key);
         }
 
-        // Import new properties with LEAD IDs
+        // Import properties and their embedded contacts
         let propertiesCreated = 0;
-        const dealMachineIdMap = new Map<string, number>(); // Map dealMachinePropertyId to our property ID
-        
-        for (const prop of parsedProperties) {
+        let contactsCreated = 0;
+        let phonesCreated = 0;
+        let emailsCreated = 0;
+
+        for (const item of parsedData) {
+          const prop = item.property;
+          const embeddedContacts = item.contacts;
+
           const key = getPropertyKey(prop);
           if (!existingAddresses.has(key)) {
             // Get next LEAD ID
             const nextLeadId = await getNextLeadId();
-            
+
             const result = await db.insert(properties).values({
               leadId: nextLeadId,
               addressLine1: prop.addressLine1,
@@ -110,12 +109,9 @@ export const dealmachineRouter = router({
               createdAt: new Date(),
               updatedAt: new Date(),
             });
-            
-            // Store property ID for contact import
+
             const propertyId = (result as any).insertId || 0;
-            if (propertyId && prop.dealMachinePropertyId) {
-              dealMachineIdMap.set(prop.dealMachinePropertyId, propertyId);
-              
+            if (propertyId) {
               // Add status tag for this import batch
               await db.insert(propertyTags).values({
                 propertyId,
@@ -123,80 +119,57 @@ export const dealmachineRouter = router({
                 createdBy: 1,
                 createdAt: new Date(),
               });
-            }
-            
-            propertiesCreated++;
-            existingAddresses.add(key);
-          }
-        }
 
-        // Import contacts if provided
-        let contactsCreated = 0;
-        if (input.contactsCSV) {
-          const contactRows = parseCSV(input.contactsCSV);
-          
-          for (const row of contactRows) {
-            const parsedContact = transformContact(row);
-            if (!parsedContact) continue;
-            
-            // Get the associated_property_id from the contact row
-            const associatedPropertyId = row["associated_property_id"];
-            if (!associatedPropertyId) continue;
-            
-            // Find the property by dealMachinePropertyId
-            const matchingProperty = await db
-              .select({ id: properties.id })
-              .from(properties)
-              .where(eq(properties.dealMachinePropertyId, associatedPropertyId))
-              .limit(1);
-            
-            if (matchingProperty.length === 0) continue;
-            
-            const propertyId = matchingProperty[0].id;
-            
-            // Create contact
-            const contactResult = await db.insert(contacts).values({
-              propertyId,
-              name: parsedContact.name,
-              relationship: parsedContact.relationship as any,
-              dnc: parsedContact.dnc ? 1 : 0,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-            
-            // Get the inserted contact ID
-            const contactId = (contactResult as any).insertId || 0;
-            
-            if (contactId) {
-              // Add phone if provided
-              if (parsedContact.phone) {
-                // Validate phoneType is one of the allowed enum values
-                const validPhoneTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
-                let phoneType: any = parsedContact.phoneType || "Mobile";
-                if (!validPhoneTypes.includes(phoneType)) {
-                  phoneType = "Mobile";
-                }
-                
-                await db.insert(contactPhones).values({
-                  contactId,
-                  phoneNumber: parsedContact.phone,
-                  phoneType,
+              // Import embedded contacts
+              for (const parsedContact of embeddedContacts) {
+                // Create contact
+                const contactResult = await db.insert(contacts).values({
+                  propertyId,
+                  name: parsedContact.name,
+                  relationship: parsedContact.relationship as any,
                   dnc: parsedContact.dnc ? 1 : 0,
                   createdAt: new Date(),
+                  updatedAt: new Date(),
                 });
+
+                const contactId = (contactResult as any).insertId || 0;
+
+                if (contactId) {
+                  // Add phone if provided
+                  if (parsedContact.phone) {
+                    const validPhoneTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
+                    let phoneType: any = parsedContact.phoneType || "Mobile";
+                    if (!validPhoneTypes.includes(phoneType)) {
+                      phoneType = "Mobile";
+                    }
+
+                    await db.insert(contactPhones).values({
+                      contactId,
+                      phoneNumber: parsedContact.phone,
+                      phoneType,
+                      dnc: parsedContact.dnc ? 1 : 0,
+                      createdAt: new Date(),
+                    });
+                    phonesCreated++;
+                  }
+
+                  // Add email if provided
+                  if (parsedContact.email) {
+                    await db.insert(contactEmails).values({
+                      contactId,
+                      email: parsedContact.email,
+                      isPrimary: 1,
+                      createdAt: new Date(),
+                    });
+                    emailsCreated++;
+                  }
+
+                  contactsCreated++;
+                }
               }
-              
-              // Add email if provided
-              if (parsedContact.email) {
-                await db.insert(contactEmails).values({
-                  contactId,
-                  email: parsedContact.email,
-                  isPrimary: 1,
-                  createdAt: new Date(),
-                });
-              }
-              
-              contactsCreated++;
+
+              propertiesCreated++;
+              existingAddresses.add(key);
             }
           }
         }
@@ -205,7 +178,9 @@ export const dealmachineRouter = router({
           success: true,
           propertiesCreated,
           contactsCreated,
-          message: `Imported ${propertiesCreated} properties and ${contactsCreated} contacts`,
+          phonesCreated,
+          emailsCreated,
+          message: `Imported ${propertiesCreated} properties, ${contactsCreated} contacts, ${phonesCreated} phones, ${emailsCreated} emails`,
         };
       } catch (error) {
         console.error("Import error:", error);
