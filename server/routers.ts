@@ -2154,7 +2154,37 @@ export const appRouter = router({
             error: error instanceof Error ? error.message : 'Unknown error',
           };
         }
+       }),
+  }),
+  dashboard: router({
+    getStats: protectedProcedure
+      .input(z.number().optional())
+      .query(async ({ input: agentId, ctx }) => {
+        // Get all properties
+        const allProperties = await db.getProperties({
+          userId: ctx.user?.id,
+          userRole: ctx.user?.role,
+        });
+
+        // Filter by agent if admin selected one
+        const filtered = agentId && ctx.user?.role === 'admin' 
+          ? allProperties.filter((p: any) => p.assignedAgentId === agentId)
+          : allProperties;
+
+        // Calculate stats
+        const stats = {
+          total: filtered.length,
+          hot: filtered.filter((p: any) => p.leadTemperature === "HOT" || p.leadTemperature === "SUPER HOT").length,
+          warm: filtered.filter((p: any) => p.leadTemperature === "WARM").length,
+          cold: filtered.filter((p: any) => p.leadTemperature === "COLD").length,
+          dead: filtered.filter((p: any) => p.leadTemperature === "DEAD").length,
+          ownerVerified: filtered.filter((p: any) => p.ownerVerified).length,
+          visited: 0,
+        };
+
+        return stats;
       }),
+  }),
 
   agents: router({
     list: protectedProcedure.query(async () => {
@@ -2197,8 +2227,6 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         return await db.deleteAgent(input.id);
       }),
-  }),
-
   }),
 });
 

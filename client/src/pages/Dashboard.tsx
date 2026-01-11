@@ -28,32 +28,26 @@ export default function Dashboard() {
   
   const { data: agents } = trpc.agents.list.useQuery();
 
-  // Use a simpler query that just counts properties
+  // Fetch dashboard stats from database
+  const { data: dashboardStats, isLoading: statsLoading } = trpc.dashboard.getStats.useQuery(
+    selectedAgentId === "all" ? undefined : parseInt(selectedAgentId),
+    { staleTime: 0, gcTime: 0 } // Disable caching to always fetch fresh data
+  );
+
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setIsLoading(true);
-        // Simulate loading stats - in production, this would be a dedicated tRPC query
-        setTimeout(() => {
-          setStats({
-            total: 11,
-            hot: 6,
-            warm: 1,
-            cold: 0,
-            dead: 0,
-            ownerVerified: 0,
-            visited: 0,
-          });
-          setIsLoading(false);
-        }, 500);
-      } catch (error) {
-        console.error("Error loading stats:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    loadStats();
-  }, []);
+    if (dashboardStats) {
+      setStats({
+        total: dashboardStats.total || 0,
+        hot: dashboardStats.hot || 0,
+        warm: dashboardStats.warm || 0,
+        cold: dashboardStats.cold || 0,
+        dead: dashboardStats.dead || 0,
+        ownerVerified: dashboardStats.ownerVerified || 0,
+        visited: dashboardStats.visited || 0,
+      });
+    }
+    setIsLoading(statsLoading ?? false);
+  }, [dashboardStats, statsLoading]);
 
   const formatCurrency = (value?: number | null) => {
     if (!value) return "$0";
@@ -99,7 +93,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? "..." : stats.total}
+              {statsLoading ? "..." : stats.total}
             </div>
             <p className="text-xs text-muted-foreground">Properties in database</p>
           </CardContent>
