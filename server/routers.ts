@@ -2185,49 +2185,6 @@ export const appRouter = router({
         return stats;
       }),
   }),
-
-  agents: router({
-    list: protectedProcedure.query(async () => {
-      return await db.listAgents();
-    }),
-
-    create: protectedProcedure
-      .input(
-        z.object({
-          name: z.string().min(1),
-          email: z.string().email(),
-          phone: z.string().optional(),
-          role: z.enum(["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]),
-          status: z.enum(["Active", "Inactive"]),
-          notes: z.string().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        return await db.createAgent(input);
-      }),
-
-    update: protectedProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          name: z.string().min(1),
-          email: z.string().email(),
-          phone: z.string().optional(),
-          role: z.enum(["Birddog", "Acquisition Manager", "Disposition Manager", "Admin", "Other"]),
-          status: z.enum(["Active", "Inactive"]),
-          notes: z.string().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        return await db.updateAgent(input.id, input);
-      }),
-
-    delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        return await db.deleteAgent(input.id);
-      }),
-  }),
 });
 
 export type AppRouter = typeof appRouter;
