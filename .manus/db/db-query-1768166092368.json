@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, email, role, agentType, status FROM agents WHERE name LIKE '%John%' OR name LIKE '%Maria%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email, role, agentType, status FROM agents WHERE name LIKE '%John%' OR name LIKE '%Maria%' LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 90
+}
