@@ -65,10 +65,7 @@ export default function ImportProperties() {
       toast.error("Please select a file to import");
       return;
     }
-    if (!selectedAgentId) {
-      toast.error("Please select an agent to assign properties");
-      return;
-    }
+    // Agent selection is now optional
 
     setIsUploading(true);
 
@@ -154,12 +151,13 @@ export default function ImportProperties() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="agent-select">Birddog Agent</Label>
+              <Label htmlFor="agent-select">Birddog Agent (Optional)</Label>
               <Select value={selectedAgentId} onValueChange={setSelectedAgentId} disabled={isUploading || loadingAgents}>
                 <SelectTrigger id="agent-select">
-                  <SelectValue placeholder="Select an agent..." />
+                  <SelectValue placeholder="Select an agent (optional)..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="unassigned">No Agent (Assign Later)</SelectItem>
                   {agents?.map((agent: { id: number; name: string | null; openId: string }) => (
                     <SelectItem key={agent.id} value={agent.id.toString()}>
                       {agent.name || agent.openId}
@@ -167,9 +165,14 @@ export default function ImportProperties() {
                   ))}
                 </SelectContent>
               </Select>
-              {selectedAgentId && (
+              {selectedAgentId && selectedAgentId !== "unassigned" && (
                 <div className="text-sm text-muted-foreground">
                   Properties will be assigned to: {agents?.find((a: { id: number; name: string | null }) => a.id.toString() === selectedAgentId)?.name}
+                </div>
+              )}
+              {selectedAgentId === "unassigned" && (
+                <div className="text-sm text-muted-foreground">
+                  Properties will be imported without agent assignment. You can assign them later using Bulk Assign Agents.
                 </div>
               )}
             </div>
@@ -190,14 +193,14 @@ export default function ImportProperties() {
               <strong>2. Select the file:</strong> Click "Choose File" and select your Excel file from your computer.
             </p>
             <p>
-              <strong>3. Assign to agent:</strong> Choose which birddog agent will manage these properties. The agent will only see properties assigned to them.
+              <strong>3. Assign to agent (optional):</strong> Choose which birddog agent will manage these properties. You can also import without assigning and assign later using Bulk Assign Agents.
             </p>
             <p>
               <strong>4. Import:</strong> Click "Import Properties" to upload and process the file. This may take a few moments depending on the file size.
             </p>
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
               <p className="text-blue-900 dark:text-blue-100">
-                <strong>Note:</strong> Each agent can only access their assigned properties. As an admin, you can view all properties from all agents.
+                <strong>Note:</strong> Agent assignment is optional. Properties imported without an agent can be assigned later using the Bulk Assign Agents feature. Each agent can only access their assigned properties, but as an admin, you can view all properties from all agents.
               </p>
             </div>
           </div>
@@ -207,7 +210,7 @@ export default function ImportProperties() {
       <div className="flex justify-end">
         <Button
           onClick={handleImport}
-          disabled={!file || !selectedAgentId || isUploading}
+          disabled={!file || isUploading}
           size="lg"
           className="min-w-[200px]"
         >
