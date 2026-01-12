@@ -1,0 +1,46 @@
+{
+  "query": "SELECT 'agents' as table_name, COUNT(*) as count FROM agents\nUNION ALL\nSELECT 'properties', COUNT(*) FROM properties\nUNION ALL\nSELECT 'contacts', COUNT(*) FROM contacts\nUNION ALL\nSELECT 'familyMembers', COUNT(*) FROM familyMembers\nUNION ALL\nSELECT 'leadAssignments', COUNT(*) FROM leadAssignments\nUNION ALL\nSELECT 'agentPermissions', COUNT(*) FROM agentPermissions\nUNION ALL\nSELECT 'leadTransferHistory', COUNT(*) FROM leadTransferHistory\nUNION ALL\nSELECT 'tasks', COUNT(*) FROM tasks\nUNION ALL\nSELECT 'users', COUNT(*) FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'agents' as table_name, COUNT(*) as count FROM agents\nUNION ALL\nSELECT 'properties', COUNT(*) FROM properties\nUNION ALL\nSELECT 'contacts', COUNT(*) FROM contacts\nUNION ALL\nSELECT 'familyMembers', COUNT(*) FROM familyMembers\nUNION ALL\nSELECT 'leadAssignments', COUNT(*) FROM leadAssignments\nUNION ALL\nSELECT 'agentPermissions', COUNT(*) FROM agentPermissions\nUNION ALL\nSELECT 'leadTransferHistory', COUNT(*) FROM leadTransferHistory\nUNION ALL\nSELECT 'tasks', COUNT(*) FROM tasks\nUNION ALL\nSELECT 'users', COUNT(*) FROM users;",
+  "rows": [
+    {
+      "table_name": "contacts",
+      "count": "0"
+    },
+    {
+      "table_name": "properties",
+      "count": "0"
+    },
+    {
+      "table_name": "familyMembers",
+      "count": "0"
+    },
+    {
+      "table_name": "leadAssignments",
+      "count": "0"
+    },
+    {
+      "table_name": "agents",
+      "count": "0"
+    },
+    {
+      "table_name": "agentPermissions",
+      "count": "0"
+    },
+    {
+      "table_name": "leadTransferHistory",
+      "count": "0"
+    },
+    {
+      "table_name": "users",
+      "count": "3"
+    },
+    {
+      "table_name": "tasks",
+      "count": "21"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\tcount\ncontacts\t0\nproperties\t0\nfamilyMembers\t0\nleadAssignments\t0\nagents\t0\nagentPermissions\t0\nleadTransferHistory\t0\nusers\t3\ntasks\t21\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
