@@ -74,3 +74,10 @@
 - [x] Add Save/Cancel buttons to all forms ✅
 - [x] Add confirmation dialogs for delete operations ✅
 - [x] Add success/error notifications for all operations ✅
+
+## Lead Source Tracking (NEW)
+- [x] Design database schema for source tracking
+- [x] Add source, listName, entryDate fields to properties table
+- [x] Create source/list management page (Edit Property Dialog)
+- [ ] Add dashboard filters for source and list
+- [ ] Test lead source tracking end-to-end

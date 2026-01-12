@@ -190,6 +190,11 @@ export const properties = mysqlTable("properties", {
   dealMachineLeadId: varchar("dealMachineLeadId", { length: 100 }),
   dealMachineRawData: text("dealMachineRawData"), // JSON string with all extra DealMachine data
   
+  // Lead source tracking
+  source: mysqlEnum("source", ["DealMachine", "Manual", "Import", "API", "CSV", "Other"]).default("Manual"),
+  listName: varchar("listName", { length: 255 }), // Name of the list/campaign
+  entryDate: timestamp("entryDate").defaultNow().notNull(), // When the lead entered the system
+  
   // Desk management
   deskName: varchar("deskName", { length: 100 }), // Desk assignment (e.g., "Sales", "Follow-up")
   deskStatus: mysqlEnum("deskStatus", ["BIN", "ACTIVE", "ARCHIVED"]).default("BIN"), // BIN=new leads, ACTIVE=in progress, ARCHIVED=completed

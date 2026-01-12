@@ -41,6 +41,9 @@ interface EditPropertyDialogProps {
     buildingSquareFeet?: number;
     yearBuilt?: number;
     notes?: string;
+    source?: string;
+    listName?: string;
+    entryDate?: Date;
   };
   onSuccess?: () => void;
 }
@@ -65,6 +68,9 @@ export function EditPropertyDialog({
     totalBaths: property.totalBaths?.toString() || "",
     buildingSquareFeet: property.buildingSquareFeet?.toString() || "",
     yearBuilt: property.yearBuilt?.toString() || "",
+    source: property.source || "Manual",
+    listName: property.listName || "",
+    entryDate: property.entryDate ? new Date(property.entryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
   const updatePropertyMutation = trpc.properties.update.useMutation({
@@ -96,6 +102,9 @@ export function EditPropertyDialog({
       totalBaths: formData.totalBaths ? parseInt(formData.totalBaths) : undefined,
       buildingSquareFeet: formData.buildingSquareFeet ? parseInt(formData.buildingSquareFeet) : undefined,
       yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : undefined,
+      source: formData.source as any,
+      listName: formData.listName || undefined,
+      entryDate: new Date(formData.entryDate),
     });
   };
 
@@ -311,6 +320,56 @@ export function EditPropertyDialog({
                   <SelectItem value="TBD">❓ TBD</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Lead Source Tracking */}
+          <div className="space-y-2">
+            <h3 className="font-semibold text-sm">Lead Source</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label htmlFor="source">Source</Label>
+                <Select
+                  value={formData.source}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, source: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DealMachine">DealMachine</SelectItem>
+                    <SelectItem value="Manual">Manual</SelectItem>
+                    <SelectItem value="Import">Import</SelectItem>
+                    <SelectItem value="API">API</SelectItem>
+                    <SelectItem value="CSV">CSV</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="listName">List Name</Label>
+                <Input
+                  id="listName"
+                  value={formData.listName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, listName: e.target.value })
+                  }
+                  placeholder="Campaign or list name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="entryDate">Entry Date</Label>
+                <Input
+                  id="entryDate"
+                  type="date"
+                  value={formData.entryDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, entryDate: e.target.value })
+                  }
+                />
+              </div>
             </div>
           </div>
 
