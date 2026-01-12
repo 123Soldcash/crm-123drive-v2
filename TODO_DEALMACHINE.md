@@ -51,3 +51,6 @@
 ## Bug Fixes
 - [x] Fix duplicate phone numbers appearing in contact display
 - [x] Add DNC visual indicator (red bold) for phone numbers with DNC flag
+- [x] Delete all agents from database
+- [x] Fix agent creation type mismatch bug (string/object error)
+- [x] Create and pass agent creation tests (5/5 passing)

@@ -92,16 +92,21 @@ export const agentsRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
     if (!db) throw new Error("Database not available");
-      const result = await db.insert(agents).values({
-        name: input.name,
-        email: input.email,
-        phone: input.phone,
-        role: (input.role || "Birddog") as any,
-        agentType: (input.agentType || "Internal") as any,
-        status: (input.status || "Active") as any,
-        notes: input.notes,
-      } as any);
-      return { id: Number((result as any).insertId), success: true };
+      try {
+        const result = await db.insert(agents).values({
+          name: input.name,
+          email: input.email,
+          phone: input.phone || undefined,
+          role: input.role || "Birddog",
+          agentType: input.agentType || "Internal",
+          status: input.status || "Active",
+          notes: input.notes || undefined,
+        });
+        return { id: Number((result as any).insertId), success: true };
+      } catch (error: any) {
+        console.error('Agent creation error:', error);
+        throw new Error(`Failed to create agent: ${error.message}`);
+      }
     }),
 
   update: protectedProcedure
