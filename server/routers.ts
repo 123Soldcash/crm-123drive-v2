@@ -1062,6 +1062,7 @@ export const appRouter = router({
         }
 
         const XLSX = await import('xlsx');
+        const { mapDealMachineRow, validateProperty } = await import('./dealmachine-mapper');
         
         // Decode base64 to buffer
         const buffer = Buffer.from(input.fileData, 'base64');
@@ -1086,83 +1087,77 @@ export const appRouter = router({
           const row = data[i];
           
           try {
-            // Map Excel columns to template fields
-            const addressLine1 = row['addressLine1'] || row['Address'] || '';
-            const city = row['city'] || row['City'] || '';
-            const state = row['state'] || row['State'] || '';
-            const zipcode = row['zipcode'] || row['Zipcode'] || '';
+            // Map DealMachine row using comprehensive mapper
+            const { property, contacts: mappedContacts } = mapDealMachineRow(row);
             
-            // Skip if essential fields are missing
-            if (!addressLine1 || !city || !state || !zipcode) {
+            // Validate property
+            const validation = validateProperty(property);
+            if (!validation.valid) {
               errorCount++;
-              errors.push(`Row ${i + 2}: Missing required fields`);
+              errors.push(`Row ${i + 2}: ${validation.errors.join(', ')}`);
               continue;
             }
             
-            // Helper function to parse dates
-            const parseDate = (value: any): Date | null => {
-              if (!value) return null;
-              if (value instanceof Date) return value;
-              const parsed = new Date(value);
-              return isNaN(parsed.getTime()) ? null : parsed;
-            };
-            
-            // Get propertyId from dealMachinePropertyId or dealMachineLeadId
-            const propertyId = row['dealMachinePropertyId'] || row['propertyId'] || null;
-            
             // Check for duplicate propertyId
-            if (propertyId) {
+            if (property.propertyId) {
               const existing = await dbInstance
                 .select({ id: properties.id })
                 .from(properties)
-                .where(eq(properties.propertyId, propertyId))
+                .where(eq(properties.propertyId, property.propertyId))
                 .limit(1);
               
               if (existing.length > 0) {
                 errorCount++;
-                errors.push(`Row ${i + 2}: Property with ID ${propertyId} already exists (duplicate)`);
+                errors.push(`Row ${i + 2}: Property with ID ${property.propertyId} already exists (duplicate)`);
                 continue;
               }
             }
             
-            // All property fields from template
+            // Prepare property data for insertion
             const propertyData: any = {
-              propertyId: propertyId,
-              addressLine1: String(addressLine1).trim(),
-              addressLine2: row['addressLine2'] || null,
-              city: String(city).trim(),
-              state: String(state).trim(),
-              zipcode: String(zipcode).trim(),
-              subdivisionName: row['subdivisionName'] || null,
-              status: row['status'] || null,
-              marketStatus: row['marketStatus'] || null,
-              ownerLocation: row['ownerLocation'] || null,
-              estimatedValue: row['estimatedValue'] ? Number(row['estimatedValue']) : null,
-              equityAmount: row['equityAmount'] ? Number(row['equityAmount']) : null,
-              equityPercent: row['equityPercent'] ? Number(row['equityPercent']) : null,
-              salePrice: row['salePrice'] ? Number(row['salePrice']) : null,
-              saleDate: parseDate(row['saleDate']),
-              mortgageAmount: row['mortgageAmount'] ? Number(row['mortgageAmount']) : null,
-              owner1Name: row['owner1Name'] || null,
-              owner2Name: row['owner2Name'] || null,
-              buildingSquareFeet: row['buildingSquareFeet'] ? Number(row['buildingSquareFeet']) : null,
-              totalBedrooms: row['totalBedrooms'] ? Number(row['totalBedrooms']) : null,
-              totalBaths: row['totalBaths'] ? Number(row['totalBaths']) : null,
-              yearBuilt: row['yearBuilt'] ? Number(row['yearBuilt']) : null,
-              propertyType: row['propertyType'] || null,
-              constructionType: row['constructionType'] || null,
-              apnParcelId: row['apnParcelId'] || null,
-              taxDelinquent: row['taxDelinquent'] || null,
-              taxDelinquentYear: row['taxDelinquentYear'] ? Number(row['taxDelinquentYear']) : null,
-              taxYear: row['taxYear'] ? Number(row['taxYear']) : null,
-              taxAmount: row['taxAmount'] ? Number(row['taxAmount']) : null,
+              propertyId: property.propertyId,
+              leadId: property.leadId,
+              addressLine1: property.addressLine1,
+              addressLine2: property.addressLine2,
+              city: property.city,
+              state: property.state,
+              zipcode: property.zipcode,
+              subdivisionName: property.subdivisionName,
+              status: property.status,
+              marketStatus: property.marketStatus,
+              ownerLocation: property.ownerLocation,
+              estimatedValue: property.estimatedValue,
+              equityAmount: property.equityAmount,
+              equityPercent: property.equityPercent,
+              salePrice: property.salePrice,
+              saleDate: property.saleDate,
+              mortgageAmount: property.mortgageAmount,
+              totalLoanBalance: property.totalLoanBalance,
+              totalLoanPayment: property.totalLoanPayment,
+              estimatedRepairCost: property.estimatedRepairCost,
+              taxYear: property.taxYear,
+              taxAmount: property.taxAmount,
+              owner1Name: property.owner1Name,
+              owner2Name: property.owner2Name,
+              buildingSquareFeet: property.buildingSquareFeet,
+              totalBedrooms: property.totalBedrooms,
+              totalBaths: property.totalBaths,
+              yearBuilt: property.yearBuilt,
+              propertyType: property.propertyType,
+              constructionType: property.constructionType,
+              apnParcelId: property.apnParcelId,
+              taxDelinquent: property.taxDelinquent,
+              taxDelinquentYear: property.taxDelinquentYear,
+              dealMachinePropertyId: property.dealMachinePropertyId,
+              dealMachineLeadId: property.dealMachineLeadId,
+              dealMachineRawData: property.dealMachineRawData,
               assignedAgentId: input.assignedAgentId,
             };
             
             // Insert property
             await dbInstance.insert(properties).values(propertyData);
             
-            // Get the inserted property ID by querying the most recent insert
+            // Get the inserted property ID
             const [insertedProperty] = await dbInstance
               .select({ id: properties.id })
               .from(properties)
@@ -1183,27 +1178,21 @@ export const appRouter = router({
             
             const insertedPropertyId = insertedProperty.id;
             
-            // Process contacts (up to 2 contacts from template)
-            const { contacts } = await import('../drizzle/schema');
-            for (let contactNum = 1; contactNum <= 2; contactNum++) {
-              const contactName = row[`contact${contactNum}_name`];
-              
-              // Skip if contact has no name
-              if (!contactName) continue;
-              
+            // Process all mapped contacts (up to 14)
+            for (const contact of mappedContacts) {
               const contactData: any = {
                 propertyId: insertedPropertyId,
-                name: String(contactName).trim(),
-                flags: row[`contact${contactNum}_flags`] || null,
-                phone1: row[`contact${contactNum}_phone1`] || null,
-                phone1Type: row[`contact${contactNum}_phone1Type`] || null,
-                phone2: row[`contact${contactNum}_phone2`] || null,
-                phone2Type: row[`contact${contactNum}_phone2Type`] || null,
-                phone3: row[`contact${contactNum}_phone3`] || null,
-                phone3Type: row[`contact${contactNum}_phone3Type`] || null,
-                email1: row[`contact${contactNum}_email1`] || null,
-                email2: row[`contact${contactNum}_email2`] || null,
-                email3: row[`contact${contactNum}_email3`] || null,
+                name: contact.name,
+                flags: contact.flags,
+                phone1: contact.phone1,
+                phone1Type: contact.phone1Type,
+                phone2: contact.phone2,
+                phone2Type: contact.phone2Type,
+                phone3: contact.phone3,
+                phone3Type: contact.phone3Type,
+                email1: contact.email1,
+                email2: contact.email2,
+                email3: contact.email3,
               };
               
               await dbInstance.insert(contacts).values(contactData);
