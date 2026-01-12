@@ -127,6 +127,13 @@
       "when": 1768181535786,
       "tag": "0017_brave_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1768240442829,
+      "tag": "0018_freezing_deadpool",
+      "breakpoints": true
     }
   ]
 }

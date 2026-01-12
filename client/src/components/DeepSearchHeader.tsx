@@ -37,6 +37,8 @@ export function DeepSearchHeader({
         return "bg-gradient-to-r from-blue-500 to-blue-700 text-white animate-pulse";
       case "HOT":
         return "bg-gradient-to-r from-green-500 to-green-700 text-white";
+      case "DEEP SEARCH":
+        return "bg-gradient-to-r from-purple-500 to-purple-700 text-white";
       case "WARM":
         return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white";
       case "COLD":
@@ -68,6 +70,7 @@ export function DeepSearchHeader({
           <Badge className={cn("text-lg px-4 py-2 font-bold shadow-lg", getTemperatureStyle())}>
             {leadTemperature === "SUPER HOT" && "🔥🔥 "}
             {leadTemperature === "HOT" && "🔥 "}
+            {leadTemperature === "DEEP SEARCH" && "🔍 "}
             {leadTemperature === "WARM" && "☀️ "}
             {leadTemperature === "COLD" && "❄️ "}
             {leadTemperature === "DEAD" && "💀 "}

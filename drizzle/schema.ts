@@ -148,7 +148,7 @@ export const properties = mysqlTable("properties", {
     "Not Interested",
     "Follow Up",
   ]).default("Not Visited"),
-  leadTemperature: mysqlEnum("leadTemperature", ["SUPER HOT", "HOT", "WARM", "COLD", "TBD", "DEAD"]).default("TBD"),
+  leadTemperature: mysqlEnum("leadTemperature", ["SUPER HOT", "HOT", "DEEP SEARCH", "WARM", "COLD", "TBD", "DEAD"]).default("TBD"),
   ownerVerified: int("ownerVerified").default(0).notNull(),
   assignedAgentId: int("assignedAgentId"), // User ID of assigned birddog agent
   marketStatus: varchar("marketStatus", { length: 100 }),

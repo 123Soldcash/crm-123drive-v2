@@ -314,6 +314,7 @@ export function EditPropertyDialog({
                 <SelectContent>
                   <SelectItem value="SUPER HOT">🔥 Super Hot</SelectItem>
                   <SelectItem value="HOT">🔥 Hot</SelectItem>
+                  <SelectItem value="DEEP SEARCH">🔍 Deep Search</SelectItem>
                   <SelectItem value="WARM">🌡️ Warm</SelectItem>
                   <SelectItem value="COLD">❄️ Cold</SelectItem>
                   <SelectItem value="DEAD">💀 Dead</SelectItem>

@@ -77,6 +77,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
   const leadTempIcon = 
     property.leadTemperature === "SUPER HOT" ? <><Flame className="h-5 w-5 text-blue-600" /><Flame className="h-5 w-5 text-blue-600 -ml-3" /></> :
     property.leadTemperature === "HOT" ? <Flame className="h-5 w-5 text-red-600" /> :
+    property.leadTemperature === "DEEP SEARCH" ? <Search className="h-5 w-5 text-purple-600" /> :
     property.leadTemperature === "WARM" ? <ThermometerSun className="h-5 w-5 text-yellow-600" /> :
     property.leadTemperature === "COLD" ? <Snowflake className="h-5 w-5 text-blue-400" /> :
     property.leadTemperature === "TBD" ? <HelpCircle className="h-5 w-5 text-gray-400" /> :
@@ -85,6 +86,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
   const leadTempColor =
     property.leadTemperature === "SUPER HOT" ? "bg-blue-100 border-blue-400 text-blue-800" :
     property.leadTemperature === "HOT" ? "bg-red-100 border-red-400 text-red-800" :
+    property.leadTemperature === "DEEP SEARCH" ? "bg-purple-100 border-purple-400 text-purple-800" :
     property.leadTemperature === "WARM" ? "bg-yellow-100 border-yellow-400 text-yellow-800" :
     property.leadTemperature === "COLD" ? "bg-blue-50 border-blue-300 text-blue-700" :
     property.leadTemperature === "TBD" ? "bg-gray-50 border-gray-300 text-gray-700" :
