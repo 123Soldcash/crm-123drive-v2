@@ -385,14 +385,25 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2 items-center">
                       <Button 
-                        variant="ghost" 
-                        size="icon" 
+                        variant="outline" 
+                        size="sm"
                         onClick={() => toggleHiddenMutation.mutate({ id: contact.id, hidden: contact.hidden === 1 ? 0 : 1 })}
                         title={contact.hidden === 1 ? "Show contact" : "Hide contact"}
+                        className="gap-1"
                       >
-                        {contact.hidden === 1 ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        {contact.hidden === 1 ? (
+                          <>
+                            <Eye className="h-4 w-4" />
+                            <span className="text-xs">Show</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-4 w-4" />
+                            <span className="text-xs">Hide</span>
+                          </>
+                        )}
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(contact)}>
                         <Edit className="h-4 w-4" />

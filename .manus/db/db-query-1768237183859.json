@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_leads, GROUP_CONCAT(addressLine1 SEPARATOR ', ') as addresses FROM properties WHERE source = 'Other' AND listName = 'SEO Property' ORDER BY id DESC LIMIT 6;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_leads, GROUP_CONCAT(addressLine1 SEPARATOR ', ') as addresses FROM properties WHERE source = 'Other' AND listName = 'SEO Property' ORDER BY id DESC LIMIT 6;",
+  "rows": [
+    {
+      "total_leads": "6",
+      "addresses": "122 Rock Dove Ln, 604 lynda lane, santhi sree, debra kendrick, 510 KINGS RD, 6218 E Olympic Blvd"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_leads\taddresses\n6\t122 Rock Dove Ln, 604 lynda lane, santhi sree, debra kendrick, 510 KINGS RD, 6218 E Olympic Blvd\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

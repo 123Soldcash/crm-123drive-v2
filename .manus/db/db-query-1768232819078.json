@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE properties SET \n  totalBedrooms = 4,\n  totalBaths = 2,\n  buildingSquareFeet = 1602,\n  yearBuilt = 1954,\n  estimatedValue = 443000,\n  equityAmount = 443000,\n  equityPercent = 100,\n  taxDelinquent = 'No',\n  taxYear = 2024,\n  taxAmount = 7781,\n  estimatedRepairCost = 56070,\n  updatedAt = NOW()\nWHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE properties SET \n  totalBedrooms = 4,\n  totalBaths = 2,\n  buildingSquareFeet = 1602,\n  yearBuilt = 1954,\n  estimatedValue = 443000,\n  equityAmount = 443000,\n  equityPercent = 100,\n  taxDelinquent = 'No',\n  taxYear = 2024,\n  taxAmount = 7781,\n  estimatedRepairCost = 56070,\n  updatedAt = NOW()\nWHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 54
+}

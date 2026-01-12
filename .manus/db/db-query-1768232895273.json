@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, leadId, addressLine1, city, totalBedrooms, totalBaths, buildingSquareFeet, yearBuilt, estimatedValue, equityPercent, taxYear, taxAmount, estimatedRepairCost FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, leadId, addressLine1, city, totalBedrooms, totalBaths, buildingSquareFeet, yearBuilt, estimatedValue, equityPercent, taxYear, taxAmount, estimatedRepairCost FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1;",
+  "rows": [
+    {
+      "id": "630024",
+      "leadId": "1267558237",
+      "addressLine1": "1513 Nw 24th Ave",
+      "city": "Fort Lauderdale",
+      "totalBedrooms": "4",
+      "totalBaths": "2",
+      "buildingSquareFeet": "1602",
+      "yearBuilt": "1954",
+      "estimatedValue": "443000",
+      "equityPercent": "100",
+      "taxYear": "2024",
+      "taxAmount": "7781",
+      "estimatedRepairCost": "56070"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcity\ttotalBedrooms\ttotalBaths\tbuildingSquareFeet\tyearBuilt\testimatedValue\tequityPercent\ttaxYear\ttaxAmount\testimatedRepairCost\n630024\t1267558237\t1513 Nw 24th Ave\tFort Lauderdale\t4\t2\t1602\t1954\t443000\t100\t2024\t7781\t56070\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

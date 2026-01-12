@@ -2041,3 +2041,79 @@ export async function addContactEmail(propertyId: number, email: string) {
   // For now, we store emails in the contact record directly
   return { success: true };
 }
+
+/**
+ * Update existing property with new data
+ */
+export async function updateProperty(
+  propertyId: number,
+  updates: Partial<InsertProperty>
+) {
+  return await db
+    .update(properties)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(properties.id, propertyId));
+}
+
+/**
+ * Add or update contacts for a property
+ */
+export async function upsertContacts(
+  propertyId: number,
+  contactsData: Array<{
+    name: string;
+    phone?: string;
+    email?: string;
+    relationship?: string;
+    flags?: string;
+  }>
+) {
+  const results = [];
+  
+  for (const contact of contactsData) {
+    // Check if contact already exists
+    const existing = await db
+      .select()
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.propertyId, propertyId),
+          eq(contacts.name, contact.name)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing contact
+      const result = await db
+        .update(contacts)
+        .set({
+          phone1: contact.phone,
+          email1: contact.email,
+          relationship: contact.relationship,
+          flags: contact.flags,
+          updatedAt: new Date(),
+        })
+        .where(eq(contacts.id, existing[0].id));
+      results.push(result);
+    } else {
+      // Insert new contact
+      const result = await db.insert(contacts).values({
+        propertyId,
+        name: contact.name,
+        phone1: contact.phone,
+        email1: contact.email,
+        relationship: contact.relationship,
+        flags: contact.flags,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      results.push(result);
+    }
+  }
+  
+  return results;
+}

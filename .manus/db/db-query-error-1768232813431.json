@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE properties SET \n  totalBedrooms = 4,\n  totalBaths = 2,\n  buildingSquareFeet = 1602,\n  yearBuilt = 1954,\n  estimatedValue = 443000,\n  equityAmount = 443000,\n  equityPercent = 100,\n  taxDelinquent = 'No',\n  taxYear = 2024,\n  taxAmount = 7781,\n  estimatedRepairCost = 56070,\n  buildingCondition = 'Average',\n  propertyFlags = '2 years behind in taxes, 2021, dod 2021, dod april 19, est, house looks run down',\n  updatedAt = NOW()\nWHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE properties SET \n  totalBedrooms = 4,\n  totalBaths = 2,\n  buildingSquareFeet = 1602,\n  yearBuilt = 1954,\n  estimatedValue = 443000,\n  equityAmount = 443000,\n  equityPercent = 100,\n  taxDelinquent = 'No',\n  taxYear = 2024,\n  taxAmount = 7781,\n  estimatedRepairCost = 56070,\n  buildingCondition = 'Average',\n  propertyFlags = '2 years behind in taxes, 2021, dod 2021, dod april 19, est, house looks run down',\n  updatedAt = NOW()\nWHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'buildingCondition' in 'field list'"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, leadId, addressLine1, city, state, zipcode FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, leadId, addressLine1, city, state, zipcode FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1;",
+  "rows": [
+    {
+      "id": "630024",
+      "leadId": "1267558237",
+      "addressLine1": "1513 Nw 24th Ave",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "zipcode": "33311"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcity\tstate\tzipcode\n630024\t1267558237\t1513 Nw 24th Ave\tFort Lauderdale\tFL\t33311\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

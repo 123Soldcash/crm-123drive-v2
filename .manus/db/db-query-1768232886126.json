@@ -1,0 +1,9 @@
+{
+  "query": "SET @propId = (SELECT id FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1);\n\nINSERT INTO contacts (propertyId, name, phone1, relationship, createdAt, updatedAt) VALUES\n(@propId, 'Ted Christie OV', '(912) 227-0345', 'Seller', NOW(), NOW()),\n(@propId, 'Tedrick Christie', '(360) 223-7706', 'Seller', NOW(), NOW()),\n(@propId, 'Disc', '(954) 485-6163', 'Seller', NOW(), NOW()),\n(@propId, 'Christie', '(912) 318-8898', 'Seller', NOW(), NOW()),\n(@propId, 'Annie', '(954) 552-1223', 'Seller', NOW(), NOW()),\n(@propId, 'Annie OV', '(954) 253-3327', 'Seller', NOW(), NOW()),\n(@propId, 'Annie NIS', '(954) 612-1538', 'Seller', NOW(), NOW()),\n(@propId, 'Michael Christie', '(912) 427-7309', 'Seller', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SET @propId = (SELECT id FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1);\n\nINSERT INTO contacts (propertyId, name, phone1, relationship, createdAt, updatedAt) VALUES\n(@propId, 'Ted Christie OV', '(912) 227-0345', 'Seller', NOW(), NOW()),\n(@propId, 'Tedrick Christie', '(360) 223-7706', 'Seller', NOW(), NOW()),\n(@propId, 'Disc', '(954) 485-6163', 'Seller', NOW(), NOW()),\n(@propId, 'Christie', '(912) 318-8898', 'Seller', NOW(), NOW()),\n(@propId, 'Annie', '(954) 552-1223', 'Seller', NOW(), NOW()),\n(@propId, 'Annie OV', '(954) 253-3327', 'Seller', NOW(), NOW()),\n(@propId, 'Annie NIS', '(954) 612-1538', 'Seller', NOW(), NOW()),\n(@propId, 'Michael Christie', '(912) 427-7309', 'Seller', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 74
+}

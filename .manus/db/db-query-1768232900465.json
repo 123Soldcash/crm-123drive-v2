@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_contacts, GROUP_CONCAT(name SEPARATOR ', ') as contact_names FROM contacts WHERE propertyId = (SELECT id FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_contacts, GROUP_CONCAT(name SEPARATOR ', ') as contact_names FROM contacts WHERE propertyId = (SELECT id FROM properties WHERE addressLine1 LIKE '%1513%' AND city = 'Fort Lauderdale' LIMIT 1);",
+  "rows": [
+    {
+      "total_contacts": "8",
+      "contact_names": "Ted Christie OV, Tedrick Christie, Disc, Christie, Annie, Annie OV, Annie NIS, Michael Christie"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_contacts\tcontact_names\n8\tTed Christie OV, Tedrick Christie, Disc, Christie, Annie, Annie OV, Annie NIS, Michael Christie\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
