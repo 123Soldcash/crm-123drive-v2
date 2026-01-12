@@ -1,281 +1,340 @@
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
+import React, { useState } from "react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertCircle, CheckCircle2, Upload, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Upload, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+
+interface PreviewRow {
+  propertyId: string;
+  address: string;
+  city: string;
+  state: string;
+  owner: string;
+  contacts: number;
+}
 
 export default function ImportDealMachine() {
-  const [propertiesFile, setPropertiesFile] = useState<File | null>(null);
-  const [contactsFile, setContactsFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<any>(null);
+  // Using sonner toast
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<PreviewRow[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<string>("");
+  const [listName, setListName] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
 
-  const utils = trpc.useUtils();
+  const agentsQuery = trpc.properties.listAgents.useQuery();
+  const importMutation = trpc.properties.importDealMachine.useMutation();
 
-  const previewImport = trpc.dealmachine.preview.useMutation({
-    onSuccess: (data) => {
-      setPreview(data);
-    },
-    onError: (error) => {
-      toast.error("Preview failed: " + error.message);
-    },
-  });
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
-  const executeImport = trpc.dealmachine.import.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Imported ${data.propertiesCreated} properties and ${data.contactsCreated} contacts`);
-      utils.properties.list.invalidate();
-      setPropertiesFile(null);
-      setContactsFile(null);
-      setPreview(null);
-    },
-    onError: (error) => {
-      toast.error("Import failed: " + error.message);
-    },
-  });
-
-  const handlePreview = async () => {
-    if (!propertiesFile) {
-      toast.error("Please select a properties CSV file");
-      return;
-    }
-
-    setLoading(true);
     try {
-      const propertiesText = await propertiesFile.text();
-      const contactsText = contactsFile ? await contactsFile.text() : "";
+      setLoading(true);
+      setFile(selectedFile);
+      setPreview([]);
 
-      previewImport.mutate({
-        propertiesCSV: propertiesText,
-        contactsCSV: contactsText,
-      });
-    } catch (error) {
-      toast.error("Failed to read files");
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = event.target?.result;
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet);
+
+          const previewRows: PreviewRow[] = rows.slice(0, 5).map((row: any) => ({
+            propertyId: row.property_id || "",
+            address: row.property_address_line_1 || "",
+            city: row.property_address_city || "",
+            state: row.property_address_state || "",
+            owner: row.owner_1_name || "",
+            contacts: Object.keys(row).filter((k) => k.includes("contact_") && k.includes("_name")).length,
+          }));
+
+          setPreview(previewRows);
+          toast({
+            title: "File loaded",
+            description: `Found ${rows.length} properties in the file`,
+          });
+        } catch (error) {
+          toast({
+            title: "Error reading file",
+            description: String(error),
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsArrayBuffer(selectedFile);
     } finally {
       setLoading(false);
     }
   };
 
   const handleImport = async () => {
-    if (!propertiesFile) {
-      toast.error("Please select a properties CSV file");
+    if (!file) {
+      toast({
+        title: "Error",
+        description: "Please select a file first",
+        variant: "destructive",
+      });
       return;
     }
 
-    setLoading(true);
     try {
-      const propertiesText = await propertiesFile.text();
-      const contactsText = contactsFile ? await contactsFile.text() : "";
+      setLoading(true);
 
-      executeImport.mutate({
-        propertiesCSV: propertiesText,
-        contactsCSV: contactsText,
-      });
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = event.target?.result;
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet);
+
+          const result = await importMutation.mutateAsync({
+            rows: rows as any[],
+            assignedAgentId: selectedAgent ? parseInt(selectedAgent) : null,
+            listName: listName || null,
+          });
+
+          setImportResult(result);
+
+          toast({
+            title: "Import completed",
+            description: `Imported ${result.propertiesImported} properties with ${result.contactsImported} contacts`,
+          });
+        } catch (error) {
+          toast({
+            title: "Import failed",
+            description: String(error),
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      reader.readAsArrayBuffer(file);
     } catch (error) {
-      toast.error("Failed to read files");
-    } finally {
+      toast({
+        title: "Error",
+        description: String(error),
+        variant: "destructive",
+      });
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Import from DealMachine</h1>
-        <p className="text-muted-foreground">
-          Upload CSV files exported from DealMachine to import properties and contacts
+        <h1 className="text-3xl font-bold">Import DealMachine Properties</h1>
+        <p className="text-muted-foreground mt-2">
+          Upload an Excel file from DealMachine to import properties and contacts
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Upload Files</CardTitle>
+          <CardTitle>Step 1: Select File</CardTitle>
+          <CardDescription>Upload your DealMachine Excel export</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="properties-file">Properties CSV File</Label>
+          <div className="border-2 border-dashed rounded-lg p-6 text-center">
             <Input
-              id="properties-file"
               type="file"
-              accept=".csv"
-              onChange={(e) => setPropertiesFile(e.target.files?.[0] || null)}
+              accept=".xlsx,.xls"
+              onChange={handleFileSelect}
               disabled={loading}
+              className="hidden"
+              id="file-input"
             />
-            {propertiesFile && (
-              <p className="text-sm text-muted-foreground">
-                ✓ {propertiesFile.name}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contacts-file">Contacts CSV File (Optional)</Label>
-            <Input
-              id="contacts-file"
-              type="file"
-              accept=".csv"
-              onChange={(e) => setContactsFile(e.target.files?.[0] || null)}
-              disabled={loading}
-            />
-            {contactsFile && (
-              <p className="text-sm text-muted-foreground">
-                ✓ {contactsFile.name}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={handlePreview}
-              disabled={!propertiesFile || loading}
-              variant="outline"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Preview
-                </>
-              )}
-            </Button>
-
-            {preview && (
-              <Button
-                onClick={handleImport}
-                disabled={loading || executeImport.isPending}
-              >
-                {executeImport.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Import
-                  </>
-                )}
-              </Button>
-            )}
+            <Label htmlFor="file-input" className="cursor-pointer">
+              <div className="flex flex-col items-center gap-2">
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <span className="font-medium">Click to select file or drag and drop</span>
+                <span className="text-sm text-muted-foreground">
+                  {file ? file.name : "No file selected"}
+                </span>
+              </div>
+            </Label>
           </div>
         </CardContent>
       </Card>
 
-      {preview && (
-        <>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Preview shows first 5 properties. {preview.totalProperties} total properties found.
-              {preview.duplicates > 0 && ` ${preview.duplicates} duplicates will be skipped.`}
-            </AlertDescription>
-          </Alert>
+      {preview.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 2: Preview</CardTitle>
+            <CardDescription>First {preview.length} properties from the file</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2">Property ID</th>
+                    <th className="text-left py-2 px-2">Address</th>
+                    <th className="text-left py-2 px-2">City, State</th>
+                    <th className="text-left py-2 px-2">Owner</th>
+                    <th className="text-left py-2 px-2">Contacts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((row, idx) => (
+                    <tr key={idx} className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-2 font-mono text-xs">{row.propertyId}</td>
+                      <td className="py-2 px-2">{row.address}</td>
+                      <td className="py-2 px-2">
+                        {row.city}, {row.state}
+                      </td>
+                      <td className="py-2 px-2">{row.owner}</td>
+                      <td className="py-2 px-2">{row.contacts}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Properties Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Address</TableHead>
-                      <TableHead>City, State</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Value</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {preview.properties.map((prop: any, idx: number) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono text-sm">
-                          {prop.addressLine1}
-                        </TableCell>
-                        <TableCell>
-                          {prop.city}, {prop.state} {prop.zipcode}
-                        </TableCell>
-                        <TableCell>{prop.owner1Name || "-"}</TableCell>
-                        <TableCell>
-                          {prop.estimatedValue
-                            ? `$${prop.estimatedValue.toLocaleString()}`
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          {prop.isDuplicate ? (
-                            <Badge variant="secondary">Duplicate</Badge>
-                          ) : (
-                            <Badge variant="default">New</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+      {preview.length > 0 && !importResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 3: Configure Import</CardTitle>
+            <CardDescription>Set import options</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="agent">Assign to Agent (Optional)</Label>
+              <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                <SelectTrigger id="agent">
+                  <SelectValue placeholder="Select an agent or leave empty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Agent (Assign Later)</SelectItem>
+                  {agentsQuery.data?.map((agent) => (
+                    <SelectItem key={agent.id} value={String(agent.id)}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="list-name">List Name (Optional)</Label>
+              <Input
+                id="list-name"
+                placeholder="e.g., 'Probate List January 2026'"
+                value={listName}
+                onChange={(e) => setListName(e.target.value)}
+              />
+            </div>
+
+            <Button
+              onClick={handleImport}
+              disabled={loading || !file}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                "Import Properties"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {importResult && (
+        <Card className={importResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {importResult.success ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  Import Completed Successfully
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                  Import Completed with Errors
+                </>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Properties Imported</p>
+                <p className="text-2xl font-bold">{importResult.propertiesImported}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-sm text-muted-foreground">Contacts Imported</p>
+                <p className="text-2xl font-bold">{importResult.contactsImported}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Phones Imported</p>
+                <p className="text-2xl font-bold">{importResult.phonesImported}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Emails Imported</p>
+                <p className="text-2xl font-bold">{importResult.emailsImported}</p>
+              </div>
+            </div>
 
-          {preview.contacts.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Contacts Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>DNC</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {preview.contacts.slice(0, 5).map((contact: any, idx: number) => (
-                        <TableRow key={idx}>
-                          <TableCell>{contact.name}</TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {contact.phone || "-"}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {contact.email || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {contact.dnc ? (
-                              <Badge variant="destructive">Yes</Badge>
-                            ) : (
-                              <Badge variant="outline">No</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
+            {importResult.duplicates && importResult.duplicates.length > 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <p className="font-medium">Duplicates Skipped: {importResult.duplicates.length}</p>
+                  <ul className="text-sm mt-2 space-y-1">
+                    {importResult.duplicates.slice(0, 5).map((dup: string, idx: number) => (
+                      <li key={idx}>• {dup}</li>
+                    ))}
+                    {importResult.duplicates.length > 5 && (
+                      <li>... and {importResult.duplicates.length - 5} more</li>
+                    )}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {importResult.errors && importResult.errors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <p className="font-medium">Errors: {importResult.errors.length}</p>
+                  <ul className="text-sm mt-2 space-y-1">
+                    {importResult.errors.slice(0, 5).map((error: string, idx: number) => (
+                      <li key={idx}>• {error}</li>
+                    ))}
+                    {importResult.errors.length > 5 && (
+                      <li>... and {importResult.errors.length - 5} more</li>
+                    )}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button onClick={() => window.location.href = "/properties"} className="w-full">
+              View Imported Properties
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

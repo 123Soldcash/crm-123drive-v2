@@ -81,3 +81,11 @@
 - [x] Create source/list management page (Edit Property Dialog)
 - [ ] Add dashboard filters for source and list
 - [ ] Test lead source tracking end-to-end
+
+## CURRENT TASK: Import DealMachine File (Jan 11)
+- [ ] Parse Excel file with 126 columns (14 property fields + 14 contacts with 8 fields each)
+- [ ] Implement field mapper for snake_case to camelCase conversion
+- [ ] Create import procedure with duplicate detection by propertyId
+- [ ] Auto-assign source='DealMachine', entryDate=now, deskStatus='BIN'
+- [ ] Import 12 properties with up to 14 contacts each
+- [ ] Test end-to-end import and verify all data

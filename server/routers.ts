@@ -2173,6 +2173,33 @@ export const appRouter = router({
 
         return stats;
       }),
+    importDealMachine: protectedProcedure
+      .input(
+        z.object({
+          rows: z.array(z.record(z.any())),
+          assignedAgentId: z.number().nullable().optional(),
+          listName: z.string().nullable().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { mapDealMachineRow, validateProperty } = await import("./lib/dealmachine-mapper");
+        const { importDealMachineProperties } = await import("./db-dealmachine-import");
+
+        const mappedProperties = input.rows.map((row) => mapDealMachineRow(row));
+
+        const validProperties = mappedProperties.filter((prop) => {
+          const errors = validateProperty(prop);
+          return errors.length === 0;
+        });
+
+        const result = await importDealMachineProperties(
+          validProperties,
+          input.assignedAgentId || null,
+          input.listName || null
+        );
+
+        return result;
+      }),
   }),
 });
 
