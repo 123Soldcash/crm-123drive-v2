@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, name, hidden, propertyId FROM contacts LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, hidden, propertyId FROM contacts LIMIT 10;",
+  "rows": [
+    {
+      "id": "570009",
+      "name": "George A Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570010",
+      "name": "George A Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570011",
+      "name": "Myiedra J Miles",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570012",
+      "name": "Young H Kim",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570013",
+      "name": "Andrina Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570014",
+      "name": "Catrina C Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570015",
+      "name": "Kayron C Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570016",
+      "name": "Alzonia S Hanks",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570017",
+      "name": "Jibri Mathis",
+      "hidden": "0",
+      "propertyId": "630003"
+    },
+    {
+      "id": "570018",
+      "name": "Michael D Giroux",
+      "hidden": "0",
+      "propertyId": "630004"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\thidden\tpropertyId\n570009\tGeorge A Adams\t0\t630002\n570010\tGeorge A Adams\t0\t630002\n570011\tMyiedra J Miles\t0\t630002\n570012\tYoung H Kim\t0\t630002\n570013\tAndrina Adams\t0\t630002\n570014\tCatrina C Adams\t0\t630002\n570015\tKayron C Adams\t0\t630002\n570016\tAlzonia S Hanks\t0\t630002\n570017\tJibri Mathis\t0\t630003\n570018\tMichael D Giroux\t0\t630004\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

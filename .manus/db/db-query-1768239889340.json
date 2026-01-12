@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, hidden, propertyId FROM contacts ORDER BY propertyId, hidden DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, hidden, propertyId FROM contacts ORDER BY propertyId, hidden DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "570014",
+      "name": "Catrina C Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570011",
+      "name": "Myiedra J Miles",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570009",
+      "name": "George A Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570012",
+      "name": "Young H Kim",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570010",
+      "name": "George A Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570016",
+      "name": "Alzonia S Hanks",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570013",
+      "name": "Andrina Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570015",
+      "name": "Kayron C Adams",
+      "hidden": "0",
+      "propertyId": "630002"
+    },
+    {
+      "id": "570017",
+      "name": "Jibri Mathis",
+      "hidden": "0",
+      "propertyId": "630003"
+    },
+    {
+      "id": "570018",
+      "name": "Michael D Giroux",
+      "hidden": "0",
+      "propertyId": "630004"
+    },
+    {
+      "id": "570019",
+      "name": "Dawn M Fossati",
+      "hidden": "0",
+      "propertyId": "630004"
+    },
+    {
+      "id": "570020",
+      "name": "Donald Ferrino",
+      "hidden": "0",
+      "propertyId": "630005"
+    },
+    {
+      "id": "570022",
+      "name": "Demi J Munn",
+      "hidden": "0",
+      "propertyId": "630005"
+    },
+    {
+      "id": "570021",
+      "name": "Tammi A Munn",
+      "hidden": "0",
+      "propertyId": "630005"
+    },
+    {
+      "id": "570027",
+      "name": "Gavin J Douse",
+      "hidden": "0",
+      "propertyId": "630006"
+    },
+    {
+      "id": "570024",
+      "name": "Janie M Cooper",
+      "hidden": "0",
+      "propertyId": "630006"
+    },
+    {
+      "id": "570026",
+      "name": "La T Jennings",
+      "hidden": "0",
+      "propertyId": "630006"
+    },
+    {
+      "id": "570023",
+      "name": "Jessica N Mcfadden",
+      "hidden": "0",
+      "propertyId": "630006"
+    },
+    {
+      "id": "570025",
+      "name": "Anthony L Jennings",
+      "hidden": "0",
+      "propertyId": "630006"
+    },
+    {
+      "id": "570028",
+      "name": "Jaime K Richards",
+      "hidden": "0",
+      "propertyId": "630007"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\thidden\tpropertyId\n570014\tCatrina C Adams\t0\t630002\n570011\tMyiedra J Miles\t0\t630002\n570009\tGeorge A Adams\t0\t630002\n570012\tYoung H Kim\t0\t630002\n570010\tGeorge A Adams\t0\t630002\n570016\tAlzonia S Hanks\t0\t630002\n570013\tAndrina Adams\t0\t630002\n570015\tKayron C Adams\t0\t630002\n570017\tJibri Mathis\t0\t630003\n570018\tMichael D Giroux\t0\t630004\n570019\tDawn M Fossati\t0\t630004\n570020\tDonald Ferrino\t0\t630005\n570022\tDemi J Munn\t0\t630005\n570021\tTammi A Munn\t0\t630005\n570027\tGavin J Douse\t0\t630006\n570024\tJanie M Cooper\t0\t630006\n570026\tLa T Jennings\t0\t630006\n570023\tJessica N Mcfadden\t0\t630006\n570025\tAnthony L Jennings\t0\t630006\n570028\tJaime K Richards\t0\t630007\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

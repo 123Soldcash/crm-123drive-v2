@@ -183,7 +183,17 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
       {contacts && contacts.length > 0 ? (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Contacts ({contacts?.length || 0})</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold">Contacts ({contacts?.length || 0})</h3>
+              <Button
+                variant={showHidden ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowHidden(!showHidden)}
+                className="text-xs"
+              >
+                {showHidden ? "Hide Hidden Contacts" : "Show All Contacts"}
+              </Button>
+            </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
@@ -385,30 +395,24 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-1 items-center">
                       <Button 
-                        variant="outline" 
-                        size="sm"
+                        variant="ghost" 
+                        size="icon"
                         onClick={() => toggleHiddenMutation.mutate({ id: contact.id, hidden: contact.hidden === 1 ? 0 : 1 })}
                         title={contact.hidden === 1 ? "Show contact" : "Hide contact"}
-                        className="gap-1"
+                        className="h-8 w-8"
                       >
                         {contact.hidden === 1 ? (
-                          <>
-                            <Eye className="h-4 w-4" />
-                            <span className="text-xs">Show</span>
-                          </>
+                          <Eye className="h-4 w-4 text-blue-500" />
                         ) : (
-                          <>
-                            <EyeOff className="h-4 w-4" />
-                            <span className="text-xs">Hide</span>
-                          </>
+                          <EyeOff className="h-4 w-4 text-gray-400" />
                         )}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(contact)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(contact)} className="h-8 w-8">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(contact.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(contact.id)} className="h-8 w-8">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
