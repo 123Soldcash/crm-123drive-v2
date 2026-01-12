@@ -54,3 +54,10 @@
 - [x] Delete all agents from database
 - [x] Fix agent creation type mismatch bug (string/object error)
 - [x] Create and pass agent creation tests (5/5 passing)
+
+
+## Current Bugs
+- [x] Remove duplicate "Add Agent" button in Agent Management
+- [x] Fix dropdown form values - sending objects instead of strings (agentType, role, status)
+- [x] Test agent creation after fixes
+- [x] Clean database completely (properties, contacts, agents, all related data)

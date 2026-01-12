@@ -1,0 +1,8 @@
+{
+  "query": "SELECT 'agents' as table_name, COUNT(*) as count FROM agents\nUNION ALL\nSELECT 'properties', COUNT(*) FROM properties\nUNION ALL\nSELECT 'contacts', COUNT(*) FROM contacts\nUNION ALL\nSELECT 'familyMembers', COUNT(*) FROM familyMembers\nUNION ALL\nSELECT 'leadAssignments', COUNT(*) FROM leadAssignments\nUNION ALL\nSELECT 'agentPermissions', COUNT(*) FROM agentPermissions\nUNION ALL\nSELECT 'leadTransferHistory', COUNT(*) FROM leadTransferHistory\nUNION ALL\nSELECT 'tasks', COUNT(*) FROM tasks\nUNION ALL\nSELECT 'activityLog', COUNT(*) FROM activityLog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'agents' as table_name, COUNT(*) as count FROM agents\nUNION ALL\nSELECT 'properties', COUNT(*) FROM properties\nUNION ALL\nSELECT 'contacts', COUNT(*) FROM contacts\nUNION ALL\nSELECT 'familyMembers', COUNT(*) FROM familyMembers\nUNION ALL\nSELECT 'leadAssignments', COUNT(*) FROM leadAssignments\nUNION ALL\nSELECT 'agentPermissions', COUNT(*) FROM agentPermissions\nUNION ALL\nSELECT 'leadTransferHistory', COUNT(*) FROM leadTransferHistory\nUNION ALL\nSELECT 'tasks', COUNT(*) FROM tasks\nUNION ALL\nSELECT 'activityLog', COUNT(*) FROM activityLog;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'rdbafwhqbdqo37pina3pdu.activityLog' doesn't exist"
+  ]
+}

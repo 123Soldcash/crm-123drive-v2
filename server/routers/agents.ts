@@ -69,8 +69,8 @@ export const agentsRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        email: z.string().email(),
-        phone: z.string().optional(),
+        email: z.string().email().optional().nullable(),
+        phone: z.string().optional().nullable(),
         role: z
           .enum([
             "Birddog",
@@ -81,12 +81,14 @@ export const agentsRouter = router({
             "Corretor",
             "Other",
           ])
-          .optional(),
+          .optional()
+          .default("Birddog"),
         agentType: z
           .enum(["Internal", "External", "Birddog", "Corretor"])
-          .optional(),
-        status: z.enum(["Active", "Inactive", "Suspended"]).optional(),
-        notes: z.string().optional(),
+          .optional()
+          .default("Internal"),
+        status: z.enum(["Active", "Inactive", "Suspended"]).optional().default("Active"),
+        notes: z.string().optional().nullable(),
       })
     )
     .mutation(async ({ input }) => {
@@ -95,11 +97,11 @@ export const agentsRouter = router({
       try {
         const result = await db.insert(agents).values({
           name: input.name,
-          email: input.email,
+          email: input.email || undefined,
           phone: input.phone || undefined,
-          role: input.role || "Birddog",
-          agentType: input.agentType || "Internal",
-          status: input.status || "Active",
+          role: input.role,
+          agentType: input.agentType,
+          status: input.status,
           notes: input.notes || undefined,
         });
         return { id: Number((result as any).insertId), success: true };
@@ -126,12 +128,14 @@ export const agentsRouter = router({
             "Corretor",
             "Other",
           ])
-          .optional(),
+          .optional()
+          .default("Birddog"),
         agentType: z
           .enum(["Internal", "External", "Birddog", "Corretor"])
-          .optional(),
-        status: z.enum(["Active", "Inactive", "Suspended"]).optional(),
-        notes: z.string().optional(),
+          .optional()
+          .default("Internal"),
+        status: z.enum(["Active", "Inactive", "Suspended"]).optional().default("Active"),
+        notes: z.string().optional().nullable(),
       })
     )
     .mutation(async ({ input }) => {

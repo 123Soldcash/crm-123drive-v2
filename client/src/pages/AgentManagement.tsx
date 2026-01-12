@@ -342,9 +342,6 @@ export default function AgentManagement() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddAgent} disabled={createAgent.isPending}>
-                  {createAgent.isPending ? "Adding..." : "Add Agent"}
-                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
