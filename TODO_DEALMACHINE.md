@@ -46,3 +46,8 @@
 - Process up to 14 contacts per property
 - Validate required fields before import
 - Show detailed error messages for debugging
+
+
+## Bug Fixes
+- [x] Fix duplicate phone numbers appearing in contact display
+- [x] Add DNC visual indicator (red bold) for phone numbers with DNC flag

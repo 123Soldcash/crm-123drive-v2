@@ -404,35 +404,43 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {/* Phone Numbers from phones array (imported) or individual fields (manual) */}
-                  {(contact.phones && contact.phones.length > 0 || contact.phone1 || contact.phone2 || contact.phone3) && (
+                  {/* Phone Numbers - show only individual fields to avoid duplicates */}
+                  {(contact.phone1 || contact.phone2 || contact.phone3) && (
                     <div className="space-y-1">
-                      {contact.phones && contact.phones.map((phone: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{phone.phoneNumber}</span>
-                          <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
-                        </div>
-                      ))}
                       {contact.phone1 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
+                        <div className={`flex items-center gap-2 text-sm ${
+                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
+                        }`}>
+                          <Phone className={`h-4 w-4 ${
+                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
+                          }`} />
                           <span>{contact.phone1}</span>
                           <Badge variant="outline" className="text-xs">{contact.phone1Type}</Badge>
+                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
                         </div>
                       )}
                       {contact.phone2 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
+                        <div className={`flex items-center gap-2 text-sm ${
+                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
+                        }`}>
+                          <Phone className={`h-4 w-4 ${
+                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
+                          }`} />
                           <span>{contact.phone2}</span>
                           <Badge variant="outline" className="text-xs">{contact.phone2Type}</Badge>
+                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
                         </div>
                       )}
                       {contact.phone3 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
+                        <div className={`flex items-center gap-2 text-sm ${
+                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
+                        }`}>
+                          <Phone className={`h-4 w-4 ${
+                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
+                          }`} />
                           <span>{contact.phone3}</span>
                           <Badge variant="outline" className="text-xs">{contact.phone3Type}</Badge>
+                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
                         </div>
                       )}
                     </div>
