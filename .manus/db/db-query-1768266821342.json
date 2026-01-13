@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, addressLine1, city, state, zipcode, owner1Name, leadTemperature, deskStatus FROM properties WHERE addressLine1 = '2892 Nw 7th Ct' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, city, state, zipcode, owner1Name, leadTemperature, deskStatus FROM properties WHERE addressLine1 = '2892 Nw 7th Ct' LIMIT 1;",
+  "rows": [
+    {
+      "id": "690001",
+      "addressLine1": "2892 Nw 7th Ct",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "zipcode": "33311",
+      "owner1Name": "Dixon Juanita C Est",
+      "leadTemperature": "TBD",
+      "deskStatus": "BIN"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tcity\tstate\tzipcode\towner1Name\tleadTemperature\tdeskStatus\n690001\t2892 Nw 7th Ct\tFort Lauderdale\tFL\t33311\tDixon Juanita C Est\tTBD\tBIN\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

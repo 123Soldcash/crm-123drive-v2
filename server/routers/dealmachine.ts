@@ -42,6 +42,165 @@ export const dealmachineRouter = router({
       }
     }),
 
+  import46col: publicProcedure
+    .input(
+      z.object({
+        propertiesCSV: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Parse CSV with 46 columns format
+        const lines = input.propertiesCSV.trim().split('\n');
+        if (lines.length < 2) throw new Error("CSV must have header and data rows");
+
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataLine = lines[1];
+
+        // Simple CSV parsing that handles quoted fields
+        const fields: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < dataLine.length; i++) {
+          const char = dataLine[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            fields.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        fields.push(current.trim());
+
+        // Map fields to data
+        const data: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          data[header] = fields[index] || '';
+        });
+
+        // Extract property data
+        const address = data.property_address_full?.trim();
+        const street = data.property_address_line_1?.trim();
+        const city = data.property_address_city?.trim();
+        const state = data.property_address_state?.trim();
+        const zipcode = data.property_address_zipcode?.trim();
+        const ownerName = data.owner_1_name?.trim();
+
+        // Validate required fields
+        if (!address || !city || !state || !zipcode) {
+          throw new Error("Missing required fields: address, city, state, zipcode");
+        }
+
+        // Check for duplicate
+        const key = `${street}|${city}|${state}|${zipcode}`.toLowerCase();
+        const existing = await db.select().from(properties).where(eq(properties.addressLine1, street));
+        if (existing.length > 0) {
+          throw new Error(`Duplicate property: ${address}`);
+        }
+
+        // Get next LEAD ID
+        const nextLeadId = await getNextLeadId();
+
+        // Insert property
+        const result = await db.insert(properties).values({
+          leadId: nextLeadId,
+          addressLine1: street,
+          addressLine2: null,
+          city: city,
+          state: state,
+          zipcode: zipcode,
+          owner1Name: ownerName || 'Unknown',
+          leadTemperature: 'TBD',
+          deskStatus: 'BIN',
+          source: 'DealMachine',
+          listName: 'DealMachine Import',
+          entryDate: new Date(),
+          dealMachinePropertyId: data.property_id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        const propertyId = (result as any).insertId || 0;
+        let contactsCreated = 0;
+        let phonesCreated = 0;
+        let emailsCreated = 0;
+
+        if (propertyId) {
+          // Add status tag
+          await db.insert(propertyTags).values({
+            propertyId,
+            tag: 'dealmachine_46col_import',
+            createdBy: 1,
+            createdAt: new Date(),
+          });
+
+          // Import up to 4 contacts
+          for (let i = 1; i <= 4; i++) {
+            const contactName = data[`contact_${i}_name`]?.trim();
+            if (!contactName) continue;
+
+            const contactPhone1 = data[`contact_${i}_phone1`]?.trim();
+            const contactEmail1 = data[`contact_${i}_email1`]?.trim();
+
+            // Insert contact
+            const contactResult = await db.insert(contacts).values({
+              propertyId,
+              name: contactName,
+              relationship: 'Owner',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+
+            const contactId = (contactResult as any).insertId || 0;
+
+            if (contactId) {
+              // Add phone if exists
+              if (contactPhone1) {
+                await db.insert(contactPhones).values({
+                  contactId,
+                  phoneNumber: contactPhone1,
+                  phoneType: 'Mobile',
+                  createdAt: new Date(),
+                });
+                phonesCreated++;
+              }
+
+              // Add email if exists
+              if (contactEmail1) {
+                await db.insert(contactEmails).values({
+                  contactId,
+                  email: contactEmail1,
+                  isPrimary: 1,
+                  createdAt: new Date(),
+                });
+                emailsCreated++;
+              }
+
+              contactsCreated++;
+            }
+          }
+        }
+
+        return {
+          success: true,
+          propertyId,
+          address,
+          contactsCreated,
+          phonesCreated,
+          emailsCreated,
+          message: `Imported property: ${address} with ${contactsCreated} contacts`,
+        };
+      } catch (error) {
+        console.error("Import 46col error:", error);
+        throw new Error(`Import failed: ${(error as Error).message}`);
+      }
+    }),
+
   import: publicProcedure
     .input(
       z.object({

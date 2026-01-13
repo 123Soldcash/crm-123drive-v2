@@ -565,6 +565,7 @@ export default function Properties() {
                 <SelectItem value="all">All Temperatures</SelectItem>
                 <SelectItem value="SUPER HOT">🔥🔥 SUPER HOT</SelectItem>
                 <SelectItem value="HOT">🔥 HOT</SelectItem>
+                <SelectItem value="DEEP_SEARCH">🔍 DEEP SEARCH</SelectItem>
                 <SelectItem value="WARM">🌡️ WARM</SelectItem>
                 <SelectItem value="COLD">❄️ COLD</SelectItem>
                 <SelectItem value="DEAD">☠️ DEAD</SelectItem>
@@ -1042,6 +1043,7 @@ function AddPropertyDialog() {
                 <SelectContent>
                   <SelectItem value="SUPER HOT">🔥 Super Hot</SelectItem>
                   <SelectItem value="HOT">🔴 Hot</SelectItem>
+                  <SelectItem value="DEEP_SEARCH">🔍 Deep Search</SelectItem>
                   <SelectItem value="WARM">🟠 Warm</SelectItem>
                   <SelectItem value="COLD">🔵 Cold</SelectItem>
                   <SelectItem value="DEAD">⚫ Dead</SelectItem>

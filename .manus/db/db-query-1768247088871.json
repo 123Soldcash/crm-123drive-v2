@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='properties' AND COLUMN_NAME='leadTemperature';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='properties' AND COLUMN_NAME='leadTemperature';",
+  "rows": [
+    {
+      "COLUMN_TYPE": "enum('SUPER HOT','HOT','DEEP SEARCH','WARM','COLD','TBD','DEAD')"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_TYPE\nenum('SUPER HOT','HOT','DEEP SEARCH','WARM','COLD','TBD','DEAD')\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

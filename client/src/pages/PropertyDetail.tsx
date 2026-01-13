@@ -95,7 +95,7 @@ export default function PropertyDetail() {
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
   const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
   const { data: userAgents } = trpc.users.listAgents.useQuery();
-  const { data: agentsList } = trpc.agents.list.useQuery();
+  const { data: agentsList, isLoading: agentsLoading, error: agentsError } = trpc.agents.listAll.useQuery();
   const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId });
   const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
 
@@ -338,6 +338,9 @@ export default function PropertyDetail() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Select Agents (Multiple)</label>
                     <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {agentsLoading && <p className="text-sm text-gray-500">Loading agents...</p>}
+                      {agentsError && <p className="text-sm text-red-500">Error loading agents: {agentsError.message}</p>}
+                      {!agentsLoading && (!agentsList || agentsList.length === 0) && <p className="text-sm text-gray-500">No agents available</p>}
                       {agentsList?.map((agent: any) => (
                         <div key={agent.id} className="flex items-center gap-2">
                           <Checkbox
@@ -420,6 +423,12 @@ export default function PropertyDetail() {
                     <div className="flex items-center gap-2">
                       <Flame className="h-4 w-4 text-red-500" />
                       <span>HOT</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="DEEP SEARCH">
+                    <div className="flex items-center gap-2">
+                      <span>🔍</span>
+                      <span className="font-semibold text-purple-600">DEEP SEARCH</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="WARM">

@@ -1,0 +1,15 @@
+{
+  "query": "\nSELECT \n  COUNT(DISTINCT c.id) as total_contacts,\n  COUNT(DISTINCT cp.id) as total_phones,\n  COUNT(DISTINCT ce.id) as total_emails\nFROM properties p\nLEFT JOIN contacts c ON p.id = c.propertyId\nLEFT JOIN contactPhones cp ON c.id = cp.contactId\nLEFT JOIN contactEmails ce ON c.id = ce.contactId\nWHERE p.listName = 'Rolando';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute \nSELECT \n  COUNT(DISTINCT c.id) as total_contacts,\n  COUNT(DISTINCT cp.id) as total_phones,\n  COUNT(DISTINCT ce.id) as total_emails\nFROM properties p\nLEFT JOIN contacts c ON p.id = c.propertyId\nLEFT JOIN contactPhones cp ON c.id = cp.contactId\nLEFT JOIN contactEmails ce ON c.id = ce.contactId\nWHERE p.listName = 'Rolando';\n",
+  "rows": [
+    {
+      "total_contacts": "0",
+      "total_phones": "0",
+      "total_emails": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_contacts\ttotal_phones\ttotal_emails\n0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

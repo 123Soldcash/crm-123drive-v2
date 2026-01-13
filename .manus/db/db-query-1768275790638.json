@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, name, email, status, agentType FROM agents;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email, status, agentType FROM agents;",
+  "rows": [
+    {
+      "id": "360027",
+      "name": " TAYLOR",
+      "email": "drtaylor1050@gmail.com",
+      "status": "Active",
+      "agentType": "Internal"
+    },
+    {
+      "id": "360028",
+      "name": "172",
+      "email": "fortlauderdale172@gmail.com",
+      "status": "Active",
+      "agentType": "External"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tstatus\tagentType\n360027\t TAYLOR\tdrtaylor1050@gmail.com\tActive\tInternal\n360028\t172\tfortlauderdale172@gmail.com\tActive\tExternal\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

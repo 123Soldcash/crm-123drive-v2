@@ -1,0 +1,80 @@
+{
+  "query": "\nSELECT \n  p.id,\n  p.addressLine1,\n  p.city,\n  p.owner1Name,\n  GROUP_CONCAT(pt.tag SEPARATOR ', ') as tags\nFROM properties p\nLEFT JOIN propertyTags pt ON p.id = pt.propertyId\nWHERE p.listName = 'Rolando'\nGROUP BY p.id\nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute \nSELECT \n  p.id,\n  p.addressLine1,\n  p.city,\n  p.owner1Name,\n  GROUP_CONCAT(pt.tag SEPARATOR ', ') as tags\nFROM properties p\nLEFT JOIN propertyTags pt ON p.id = pt.propertyId\nWHERE p.listName = 'Rolando'\nGROUP BY p.id\nLIMIT 10;\n",
+  "rows": [
+    {
+      "id": "720231",
+      "addressLine1": "779 Nw 113th St",
+      "city": "Miami",
+      "owner1Name": "Rosemene Casseus",
+      "tags": "NULL"
+    },
+    {
+      "id": "720140",
+      "addressLine1": "14430 Nw 16th Dr",
+      "city": "Miami",
+      "owner1Name": "Winniefred Ramsay",
+      "tags": "NULL"
+    },
+    {
+      "id": "720062",
+      "addressLine1": "18930 Nw 8th Ave",
+      "city": "Miami",
+      "owner1Name": "Elizabeth Jean-francois",
+      "tags": "NULL"
+    },
+    {
+      "id": "720129",
+      "addressLine1": "228 Ne 199th Ln",
+      "city": "Miami",
+      "owner1Name": "Gelin Homere",
+      "tags": "NULL"
+    },
+    {
+      "id": "720153",
+      "addressLine1": "13711 Jackson St",
+      "city": "Miami",
+      "owner1Name": "Custom Interior Contractors Corp",
+      "tags": "NULL"
+    },
+    {
+      "id": "720082",
+      "addressLine1": "13418 Sw 64th Ln",
+      "city": "Miami",
+      "owner1Name": "Carlos Plaza & Olga",
+      "tags": "NULL"
+    },
+    {
+      "id": "720241",
+      "addressLine1": "4820 Nw 25th Ave",
+      "city": "Miami",
+      "owner1Name": "Tiffany C Chestnut Moss",
+      "tags": "NULL"
+    },
+    {
+      "id": "720246",
+      "addressLine1": "1401 Ne 200th Ter",
+      "city": "Miami",
+      "owner1Name": "Marie Beauchamp",
+      "tags": "NULL"
+    },
+    {
+      "id": "720072",
+      "addressLine1": "10515 Nw 2nd Ct",
+      "city": "Miami",
+      "owner1Name": "William Louidor",
+      "tags": "NULL"
+    },
+    {
+      "id": "720115",
+      "addressLine1": "2100 Nw 11th St",
+      "city": "Miami",
+      "owner1Name": "Orlando Conde Trs",
+      "tags": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tcity\towner1Name\ttags\n720231\t779 Nw 113th St\tMiami\tRosemene Casseus\tNULL\n720140\t14430 Nw 16th Dr\tMiami\tWinniefred Ramsay\tNULL\n720062\t18930 Nw 8th Ave\tMiami\tElizabeth Jean-francois\tNULL\n720129\t228 Ne 199th Ln\tMiami\tGelin Homere\tNULL\n720153\t13711 Jackson St\tMiami\tCustom Interior Contractors Corp\tNULL\n720082\t13418 Sw 64th Ln\tMiami\tCarlos Plaza & Olga\tNULL\n720241\t4820 Nw 25th Ave\tMiami\tTiffany C Chestnut Moss\tNULL\n720246\t1401 Ne 200th Ter\tMiami\tMarie Beauchamp\tNULL\n720072\t10515 Nw 2nd Ct\tMiami\tWilliam Louidor\tNULL\n720115\t2100 Nw 11th St\tMiami\tOrlando Conde Trs\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

@@ -11,11 +11,13 @@ import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
+import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
 
 export const appRouter = router({
   system: systemRouter,
   agents: agentsRouter,
   dealmachine: dealmachineRouter,
+  dealmachineRolando: dealmachineRolandoRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

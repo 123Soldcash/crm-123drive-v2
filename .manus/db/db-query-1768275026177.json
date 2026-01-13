@@ -1,0 +1,15 @@
+{
+  "query": "\nSELECT \n  COUNT(DISTINCT p.id) as total_properties,\n  COUNT(DISTINCT pt.propertyId) as properties_with_tags,\n  COUNT(pt.id) as total_tags\nFROM properties p\nLEFT JOIN propertyTags pt ON p.id = pt.propertyId\nWHERE p.listName = 'Rolando' OR pt.tag = 'rolando_import';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute \nSELECT \n  COUNT(DISTINCT p.id) as total_properties,\n  COUNT(DISTINCT pt.propertyId) as properties_with_tags,\n  COUNT(pt.id) as total_tags\nFROM properties p\nLEFT JOIN propertyTags pt ON p.id = pt.propertyId\nWHERE p.listName = 'Rolando' OR pt.tag = 'rolando_import';\n",
+  "rows": [
+    {
+      "total_properties": "252",
+      "properties_with_tags": "0",
+      "total_tags": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_properties\tproperties_with_tags\ttotal_tags\n252\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}
