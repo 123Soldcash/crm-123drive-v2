@@ -1,0 +1,292 @@
+EXCEL FILE DETAILED ANALYSIS
+================================================================================
+
+Total rows: 252
+Total columns: 174
+
+ALL COLUMNS:
+1. property_id (252 values)
+2. lead_id (252 values)
+3. property_address_full (252 values)
+4. property_address_line_1 (252 values)
+5. property_address_line_2 (2 values)
+6. property_address_city (252 values)
+7. property_address_state (252 values)
+8. property_address_zipcode (252 values)
+9. property_address_county (252 values)
+10. property_lat (252 values)
+11. property_lng (252 values)
+12. owner_1_name (252 values)
+13. dealmachine_url (252 values)
+14. property_flags (252 values)
+15. contact_1_name (228 values)
+16. contact_1_flags (233 values)
+17. contact_1_phone1 (188 values)
+18. contact_1_phone2 (124 values)
+19. contact_1_phone3 (67 values)
+20. contact_1_email1 (175 values)
+21. contact_1_email2 (124 values)
+22. contact_1_email3 (75 values)
+23. contact_2_name (207 values)
+24. contact_2_flags (208 values)
+25. contact_2_phone1 (159 values)
+26. contact_2_phone2 (93 values)
+27. contact_2_phone3 (46 values)
+28. contact_2_email1 (162 values)
+29. contact_2_email2 (98 values)
+30. contact_2_email3 (57 values)
+31. contact_3_name (171 values)
+32. contact_3_flags (173 values)
+33. contact_3_phone1 (121 values)
+34. contact_3_phone2 (51 values)
+35. contact_3_phone3 (22 values)
+36. contact_3_email1 (128 values)
+37. contact_3_email2 (83 values)
+38. contact_3_email3 (48 values)
+39. contact_4_name (134 values)
+40. contact_4_flags (134 values)
+41. contact_4_phone1 (85 values)
+42. contact_4_phone2 (34 values)
+43. contact_4_phone3 (16 values)
+44. contact_4_email1 (79 values)
+45. contact_4_email2 (42 values)
+46. contact_4_email3 (23 values)
+47. contact_5_name (98 values)
+48. contact_5_flags (99 values)
+49. contact_5_phone1 (73 values)
+50. contact_5_phone2 (38 values)
+51. contact_5_phone3 (12 values)
+52. contact_5_email1 (74 values)
+53. contact_5_email2 (41 values)
+54. contact_5_email3 (20 values)
+55. contact_6_name (72 values)
+56. contact_6_flags (72 values)
+57. contact_6_phone1 (42 values)
+58. contact_6_phone2 (17 values)
+59. contact_6_phone3 (6 values)
+60. contact_6_email1 (38 values)
+61. contact_6_email2 (24 values)
+62. contact_6_email3 (12 values)
+63. contact_7_name (47 values)
+64. contact_7_flags (47 values)
+65. contact_7_phone1 (32 values)
+66. contact_7_phone2 (18 values)
+67. contact_7_phone3 (13 values)
+68. contact_7_email1 (36 values)
+69. contact_7_email2 (20 values)
+70. contact_7_email3 (9 values)
+71. contact_8_name (29 values)
+72. contact_8_flags (30 values)
+73. contact_8_phone1 (18 values)
+74. contact_8_phone2 (9 values)
+75. contact_8_phone3 (6 values)
+76. contact_8_email1 (17 values)
+77. contact_8_email2 (5 values)
+78. contact_8_email3 (4 values)
+79. contact_9_name (18 values)
+80. contact_9_flags (18 values)
+81. contact_9_phone1 (13 values)
+82. contact_9_phone2 (6 values)
+83. contact_9_phone3 (5 values)
+84. contact_9_email1 (13 values)
+85. contact_9_email2 (8 values)
+86. contact_9_email3 (7 values)
+87. contact_10_name (8 values)
+88. contact_10_flags (8 values)
+89. contact_10_phone1 (4 values)
+90. contact_10_phone2 (3 values)
+91. contact_10_phone3 (0 values)
+92. contact_10_email1 (5 values)
+93. contact_10_email2 (4 values)
+94. contact_10_email3 (2 values)
+95. contact_11_name (5 values)
+96. contact_11_flags (5 values)
+97. contact_11_phone1 (4 values)
+98. contact_11_phone2 (2 values)
+99. contact_11_phone3 (1 values)
+100. contact_11_email1 (5 values)
+101. contact_11_email2 (3 values)
+102. contact_11_email3 (0 values)
+103. contact_12_name (4 values)
+104. contact_12_flags (4 values)
+105. contact_12_phone1 (1 values)
+106. contact_12_phone2 (0 values)
+107. contact_12_phone3 (0 values)
+108. contact_12_email1 (3 values)
+109. contact_12_email2 (0 values)
+110. contact_12_email3 (0 values)
+111. contact_13_name (0 values)
+112. contact_13_flags (0 values)
+113. contact_13_phone1 (0 values)
+114. contact_13_phone2 (0 values)
+115. contact_13_phone3 (0 values)
+116. contact_13_email1 (0 values)
+117. contact_13_email2 (0 values)
+118. contact_13_email3 (0 values)
+119. contact_14_name (0 values)
+120. contact_14_flags (0 values)
+121. contact_14_phone1 (0 values)
+122. contact_14_phone2 (0 values)
+123. contact_14_phone3 (0 values)
+124. contact_14_email1 (0 values)
+125. contact_14_email2 (0 values)
+126. contact_14_email3 (0 values)
+127. contact_15_name (0 values)
+128. contact_15_flags (0 values)
+129. contact_15_phone1 (0 values)
+130. contact_15_phone2 (0 values)
+131. contact_15_phone3 (0 values)
+132. contact_15_email1 (0 values)
+133. contact_15_email2 (0 values)
+134. contact_15_email3 (0 values)
+135. contact_16_name (0 values)
+136. contact_16_flags (0 values)
+137. contact_16_phone1 (0 values)
+138. contact_16_phone2 (0 values)
+139. contact_16_phone3 (0 values)
+140. contact_16_email1 (0 values)
+141. contact_16_email2 (0 values)
+142. contact_16_email3 (0 values)
+143. contact_17_name (0 values)
+144. contact_17_flags (0 values)
+145. contact_17_phone1 (0 values)
+146. contact_17_phone2 (0 values)
+147. contact_17_phone3 (0 values)
+148. contact_17_email1 (0 values)
+149. contact_17_email2 (0 values)
+150. contact_17_email3 (0 values)
+151. contact_18_name (0 values)
+152. contact_18_flags (0 values)
+153. contact_18_phone1 (0 values)
+154. contact_18_phone2 (0 values)
+155. contact_18_phone3 (0 values)
+156. contact_18_email1 (0 values)
+157. contact_18_email2 (0 values)
+158. contact_18_email3 (0 values)
+159. contact_19_name (0 values)
+160. contact_19_flags (0 values)
+161. contact_19_phone1 (0 values)
+162. contact_19_phone2 (0 values)
+163. contact_19_phone3 (0 values)
+164. contact_19_email1 (0 values)
+165. contact_19_email2 (0 values)
+166. contact_19_email3 (0 values)
+167. contact_20_name (0 values)
+168. contact_20_flags (0 values)
+169. contact_20_phone1 (0 values)
+170. contact_20_phone2 (0 values)
+171. contact_20_phone3 (0 values)
+172. contact_20_email1 (0 values)
+173. contact_20_email2 (0 values)
+174. contact_20_email3 (0 values)
+
+
+SAMPLE DATA (First 5 rows, all columns):
+--------------------------------------------------------------------------------
+
+--- Row 1 ---
+   property_id: 232322448
+   lead_id: 1238558064
+   property_address_full: 1505 Nw 180th Ter, Miami, Fl 33169
+   property_address_line_1: 1505 Nw 180th Ter
+   property_address_city: Miami
+   property_address_state: FL
+   property_address_zipcode: 33169
+   property_address_county: Miami-Dade
+   property_lat: 25.939571
+   property_lng: -80.227237
+   owner_1_name: Trevor Bibs Barrett Revocable
+   dealmachine_url: https://app.dealmachine.com/leads#property(id)=232322448
+   property_flags: Off Market, Cash Buyer, High Equity, Tax Delinquent
+
+--- Row 2 ---
+   property_id: 232537079
+   lead_id: 1238558191
+   property_address_full: 5810 Nw 30th Ave, Miami, Fl 33142
+   property_address_line_1: 5810 Nw 30th Ave
+   property_address_city: Miami
+   property_address_state: FL
+   property_address_zipcode: 33142
+   property_address_county: Miami-Dade
+   property_lat: 25.827732
+   property_lng: -80.245257
+   owner_1_name: Willie Thea Bradley Est Of
+   dealmachine_url: https://app.dealmachine.com/leads#property(id)=232537079
+   property_flags: Off Market, High Equity, Tax Delinquent, Senior Owner, Corporate Owner
+   contact_1_name: Willie T Bradley
+   contact_1_flags: Likely Owner, Resident
+   contact_1_phone1: 13056332895.0
+
+--- Row 3 ---
+   property_id: 232612121
+   lead_id: 1238558333
+   property_address_full: 11055 Sw 159th Ter, Miami, Fl 33157
+   property_address_line_1: 11055 Sw 159th Ter
+   property_address_city: Miami
+   property_address_state: FL
+   property_address_zipcode: 33157
+   property_address_county: Miami-Dade
+   property_lat: 25.621198
+   property_lng: -80.373071
+   owner_1_name: Jolette Charles Est Of
+   dealmachine_url: https://app.dealmachine.com/leads#property(id)=232612121
+   property_flags: Off Market, High Equity, Senior Owner, Tired Landlord, Corporate Owner
+   contact_1_name: Jordan E Clarke
+   contact_1_flags: Likely Owner, Resident
+   contact_1_phone1: 13052178437.0
+   contact_1_phone2: 17863718100.0
+   contact_1_email1: music.man555@yahoo.com
+   contact_1_email2: jordanclarke9981@hotmail.com
+   contact_2_name: Errol E Clark
+   contact_2_flags: Likely Owner, Resident
+   contact_2_phone1: 13057974663.0
+   contact_2_phone2: 13054901219.0
+   contact_2_email1: errol5454@hotmail.com
+   contact_3_name: Aqulia J Poole
+   contact_3_flags: Likely Owner, Resident
+   contact_3_phone1: 17869084830.0
+   contact_3_email1: aqulia123@yahoo.com
+   contact_4_name: Errol E Clark
+   contact_4_flags: Likely Owner, Resident
+   contact_4_phone1: 13057633362.0
+
+--- Row 4 ---
+   property_id: 232472183
+   lead_id: 1267547430
+   property_address_full: 8413 Nw 24th Ave, Miami, Fl 33147
+   property_address_line_1: 8413 Nw 24th Ave
+   property_address_city: Miami
+   property_address_state: FL
+   property_address_zipcode: 33147
+   property_address_county: Miami-Dade
+   property_lat: 25.851115
+   property_lng: -80.237608
+   owner_1_name: Tessie M Jones
+   dealmachine_url: https://app.dealmachine.com/leads#property(id)=232472183
+   property_flags: Off Market, High Equity, Tax Delinquent
+   contact_1_name: Tessie A Jones
+   contact_1_flags: Likely Owner, Family, Resident
+   contact_1_email1: indiasasha20@gmail.com
+   contact_2_name: Mary L Massie
+   contact_2_flags: Potential Owner, Resident
+   contact_2_phone1: 13056966298.0
+
+--- Row 5 ---
+   property_id: 232900253
+   lead_id: 1267547553
+   property_address_full: 11312 Sw 203rd Ter, Miami, Fl 33189
+   property_address_line_1: 11312 Sw 203rd Ter
+   property_address_city: Miami
+   property_address_state: FL
+   property_address_zipcode: 33189
+   property_address_county: Miami-Dade
+   property_lat: 25.577452
+   property_lng: -80.374584
+   owner_1_name: Maria Castellanos
+   dealmachine_url: https://app.dealmachine.com/leads#property(id)=232900253
+   property_flags: Off Market, High Equity, Tax Delinquent, Senior Owner, Empty Nester
+   contact_1_name: Maria R Castellanos
+   contact_1_flags: Likely Owner, Family
+   contact_1_phone1: 13052511119.0
+   contact_1_phone2: 13052337890.0
+   contact_1_email1: my_sweet_home_inc@yahoo.com

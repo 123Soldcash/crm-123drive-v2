@@ -1,5 +1,14 @@
 # CRM 123Drive V2 - TODO
 
+## CRITICAL: Rolando Excel Data Import Issues (Jan 13, 2026) - RESOLVED ✅
+- [x] Fix contact import - 1,021 contacts imported (100%)
+- [x] Fix phone import - 1,329 phones imported (100%)
+- [x] Fix email import - 1,444 emails imported (100%)
+- [x] Import property_flags stored in dealMachineRawData (High Equity, Off Market, Tax Delinquent, etc.)
+- [x] Re-import all 20 contacts per property with all phone1/2/3 and email1/2/3 fields
+- [x] Store property_lat, property_lng, property_address_county in dealMachineRawData
+- [x] Store dealmachine_url in dealMachineRawData
+
 ## Database Schema
 - [x] Properties table with all fields
 - [x] Property contacts table

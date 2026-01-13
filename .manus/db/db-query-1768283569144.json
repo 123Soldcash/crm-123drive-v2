@@ -1,0 +1,70 @@
+{
+  "query": "SELECT p.id, p.addressLine1, p.dealMachinePropertyId, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.dealMachinePropertyId IS NOT NULL GROUP BY p.id HAVING contact_count > 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT p.id, p.addressLine1, p.dealMachinePropertyId, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.dealMachinePropertyId IS NOT NULL GROUP BY p.id HAVING contact_count > 0 LIMIT 10;",
+  "rows": [
+    {
+      "id": "720398",
+      "addressLine1": "13221 Nw 26th Ct",
+      "dealMachinePropertyId": "232392025",
+      "contact_count": "2"
+    },
+    {
+      "id": "720326",
+      "addressLine1": "164 Nw 118th St",
+      "dealMachinePropertyId": "232517178",
+      "contact_count": "5"
+    },
+    {
+      "id": "720397",
+      "addressLine1": "2020 Nw 135th St",
+      "dealMachinePropertyId": "232391928",
+      "contact_count": "5"
+    },
+    {
+      "id": "720473",
+      "addressLine1": "20215 Ne 13th Ct",
+      "dealMachinePropertyId": "232412632",
+      "contact_count": "1"
+    },
+    {
+      "id": "720438",
+      "addressLine1": "20221 Sw 113th Ct",
+      "dealMachinePropertyId": "232900183",
+      "contact_count": "5"
+    },
+    {
+      "id": "720381",
+      "addressLine1": "228 Ne 199th Ln",
+      "dealMachinePropertyId": "232339819",
+      "contact_count": "4"
+    },
+    {
+      "id": "720449",
+      "addressLine1": "1434 Nw 55th Ter",
+      "dealMachinePropertyId": "232936923",
+      "contact_count": "4"
+    },
+    {
+      "id": "720408",
+      "addressLine1": "17901 Sw 108th Ct",
+      "dealMachinePropertyId": "232750238",
+      "contact_count": "1"
+    },
+    {
+      "id": "720259",
+      "addressLine1": "18910 Nw 11th Ct",
+      "dealMachinePropertyId": "232111066",
+      "contact_count": "1"
+    },
+    {
+      "id": "720273",
+      "addressLine1": "7221 Nw 17th Ave",
+      "dealMachinePropertyId": "232455170",
+      "contact_count": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tdealMachinePropertyId\tcontact_count\n720398\t13221 Nw 26th Ct\t232392025\t2\n720326\t164 Nw 118th St\t232517178\t5\n720397\t2020 Nw 135th St\t232391928\t5\n720473\t20215 Ne 13th Ct\t232412632\t1\n720438\t20221 Sw 113th Ct\t232900183\t5\n720381\t228 Ne 199th Ln\t232339819\t4\n720449\t1434 Nw 55th Ter\t232936923\t4\n720408\t17901 Sw 108th Ct\t232750238\t1\n720259\t18910 Nw 11th Ct\t232111066\t1\n720273\t7221 Nw 17th Ave\t232455170\t3\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

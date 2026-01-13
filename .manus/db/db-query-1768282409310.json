@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as rolando_properties FROM properties WHERE listName LIKE '%rolando%' OR listName LIKE '%Rolando%' OR source = 'DealMachine';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as rolando_properties FROM properties WHERE listName LIKE '%rolando%' OR listName LIKE '%Rolando%' OR source = 'DealMachine';",
+  "rows": [
+    {
+      "rolando_properties": "253"
+    }
+  ],
+  "messages": [],
+  "stdout": "rolando_properties\n253\n",
+  "stderr": "",
+  "execution_time_ms": 181
+}

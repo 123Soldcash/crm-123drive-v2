@@ -1,0 +1,40 @@
+{
+  "query": "SELECT p.id, p.leadId, p.addressLine1, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.dealMachinePropertyId IS NOT NULL GROUP BY p.id HAVING contact_count > 3 ORDER BY contact_count DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT p.id, p.leadId, p.addressLine1, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.dealMachinePropertyId IS NOT NULL GROUP BY p.id HAVING contact_count > 3 ORDER BY contact_count DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "720295",
+      "leadId": "1878897241",
+      "addressLine1": "19920 Nw 3rd Ave",
+      "contact_count": "12"
+    },
+    {
+      "id": "720379",
+      "leadId": "1878897325",
+      "addressLine1": "800 Nw 170th Ter",
+      "contact_count": "12"
+    },
+    {
+      "id": "720391",
+      "leadId": "1878897337",
+      "addressLine1": "13500 Nw 10th Ave",
+      "contact_count": "12"
+    },
+    {
+      "id": "720482",
+      "leadId": "1878897428",
+      "addressLine1": "740 Nw 114th St",
+      "contact_count": "12"
+    },
+    {
+      "id": "720447",
+      "leadId": "1878897393",
+      "addressLine1": "20640 Sw 125th Ave",
+      "contact_count": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcontact_count\n720295\t1878897241\t19920 Nw 3rd Ave\t12\n720379\t1878897325\t800 Nw 170th Ter\t12\n720391\t1878897337\t13500 Nw 10th Ave\t12\n720482\t1878897428\t740 Nw 114th St\t12\n720447\t1878897393\t20640 Sw 125th Ave\t11\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

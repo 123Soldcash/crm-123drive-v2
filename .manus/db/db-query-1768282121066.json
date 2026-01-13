@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as total_properties FROM properties; SELECT COUNT(*) as total_contacts FROM contacts; SELECT COUNT(*) as total_phones FROM contactPhones; SELECT COUNT(*) as total_emails FROM contactEmails;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_properties FROM properties; SELECT COUNT(*) as total_contacts FROM contacts; SELECT COUNT(*) as total_phones FROM contactPhones; SELECT COUNT(*) as total_emails FROM contactEmails;",
+  "rows": [
+    {
+      "total_properties": "352"
+    },
+    {
+      "total_properties": "total_contacts"
+    },
+    {
+      "total_properties": "893"
+    },
+    {
+      "total_properties": "total_phones"
+    },
+    {
+      "total_properties": "1271"
+    },
+    {
+      "total_properties": "total_emails"
+    },
+    {
+      "total_properties": "576"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_properties\n352\ntotal_contacts\n893\ntotal_phones\n1271\ntotal_emails\n576\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

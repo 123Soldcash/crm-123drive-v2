@@ -1,0 +1,17 @@
+{
+  "query": "SELECT p.id, p.leadId, p.addressLine1, p.dealMachinePropertyId, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.addressLine1 LIKE '%1711 Nw 55th%' GROUP BY p.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT p.id, p.leadId, p.addressLine1, p.dealMachinePropertyId, COUNT(c.id) as contact_count FROM properties p LEFT JOIN contacts c ON c.propertyId = p.id WHERE p.addressLine1 LIKE '%1711 Nw 55th%' GROUP BY p.id;",
+  "rows": [
+    {
+      "id": "630049",
+      "leadId": "1267558859",
+      "addressLine1": "1711 Nw 55th Ave",
+      "dealMachinePropertyId": "227720129",
+      "contact_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tdealMachinePropertyId\tcontact_count\n630049\t1267558859\t1711 Nw 55th Ave\t227720129\t0\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

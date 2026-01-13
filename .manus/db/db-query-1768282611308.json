@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM properties WHERE Field LIKE '%tag%' OR Field LIKE '%flag%' OR Field LIKE '%status%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SHOW COLUMNS FROM properties WHERE Field LIKE '%tag%' OR Field LIKE '%flag%' OR Field LIKE '%status%';",
+  "rows": [
+    {
+      "Field": "status",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nstatus\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}
