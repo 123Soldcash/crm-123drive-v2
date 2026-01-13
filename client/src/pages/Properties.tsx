@@ -180,7 +180,7 @@ export default function Properties() {
   const { data: savedSearches = [] } = trpc.savedSearches.list.useQuery();
 
   // Fetch agents for bulk reassignment
-  const { data: agents = [] } = trpc.users.listAgents.useQuery();
+  const { data: agents = [] } = trpc.agents.listAll.useQuery();
 
   const utils = trpc.useUtils();
 
@@ -656,7 +656,7 @@ export default function Properties() {
                       <SelectItem value="unassigned">
                         <span className="text-muted-foreground">Unassigned</span>
                       </SelectItem>
-                      {agents.map((agent: { id: number; name: string | null; openId: string }) => (
+                      {agents.map((agent: { id: number; name: string | null; agentType?: string }) => (
                         <SelectItem key={agent.id} value={agent.id.toString()}>
                           {agent.name || agent.openId}
                         </SelectItem>
