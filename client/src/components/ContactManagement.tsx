@@ -467,7 +467,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                       {contact.emails && contact.emails.map((email: any, idx: number) => (
                         <div key={idx} className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{email.email}</span>
+                          <span>{email.emailAddress || email.email}</span>
                         </div>
                       ))}
                       {contact.email1 && (

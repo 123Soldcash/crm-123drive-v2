@@ -1,0 +1,30 @@
+{
+  "query": "SELECT c.id, c.name, c.email1, c.email2, c.email3, c.phone1, c.phone2, c.phone3 FROM contacts c WHERE c.propertyId = 720269 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.name, c.email1, c.email2, c.email3, c.phone1, c.phone2, c.phone3 FROM contacts c WHERE c.propertyId = 720269 LIMIT 5;",
+  "rows": [
+    {
+      "id": "660018",
+      "name": "Odalys Ortega",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL"
+    },
+    {
+      "id": "660309",
+      "name": "Odalys Ortega",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail1\temail2\temail3\tphone1\tphone2\tphone3\n660018\tOdalys Ortega\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n660309\tOdalys Ortega\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
