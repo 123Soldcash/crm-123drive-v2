@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, name, phone1, phone2, phone3, email1, email2, email3 FROM contacts WHERE name LIKE 'Maria%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, phone1, phone2, phone3, email1, email2, email3 FROM contacts WHERE name LIKE 'Maria%' LIMIT 1;",
+  "rows": [
+    {
+      "id": "570122",
+      "name": "Maria A Munro",
+      "phone1": "19542754685",
+      "phone2": "19544456340",
+      "phone3": "19545729028",
+      "email1": "mariamunro@uniqueproductions.net",
+      "email2": "maxmunro@uniqueproductions.net",
+      "email3": "mmunro1@icloud.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone1\tphone2\tphone3\temail1\temail2\temail3\n570122\tMaria A Munro\t19542754685\t19544456340\t19545729028\tmariamunro@uniqueproductions.net\tmaxmunro@uniqueproductions.net\tmmunro1@icloud.com\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

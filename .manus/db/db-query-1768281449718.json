@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as count FROM contacts WHERE phone1 IS NOT NULL AND phone1 != '' AND phone1 != '0';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as count FROM contacts WHERE phone1 IS NOT NULL AND phone1 != '' AND phone1 != '0';",
+  "rows": [
+    {
+      "count": "208"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\n208\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO contactEmails (contactId, email, createdAt) SELECT id, email3, NOW() FROM contacts WHERE email3 IS NOT NULL AND email3 != '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contactEmails (contactId, email, createdAt) SELECT id, email3, NOW() FROM contacts WHERE email3 IS NOT NULL AND email3 != '';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 69
+}

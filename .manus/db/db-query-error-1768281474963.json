@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO contactEmails (contactId, email, emailType, createdAt) SELECT id, email1, 'Personal', NOW() FROM contacts WHERE email1 IS NOT NULL AND email1 != '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contactEmails (contactId, email, emailType, createdAt) SELECT id, email1, 'Personal', NOW() FROM contacts WHERE email1 IS NOT NULL AND email1 != '';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'emailType' in 'field list'"
+  ]
+}

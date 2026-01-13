@@ -1,0 +1,18 @@
+{
+  "query": "SELECT 'contactPhones' as table_name, COUNT(*) as count FROM contactPhones UNION ALL SELECT 'contactEmails' as table_name, COUNT(*) as count FROM contactEmails;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'contactPhones' as table_name, COUNT(*) as count FROM contactPhones UNION ALL SELECT 'contactEmails' as table_name, COUNT(*) as count FROM contactEmails;",
+  "rows": [
+    {
+      "table_name": "contactEmails",
+      "count": "576"
+    },
+    {
+      "table_name": "contactPhones",
+      "count": "1271"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\tcount\ncontactEmails\t576\ncontactPhones\t1271\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

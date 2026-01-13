@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as phone_count FROM contactPhones; SELECT COUNT(*) as email_count FROM contactEmails;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as phone_count FROM contactPhones; SELECT COUNT(*) as email_count FROM contactEmails;",
+  "rows": [
+    {
+      "phone_count": "1271"
+    },
+    {
+      "phone_count": "email_count"
+    },
+    {
+      "phone_count": "576"
+    }
+  ],
+  "messages": [],
+  "stdout": "phone_count\n1271\nemail_count\n576\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}
