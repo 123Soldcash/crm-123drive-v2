@@ -1,0 +1,394 @@
+{
+  "query": "DESCRIBE properties;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute DESCRIBE properties;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "leadId",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "addressLine1",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "addressLine2",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "city",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "state",
+      "Type": "varchar(2)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "zipcode",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "subdivisionName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "trackingStatus",
+      "Type": "enum('Not Visited','Off Market','Cash Buyer','Free And Clear','High Equity','Senior Owner','Tired Landlord','Absentee Owner','Corporate Owner','Empty Nester','Interested','Not Interested','Follow Up')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "Not Visited",
+      "Extra": ""
+    },
+    {
+      "Field": "leadTemperature",
+      "Type": "enum('SUPER HOT','HOT','DEEP SEARCH','WARM','COLD','TBD','DEAD')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "TBD",
+      "Extra": ""
+    },
+    {
+      "Field": "ownerVerified",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "assignedAgentId",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "marketStatus",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ownerLocation",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "estimatedValue",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equityAmount",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equityPercent",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "salePrice",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "saleDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mortgageAmount",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "owner1Name",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "owner2Name",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "buildingSquareFeet",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "totalBedrooms",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "totalBaths",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "yearBuilt",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "propertyType",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "constructionType",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "apnParcelId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxDelinquent",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxDelinquentYear",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "propertyId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxYear",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxAmount",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "deskName",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deskStatus",
+      "Type": "enum('BIN','ACTIVE','ARCHIVED')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "BIN",
+      "Extra": ""
+    },
+    {
+      "Field": "totalLoanBalance",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "totalLoanPayment",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "estimatedRepairCost",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dealMachinePropertyId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dealMachineLeadId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dealMachineRawData",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "source",
+      "Type": "enum('DealMachine','Manual','Import','API','CSV','Other')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "Manual",
+      "Extra": ""
+    },
+    {
+      "Field": "listName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "entryDate",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nleadId\tint(11)\tYES\t\tNULL\t\naddressLine1\tvarchar(255)\tNO\t\tNULL\t\naddressLine2\tvarchar(255)\tYES\t\tNULL\t\ncity\tvarchar(100)\tNO\t\tNULL\t\nstate\tvarchar(2)\tNO\t\tNULL\t\nzipcode\tvarchar(10)\tNO\t\tNULL\t\nsubdivisionName\tvarchar(255)\tYES\t\tNULL\t\nstatus\ttext\tYES\t\tNULL\t\ntrackingStatus\tenum('Not Visited','Off Market','Cash Buyer','Free And Clear','High Equity','Senior Owner','Tired Landlord','Absentee Owner','Corporate Owner','Empty Nester','Interested','Not Interested','Follow Up')\tYES\t\tNot Visited\t\nleadTemperature\tenum('SUPER HOT','HOT','DEEP SEARCH','WARM','COLD','TBD','DEAD')\tYES\t\tTBD\t\nownerVerified\tint(11)\tNO\t\t0\t\nassignedAgentId\tint(11)\tYES\t\tNULL\t\nmarketStatus\tvarchar(100)\tYES\t\tNULL\t\nownerLocation\tvarchar(100)\tYES\t\tNULL\t\nestimatedValue\tint(11)\tYES\t\tNULL\t\nequityAmount\tint(11)\tYES\t\tNULL\t\nequityPercent\tint(11)\tYES\t\tNULL\t\nsalePrice\tint(11)\tYES\t\tNULL\t\nsaleDate\ttimestamp\tYES\t\tNULL\t\nmortgageAmount\tint(11)\tYES\t\tNULL\t\nowner1Name\tvarchar(255)\tYES\t\tNULL\t\nowner2Name\tvarchar(255)\tYES\t\tNULL\t\nbuildingSquareFeet\tint(11)\tYES\t\tNULL\t\ntotalBedrooms\tint(11)\tYES\t\tNULL\t\ntotalBaths\tint(11)\tYES\t\tNULL\t\nyearBuilt\tint(11)\tYES\t\tNULL\t\npropertyType\tvarchar(100)\tYES\t\tNULL\t\nconstructionType\tvarchar(100)\tYES\t\tNULL\t\napnParcelId\tvarchar(100)\tYES\t\tNULL\t\ntaxDelinquent\tvarchar(10)\tYES\t\tNULL\t\ntaxDelinquentYear\tint(11)\tYES\t\tNULL\t\npropertyId\tvarchar(100)\tYES\tUNI\tNULL\t\ntaxYear\tint(11)\tYES\t\tNULL\t\ntaxAmount\tint(11)\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\ndeskName\tvarchar(100)\tYES\t\tNULL\t\ndeskStatus\tenum('BIN','ACTIVE','ARCHIVED')\tYES\t\tBIN\t\ntotalLoanBalance\tint(11)\tYES\t\tNULL\t\ntotalLoanPayment\tint(11)\tYES\t\tNULL\t\nestimatedRepairCost\tint(11)\tYES\t\tNULL\t\ndealMachinePropertyId\tvarchar(100)\tYES\t\tNULL\t\ndealMachineLeadId\tvarchar(100)\tYES\t\tNULL\t\ndealMachineRawData\ttext\tYES\t\tNULL\t\nsource\tenum('DealMachine','Manual','Import','API','CSV','Other')\tYES\t\tManual\t\nlistName\tvarchar(255)\tYES\t\tNULL\t\nentryDate\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, addressLine1, propertyId, dealMachineLeadId, dealMachineRawData FROM properties WHERE propertyId IS NOT NULL LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, propertyId, dealMachineLeadId, dealMachineRawData FROM properties WHERE propertyId IS NOT NULL LIMIT 5;",
+  "rows": [
+    {
+      "id": "630047",
+      "addressLine1": "609 Ne 2nd Ter",
+      "propertyId": "227509609",
+      "dealMachineLeadId": "1267558819",
+      "dealMachineRawData": "{\"property_address_full\":\"609 Ne 2nd Ter, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.326002,\"property_lng\":-80.099267,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227509609\",\"property_flags\":\"Off Market, Adjustable Loan, High Equity, Absentee Owner\"}"
+    },
+    {
+      "id": "630050",
+      "addressLine1": "519 Ne 8th Ave",
+      "propertyId": "227509119",
+      "dealMachineLeadId": "1267558941",
+      "dealMachineRawData": "{\"property_address_full\":\"519 Ne 8th Ave, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.324754,\"property_lng\":-80.09356,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227509119\",\"property_flags\":\"Off Market, Free And Clear, High Equity\"}"
+    },
+    {
+      "id": "630070",
+      "addressLine1": "534 Nw 3rd Way",
+      "propertyId": "227495475",
+      "dealMachineLeadId": "1267559447",
+      "dealMachineRawData": "{\"property_address_full\":\"534 Nw 3rd Way, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.32545,\"property_lng\":-80.10965,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227495475\",\"property_flags\":\"Off Market, High Equity, Senior Owner, Absentee Owner\"}"
+    },
+    {
+      "id": "630088",
+      "addressLine1": "701 Nw 2nd Ter",
+      "propertyId": "227493017",
+      "dealMachineLeadId": "1596407261",
+      "dealMachineRawData": "{\"property_address_full\":\"701 Nw 2nd Ter, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.326469,\"property_lng\":-80.106625,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227493017\",\"property_flags\":\"Off Market, High Equity, Senior Owner\"}"
+    },
+    {
+      "id": "720454",
+      "addressLine1": "19621 Nw 8th Ave",
+      "propertyId": "2175177603",
+      "dealMachineLeadId": "2745575629",
+      "dealMachineRawData": "{\"lat\": 25.954342, \"lng\": -80.21515, \"county\": \"Miami-Dade\", \"dealMachineUrl\": \"https://app.dealmachine.com/leads#property(id)=2175177603\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tpropertyId\tdealMachineLeadId\tdealMachineRawData\n630047\t609 Ne 2nd Ter\t227509609\t1267558819\t{\"property_address_full\":\"609 Ne 2nd Ter, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.326002,\"property_lng\":-80.099267,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227509609\",\"property_flags\":\"Off Market, Adjustable Loan, High Equity, Absentee Owner\"}\n630050\t519 Ne 8th Ave\t227509119\t1267558941\t{\"property_address_full\":\"519 Ne 8th Ave, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.324754,\"property_lng\":-80.09356,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227509119\",\"property_flags\":\"Off Market, Free And Clear, High Equity\"}\n630070\t534 Nw 3rd Way\t227495475\t1267559447\t{\"property_address_full\":\"534 Nw 3rd Way, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.32545,\"property_lng\":-80.10965,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227495475\",\"property_flags\":\"Off Market, High Equity, Senior Owner, Absentee Owner\"}\n630088\t701 Nw 2nd Ter\t227493017\t1596407261\t{\"property_address_full\":\"701 Nw 2nd Ter, Deerfield Beach, Fl 33441\",\"property_address_county\":\"Broward\",\"property_lat\":26.326469,\"property_lng\":-80.106625,\"dealmachine_url\":\"https://app.dealmachine.com/leads#property(id)=227493017\",\"property_flags\":\"Off Market, High Equity, Senior Owner\"}\n720454\t19621 Nw 8th Ave\t2175177603\t2745575629\t{\"lat\": 25.954342, \"lng\": -80.21515, \"county\": \"Miami-Dade\", \"dealMachineUrl\": \"https://app.dealmachine.com/leads#property(id)=2175177603\"}\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

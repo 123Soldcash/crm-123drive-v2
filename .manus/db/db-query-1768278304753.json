@@ -1,0 +1,45 @@
+{
+  "query": "SELECT p.id, p.addressLine1, p.owner1Name, COUNT(DISTINCT c.id) as contact_count, COUNT(DISTINCT pt.id) as tag_count FROM properties p LEFT JOIN contacts c ON p.id = c.propertyId LEFT JOIN propertyTags pt ON p.id = pt.propertyId WHERE p.listName = 'Rolando' GROUP BY p.id LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT p.id, p.addressLine1, p.owner1Name, COUNT(DISTINCT c.id) as contact_count, COUNT(DISTINCT pt.id) as tag_count FROM properties p LEFT JOIN contacts c ON p.id = c.propertyId LEFT JOIN propertyTags pt ON p.id = pt.propertyId WHERE p.listName = 'Rolando' GROUP BY p.id LIMIT 5;",
+  "rows": [
+    {
+      "id": "720253",
+      "addressLine1": "1505 Nw 180th Ter",
+      "owner1Name": "Trevor Bibs Barrett Revocable",
+      "contact_count": "0",
+      "tag_count": "0"
+    },
+    {
+      "id": "720254",
+      "addressLine1": "5810 Nw 30th Ave",
+      "owner1Name": "Willie Thea Bradley Est Of",
+      "contact_count": "0",
+      "tag_count": "0"
+    },
+    {
+      "id": "720255",
+      "addressLine1": "11055 Sw 159th Ter",
+      "owner1Name": "Jolette Charles Est Of",
+      "contact_count": "0",
+      "tag_count": "0"
+    },
+    {
+      "id": "720256",
+      "addressLine1": "8413 Nw 24th Ave",
+      "owner1Name": "Tessie M Jones",
+      "contact_count": "0",
+      "tag_count": "0"
+    },
+    {
+      "id": "720257",
+      "addressLine1": "11312 Sw 203rd Ter",
+      "owner1Name": "Maria Castellanos",
+      "contact_count": "0",
+      "tag_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\towner1Name\tcontact_count\ttag_count\n720253\t1505 Nw 180th Ter\tTrevor Bibs Barrett Revocable\t0\t0\n720254\t5810 Nw 30th Ave\tWillie Thea Bradley Est Of\t0\t0\n720255\t11055 Sw 159th Ter\tJolette Charles Est Of\t0\t0\n720256\t8413 Nw 24th Ave\tTessie M Jones\t0\t0\n720257\t11312 Sw 203rd Ter\tMaria Castellanos\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
