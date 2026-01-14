@@ -256,13 +256,12 @@ export default function Properties() {
       filtered = filtered.filter((p) => p.deskName === filters.deskName);
     }
 
-    // Filter by status tags
+    // Filter by property flags (from dealMachineRawData)
     if (filters.statusTags.length > 0) {
       filtered = filtered.filter((property) => {
-        if (!property.status) return false;
-        const propertyTags = property.status.split(",").map((t) => t.trim());
+        if (!property.propertyFlags || property.propertyFlags.length === 0) return false;
         // Property must have ALL selected tags
-        return filters.statusTags.every((tag) => propertyTags.includes(tag));
+        return filters.statusTags.every((tag) => property.propertyFlags.includes(tag));
       });
     }
 
@@ -779,6 +778,21 @@ export default function Properties() {
                       <div className="text-sm text-muted-foreground">
                         {property.city}, {property.state}
                       </div>
+                      {/* Property Flags from DealMachine */}
+                      {property.propertyFlags && property.propertyFlags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {property.propertyFlags.slice(0, 3).map((flag: string, i: number) => (
+                            <Badge key={i} variant="outline" className="text-xs px-1.5 py-0.5 bg-amber-50 text-amber-700 border-amber-300">
+                              {flag}
+                            </Badge>
+                          ))}
+                          {property.propertyFlags.length > 3 && (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600">
+                              +{property.propertyFlags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </Link>
                     </TableCell>
                   )}

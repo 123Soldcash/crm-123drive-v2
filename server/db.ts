@@ -924,11 +924,31 @@ export async function getPropertiesWithAgents(filters?: {
     });
   }
 
-  // Combine properties with their agents
-  return propertyResults.map(property => ({
-    ...property,
-    agents: agentsByProperty.get(property.id) || [],
-  }));
+  // Combine properties with their agents and extract property flags
+  return propertyResults.map(property => {
+    let propertyFlags: string[] = [];
+    
+    // Parse dealMachineRawData to extract property_flags
+    if (property.dealMachineRawData) {
+      try {
+        const rawData = JSON.parse(property.dealMachineRawData);
+        if (rawData.property_flags) {
+          propertyFlags = rawData.property_flags
+            .split(',')
+            .map((flag: string) => flag.trim())
+            .filter((flag: string) => flag.length > 0);
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+    
+    return {
+      ...property,
+      agents: agentsByProperty.get(property.id) || [],
+      propertyFlags,
+    };
+  });
 }
 
 

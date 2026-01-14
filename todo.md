@@ -532,3 +532,11 @@
 - [ ] Phase 4: Document contact field mapping (up to 9 contacts per property)
 - [ ] Phase 5: Prepare import validation checklist
 - [ ] Phase 6: Test manual import workflow
+
+
+## Property Flags UI Implementation (Jan 13, 2026) - COMPLETED ✅
+- [x] Extract property flags from dealMachineRawData in backend
+- [x] Display property flags as visual badges in property list (amber badges below address)
+- [x] Implement functional filters for property flags (High Equity, Off Market, Tax Delinquent, etc.)
+- [x] Test flags display and filtering (Tired Landlord filter: 13 properties)
+- [x] Save checkpoint for production publish

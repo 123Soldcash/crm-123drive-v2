@@ -31,17 +31,28 @@ export const appRouter = router({
 
   properties: router({
     statusCounts: protectedProcedure.query(async () => {
-      // Get all properties and count status tags
+      // Get all properties and count property flags from dealMachineRawData
       const allProperties = await db.getProperties({});
       const counts: Record<string, number> = {};
 
       allProperties.forEach((property) => {
-        if (property.status) {
-          // Split status string by comma and count each tag
-          const tags = property.status.split(',').map(t => t.trim());
-          tags.forEach(tag => {
-            counts[tag] = (counts[tag] || 0) + 1;
-          });
+        // Parse dealMachineRawData to extract property_flags
+        if (property.dealMachineRawData) {
+          try {
+            const rawData = JSON.parse(property.dealMachineRawData);
+            if (rawData.property_flags) {
+              const flags = rawData.property_flags
+                .split(',')
+                .map((flag: string) => flag.trim())
+                .filter((flag: string) => flag.length > 0);
+              
+              flags.forEach((flag: string) => {
+                counts[flag] = (counts[flag] || 0) + 1;
+              });
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
         }
       });
 
