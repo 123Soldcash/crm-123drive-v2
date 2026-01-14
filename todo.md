@@ -540,3 +540,12 @@
 - [x] Implement functional filters for property flags (High Equity, Off Market, Tax Delinquent, etc.)
 - [x] Test flags display and filtering (Tired Landlord filter: 13 properties)
 - [x] Save checkpoint for production publish
+
+
+## Saved Searches Enhancement (Jan 13, 2026)
+- [x] Test multi-select property flag filtering (verified: High Equity (90) + Senior Owner (31) = 31 properties with AND logic)
+- [x] Update savedSearches database schema to include statusTags field (already supports via JSON filters field)
+- [x] Update Save Search dialog to capture selected property flags (already captures entire filters object including statusTags)
+- [x] Update Load Search to restore property flag filters (already restores entire filters object including statusTags)
+- [x] Test saving and loading searches with property flags (verified: saved "High Equity + Senior Owner", cleared filters, loaded successfully with 31 properties)
+- [ ] Save checkpoint for production publish
