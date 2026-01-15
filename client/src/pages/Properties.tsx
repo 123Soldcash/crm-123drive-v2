@@ -75,6 +75,7 @@ interface FilterState {
   visited: boolean;
   assignedAgentId: number | null;
   deskName: string;
+  dealStage: string;
 }
 
 const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
@@ -96,6 +97,7 @@ export default function Properties() {
       visited: params.get('visited') === 'true',
       assignedAgentId: null,
       deskName: "",
+      dealStage: "",
     };
   });
 
@@ -206,6 +208,19 @@ export default function Properties() {
     },
   });
 
+  // Bulk stage update mutation
+  const bulkUpdateStagesMutation = trpc.properties.bulkUpdateStages.useMutation({
+    onSuccess: () => {
+      utils.properties.list.invalidate();
+      utils.properties.getPropertiesByStage.invalidate();
+      setSelectedProperties([]);
+      toast.success(`Successfully moved ${selectedProperties.length} ${selectedProperties.length === 1 ? 'property' : 'properties'} to Pipeline stage`);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update stages: ${error.message}`);
+    },
+  });
+
   // Bulk delete mutation
   const bulkDelete = trpc.properties.bulkDeleteProperties.useMutation({
     onSuccess: (data) => {
@@ -267,8 +282,13 @@ export default function Properties() {
       });
     }
 
+    // Filter by Pipeline stage
+    if (filters.dealStage) {
+      filtered = filtered.filter((p) => p.dealStage === filters.dealStage);
+    }
+
     return filtered;
-  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName]);
+  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName, filters.dealStage]);
 
   // Store property IDs in localStorage for next/previous navigation
   useEffect(() => {
@@ -299,6 +319,7 @@ export default function Properties() {
       visited: false,
       assignedAgentId: null,
       deskName: "",
+      dealStage: "",
     });
   };
 
@@ -598,6 +619,32 @@ export default function Properties() {
                 </SelectContent>
               </Select>
             )}
+
+            {/* Pipeline Stage Filter */}
+            <Select
+              value={filters.dealStage || "all"}
+              onValueChange={(value) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  dealStage: value === "all" ? "" : value,
+                }))
+              }
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Pipeline Stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stages</SelectItem>
+                {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
+                  <SelectItem key={stage.id} value={stage.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{stage.icon}</span>
+                      <span>{stage.shortLabel}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -660,6 +707,32 @@ export default function Properties() {
                       {agents.map((agent: { id: number; name: string | null; agentType?: string }) => (
                         <SelectItem key={agent.id} value={agent.id.toString()}>
                           {agent.name || agent.openId}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Move to:</span>
+                  <Select
+                    onValueChange={(value) => {
+                      bulkUpdateStagesMutation.mutate({
+                        propertyIds: selectedProperties,
+                        newStage: value,
+                        notes: `Bulk moved to ${STAGE_CONFIGS.find(s => s.id === value)?.label}`,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select stage..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
+                          <span className="flex items-center gap-2">
+                            <span>{stage.icon}</span>
+                            <span>{stage.shortLabel}</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

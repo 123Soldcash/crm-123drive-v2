@@ -889,4 +889,18 @@
 - [x] Calculate total estimated value in each Pipeline stage
 - [x] Show count and total value in column headers
 - [x] Guide user to merge duplicate properties (1441 Nw 179th St)
-- [ ] Save checkpoint and deliver enhancements
+- [x] Save checkpoint and deliver enhancements
+
+## Pipeline Advanced Features (Jan 15, 2026 - Phase 2)
+- [x] Guide user to merge duplicate properties via Duplicates Dashboard
+- [x] Find duplicate properties at "1441 Nw 179th St"
+- [x] Explain merge process step-by-step
+- [x] Implement bulk stage updates feature
+- [x] Add checkbox selection for multiple properties
+- [x] Add "Move to Stage" dropdown in bulk actions toolbar
+- [x] Create bulkUpdateStages tRPC endpoint
+- [x] Add Pipeline stage filter to Properties list
+- [x] Add stage dropdown filter next to existing filters
+- [x] Filter properties by selected Pipeline stage
+- [x] Show stage count in filter dropdown
+- [ ] Save checkpoint and deliver all features
