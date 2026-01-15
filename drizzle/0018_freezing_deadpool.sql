@@ -1,1 +1,0 @@
-ALTER TABLE `properties` MODIFY COLUMN `leadTemperature` enum('SUPER HOT','HOT','DEEP SEARCH','WARM','COLD','TBD','DEAD') DEFAULT 'TBD';

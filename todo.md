@@ -717,4 +717,40 @@
   - [x] High data completeness vs empty lead
   - [x] Conflicting contact information
   - [x] Recent activity on both leads
-- [ ] Save checkpoint and deliver AI merge system
+- [x] Save checkpoint and deliver AI merge system (version: d465d236)
+
+
+## AI Learning from User Feedback (Jan 15, 2026)
+- [x] Create database schema for merge feedback tracking:
+  - [x] mergeFeedback table (suggestionId, userId, action, timestamp, confidence, factors)
+  - [x] Store accepted/rejected suggestions with original confidence scores
+  - [x] Track which factors contributed to user decision
+- [x] Build backend endpoints for feedback recording:
+  - [x] recordMergeFeedback mutation (action: accepted/rejected/ignored)
+  - [x] getMergeFeedbackStats query (acceptance rate by confidence level)
+  - [x] getFactorPerformance query (which factors predict user acceptance)
+- [x] Implement feedback analysis algorithm:
+  - [x] Calculate acceptance rate by confidence level (HIGH/MEDIUM/LOW)
+  - [x] Identify over-confident suggestions (HIGH confidence but rejected)
+  - [x] Identify under-confident suggestions (LOW confidence but accepted)
+  - [x] Adjust scoring weights based on feedback patterns
+- [ ] Add feedback collection UI:
+  - [ ] "Why did you reject this?" quick feedback buttons
+  - [ ] Track implicit feedback (accepted suggestions via merge)
+  - [ ] Show feedback confirmation toast
+- [ ] Create AI Performance Dashboard:
+  - [ ] Overall acceptance rate metric
+  - [ ] Acceptance rate by confidence level (chart)
+  - [ ] Most accurate factors (address vs owner vs data quality)
+  - [ ] Recent feedback timeline
+  - [ ] Suggestions for improving AI accuracy
+- [ ] Implement scoring weight adjustments:
+  - [ ] Start with baseline weights (address 40%, owner 25%, etc.)
+  - [ ] Adjust weights based on which factors correlate with acceptance
+  - [ ] Cap weight changes to prevent over-fitting (±10% max)
+- [ ] Test AI learning system:
+  - [ ] Simulate 50 feedback events (mix of accept/reject)
+  - [ ] Verify weights adjust correctly
+  - [ ] Test that over-confident suggestions get penalized
+  - [ ] Test that under-confident suggestions get boosted
+- [ ] Save checkpoint and deliver AI learning system

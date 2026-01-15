@@ -810,3 +810,43 @@ export const leadMergeHistory = mysqlTable("leadMergeHistory", {
 
 export type LeadMergeHistory = typeof leadMergeHistory.$inferSelect;
 export type InsertLeadMergeHistory = typeof leadMergeHistory.$inferInsert;
+
+
+/**
+ * Merge Feedback table - tracks user feedback on AI merge suggestions
+ * Used for AI learning to improve confidence scoring over time
+ */
+export const mergeFeedback = mysqlTable("mergeFeedback", {
+  id: int("id").autoincrement().primaryKey(),
+  lead1Id: int("lead1Id").notNull(), // First lead in the suggestion
+  lead2Id: int("lead2Id").notNull(), // Second lead in the suggestion
+  suggestedPrimaryId: int("suggestedPrimaryId").notNull(), // AI's suggested primary lead
+  
+  // AI confidence scores at time of suggestion
+  overallScore: int("overallScore").notNull(), // 0-100
+  addressSimilarity: int("addressSimilarity").notNull(), // 0-100
+  ownerNameSimilarity: int("ownerNameSimilarity").notNull(), // 0-100
+  dataCompletenessScore: int("dataCompletenessScore").notNull(), // 0-100
+  leadQualityScore: int("leadQualityScore").notNull(), // 0-100
+  riskScore: int("riskScore").notNull(), // 0-100
+  confidenceLevel: mysqlEnum("confidenceLevel", ["HIGH", "MEDIUM", "LOW", "VERY_LOW"]).notNull(),
+  
+  // User feedback
+  action: mysqlEnum("action", ["accepted", "rejected", "ignored"]).notNull(),
+  actualPrimaryId: int("actualPrimaryId"), // Which lead user chose as primary (if accepted)
+  rejectionReason: mysqlEnum("rejectionReason", [
+    "wrong_address",
+    "wrong_owner", 
+    "not_duplicates",
+    "too_risky",
+    "other"
+  ]),
+  rejectionNotes: text("rejectionNotes"),
+  
+  userId: int("userId").notNull(), // User who provided feedback
+  feedbackAt: timestamp("feedbackAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MergeFeedback = typeof mergeFeedback.$inferSelect;
+export type InsertMergeFeedback = typeof mergeFeedback.$inferInsert;

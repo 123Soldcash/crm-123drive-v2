@@ -1,1 +1,0 @@
-ALTER TABLE `tasks` MODIFY COLUMN `repeatTask` enum('Daily','Weekly','Monthly','No repeat') DEFAULT 'No repeat';

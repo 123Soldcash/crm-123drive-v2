@@ -7,6 +7,8 @@ import * as db from "./db";
 import { mergeLeads, getMergeHistory } from "./db-merge";
 import { getAllDuplicateGroups } from "./db-duplicates-dashboard";
 import { getAIMergeSuggestions, getAISuggestionForPair } from "./db-aiMergeSuggestions";
+import { recordMergeFeedback, getMergeFeedbackStats, getFactorPerformance, getRecentFeedbackTimeline } from "./db-mergeFeedback";
+import { getWeightAdjustmentSummary } from "./utils/aiScoringWeights";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
@@ -529,6 +531,53 @@ export const appRouter = router({
       .input(z.object({ lead1Id: z.number(), lead2Id: z.number() }))
       .query(async ({ input }) => {
         return await getAISuggestionForPair(input.lead1Id, input.lead2Id);
+      }),
+
+    recordMergeFeedback: protectedProcedure
+      .input(z.object({
+        lead1Id: z.number(),
+        lead2Id: z.number(),
+        aiSuggestion: z.object({
+          overallScore: z.number(),
+          addressSimilarity: z.number(),
+          ownerNameSimilarity: z.number(),
+          dataCompletenessScore: z.number(),
+          leadQualityScore: z.number(),
+          riskScore: z.number(),
+          confidenceLevel: z.enum(["HIGH", "MEDIUM", "LOW", "VERY_LOW"]),
+          suggestedPrimary: z.number(),
+          reasoning: z.array(z.string()),
+        }),
+        action: z.enum(["accepted", "rejected", "ignored"]),
+        actualPrimaryId: z.number().optional(),
+        rejectionReason: z.enum(["wrong_address", "wrong_owner", "not_duplicates", "too_risky", "other"]).optional(),
+        rejectionNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return await recordMergeFeedback({
+          ...input,
+          userId: ctx.user.id,
+        });
+      }),
+
+    getMergeFeedbackStats: protectedProcedure
+      .query(async () => {
+        return await getMergeFeedbackStats();
+      }),
+
+    getFactorPerformance: protectedProcedure
+      .query(async () => {
+        return await getFactorPerformance();
+      }),
+
+    getRecentFeedbackTimeline: protectedProcedure
+      .query(async () => {
+        return await getRecentFeedbackTimeline();
+      }),
+
+    getWeightAdjustmentSummary: protectedProcedure
+      .query(async () => {
+        return await getWeightAdjustmentSummary();
       }),
 
     deleteProperty: protectedProcedure
