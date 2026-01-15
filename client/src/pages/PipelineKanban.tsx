@@ -14,8 +14,10 @@ import { trpc } from "@/lib/trpc";
 import { STAGE_CONFIGS, type DealStage } from "@/lib/stageConfig";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Loader2, Home, DollarSign, Calendar } from "lucide-react";
+import { Loader2, Home, DollarSign, Calendar, Plus } from "lucide-react";
+import { QuickAddLeadDialog } from "@/components/QuickAddLeadDialog";
 
 interface PropertyCard {
   id: number;
@@ -130,6 +132,7 @@ function DroppableStageColumn({
   stageConfig: (typeof STAGE_CONFIGS)[0];
   properties: PropertyCard[];
 }) {
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: stageConfig.id,
   });
@@ -150,8 +153,23 @@ function DroppableStageColumn({
               </p>
             </div>
           </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => setShowAddDialog(true)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+
+      {/* Quick Add Dialog */}
+      <QuickAddLeadDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        dealStage={stageConfig.id}
+      />
 
       {/* Column Body - Droppable Area */}
       <div

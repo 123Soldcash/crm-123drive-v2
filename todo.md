@@ -833,3 +833,12 @@
   - [ ] Test bulk stage updates
   - [ ] Verify statistics calculations
 - [x] Save checkpoint and deliver pipeline foundation (version: d314a582)
+
+## Quick Lead Creation from Pipeline (Jan 15, 2026)
+- [x] Create QuickAddLeadDialog component
+- [x] Add "+ Add Lead" button to each Kanban column header
+- [x] Quick form with essential fields (address, city, state, zip, owner name)
+- [x] Automatically set dealStage to the column where button was clicked
+- [x] Show success toast and add new card to column immediately
+- [x] Test creating leads at different stages
+- [ ] Save checkpoint and deliver enhanced Pipeline
