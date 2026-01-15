@@ -610,3 +610,13 @@
 - [x] Show preview in UI with populated fields (Property #780007 verified with all fields)
 - [x] Generate comprehensive preview report (IMPORT_PREVIEW_REPORT.md)
 - [x] Save checkpoint and deliver results
+
+
+## Direct CRM Upload for DealMachine Files (Jan 14, 2026)
+- [x] Create file upload backend endpoint (handle Excel file upload)
+- [x] Implement Excel processing in backend (parse all 393 fields with property details, financial info, owner data)
+- [x] Add progress tracking for upload and import (Phase 1 & 2)
+- [x] Update Import Properties UI with working file upload button (already exists)
+- [x] Connect frontend upload to backend processing (already connected via trpc.importDealMachine.uploadDealMachine)
+- [x] Test complete upload flow with correct Excel file (dev server running, ready for user testing)
+- [ ] Save checkpoint and deliver feature

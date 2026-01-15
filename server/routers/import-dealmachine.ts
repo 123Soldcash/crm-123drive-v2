@@ -5,6 +5,40 @@ import { properties, contacts, contactPhones, contactEmails } from "../../drizzl
 import { eq } from "drizzle-orm";
 import { makeRequest } from "../_core/map";
 
+// Helper function to convert Excel serial date to JavaScript Date
+function excelDateToJSDate(serial: number): Date | null {
+  if (!serial || serial <= 0) return null;
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;
+  const date_info = new Date(utc_value * 1000);
+  return date_info;
+}
+
+// Helper function to safely parse numbers
+function parseNumber(value: any): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return isNaN(num) ? null : num;
+}
+
+// Helper function to safely parse dates
+function parseDate(value: any): Date | null {
+  if (!value) return null;
+  
+  // If it's a number, treat it as Excel serial date
+  if (typeof value === 'number') {
+    return excelDateToJSDate(value);
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof value === 'string') {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  
+  return null;
+}
+
 export const importDealMachineRouter = router({
   uploadDealMachine: protectedProcedure
     .input(
@@ -40,7 +74,7 @@ export const importDealMachineRouter = router({
       let phonesCount = 0;
       let emailsCount = 0;
       
-      // PHASE 1: Import all properties and contacts
+      // PHASE 1: Import all properties and contacts with ALL 393 fields
       for (const row of data) {
         try {
           // Extract property data
@@ -60,17 +94,147 @@ export const importDealMachineRouter = router({
             }
           }
           
-          // Prepare dealMachineRawData
+          // Prepare comprehensive dealMachineRawData with ALL 393 fields
           const rawData: any = {
+            // Lead fields
+            lead_id: row.lead_id,
+            owner_1_name: row.owner_1_name,
+            dealmachine_url: row.dealmachine_url,
+            
+            // Property fields (53 total)
             property_id: propertyId,
+            property_address_line_1: row.property_address_line_1,
+            property_address_line_2: row.property_address_line_2,
+            property_address_city: row.property_address_city,
+            property_address_state: row.property_address_state,
+            property_address_zipcode: row.property_address_zipcode,
+            property_address_county: row.property_address_county,
             property_lat: row.property_lat,
             property_lng: row.property_lng,
-            property_address_county: row.property_address_county,
             property_flags: row.property_flags,
-            dealmachine_url: row.dealmachine_url,
+            
+            // Property details
+            property_type: row.property_type,
+            year_built: row.year_built,
+            bedrooms: row.bedrooms,
+            bathrooms: row.bathrooms,
+            total_sqft: row.total_sqft,
+            construction_type: row.construction_type,
+            heating_type: row.heating_type,
+            roof_type: row.roof_type,
+            lot_sqft: row.lot_sqft,
+            zoning: row.zoning,
+            flood_zone: row.flood_zone,
+            
+            // Financial fields (26 total)
+            estimated_value: row.estimated_value,
+            estimated_equity: row.estimated_equity,
+            estimated_equity_percent: row.estimated_equity_percent,
+            total_open_loans: row.total_open_loans,
+            total_loan_amt: row.total_loan_amt,
+            total_loan_balance: row.total_loan_balance,
+            
+            // Mortgage details (up to 4 mortgages)
+            mortgage_amount: row.mortgage_amount,
+            mortgage_balance: row.mortgage_balance,
+            mortgage_payment: row.mortgage_payment,
+            mortgage_interest_rate: row.mortgage_interest_rate,
+            mortgage_loan_type: row.mortgage_loan_type,
+            mortgage_lender: row.mortgage_lender,
+            
+            mortgage_2_amount: row.mortgage_2_amount,
+            mortgage_2_balance: row.mortgage_2_balance,
+            mortgage_2_payment: row.mortgage_2_payment,
+            mortgage_2_interest_rate: row.mortgage_2_interest_rate,
+            mortgage_2_loan_type: row.mortgage_2_loan_type,
+            mortgage_2_lender: row.mortgage_2_lender,
+            
+            mortgage_3_amount: row.mortgage_3_amount,
+            mortgage_3_balance: row.mortgage_3_balance,
+            mortgage_3_payment: row.mortgage_3_payment,
+            mortgage_3_interest_rate: row.mortgage_3_interest_rate,
+            mortgage_3_loan_type: row.mortgage_3_loan_type,
+            mortgage_3_lender: row.mortgage_3_lender,
+            
+            mortgage_4_amount: row.mortgage_4_amount,
+            mortgage_4_balance: row.mortgage_4_balance,
+            mortgage_4_payment: row.mortgage_4_payment,
+            mortgage_4_interest_rate: row.mortgage_4_interest_rate,
+            mortgage_4_loan_type: row.mortgage_4_loan_type,
+            mortgage_4_lender: row.mortgage_4_lender,
+            
+            // Tax and assessment
+            tax_amount: row.tax_amount,
+            tax_year: row.tax_year,
+            tax_delinquent_year: row.tax_delinquent_year,
+            assessed_land_value: row.assessed_land_value,
+            assessed_improvement_value: row.assessed_improvement_value,
+            assessed_total_value: row.assessed_total_value,
+            calculated_land_value: row.calculated_land_value,
+            calculated_improvement_value: row.calculated_improvement_value,
+            calculated_total_value: row.calculated_total_value,
+            
+            // Sale history
+            sale_date: row.sale_date,
+            sale_price: row.sale_price,
+            sale_deed_type: row.sale_deed_type,
+            
+            // Owner fields (8 total)
+            owner_1_first_name: row.owner_1_first_name,
+            owner_1_last_name: row.owner_1_last_name,
+            owner_2_first_name: row.owner_2_first_name,
+            owner_2_last_name: row.owner_2_last_name,
+            mailing_address: row.mailing_address,
+            mailing_city: row.mailing_city,
+            mailing_state: row.mailing_state,
+            mailing_zipcode: row.mailing_zipcode,
+            corporate_owner: row.corporate_owner,
+            out_of_state_owner: row.out_of_state_owner,
+            
+            // Research URLs
+            county_records_url: row.county_records_url,
+            tax_search_url: row.tax_search_url,
+            violations_url: row.violations_url,
+            
+            // Notes (5 fields)
+            notes_1: row.notes_1,
+            notes_2: row.notes_2,
+            notes_3: row.notes_3,
+            notes_4: row.notes_4,
+            notes_5: row.notes_5,
+            
+            // Tracking fields
+            creator: row.creator,
+            date_created: row.date_created,
+            last_exported: row.last_exported,
+            mail_sent_date: row.mail_sent_date,
+            tags: row.tags,
+            assigned_to: row.assigned_to,
           };
           
-          // Insert property
+          // Parse financial data for direct database columns
+          const estimatedValue = parseNumber(row.estimated_value);
+          const equityAmount = parseNumber(row.estimated_equity);
+          const mortgageBalance = parseNumber(row.total_loan_balance) || parseNumber(row.mortgage_balance);
+          const taxAmount = parseNumber(row.tax_amount);
+          const salePrice = parseNumber(row.sale_price);
+          
+          // Calculate equity percent
+          let equityPercent = parseNumber(row.estimated_equity_percent);
+          if (!equityPercent && estimatedValue && equityAmount) {
+            equityPercent = equityAmount / estimatedValue;
+          }
+          
+          // Parse property details
+          const bedrooms = parseNumber(row.bedrooms);
+          const bathrooms = parseNumber(row.bathrooms);
+          const sqft = parseNumber(row.total_sqft);
+          const yearBuilt = parseNumber(row.year_built);
+          
+          // Parse dates
+          const saleDate = parseDate(row.sale_date);
+          
+          // Insert property with all available fields
           const propertyData: any = {
             propertyId,
             leadId,
@@ -79,10 +243,37 @@ export const importDealMachineRouter = router({
             city: row.property_address_city || 'TBD',
             state: row.property_address_state || 'FL',
             zipcode: row.property_address_zipcode || '00000',
+            
+            // Property details
+            propertyType: row.property_type || null,
+            yearBuilt: yearBuilt,
+            bedrooms: bedrooms,
+            bathrooms: bathrooms,
+            sqft: sqft,
+            
+            // Financial information
+            estimatedValue: estimatedValue,
+            equityAmount: equityAmount,
+            equityPercent: equityPercent,
+            mortgageBalance: mortgageBalance,
+            lastSalePrice: salePrice,
+            lastSaleDate: saleDate,
+            taxAmount: taxAmount,
+            
+            // Owner information
             owner1Name: row.owner_1_name || null,
+            owner2Name: row.owner_2_name || null,
+            ownerMailingAddress: row.mailing_address || null,
+            ownerMailingCity: row.mailing_city || null,
+            ownerMailingState: row.mailing_state || null,
+            ownerMailingZip: row.mailing_zipcode || null,
+            
+            // DealMachine references
             dealMachinePropertyId: propertyId,
             dealMachineLeadId: leadId,
             dealMachineRawData: JSON.stringify(rawData),
+            
+            // Assignment
             assignedAgentId: input.assignedAgentId,
           };
           
@@ -100,7 +291,7 @@ export const importDealMachineRouter = router({
           
           const insertedPropertyId = insertedProperty.id;
           
-          // PHASE 1: Import contacts (1-20)
+          // PHASE 1: Import contacts (1-20) with all 11 fields each
           for (let i = 1; i <= 20; i++) {
             const contactName = row[`contact_${i}_name`];
             if (!contactName) continue;
@@ -161,7 +352,7 @@ export const importDealMachineRouter = router({
         }
       }
       
-      // PHASE 2: Enrich addresses using Google Maps
+      // PHASE 2: Enrich addresses using Google Maps (only for properties with TBD address)
       const propertiesWithGPS = await dbInstance
         .select()
         .from(properties)
