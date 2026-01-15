@@ -90,6 +90,24 @@ export const appRouter = router({
         });
       }),
 
+    search: protectedProcedure
+      .input(
+        z.object({
+          query: z.string(),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        // Search properties by address
+        const properties = await db.getPropertiesWithAgents({
+          search: input.query,
+          userId: ctx.user?.id,
+          userRole: ctx.user?.role,
+        });
+        
+        // Return top 10 results
+        return properties.slice(0, 10);
+      }),
+
     updateStatus: protectedProcedure
       .input(
         z.object({

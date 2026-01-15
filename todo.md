@@ -862,4 +862,12 @@
 - [x] Add "Create New" option if property not found
 - [x] Update stage when moving existing property to Pipeline
 - [x] Test search with various address formats
-- [ ] Save checkpoint and deliver search-first Pipeline
+- [x] Save checkpoint and deliver search-first Pipeline (version: 11fe69b0)
+
+
+## Fix Property Search in Pipeline (Jan 15, 2026)
+- [x] Debug properties.search endpoint to check if it exists
+- [x] Fix search query to return results from database (added search endpoint)
+- [x] Test search with known property addresses
+- [x] Verify search results show in QuickAddLeadDialog
+- [ ] Save checkpoint with working search
