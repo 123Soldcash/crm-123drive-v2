@@ -635,4 +635,17 @@
 - [x] Check how equity percent is calculated and displayed in PropertyDetail page (import script was storing 0.73 as 1)
 - [x] Fix display logic to show correct percentage (updated import script + fixed 15 existing properties: 1% → 72-100%)
 - [x] Verify fix in UI with multiple properties (Property #780007: 72% displayed correctly)
-- [ ] Save checkpoint and deliver fix
+- [x] Save checkpoint and deliver fix (version: 8954755e)
+
+
+
+## Duplicate Lead Detection Feature (Jan 15, 2026)
+- [x] Create backend API endpoint for searching similar addresses (fuzzy matching + GPS matching)
+- [x] Implement address normalization logic (Nw → Northwest, Ter → Terrace, etc.)
+- [x] Add Levenshtein distance algorithm for string similarity scoring
+- [x] Create real-time search UI component with debounce (300ms)
+- [x] Display potential duplicates in dropdown with property details (ID, owner, status, created date)
+- [x] Add "View Lead" and "Merge with this" action buttons
+- [x] Add "Create Anyway" option to bypass duplicate warning
+- [x] Test with various address formats (abbreviated vs full, different casing, GPS coordinates)
+- [ ] Save checkpoint and deliver feature

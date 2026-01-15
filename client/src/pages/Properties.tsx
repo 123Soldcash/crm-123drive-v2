@@ -37,6 +37,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
 import { DeskDialog } from "@/components/DeskDialog";
 import { AddressAutocomplete, type AddressDetails } from "@/components/AddressAutocomplete";
+import { DuplicateDetectionAlert } from "@/components/DuplicateDetectionAlert";
 
 // Common status tags found in the data
 const STATUS_TAGS = [
@@ -938,6 +939,7 @@ export default function Properties() {
 // Add Property Dialog Component
 function AddPropertyDialog() {
   const [open, setOpen] = useState(false);
+  const [ignoreDuplicates, setIgnoreDuplicates] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: "",
     city: "",
@@ -945,6 +947,8 @@ function AddPropertyDialog() {
     zipcode: "",
     owner1Name: "",
     leadTemperature: "TBD" as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" | "TBD",
+    lat: undefined as number | undefined,
+    lng: undefined as number | undefined,
   });
 
   const utils = trpc.useUtils();
@@ -961,7 +965,10 @@ function AddPropertyDialog() {
         zipcode: "",
         owner1Name: "",
         leadTemperature: "TBD",
+        lat: undefined,
+        lng: undefined,
       });
+      setIgnoreDuplicates(false);
     },
     onError: (error) => {
       toast.error("Failed to create property: " + error.message);
@@ -1001,6 +1008,7 @@ function AddPropertyDialog() {
                   ...formData,
                   addressLine1: address,
                 });
+                setIgnoreDuplicates(false); // Reset ignore flag when address changes
               }}
               onAddressSelect={(details: AddressDetails) => {
                 setFormData({
@@ -1009,11 +1017,24 @@ function AddPropertyDialog() {
                   city: details.city,
                   state: details.state,
                   zipcode: details.zipCode,
+                  lat: details.lat,
+                  lng: details.lng,
                 });
+                setIgnoreDuplicates(false); // Reset ignore flag when address changes
               }}
               placeholder="123 Main Street"
             />
           </div>
+          
+          {/* Duplicate Detection Alert */}
+          {!ignoreDuplicates && formData.addressLine1 && (
+            <DuplicateDetectionAlert
+              address={`${formData.addressLine1}, ${formData.city}, ${formData.state} ${formData.zipcode}`}
+              lat={formData.lat}
+              lng={formData.lng}
+              onCreateAnyway={() => setIgnoreDuplicates(true)}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>

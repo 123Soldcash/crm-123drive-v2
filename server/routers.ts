@@ -13,6 +13,7 @@ import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
 import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
 import { importDealMachineRouter } from "./routers/import-dealmachine";
+import { findDuplicates } from "./utils/duplicateDetection";
 
 export const appRouter = router({
   system: systemRouter,
@@ -302,6 +303,42 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await db.removePropertyTag(input.tagId);
         return { success: true };
+      }),
+
+    searchDuplicates: protectedProcedure
+      .input(
+        z.object({
+          address: z.string(),
+          lat: z.number().optional(),
+          lng: z.number().optional(),
+          similarityThreshold: z.number().optional().default(85),
+        })
+      )
+      .query(async ({ input }) => {
+        // Get all properties for duplicate detection
+        const allProperties = await db.getProperties({});
+        
+        // Transform to format expected by duplicate detection
+        const propertiesForMatching = allProperties.map((p) => ({
+          id: p.id,
+          address: `${p.addressLine1}${p.addressLine2 ? ' ' + p.addressLine2 : ''}, ${p.city}, ${p.state} ${p.zipcode}`,
+          ownerName: p.owner1Name,
+          leadTemperature: p.leadTemperature,
+          createdAt: p.createdAt,
+          lat: p.lat,
+          lng: p.lng,
+        }));
+        
+        // Find duplicates
+        const duplicates = findDuplicates(
+          input.address,
+          propertiesForMatching,
+          input.lat,
+          input.lng,
+          input.similarityThreshold
+        );
+        
+        return duplicates;
       }),
 
     create: protectedProcedure
