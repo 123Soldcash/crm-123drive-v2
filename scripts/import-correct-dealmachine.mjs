@@ -306,6 +306,19 @@ try {
     const propertyId = propertyResult.insertId;
     imported.properties++;
     
+    // Insert property flags as tags
+    if (row.property_flags) {
+      const flags = row.property_flags.split(',').map(f => f.trim()).filter(f => f);
+      for (const flag of flags) {
+        await connection.execute(
+          `INSERT INTO propertyTags (propertyId, tag, createdBy, createdAt)
+           VALUES (?, ?, 1, NOW())`,
+          [propertyId, flag]
+        );
+      }
+      console.log(`     🏷️  Tags: ${flags.join(', ')}`);
+    }
+    
     console.log(`  ✅ Property #${propertyId} created`);
     console.log(`     Address: ${row.property_address_full}`);
     console.log(`     Value: $${row.estimated_value?.toLocaleString() || 0}`);

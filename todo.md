@@ -619,4 +619,12 @@
 - [x] Update Import Properties UI with working file upload button (already exists)
 - [x] Connect frontend upload to backend processing (already connected via trpc.importDealMachine.uploadDealMachine)
 - [x] Test complete upload flow with correct Excel file (dev server running, ready for user testing)
+- [x] Save checkpoint and deliver feature (version: a29e2437)
+
+
+## Auto-Populate Custom Tags from Property Flags (Jan 14, 2026)
+- [x] Update import script to copy propertyFlags to customTags field in database (propertyTags table)
+- [x] Update existing properties to populate customTags from propertyFlags (112 properties, 398 tags created)
+- [x] Update property detail page to display propertyFlags as custom tags (already working - reads from propertyTags table)
+- [x] Test in UI to verify tags appear in Custom Tags field (Property #780007: Off Market, High Equity, Tax Delinquent, Senior Owner, Empty Nester)
 - [ ] Save checkpoint and deliver feature
