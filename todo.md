@@ -851,4 +851,15 @@
 - [x] Update stage definitions to match refined flow (17 pipeline stages)
 - [x] Ensure pre-pipeline stages still work in Properties list
 - [x] Add info banner explaining pipeline vs pre-pipeline
-- [ ] Save checkpoint and deliver refined pipeline structure
+- [x] Save checkpoint and deliver refined pipeline structure (version: fb03bf85)
+
+
+## Search-First Pipeline Lead Creation (Jan 15, 2026)
+- [x] Update QuickAddLeadDialog to show search box first
+- [x] Add property search by address with real-time results
+- [x] Show existing properties with current stage and details
+- [x] Add "Move to [Stage]" button for existing properties
+- [x] Add "Create New" option if property not found
+- [x] Update stage when moving existing property to Pipeline
+- [x] Test search with various address formats
+- [ ] Save checkpoint and deliver search-first Pipeline
