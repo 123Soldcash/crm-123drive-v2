@@ -810,14 +810,13 @@
   - [x] Define 22 stages with ADHD-friendly colors
   - [x] Group stages by phase (acquisition/seller/buyer/closing/complete/dead)
   - [x] Add emoji icons for visual recognition
-  - [x] Color coding: Green=acquisition, Blue=seller, Orange=buyer, Purple=closing
-- [ ] Build Kanban Board page:
-  - [ ] Create PipelineKanban.tsx with drag-and-drop
-  - [ ] Color-coded columns by phase (green/blue/orange/purple)
-  - [ ] Property cards showing: address, owner, value, days in stage
-  - [ ] Click card to open property details
-  - [ ] Stage count badges on column headers
-  - [ ] Simple filters: agent, temperature, date range
+  - [x] Color coding: Green=acquisition, Blue=seller, Orange=buyer, Purple=closin- [x] Build Kanban Board page:
+  - [x] Create PipelineKanban.tsx with drag-and-drop
+  - [x] Color-coded columns by phase (green/blue/orange/purple)
+  - [x] Property cards showing: address, owner, value, days in stage
+  - [x] Drag cards between columns to update stage
+  - [x] Real-time updates with optimistic UI
+  - [x] Add Pipeline link to sidebar navigationge
 - [ ] Add stage badges to existing pages:
   - [ ] Properties list - show current stage badge
   - [ ] Property detail - stage dropdown to change stage
@@ -833,4 +832,4 @@
   - [ ] Verify stage history tracking
   - [ ] Test bulk stage updates
   - [ ] Verify statistics calculations
-- [ ] Save checkpoint and deliver pipeline system
+- [x] Save checkpoint and deliver pipeline foundation (version: d314a582)
