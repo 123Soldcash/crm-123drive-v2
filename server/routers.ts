@@ -9,6 +9,7 @@ import { getAllDuplicateGroups } from "./db-duplicates-dashboard";
 import { getAIMergeSuggestions, getAISuggestionForPair } from "./db-aiMergeSuggestions";
 import { recordMergeFeedback, getMergeFeedbackStats, getFactorPerformance, getRecentFeedbackTimeline } from "./db-mergeFeedback";
 import { getWeightAdjustmentSummary } from "./utils/aiScoringWeights";
+import { searchLeadsByPhone } from "./db-phoneSearch";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
@@ -578,6 +579,12 @@ export const appRouter = router({
     getWeightAdjustmentSummary: protectedProcedure
       .query(async () => {
         return await getWeightAdjustmentSummary();
+      }),
+
+    searchLeadsByPhone: protectedProcedure
+      .input(z.object({ phoneNumber: z.string() }))
+      .query(async ({ input }) => {
+        return await searchLeadsByPhone(input.phoneNumber);
       }),
 
     deleteProperty: protectedProcedure

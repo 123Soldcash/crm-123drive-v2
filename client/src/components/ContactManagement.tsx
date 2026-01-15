@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, Mail, MessageSquare, Facebook, Instagram, Star, AlertTriangle, Scale, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { PhoneDuplicateAlert } from "./PhoneDuplicateAlert";
 import { toast } from "sonner";
 
 interface ContactManagementProps {
@@ -305,28 +306,33 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   <div className="space-y-2">
                     <Label>Phone Numbers</Label>
                     {[1, 2, 3].map((num) => (
-                      <div key={num} className="grid grid-cols-3 gap-2">
-                        <Input
-                          placeholder={`Phone ${num}`}
-                          value={formData[`phone${num}` as keyof typeof formData] as string}
-                          onChange={(e) => setFormData({ ...formData, [`phone${num}`]: e.target.value })}
-                          className="col-span-2"
-                        />
-                        <Select
-                          value={formData[`phone${num}Type` as keyof typeof formData] as string}
-                          onValueChange={(value) => setFormData({ ...formData, [`phone${num}Type`]: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Mobile">Mobile</SelectItem>
-                            <SelectItem value="Landline">Landline</SelectItem>
-                            <SelectItem value="Wireless">Wireless</SelectItem>
-                            <SelectItem value="Work">Work</SelectItem>
-                            <SelectItem value="Home">Home</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div key={num} className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <Input
+                            placeholder={`Phone ${num}`}
+                            value={formData[`phone${num}` as keyof typeof formData] as string}
+                            onChange={(e) => setFormData({ ...formData, [`phone${num}`]: e.target.value })}
+                            className="col-span-2"
+                          />
+                          <Select
+                            value={formData[`phone${num}Type` as keyof typeof formData] as string}
+                            onValueChange={(value) => setFormData({ ...formData, [`phone${num}Type`]: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Mobile">Mobile</SelectItem>
+                              <SelectItem value="Landline">Landline</SelectItem>
+                              <SelectItem value="Wireless">Wireless</SelectItem>
+                              <SelectItem value="Work">Work</SelectItem>
+                              <SelectItem value="Home">Home</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {formData[`phone${num}` as keyof typeof formData] && (
+                          <PhoneDuplicateAlert phoneNumber={formData[`phone${num}` as keyof typeof formData] as string} />
+                        )}
                       </div>
                     ))}
                   </div>
