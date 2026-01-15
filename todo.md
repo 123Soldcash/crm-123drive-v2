@@ -691,3 +691,30 @@
 - [ ] Test owner name duplicate detection
 - [ ] Test duplicates dashboard UI
 - [ ] Save checkpoint and deliver complete system
+
+
+## AI-Powered Auto-Merge Suggestions (Jan 15, 2026)
+- [x] Create AI confidence scoring algorithm with multiple factors:
+  - [x] Address similarity score (exact match, fuzzy, GPS)
+  - [x] Owner name similarity score
+  - [x] Data completeness comparison (contacts, notes, tasks, photos)
+  - [x] Lead quality assessment (temperature, status, assigned agents)
+  - [x] Risk factors (conflicting data, multiple contacts, recent activity)
+- [x] Build backend endpoint getAIMergeSuggestions with LLM integration
+- [x] Create AI prompt template for merge analysis
+- [x] Implement confidence score calculation (0-100%)
+- [x] Generate merge reasoning with bullet points
+- [x] Create AIMergeSuggestion component with confidence badge
+- [x] Display confidence levels: High (90%+), Medium (70-89%), Low (50-69%)
+- [x] Show AI reasoning in expandable section
+- [x] Add "Accept Suggestion" quick action button
+- [x] Integrate AI suggestions into Duplicates Dashboard
+- [x] Add "AI Suggestions" filter tab
+- [x] Sort duplicates by confidence score (highest first)
+- [x] Test AI suggestions with various scenarios:
+  - [x] Identical addresses with different owner names
+  - [x] Similar addresses with GPS match
+  - [x] High data completeness vs empty lead
+  - [x] Conflicting contact information
+  - [x] Recent activity on both leads
+- [ ] Save checkpoint and deliver AI merge system

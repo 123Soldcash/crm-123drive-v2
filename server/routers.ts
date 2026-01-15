@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { mergeLeads, getMergeHistory } from "./db-merge";
 import { getAllDuplicateGroups } from "./db-duplicates-dashboard";
+import { getAIMergeSuggestions, getAISuggestionForPair } from "./db-aiMergeSuggestions";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
@@ -516,6 +517,18 @@ export const appRouter = router({
       .input(z.object({ similarityThreshold: z.number().optional().default(85) }))
       .query(async ({ input }) => {
         return await getAllDuplicateGroups(input.similarityThreshold);
+      }),
+
+    getAIMergeSuggestions: protectedProcedure
+      .input(z.object({ minConfidence: z.number().optional().default(50) }))
+      .query(async ({ input }) => {
+        return await getAIMergeSuggestions(input.minConfidence);
+      }),
+
+    getAISuggestionForPair: protectedProcedure
+      .input(z.object({ lead1Id: z.number(), lead2Id: z.number() }))
+      .query(async ({ input }) => {
+        return await getAISuggestionForPair(input.lead1Id, input.lead2Id);
       }),
 
     deleteProperty: protectedProcedure

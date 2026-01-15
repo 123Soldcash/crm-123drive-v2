@@ -5,19 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GitMerge, ExternalLink, AlertTriangle, CheckCircle2, Filter } from "lucide-react";
+import { GitMerge, ExternalLink, AlertTriangle, CheckCircle2, Filter, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { MergeLeadsDialog } from "@/components/MergeLeadsDialog";
+import { AIMergeSuggestionCard } from "@/components/AIMergeSuggestionCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function DuplicatesDashboard() {
   const [similarityThreshold, setSimilarityThreshold] = useState(85);
+  const [minConfidence, setMinConfidence] = useState(70);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [selectedDuplicate, setSelectedDuplicate] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   const { data: duplicateGroups, isLoading, refetch } = trpc.properties.getAllDuplicateGroups.useQuery({
     similarityThreshold,
+  });
+
+  const { data: aiSuggestions, isLoading: aiLoading, refetch: refetchAI } = trpc.properties.getAIMergeSuggestions.useQuery({
+    minConfidence,
   });
 
   const handleMergeClick = (group: any, duplicate: any) => {
@@ -31,6 +39,7 @@ export function DuplicatesDashboard() {
     setSelectedGroup(null);
     setSelectedDuplicate(null);
     refetch();
+    refetchAI();
   };
 
   return (
@@ -104,6 +113,21 @@ export function DuplicatesDashboard() {
         </div>
       )}
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="all">
+            <GitMerge className="w-4 h-4 mr-2" />
+            All Duplicates
+          </TabsTrigger>
+          <TabsTrigger value="ai">
+            <Sparkles className="w-4 h-4 mr-2" />
+            AI Suggestions
+          </TabsTrigger>
+        </TabsList>
+
+        {/* All Duplicates Tab */}
+        <TabsContent value="all" className="mt-6 space-y-4">
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-4">
@@ -121,8 +145,8 @@ export function DuplicatesDashboard() {
         </div>
       )}
 
-      {/* Empty State */}
-      {!isLoading && duplicateGroups && duplicateGroups.length === 0 && (
+          {/* Empty State */}
+          {!isLoading && duplicateGroups && duplicateGroups.length === 0 && (
         <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-900 dark:text-green-100">
@@ -131,8 +155,8 @@ export function DuplicatesDashboard() {
         </Alert>
       )}
 
-      {/* Duplicate Groups */}
-      {!isLoading && duplicateGroups && duplicateGroups.length > 0 && (
+          {/* Duplicate Groups */}
+          {!isLoading && duplicateGroups && duplicateGroups.length > 0 && (
         <div className="space-y-4">
           {duplicateGroups.map((group, index) => (
             <Card key={index} className="border-2 border-amber-200 dark:border-amber-800">
@@ -263,7 +287,71 @@ export function DuplicatesDashboard() {
             </Card>
           ))}
         </div>
-      )}
+          )}
+        </TabsContent>
+
+        {/* AI Suggestions Tab */}
+        <TabsContent value="ai" className="mt-6 space-y-4">
+          {/* AI Loading State */}
+          {aiLoading && (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2 mt-2" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-32 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* AI Empty State */}
+          {!aiLoading && aiSuggestions && aiSuggestions.length === 0 && (
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-900 dark:text-blue-100">
+                <strong>No AI suggestions available.</strong> Try lowering the minimum confidence threshold or check the "All Duplicates" tab for manual review.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* AI Suggestions List */}
+          {!aiLoading && aiSuggestions && aiSuggestions.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {aiSuggestions.length} AI-powered merge suggestions sorted by confidence
+                </p>
+                <Select
+                  value={minConfidence.toString()}
+                  onValueChange={(value) => setMinConfidence(parseInt(value))}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Min confidence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="90">High (90%+)</SelectItem>
+                    <SelectItem value="70">Medium (70%+)</SelectItem>
+                    <SelectItem value="50">Low (50%+)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {aiSuggestions.map((suggestion, index) => (
+                <AIMergeSuggestionCard
+                  key={index}
+                  suggestion={suggestion}
+                  onMergeComplete={handleMergeComplete}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Merge Dialog */}
       {selectedGroup && selectedDuplicate && (
