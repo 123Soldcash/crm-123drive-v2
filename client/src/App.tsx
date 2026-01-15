@@ -19,6 +19,7 @@ import { TasksCalendar } from "./pages/TasksCalendar";
 import AgentManagement from "./pages/AgentManagement";
 import BulkAgentAssignment from "./pages/BulkAgentAssignment";
 import ImportDealMachine from "./pages/ImportDealMachine";
+import { DuplicatesDashboard } from "./pages/DuplicatesDashboard";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
       <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
       <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
+      <Route path="/duplicates" component={() => <DashboardLayout><DuplicatesDashboard /></DashboardLayout>} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

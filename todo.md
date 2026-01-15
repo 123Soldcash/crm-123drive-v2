@@ -648,4 +648,46 @@
 - [x] Add "View Lead" and "Merge with this" action buttons
 - [x] Add "Create Anyway" option to bypass duplicate warning
 - [x] Test with various address formats (abbreviated vs full, different casing, GPS coordinates)
-- [ ] Save checkpoint and deliver feature
+- [x] Save checkpoint and deliver feature (version: d2d0360c)
+
+
+## Lead Merge & Duplicate Management Enhancements (Jan 15, 2026)
+
+### Step 1: Lead Merge Functionality
+- [ ] Create mergeLeads backend mutation in routers.ts
+- [ ] Implement merge logic: transfer all contacts, phones, emails to primary lead
+- [ ] Transfer all notes, tasks, photos, visits to primary lead
+- [ ] Transfer all agent assignments to primary lead
+- [ ] Transfer all family members to primary lead
+- [ ] Preserve merge history in database (who merged, when, which leads)
+- [ ] Delete secondary lead after successful merge
+- [ ] Create MergeLeadsDialog component with preview
+- [ ] Show comparison of both leads before merge (address, owner, contacts, etc.)
+- [ ] Add confirmation step with "Primary Lead" selection
+- [ ] Connect merge button in DuplicateDetectionAlert to dialog
+- [ ] Test merge with various scenarios (contacts, notes, tasks, photos)
+
+### Step 2: Owner Name Duplicate Detection
+- [ ] Add owner name fuzzy matching to findDuplicates function
+- [ ] Update searchDuplicates endpoint to include owner name parameter
+- [ ] Add owner name similarity scoring (85% threshold)
+- [ ] Update DuplicateDetectionAlert to search by owner name when available
+- [ ] Test owner name matching with variations (John Smith vs J Smith, etc.)
+
+### Step 3: Duplicates Management Dashboard
+- [ ] Create /duplicates route in App.tsx
+- [ ] Create DuplicatesDashboard page component
+- [ ] Add navigation link to sidebar
+- [ ] Implement getAllDuplicates backend query
+- [ ] Group duplicates by similarity clusters
+- [ ] Display duplicate groups in cards with property details
+- [ ] Add bulk merge functionality for multiple duplicate groups
+- [ ] Add "Mark as Not Duplicate" option
+- [ ] Add filters (by similarity %, by match type, by date)
+- [ ] Test dashboard with existing database properties
+
+### Final Steps
+- [ ] Write comprehensive tests for merge functionality
+- [ ] Test owner name duplicate detection
+- [ ] Test duplicates dashboard UI
+- [ ] Save checkpoint and deliver complete system

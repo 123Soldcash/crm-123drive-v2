@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, UserPlus, Zap } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, UserPlus, Zap, GitMerge } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -32,6 +32,7 @@ const menuItems = [
   { icon: Building2, label: "Properties", path: "/properties" },
   { icon: MapPin, label: "Map View", path: "/map" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks/kanban" },
+  { icon: GitMerge, label: "Duplicates", path: "/duplicates" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
   { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },

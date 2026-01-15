@@ -5,21 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, ExternalLink, GitMerge } from "lucide-react";
 import { Link } from "wouter";
+import { MergeLeadsDialog } from "@/components/MergeLeadsDialog";
 
 interface DuplicateDetectionAlertProps {
   address: string;
+  ownerName?: string;
   lat?: number;
   lng?: number;
   onCreateAnyway?: () => void;
+  currentLeadId?: number;
 }
 
 export function DuplicateDetectionAlert({
   address,
+  ownerName,
   lat,
   lng,
   onCreateAnyway,
+  currentLeadId,
 }: DuplicateDetectionAlertProps) {
   const [debouncedAddress, setDebouncedAddress] = useState(address);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [selectedDuplicate, setSelectedDuplicate] = useState<any>(null);
 
   // Debounce address input (300ms)
   useEffect(() => {
@@ -34,12 +41,13 @@ export function DuplicateDetectionAlert({
   const { data: duplicates, isLoading } = trpc.properties.searchDuplicates.useQuery(
     {
       address: debouncedAddress,
+      ownerName,
       lat,
       lng,
       similarityThreshold: 85,
     },
     {
-      enabled: debouncedAddress.length > 10, // Only search if address is substantial
+      enabled: debouncedAddress.length > 10 || (ownerName && ownerName.length > 3), // Only search if address is substantial
       refetchOnWindowFocus: false,
     }
   );
@@ -128,8 +136,12 @@ export function DuplicateDetectionAlert({
                       size="sm"
                       variant="outline"
                       className="text-xs whitespace-nowrap"
-                      disabled
-                      title="Merge functionality coming soon"
+                      onClick={() => {
+                        setSelectedDuplicate(duplicate);
+                        setMergeDialogOpen(true);
+                      }}
+                      disabled={!currentLeadId}
+                      title={!currentLeadId ? "Save lead first to enable merge" : "Merge with this lead"}
                     >
                       <GitMerge className="h-3 w-3 mr-1" />
                       Merge
@@ -160,6 +172,24 @@ export function DuplicateDetectionAlert({
           )}
         </div>
       </AlertDescription>
+
+      {/* Merge Dialog */}
+      {selectedDuplicate && currentLeadId && (
+        <MergeLeadsDialog
+          open={mergeDialogOpen}
+          onOpenChange={setMergeDialogOpen}
+          primaryLeadId={currentLeadId}
+          secondaryLeadId={selectedDuplicate.propertyId}
+          primaryLeadAddress={address}
+          secondaryLeadAddress={selectedDuplicate.address}
+          primaryLeadOwner={ownerName || null}
+          secondaryLeadOwner={selectedDuplicate.ownerName}
+          onMergeComplete={() => {
+            setMergeDialogOpen(false);
+            setSelectedDuplicate(null);
+          }}
+        />
+      )}
     </Alert>
   );
 }

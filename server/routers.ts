@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { mergeLeads, getMergeHistory } from "./db-merge";
+import { getAllDuplicateGroups } from "./db-duplicates-dashboard";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
@@ -309,6 +311,7 @@ export const appRouter = router({
       .input(
         z.object({
           address: z.string(),
+          ownerName: z.string().optional(),
           lat: z.number().optional(),
           lng: z.number().optional(),
           similarityThreshold: z.number().optional().default(85),
@@ -335,7 +338,8 @@ export const appRouter = router({
           propertiesForMatching,
           input.lat,
           input.lng,
-          input.similarityThreshold
+          input.similarityThreshold,
+          input.ownerName
         );
         
         return duplicates;
@@ -480,6 +484,38 @@ export const appRouter = router({
       .query(async ({ ctx }) => {
         if (!ctx.user?.id) return [];
         return await db.getPendingTransfersForAgent(ctx.user.id);
+      }),
+
+    mergeLeads: protectedProcedure
+      .input(
+        z.object({
+          primaryLeadId: z.number(),
+          secondaryLeadId: z.number(),
+          reason: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user?.id) {
+          throw new Error('User not authenticated');
+        }
+        return await mergeLeads(
+          input.primaryLeadId,
+          input.secondaryLeadId,
+          ctx.user.id,
+          input.reason
+        );
+      }),
+
+    getMergeHistory: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        return await getMergeHistory(input.propertyId);
+      }),
+
+    getAllDuplicateGroups: protectedProcedure
+      .input(z.object({ similarityThreshold: z.number().optional().default(85) }))
+      .query(async ({ input }) => {
+        return await getAllDuplicateGroups(input.similarityThreshold);
       }),
 
     deleteProperty: protectedProcedure

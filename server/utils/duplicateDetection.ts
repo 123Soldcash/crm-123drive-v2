@@ -169,7 +169,8 @@ export function findDuplicates(
   }>,
   searchLat?: number | null,
   searchLng?: number | null,
-  similarityThreshold: number = 85
+  similarityThreshold: number = 85,
+  searchOwnerName?: string | null
 ): DuplicateMatch[] {
   const matches: DuplicateMatch[] = [];
   
@@ -189,6 +190,23 @@ export function findDuplicates(
           similarity: 99.9,
         });
         return; // Skip address matching if GPS matched
+      }
+    }
+    
+    // Check owner name similarity if provided
+    if (searchOwnerName && property.ownerName) {
+      const ownerSimilarity = calculateSimilarity(searchOwnerName, property.ownerName);
+      if (ownerSimilarity >= similarityThreshold) {
+        matches.push({
+          propertyId: property.id,
+          address: property.address,
+          ownerName: property.ownerName,
+          leadTemperature: property.leadTemperature,
+          createdAt: property.createdAt,
+          matchType: ownerSimilarity === 100 ? 'exact' : 'fuzzy',
+          similarity: ownerSimilarity,
+        });
+        return; // Skip address matching if owner matched
       }
     }
     

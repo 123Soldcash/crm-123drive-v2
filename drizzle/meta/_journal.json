@@ -134,6 +134,13 @@
       "when": 1768240442829,
       "tag": "0018_freezing_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1768457019544,
+      "tag": "0020_closed_screwball",
+      "breakpoints": true
     }
   ]
 }

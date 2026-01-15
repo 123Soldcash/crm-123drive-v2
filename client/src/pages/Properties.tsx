@@ -1030,6 +1030,7 @@ function AddPropertyDialog() {
           {!ignoreDuplicates && formData.addressLine1 && (
             <DuplicateDetectionAlert
               address={`${formData.addressLine1}, ${formData.city}, ${formData.state} ${formData.zipcode}`}
+              ownerName={formData.owner1Name}
               lat={formData.lat}
               lng={formData.lng}
               onCreateAnyway={() => setIgnoreDuplicates(true)}
