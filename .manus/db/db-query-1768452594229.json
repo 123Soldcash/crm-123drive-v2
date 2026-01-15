@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, equityAmount, equityPercent, estimatedValue, mortgageAmount \nFROM properties \nWHERE id = 780007;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, equityAmount, equityPercent, estimatedValue, mortgageAmount \nFROM properties \nWHERE id = 780007;",
+  "rows": [
+    {
+      "id": "780007",
+      "equityAmount": "476244",
+      "equityPercent": "1",
+      "estimatedValue": "659000",
+      "mortgageAmount": "525000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tequityAmount\tequityPercent\testimatedValue\tmortgageAmount\n780007\t476244\t1\t659000\t525000\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

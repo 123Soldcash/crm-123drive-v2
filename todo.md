@@ -627,4 +627,12 @@
 - [x] Update existing properties to populate customTags from propertyFlags (112 properties, 398 tags created)
 - [x] Update property detail page to display propertyFlags as custom tags (already working - reads from propertyTags table)
 - [x] Test in UI to verify tags appear in Custom Tags field (Property #780007: Off Market, High Equity, Tax Delinquent, Senior Owner, Empty Nester)
-- [ ] Save checkpoint and deliver feature
+- [x] Save checkpoint and deliver feature (version: d0382256)
+
+
+## Fix Equity Percent Display Bug (Jan 14, 2026)
+- [x] Investigate how equity percent is stored in database (stored as integer, schema expects percentage * 100)
+- [x] Check how equity percent is calculated and displayed in PropertyDetail page (import script was storing 0.73 as 1)
+- [x] Fix display logic to show correct percentage (updated import script + fixed 15 existing properties: 1% → 72-100%)
+- [x] Verify fix in UI with multiple properties (Property #780007: 72% displayed correctly)
+- [ ] Save checkpoint and deliver fix

@@ -288,7 +288,7 @@ try {
         row.construction_type || null,
         row.estimated_value || null,
         row.equity_amount || null,
-        row.equity_percent || null,
+        row.equity_percent ? Math.round(row.equity_percent * 100) : null, // Convert 0.73 to 73
         row.mortgage_amount || row.total_loan_amt || null,
         row.total_loan_balance || null,
         row.total_loan_payment || null,
