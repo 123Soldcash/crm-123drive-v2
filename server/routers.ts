@@ -10,6 +10,7 @@ import { getAIMergeSuggestions, getAISuggestionForPair } from "./db-aiMergeSugge
 import { recordMergeFeedback, getMergeFeedbackStats, getFactorPerformance, getRecentFeedbackTimeline } from "./db-mergeFeedback";
 import { getWeightAdjustmentSummary } from "./utils/aiScoringWeights";
 import { searchLeadsByPhone } from "./db-phoneSearch";
+import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, getStageStats, bulkUpdateStages } from "./db-stageManagement";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
@@ -836,6 +837,60 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         return await db.deleteFamilyMember(input.id);
+      }),
+
+    // Deal Pipeline Stage Management
+    updateDealStage: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        newStage: z.string(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return await updatePropertyStage(
+          input.propertyId,
+          input.newStage,
+          ctx.user!.id,
+          input.notes
+        );
+      }),
+
+    getStageHistory: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        return await getPropertyStageHistory(input.propertyId);
+      }),
+
+    getPropertiesByStage: protectedProcedure
+      .input(z.object({
+        stage: z.string().optional(),
+        agentId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await getPropertiesByStage(input.stage, input.agentId);
+      }),
+
+    getStageStats: protectedProcedure
+      .input(z.object({
+        agentId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await getStageStats(input.agentId);
+      }),
+
+    bulkUpdateStages: protectedProcedure
+      .input(z.object({
+        propertyIds: z.array(z.number()),
+        newStage: z.string(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return await bulkUpdateStages(
+          input.propertyIds,
+          input.newStage,
+          ctx.user!.id,
+          input.notes
+        );
       }),
   }),
 

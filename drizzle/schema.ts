@@ -199,6 +199,33 @@ export const properties = mysqlTable("properties", {
   deskName: varchar("deskName", { length: 100 }), // Desk assignment (e.g., "Sales", "Follow-up")
   deskStatus: mysqlEnum("deskStatus", ["BIN", "ACTIVE", "ARCHIVED"]).default("BIN"), // BIN=new leads, ACTIVE=in progress, ARCHIVED=completed
   
+  // Wholesale Deal Pipeline
+  dealStage: mysqlEnum("dealStage", [
+    "NEW_LEAD",
+    "LEAD_IMPORTED",
+    "SKIP_TRACED",
+    "FIRST_CONTACT_MADE",
+    "ANALYZING_DEAL",
+    "OFFER_PENDING",
+    "FOLLOW_UP_ON_CONTRACT",
+    "UNDER_CONTRACT_A",
+    "MARKETING_TO_BUYERS",
+    "BUYER_INTERESTED",
+    "CONTRACT_B_SIGNED",
+    "ASSIGNMENT_FEE_AGREED",
+    "ESCROW_DEPOSIT_A",
+    "ESCROW_DEPOSIT_B",
+    "INSPECTION_PERIOD",
+    "TITLE_COMPANY",
+    "MUNICIPAL_LIENS",
+    "TITLE_SEARCH",
+    "TITLE_INSURANCE",
+    "CLOSING",
+    "CLOSED_WON",
+    "DEAD_LOST"
+  ]).default("NEW_LEAD"),
+  stageChangedAt: timestamp("stageChangedAt").defaultNow().notNull(),
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -850,3 +877,23 @@ export const mergeFeedback = mysqlTable("mergeFeedback", {
 
 export type MergeFeedback = typeof mergeFeedback.$inferSelect;
 export type InsertMergeFeedback = typeof mergeFeedback.$inferInsert;
+
+
+/**
+ * Stage History table - tracks all deal stage changes for pipeline analytics
+ * Used to calculate time in stage, conversion rates, and bottlenecks
+ */
+export const stageHistory = mysqlTable("stageHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  oldStage: varchar("oldStage", { length: 50 }),
+  newStage: varchar("newStage", { length: 50 }).notNull(),
+  changedBy: int("changedBy").notNull(), // User ID who changed the stage
+  notes: text("notes"), // Optional notes about why stage changed
+  daysInPreviousStage: int("daysInPreviousStage"), // Auto-calculated
+  changedAt: timestamp("changedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StageHistory = typeof stageHistory.$inferSelect;
+export type InsertStageHistory = typeof stageHistory.$inferInsert;

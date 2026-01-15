@@ -792,4 +792,45 @@
 - [x] Add "View Existing Lead" button to navigate to duplicate
 - [x] Add "Add Anyway" option to bypass warning
 - [x] Test with various phone formats ((305) 555-1234, 305-555-1234, 3055551234) - 9/9 tests passing
-- [ ] Save checkpoint and deliver phone duplicate detection
+- [x] Save checkpoint and deliver phone duplicate detection (version: 3ca4bb49)
+
+
+## Wholesale Deal Pipeline System (Jan 15, 2026)
+- [x] Update database schema:
+  - [x] Add dealStage field to properties table (enum with 22 stages)
+  - [x] Create stageHistory table (propertyId, oldStage, newStage, changedBy, changedAt, notes)
+  - [x] Add stageChangedAt timestamp to properties
+- [x] Create backend endpoints:
+  - [x] updateDealStage mutation (propertyId, newStage, notes)
+  - [x] getStageHistory query (propertyId)
+  - [x] getPropertiesByStage query (stage, filters)
+  - [x] getStageStats query (count per stage, avg days in stage)
+  - [x] bulkUpdateStage mutation (multiple properties at once)
+- [x] Create stage configuration:
+  - [x] Define 22 stages with ADHD-friendly colors
+  - [x] Group stages by phase (acquisition/seller/buyer/closing/complete/dead)
+  - [x] Add emoji icons for visual recognition
+  - [x] Color coding: Green=acquisition, Blue=seller, Orange=buyer, Purple=closing
+- [ ] Build Kanban Board page:
+  - [ ] Create PipelineKanban.tsx with drag-and-drop
+  - [ ] Color-coded columns by phase (green/blue/orange/purple)
+  - [ ] Property cards showing: address, owner, value, days in stage
+  - [ ] Click card to open property details
+  - [ ] Stage count badges on column headers
+  - [ ] Simple filters: agent, temperature, date range
+- [ ] Add stage badges to existing pages:
+  - [ ] Properties list - show current stage badge
+  - [ ] Property detail - stage dropdown to change stage
+  - [ ] Dashboard - add pipeline stats widget
+- [ ] ADHD-friendly design:
+  - [ ] Large, clear stage labels
+  - [ ] High contrast colors
+  - [ ] Minimal text, maximum visual
+  - [ ] One-click actions (no nested menus)
+  - [ ] Persistent stage filter in sidebar
+- [ ] Test pipeline system:
+  - [ ] Test drag-and-drop between stages
+  - [ ] Verify stage history tracking
+  - [ ] Test bulk stage updates
+  - [ ] Verify statistics calculations
+- [ ] Save checkpoint and deliver pipeline system
