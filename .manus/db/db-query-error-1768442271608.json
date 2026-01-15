@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  dealMachinePropertyId,\n  address,\n  city,\n  state,\n  zipCode,\n  (SELECT COUNT(*) FROM contacts WHERE contacts.propertyId = properties.id) as contact_count,\n  (SELECT COUNT(*) FROM contactPhones WHERE contactPhones.contactId IN (SELECT id FROM contacts WHERE contacts.propertyId = properties.id)) as phone_count,\n  (SELECT COUNT(*) FROM contactEmails WHERE contactEmails.contactId IN (SELECT id FROM contacts WHERE contacts.propertyId = properties.id)) as email_count\nFROM properties \nWHERE dealMachinePropertyId IN ('1238558064', '1238558191', '1238558333', '1267547430', '1267547553', '1267547891', '1267548239', '1267548524', '1267548596', '1267549028')\nORDER BY dealMachinePropertyId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT \n  dealMachinePropertyId,\n  address,\n  city,\n  state,\n  zipCode,\n  (SELECT COUNT(*) FROM contacts WHERE contacts.propertyId = properties.id) as contact_count,\n  (SELECT COUNT(*) FROM contactPhones WHERE contactPhones.contactId IN (SELECT id FROM contacts WHERE contacts.propertyId = properties.id)) as phone_count,\n  (SELECT COUNT(*) FROM contactEmails WHERE contactEmails.contactId IN (SELECT id FROM contacts WHERE contacts.propertyId = properties.id)) as email_count\nFROM properties \nWHERE dealMachinePropertyId IN ('1238558064', '1238558191', '1238558333', '1267547430', '1267547553', '1267547891', '1267548239', '1267548524', '1267548596', '1267549028')\nORDER BY dealMachinePropertyId;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'address' in 'field list'"
+  ]
+}

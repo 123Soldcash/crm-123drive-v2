@@ -1,0 +1,9 @@
+{
+  "query": "SELECT c.id, c.name, c.relationship, c.flags,\n  (SELECT COUNT(*) FROM contactPhones WHERE contactId = c.id) as phone_count,\n  (SELECT COUNT(*) FROM contactEmails WHERE contactId = c.id) as email_count\nFROM contacts c\nWHERE c.propertyId = 750033;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.name, c.relationship, c.flags,\n  (SELECT COUNT(*) FROM contactPhones WHERE contactId = c.id) as phone_count,\n  (SELECT COUNT(*) FROM contactEmails WHERE contactId = c.id) as email_count\nFROM contacts c\nWHERE c.propertyId = 750033;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 52
+}
