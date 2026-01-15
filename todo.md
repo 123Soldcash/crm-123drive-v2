@@ -903,4 +903,14 @@
 - [x] Add stage dropdown filter next to existing filters
 - [x] Filter properties by selected Pipeline stage
 - [x] Show stage count in filter dropdown
-- [ ] Save checkpoint and deliver all features
+- [x] Save checkpoint and deliver all features
+
+## CRITICAL BUG FIX - Drizzle ORM Configuration (Jan 15, 2026)
+- [x] Verify current db.ts getDb() implementation
+- [x] Apply schema configuration to drizzle initialization
+- [x] Import all schema tables including stageHistory
+- [x] Add defensive check for db.query availability
+- [x] Restart server to apply configuration changes
+- [x] Test Pipeline move functionality (1336 Nw 44th St)
+- [x] Verify no "Cannot read properties of undefined" errors
+- [ ] Save checkpoint with working Pipeline move

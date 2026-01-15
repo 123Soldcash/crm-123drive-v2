@@ -1,15 +1,23 @@
 import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { ne } from 'drizzle-orm';
+import * as schema from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // ✅ CRITICAL: Pass schema to enable db.query.* relational API
+      _db = drizzle(process.env.DATABASE_URL, { schema, mode: 'default' });
+      
+      // Defensive check to catch configuration issues early
+      if (!_db.query) {
+        console.error("[Database] Query API not initialized - schema missing?");
+        throw new Error("Drizzle query API not available");
+      }
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
