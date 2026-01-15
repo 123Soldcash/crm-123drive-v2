@@ -137,6 +137,11 @@ function DroppableStageColumn({
     id: stageConfig.id,
   });
 
+  // Calculate total estimated value for this stage
+  const totalValue = properties.reduce((sum, prop) => {
+    return sum + (prop.estimatedValue || 0);
+  }, 0);
+
   return (
     <div className="flex-shrink-0 w-80">
       {/* Column Header */}
@@ -151,6 +156,19 @@ function DroppableStageColumn({
               <p className="text-xs text-muted-foreground">
                 {properties.length} lead{properties.length !== 1 ? "s" : ""}
               </p>
+              {/* Total Value Display */}
+              {totalValue > 0 && (
+                <div className="flex items-center gap-1 mt-1">
+                  <DollarSign className="w-3 h-3 text-green-600" />
+                  <span className="text-xs font-semibold text-green-600">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 0,
+                    }).format(totalValue)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <Button

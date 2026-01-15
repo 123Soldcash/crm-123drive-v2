@@ -878,4 +878,15 @@
 - [x] Fix db-stageManagement.ts to handle property updates correctly (added null checks)
 - [x] Test moving existing properties from search results to Pipeline stages
 - [x] Verify stage history is recorded correctly
-- [ ] Save checkpoint with working move functionality
+- [x] Save checkpoint with working move functionality (version: 077eb775)
+
+
+## Pipeline Enhancements (Jan 15, 2026)
+- [x] Add stage badges to Properties list page
+- [x] Show color-coded stage badge on each property card
+- [x] Badge shows stage name with emoji icon
+- [x] Add pipeline value tracking to Kanban columns
+- [x] Calculate total estimated value in each Pipeline stage
+- [x] Show count and total value in column headers
+- [x] Guide user to merge duplicate properties (1441 Nw 179th St)
+- [ ] Save checkpoint and deliver enhancements

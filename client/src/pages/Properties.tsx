@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus } from "lucide-react";
+import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus, Workflow } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
 import { DeskDialog } from "@/components/DeskDialog";
 import { AddressAutocomplete, type AddressDetails } from "@/components/AddressAutocomplete";
 import { DuplicateDetectionAlert } from "@/components/DuplicateDetectionAlert";
+import { STAGE_CONFIGS, type DealStage } from "@/lib/stageConfig";
 
 // Common status tags found in the data
 const STATUS_TAGS = [
@@ -779,6 +780,26 @@ export default function Properties() {
                       <div className="text-sm text-muted-foreground">
                         {property.city}, {property.state}
                       </div>
+                      
+                      {/* Deal Stage Badge */}
+                      {property.dealStage && (() => {
+                        const stageConfig = STAGE_CONFIGS.find((s) => s.id === property.dealStage);
+                        if (stageConfig) {
+                          return (
+                            <div className="mt-2">
+                              <Badge
+                                className={`${stageConfig.bgColor} ${stageConfig.color} border-0 font-semibold px-2 py-1 text-xs flex items-center gap-1 w-fit`}
+                              >
+                                <Workflow className="w-3 h-3" />
+                                <span>{stageConfig.icon}</span>
+                                <span>{stageConfig.shortLabel}</span>
+                              </Badge>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                       {/* Property Flags from DealMachine */}
                       {property.propertyFlags && property.propertyFlags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
