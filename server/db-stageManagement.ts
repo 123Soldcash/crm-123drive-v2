@@ -13,6 +13,10 @@ export async function updatePropertyStage(
 ) {
   const db = await getDb();
   
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  
   // Get current property to calculate days in previous stage
   const property = await db.query.properties.findFirst({
     where: eq(properties.id, propertyId),
@@ -60,6 +64,11 @@ export async function updatePropertyStage(
  */
 export async function getPropertyStageHistory(propertyId: number) {
   const db = await getDb();
+  
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  
   return await db.query.stageHistory.findMany({
     where: eq(stageHistory.propertyId, propertyId),
     orderBy: (stageHistory, { desc }) => [desc(stageHistory.changedAt)],
@@ -71,6 +80,11 @@ export async function getPropertyStageHistory(propertyId: number) {
  */
 export async function getPropertiesByStage(stage?: string, agentId?: number) {
   const db = await getDb();
+  
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  
   const conditions = [];
   
   if (stage) {
@@ -92,6 +106,11 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
  */
 export async function getStageStats(agentId?: number) {
   const db = await getDb();
+  
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  
   const conditions = agentId ? [eq(properties.assignedAgentId, agentId)] : [];
   
   // Count properties in each stage

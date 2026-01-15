@@ -870,4 +870,12 @@
 - [x] Fix search query to return results from database (added search endpoint)
 - [x] Test search with known property addresses
 - [x] Verify search results show in QuickAddLeadDialog
-- [ ] Save checkpoint with working search
+- [x] Save checkpoint with working search (version: 45706a3b)
+
+
+## Fix Move Button Error in Pipeline (Jan 15, 2026)
+- [x] Debug updateDealStage mutation error (Cannot read properties of undefined)
+- [x] Fix db-stageManagement.ts to handle property updates correctly (added null checks)
+- [x] Test moving existing properties from search results to Pipeline stages
+- [x] Verify stage history is recorded correctly
+- [ ] Save checkpoint with working move functionality
