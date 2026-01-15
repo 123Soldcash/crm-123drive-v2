@@ -18,9 +18,36 @@ export default function ImportProperties() {
   const [file, setFile] = useState<File | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [importMode, setImportMode] = useState<"standard" | "dealmachine">("dealmachine");
+  const [importProgress, setImportProgress] = useState<{
+    phase: string;
+    current: number;
+    total: number;
+    message: string;
+  } | null>(null);
 
   const { data: agents, isLoading: loadingAgents } = trpc.users.listAgents.useQuery();
   const utils = trpc.useUtils();
+
+  const uploadDealMachine = trpc.importDealMachine.uploadDealMachine.useMutation({
+    onSuccess: (result) => {
+      utils.properties.list.invalidate();
+      setFile(null);
+      setSelectedAgentId("");
+      setIsUploading(false);
+      setImportProgress(null);
+      
+      toast.success(
+        `Successfully imported ${result.propertiesCount} properties, ${result.contactsCount} contacts, ${result.phonesCount} phones, ${result.emailsCount} emails!`,
+        { duration: 6000 }
+      );
+    },
+    onError: (error) => {
+      setIsUploading(false);
+      setImportProgress(null);
+      toast.error(`DealMachine import failed: ${error.message}`);
+    },
+  });
 
   const uploadProperties = trpc.import.uploadProperties.useMutation({
     onSuccess: (result) => {
@@ -65,22 +92,32 @@ export default function ImportProperties() {
       toast.error("Please select a file to import");
       return;
     }
-    // Agent selection is now optional
 
     setIsUploading(true);
+    setImportProgress({ phase: "Preparing", current: 0, total: 100, message: "Reading file..." });
 
     try {
-      // Read file as base64
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         
         try {
-          // Call tRPC mutation
-          await uploadProperties.mutateAsync({
-            fileData: base64.split(",")[1], // Remove data:... prefix
-            assignedAgentId: selectedAgentId === "unassigned" ? null : Number(selectedAgentId),
-          });
+          if (importMode === "dealmachine") {
+            // DealMachine 2-phase import
+            setImportProgress({ phase: "Phase 1", current: 0, total: 100, message: "Importing properties and contacts..." });
+            await uploadDealMachine.mutateAsync({
+              fileData: base64.split(",")[1],
+              assignedAgentId: selectedAgentId === "unassigned" ? null : Number(selectedAgentId),
+            });
+          } else {
+            // Standard import
+            setImportProgress({ phase: "Importing", current: 0, total: 100, message: "Processing properties..." });
+            await uploadProperties.mutateAsync({
+              fileData: base64.split(",")[1],
+              assignedAgentId: selectedAgentId === "unassigned" ? null : Number(selectedAgentId),
+            });
+          }
+          
           setSelectedAgentId("");
           const fileInput = document.getElementById("file-input") as HTMLInputElement;
           if (fileInput) fileInput.value = "";
@@ -89,6 +126,7 @@ export default function ImportProperties() {
           toast.error("Failed to import properties. Please check the file format.");
         } finally {
           setIsUploading(false);
+          setImportProgress(null);
         }
       };
 
@@ -97,6 +135,7 @@ export default function ImportProperties() {
       console.error("File read error:", error);
       toast.error("Failed to read file");
       setIsUploading(false);
+      setImportProgress(null);
     }
   };
 
@@ -105,9 +144,82 @@ export default function ImportProperties() {
       <div>
         <h1 className="text-3xl font-bold">Import Properties</h1>
         <p className="text-muted-foreground mt-2">
-          Upload an Excel file to import properties and assign them to a birddog agent
+          Upload a DealMachine Excel file to automatically import properties with all contacts, phones, and emails
         </p>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Import Mode</CardTitle>
+          <CardDescription>
+            Choose the import mode based on your file source
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button
+              variant={importMode === "dealmachine" ? "default" : "outline"}
+              onClick={() => setImportMode("dealmachine")}
+              disabled={isUploading}
+              className="flex-1"
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              DealMachine Import
+            </Button>
+            <Button
+              variant={importMode === "standard" ? "default" : "outline"}
+              onClick={() => setImportMode("standard")}
+              disabled={isUploading}
+              className="flex-1"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Standard Import
+            </Button>
+          </div>
+          {importMode === "dealmachine" && (
+            <div className="mt-4 p-3 bg-green-50 dark:bg-green-950 rounded-md">
+              <p className="text-sm text-green-900 dark:text-green-100">
+                <strong>DealMachine Mode:</strong> Automatically imports all 20 contacts per property with phones, emails, property flags, and enriches addresses via Google Maps.
+              </p>
+            </div>
+          )}
+          {importMode === "standard" && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                <strong>Standard Mode:</strong> Basic property import for custom Excel formats.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {importProgress && (
+        <Card className="mb-6 border-blue-500">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 animate-pulse" />
+              Import in Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-medium">{importProgress.phase}</span>
+                  <span className="text-muted-foreground">{importProgress.current}%</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${importProgress.current}%` }}
+                  ></div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">{importProgress.message}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -186,23 +298,51 @@ export default function ImportProperties() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3 text-sm text-muted-foreground">
-            <p>
-              <strong>1. Prepare your Excel file:</strong> Ensure your file contains columns for address, city, state, zipcode, owner information, and contact details.
-            </p>
-            <p>
-              <strong>2. Select the file:</strong> Click "Choose File" and select your Excel file from your computer.
-            </p>
-            <p>
-              <strong>3. Assign to agent (optional):</strong> Choose which birddog agent will manage these properties. You can also import without assigning and assign later using Bulk Assign Agents.
-            </p>
-            <p>
-              <strong>4. Import:</strong> Click "Import Properties" to upload and process the file. This may take a few moments depending on the file size.
-            </p>
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
-              <p className="text-blue-900 dark:text-blue-100">
-                <strong>Note:</strong> Agent assignment is optional. Properties imported without an agent can be assigned later using the Bulk Assign Agents feature. Each agent can only access their assigned properties, but as an admin, you can view all properties from all agents.
-              </p>
-            </div>
+            {importMode === "dealmachine" ? (
+              <>
+                <p>
+                  <strong>1. Export from DealMachine:</strong> Download your properties Excel file from DealMachine.
+                </p>
+                <p>
+                  <strong>2. Select the file:</strong> Click "Choose File" and select your DealMachine Excel file.
+                </p>
+                <p>
+                  <strong>3. Assign to agent (optional):</strong> Choose which birddog agent will manage these properties.
+                </p>
+                <p>
+                  <strong>4. Import:</strong> Click "Import Properties" to start the 2-phase import process:
+                </p>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li><strong>Phase 1:</strong> Import all properties, contacts (up to 20 per property), phones, and emails</li>
+                  <li><strong>Phase 2:</strong> Enrich missing addresses using GPS coordinates via Google Maps</li>
+                </ul>
+                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-md">
+                  <p className="text-amber-900 dark:text-amber-100">
+                    <strong>What gets imported:</strong> Properties, property flags (High Equity, Off Market, etc.), up to 20 contacts per property, up to 3 phones per contact, up to 3 emails per contact, GPS coordinates, and enriched addresses.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>
+                  <strong>1. Prepare your Excel file:</strong> Ensure your file contains columns for address, city, state, zipcode, owner information, and contact details.
+                </p>
+                <p>
+                  <strong>2. Select the file:</strong> Click "Choose File" and select your Excel file from your computer.
+                </p>
+                <p>
+                  <strong>3. Assign to agent (optional):</strong> Choose which birddog agent will manage these properties.
+                </p>
+                <p>
+                  <strong>4. Import:</strong> Click "Import Properties" to upload and process the file.
+                </p>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
+                  <p className="text-blue-900 dark:text-blue-100">
+                    <strong>Note:</strong> Agent assignment is optional. Properties imported without an agent can be assigned later using the Bulk Assign Agents feature.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

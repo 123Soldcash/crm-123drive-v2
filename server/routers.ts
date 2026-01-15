@@ -12,6 +12,7 @@ import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
 import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
+import { importDealMachineRouter } from "./routers/import-dealmachine";
 
 export const appRouter = router({
   system: systemRouter,
@@ -1060,6 +1061,8 @@ export const appRouter = router({
       }),
   }),
 
+  importDealMachine: importDealMachineRouter,
+  
   import: router({
     uploadProperties: protectedProcedure
       .input(
