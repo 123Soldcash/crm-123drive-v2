@@ -33,10 +33,11 @@ export interface StageConfig {
   bgColor: string; // Background color
   phase: "acquisition" | "seller" | "buyer" | "closing" | "complete" | "dead";
   icon: string; // Emoji for visual recognition
+  isPipeline: boolean; // true = show in Pipeline Kanban, false = Properties list only
 }
 
 export const STAGE_CONFIGS: StageConfig[] = [
-  // 🟢 Acquisition Phase (Green)
+  // 🔍 PRE-PIPELINE STAGES (Properties List Only - Not shown in Pipeline Kanban)
   {
     id: "NEW_LEAD",
     label: "New Lead",
@@ -45,6 +46,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-green-50 border-green-200",
     phase: "acquisition",
     icon: "🎯",
+    isPipeline: false,
   },
   {
     id: "LEAD_IMPORTED",
@@ -54,6 +56,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-green-50 border-green-200",
     phase: "acquisition",
     icon: "📥",
+    isPipeline: false,
   },
   {
     id: "SKIP_TRACED",
@@ -63,9 +66,8 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-green-50 border-green-200",
     phase: "acquisition",
     icon: "🔍",
+    isPipeline: false,
   },
-
-  // 🔵 Seller Phase (Blue)
   {
     id: "FIRST_CONTACT_MADE",
     label: "First Contact Made",
@@ -74,7 +76,11 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-blue-50 border-blue-200",
     phase: "seller",
     icon: "📞",
+    isPipeline: false,
   },
+
+  // 💼 PIPELINE STAGES (Shown in Pipeline Kanban - Seller shows interest)
+  // 🔵 Seller Phase (Blue)
   {
     id: "ANALYZING_DEAL",
     label: "Analyzing Deal",
@@ -83,6 +89,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-blue-50 border-blue-200",
     phase: "seller",
     icon: "📊",
+    isPipeline: true, // PIPELINE ENTRY POINT
   },
   {
     id: "OFFER_PENDING",
@@ -92,6 +99,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-blue-50 border-blue-200",
     phase: "seller",
     icon: "💰",
+    isPipeline: true,
   },
   {
     id: "FOLLOW_UP_ON_CONTRACT",
@@ -101,6 +109,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-blue-50 border-blue-200",
     phase: "seller",
     icon: "📋",
+    isPipeline: true,
   },
   {
     id: "UNDER_CONTRACT_A",
@@ -110,6 +119,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-blue-50 border-blue-200",
     phase: "seller",
     icon: "✅",
+    isPipeline: true,
   },
 
   // 🟠 Buyer Phase (Orange)
@@ -121,6 +131,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "📢",
+    isPipeline: true,
   },
   {
     id: "BUYER_INTERESTED",
@@ -130,6 +141,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "👤",
+    isPipeline: true,
   },
   {
     id: "CONTRACT_B_SIGNED",
@@ -139,6 +151,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "📝",
+    isPipeline: true,
   },
   {
     id: "ASSIGNMENT_FEE_AGREED",
@@ -148,6 +161,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "💵",
+    isPipeline: true,
   },
   {
     id: "ESCROW_DEPOSIT_A",
@@ -157,6 +171,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "💰",
+    isPipeline: true,
   },
   {
     id: "ESCROW_DEPOSIT_B",
@@ -166,6 +181,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "💰",
+    isPipeline: true,
   },
   {
     id: "INSPECTION_PERIOD",
@@ -175,6 +191,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-orange-50 border-orange-200",
     phase: "buyer",
     icon: "🔎",
+    isPipeline: true,
   },
 
   // 🟣 Closing Phase (Purple)
@@ -186,6 +203,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-purple-50 border-purple-200",
     phase: "closing",
     icon: "🏛️",
+    isPipeline: true,
   },
   {
     id: "MUNICIPAL_LIENS",
@@ -195,6 +213,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-purple-50 border-purple-200",
     phase: "closing",
     icon: "📋",
+    isPipeline: true,
   },
   {
     id: "TITLE_SEARCH",
@@ -204,6 +223,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-purple-50 border-purple-200",
     phase: "closing",
     icon: "🔍",
+    isPipeline: true,
   },
   {
     id: "TITLE_INSURANCE",
@@ -213,6 +233,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-purple-50 border-purple-200",
     phase: "closing",
     icon: "🛡️",
+    isPipeline: true,
   },
   {
     id: "CLOSING",
@@ -222,6 +243,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-purple-50 border-purple-200",
     phase: "closing",
     icon: "🎉",
+    isPipeline: true,
   },
 
   // ✅ Complete (Dark Green)
@@ -233,6 +255,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-emerald-50 border-emerald-200",
     phase: "complete",
     icon: "✅",
+    isPipeline: true,
   },
 
   // ❌ Dead (Red)
@@ -244,6 +267,7 @@ export const STAGE_CONFIGS: StageConfig[] = [
     bgColor: "bg-red-50 border-red-200",
     phase: "dead",
     icon: "❌",
+    isPipeline: false, // Dead leads don't show in pipeline
   },
 ];
 

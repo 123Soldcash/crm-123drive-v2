@@ -261,10 +261,15 @@ export default function PipelineKanban() {
         </p>
       </div>
 
+      {/* Info Banner */}
+      <div className="text-sm text-muted-foreground px-4 py-3 bg-muted/30 rounded-lg border">
+        💼 <strong>Pipeline View:</strong> Showing only active deals (seller interested). Pre-pipeline stages (New Lead, Skip Traced, First Contact) remain in Properties list.
+      </div>
+
       {/* Kanban Board */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {STAGE_CONFIGS.filter((s) => s.phase !== "dead").map((stageConfig) => (
+          {STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").map((stageConfig) => (
             <DroppableStageColumn
               key={stageConfig.id}
               stageConfig={stageConfig}

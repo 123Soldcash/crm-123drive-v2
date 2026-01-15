@@ -841,4 +841,14 @@
 - [x] Automatically set dealStage to the column where button was clicked
 - [x] Show success toast and add new card to column immediately
 - [x] Test creating leads at different stages
-- [ ] Save checkpoint and deliver enhanced Pipeline
+- [x] Save checkpoint and deliver enhanced Pipeline (version: e36655e0)
+
+
+## Pipeline Restructure - Start from Analyzing Deal (Jan 15, 2026)
+- [x] Update stageConfig.ts to mark pre-pipeline stages (New Lead, Imported, Skip Traced, First Contact)
+- [x] Add isPipeline flag to stage configuration
+- [x] Filter Kanban board to show only isPipeline=true stages
+- [x] Update stage definitions to match refined flow (17 pipeline stages)
+- [x] Ensure pre-pipeline stages still work in Properties list
+- [x] Add info banner explaining pipeline vs pre-pipeline
+- [ ] Save checkpoint and deliver refined pipeline structure
