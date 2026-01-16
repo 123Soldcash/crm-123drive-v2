@@ -913,4 +913,19 @@
 - [x] Restart server to apply configuration changes
 - [x] Test Pipeline move functionality (1336 Nw 44th St)
 - [x] Verify no "Cannot read properties of undefined" errors
-- [ ] Save checkpoint with working Pipeline move
+- [x] Save checkpoint with working Pipeline move
+
+## Desk Name Update (Jan 15, 2026)
+- [x] Find where DESK_5 is defined in schema or constants
+- [x] Rename DESK_5 to Desk_Deep_Search
+- [x] Update database if needed (0 rows affected - no existing DESK_5 records)
+- [ ] Test in property details page
+- [ ] Save checkpoint with updated desk name
+
+## URGENT - Zapier Integration Broken (Jan 15, 2026)
+- [x] Review what API endpoints Zapier was using
+- [x] Check if recent updates changed tRPC router paths
+- [x] Identify what broke the Zapier connection (dev URL changes)
+- [ ] Fix API endpoints or document new connection details
+- [ ] Test Zapier webhook/API connection
+- [ ] Provide updated Zapier configuration to user

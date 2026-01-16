@@ -506,7 +506,7 @@ export default function PropertyDetail() {
                   ? 'bg-blue-50 border-blue-500'
                   : property.deskName === 'DESK_4'
                   ? 'bg-pink-50 border-pink-500'
-                  : property.deskName === 'DESK_5'
+                  : property.deskName === 'Desk_Deep_Search'
                   ? 'bg-orange-50 border-orange-500'
                   : 'bg-gray-100 border-gray-400'
               }`}>
@@ -524,7 +524,7 @@ export default function PropertyDetail() {
                       ? '🔵'
                       : property.deskName === 'DESK_4'
                       ? '🩷'
-                      : property.deskName === 'DESK_5'
+                      : property.deskName === 'Desk_Deep_Search'
                       ? '🟠'
                       : '🗑️'}
                   </span>
@@ -568,10 +568,10 @@ export default function PropertyDetail() {
                     <span>DESK_4</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="DESK_5">
+                <SelectItem value="Desk_Deep_Search">
                   <div className="flex items-center gap-2">
                     <span>🟠</span>
-                    <span>DESK_5</span>
+                    <span>Desk_Deep_Search</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="ARCHIVED">
