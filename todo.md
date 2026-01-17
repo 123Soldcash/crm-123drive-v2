@@ -929,3 +929,13 @@
 - [ ] Fix API endpoints or document new connection details
 - [ ] Test Zapier webhook/API connection
 - [ ] Provide updated Zapier configuration to user
+
+## Add to Pipeline Button in Property Details (Jan 15, 2026) - COMPLETED ✅
+- [x] Add "Add to Pipeline" button to PropertyDetail page header
+- [x] Create stage selection dialog with all Pipeline stages
+- [x] Connect to updateDealStage tRPC mutation
+- [x] Show success toast after adding to Pipeline
+- [x] Update UI to show current Pipeline stage if already in Pipeline
+- [x] Test with sample property (285 Sw 12th St → Offer Pending)
+- [x] Verify property appears in Pipeline Kanban board
+- [x] ADHD-friendly design with blue button and TrendingUp icon

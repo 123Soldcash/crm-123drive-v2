@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ChevronLeft, ChevronRight, MapPin, Phone, Mail, User, Calendar, Trash2, Navigation, ExternalLink, Flame, Snowflake, ThermometerSun, Check, X, Plus, Users, ArrowRightLeft, History, Star } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, MapPin, Phone, Mail, User, Calendar, Trash2, Navigation, ExternalLink, Flame, Snowflake, ThermometerSun, Check, X, Plus, Users, ArrowRightLeft, History, Star, TrendingUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { DeepSearchTabs } from "@/components/DeepSearchTabs";
+import { STAGE_CONFIGS } from "@/lib/stageConfig";
 import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
@@ -53,6 +54,8 @@ export default function PropertyDetail() {
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
   const [showDeepSearch, setShowDeepSearch] = useState(true);
+  const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
+  const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();
   const [, navigate] = useRoute("/properties/:id");
 
@@ -141,6 +144,18 @@ export default function PropertyDetail() {
     },
   });
 
+  const updateDealStage = trpc.properties.updateDealStage.useMutation({
+    onSuccess: () => {
+      utils.properties.getById.invalidate({ id: propertyId });
+      setPipelineDialogOpen(false);
+      setSelectedPipelineStage("");
+      toast.success("Property added to Pipeline successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to add to Pipeline: ${error.message}`);
+    },
+  });
+
   const assignAgent = trpc.properties.assignAgent.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
@@ -222,6 +237,17 @@ export default function PropertyDetail() {
       return;
     }
     createNote.mutate({ propertyId, content: noteContent });
+  };
+
+  const handleAddToPipeline = () => {
+    if (!selectedPipelineStage) {
+      toast.error("Please select a Pipeline stage");
+      return;
+    }
+    updateDealStage.mutate({
+      propertyId,
+      newStage: selectedPipelineStage,
+    });
   };
 
   if (isLoading) {
@@ -320,6 +346,53 @@ export default function PropertyDetail() {
                 onSuccess={() => window.location.reload()}
               />
             )}
+            <Dialog open={pipelineDialogOpen} onOpenChange={setPipelineDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Add to Pipeline
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add to Deal Pipeline</DialogTitle>
+                  <DialogDescription>
+                    Select the Pipeline stage to add this property to. You can move it between stages later.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Select Pipeline Stage</label>
+                    <Select value={selectedPipelineStage} onValueChange={setSelectedPipelineStage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a stage..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
+                          <SelectItem key={stage.id} value={stage.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{stage.icon}</span>
+                              <span>{stage.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPipelineDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddToPipeline}
+                    disabled={!selectedPipelineStage}
+                  >
+                    Add to Pipeline
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
