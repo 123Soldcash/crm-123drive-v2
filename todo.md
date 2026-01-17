@@ -971,3 +971,16 @@
 - [x] Verify only one Family Tree section appears
 - [x] All 4 major sections now hidden by default (Family Tree, Deep Search, Field Visit, Desk-Chris Notes)
 - [x] Color-coded system complete: Yellow (Family), Blue (Research), Pink (Birddog), Green (Chris Notes)
+
+
+## Notes Display & Screenshot Paste Features (Jan 17, 2026) - COMPLETED ✅
+- [x] Change Desk-Chris Notes display to table format (Date | Agent | Notes)
+- [x] Change general Notes display to table format (Date | Agent | Notes | Actions)
+- [x] Fix note duplication - Desk-Chris Notes should only show noteType='desk-chris'
+- [x] Fix note duplication - General Notes should only show noteType='general'
+- [x] Add Hide/Show toggle to Property Photos section (default hidden)
+- [x] Implement screenshot paste functionality (Ctrl+V) in Notes section
+- [x] Auto-upload pasted images to S3 storage (existing bulk upload functionality)
+- [x] Display pasted images inline with captions
+- [x] Table format implemented with sticky headers and hover effects
+- [x] Screenshot paste with toast notification "Screenshot pasted! Add a caption if needed."

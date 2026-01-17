@@ -82,68 +82,80 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
         <>
           {/* Add New Note */}
           <div className="mb-6 space-y-3">
-        <Textarea
-          placeholder="Add a new Desk-Chris note... (timestamp will be added automatically)"
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          rows={3}
-          className="resize-none bg-white"
-        />
-        <Button
-          onClick={handleAddNote}
-          disabled={createNoteMutation.isPending || !newNote.trim()}
-          className="w-full"
-        >
-          {createNoteMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Adding Note...
-            </>
-          ) : (
-            "Add Desk-Chris Note"
-          )}
-        </Button>
-      </div>
-
-      {/* Notes List */}
-      <div className="space-y-3">
-        <h4 className="font-medium text-sm text-gray-700">
-          Notes History ({deskChrisNotes.length})
-        </h4>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Textarea
+              placeholder="Add a new Desk-Chris note... (timestamp will be added automatically)"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              rows={3}
+              className="resize-none bg-white"
+            />
+            <Button
+              onClick={handleAddNote}
+              disabled={createNoteMutation.isPending || !newNote.trim()}
+              className="w-full"
+            >
+              {createNoteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding Note...
+                </>
+              ) : (
+                "Add Desk-Chris Note"
+              )}
+            </Button>
           </div>
-        ) : deskChrisNotes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <StickyNote className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No Desk-Chris notes yet</p>
-            <p className="text-sm">Add your first note above</p>
-          </div>
-        ) : (
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {deskChrisNotes.map((note) => (
-              <div
-                key={note.id}
-                className="bg-white p-4 rounded-lg border border-green-200 shadow-sm"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span className="text-xs font-medium text-green-600">
-                    {formatTimestamp(note.createdAt)}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    by {note.userName || "Unknown"}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {note.content}
-                </p>
+
+          {/* Notes List - Table Format (ADHD-Friendly) */}
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm text-gray-700">
+              Notes History ({deskChrisNotes.length})
+            </h4>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
-            ))}
+            ) : deskChrisNotes.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <StickyNote className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <p>No Desk-Chris notes yet</p>
+                <p className="text-sm">Add your first note above</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full border-collapse bg-white">
+                  <thead className="sticky top-0 bg-green-100">
+                    <tr>
+                      <th className="border border-green-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-48">
+                        Date
+                      </th>
+                      <th className="border border-green-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-32">
+                        Agent
+                      </th>
+                      <th className="border border-green-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                        Notes
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deskChrisNotes.map((note) => (
+                      <tr key={note.id} className="hover:bg-green-50">
+                        <td className="border border-green-200 px-4 py-2 text-sm text-gray-700">
+                          {formatTimestamp(note.createdAt)}
+                        </td>
+                        <td className="border border-green-200 px-4 py-2 text-sm text-gray-700">
+                          {note.userName || "Unknown"}
+                        </td>
+                        <td className="border border-green-200 px-4 py-2 text-sm text-gray-700 whitespace-pre-wrap">
+                          {note.content}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
-      </div>
         </>
       )}
     </Card>

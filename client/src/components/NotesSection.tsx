@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +17,45 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<Record<number, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Screenshot paste functionality (Lightshot-style)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (!blob) continue;
+
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const imageData = event.target?.result as string;
+            setSelectedImages((prev) => [...prev, imageData]);
+            toast.success("Screenshot pasted! Add a caption if needed.");
+          };
+          reader.readAsDataURL(blob);
+        }
+      }
+    };
+
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.addEventListener("paste", handlePaste);
+      return () => textarea.removeEventListener("paste", handlePaste);
+    }
+  }, []);
 
   const utils = trpc.useUtils();
 
-  const { data: notes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
+  const { data: allNotes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
+  
+  // Filter to show only general notes (not desk-chris notes)
+  const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
 
   const createNoteMutation = trpc.notes.create.useMutation({
     onSuccess: async (note) => {
@@ -108,6 +143,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     createNoteMutation.mutate({
       propertyId,
       content: noteText,
+      noteType: "general", // Explicitly set as general note
     });
   };
 
@@ -133,7 +169,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
         {/* Add Note Form */}
         <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
           <Textarea
-            placeholder="Add a note about this property..."
+            ref={textareaRef}
+            placeholder="Add a note about this property... (Ctrl+V to paste screenshots)"
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             rows={3}
@@ -224,31 +261,65 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </Button>
         </div>
 
-        {/* Notes List */}
+        {/* Notes List - Table Format (ADHD-Friendly) */}
         <div className="space-y-3">
+          <h4 className="font-medium text-sm text-gray-700">
+            Notes History ({notes.length})
+          </h4>
           {notes && notes.length > 0 ? (
-            notes.map((note) => (
-              <div key={note.id} className="p-4 border rounded-lg space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <span>{note.userName}</span>
-                      <span>•</span>
-                      <span>{formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}</span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteNoteMutation.mutate({ id: note.id })}
-                    disabled={deleteNoteMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="w-full border-collapse bg-white">
+                <thead className="sticky top-0 bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-48">
+                      Date
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-32">
+                      Agent
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                      Notes
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-center text-sm font-semibold text-gray-700 w-16">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {notes.map((note) => (
+                    <tr key={note.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-200 px-4 py-2 text-sm text-gray-700">
+                        {new Date(note.createdAt).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-sm text-gray-700">
+                        {note.userName || "Unknown"}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-sm text-gray-700 whitespace-pre-wrap">
+                        {note.content}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteNoteMutation.mutate({ id: note.id })}
+                          disabled={deleteNoteMutation.isPending}
+                          className="h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
               No notes yet. Add your first note above.

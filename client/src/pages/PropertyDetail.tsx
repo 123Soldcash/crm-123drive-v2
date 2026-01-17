@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { PropertyCheckIn } from "@/components/PropertyCheckIn";
-import { VisitHistory, PhotoGallery } from "@/components/VisitHistory";
+import { VisitHistory } from "@/components/VisitHistory";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 import { ContactManagement } from "@/components/ContactManagement";
 import { DeskChrisNotes } from "@/components/DeskChrisNotes";
