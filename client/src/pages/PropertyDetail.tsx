@@ -54,6 +54,7 @@ export default function PropertyDetail() {
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
   const [showDeepSearch, setShowDeepSearch] = useState(true);
+  const [showFamilyTree, setShowFamilyTree] = useState(true);
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();
@@ -868,14 +869,30 @@ export default function PropertyDetail() {
         </CardContent>
       </Card>
 
-      {/* Family Tree */}
-      <Card>
-        <CardContent className="pt-6">
-          <FamilyTreeEnhanced propertyId={propertyId} />
-        </CardContent>
+      <PropertyTasks propertyId={propertyId} />
+
+      {/* Family Tree - ADHD-friendly yellow background */}
+      <Card className="bg-yellow-50 border-yellow-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Family Tree</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFamilyTree(!showFamilyTree)}
+            className="text-xs"
+          >
+            {showFamilyTree ? "Hide" : "Show"}
+          </Button>
+        </CardHeader>
       </Card>
 
-      <PropertyTasks propertyId={propertyId} />
+      {showFamilyTree && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardContent className="pt-6">
+            <FamilyTreeEnhanced propertyId={propertyId} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Transfer History */}
       {transferHistory && transferHistory.length > 0 && (
@@ -920,8 +937,8 @@ export default function PropertyDetail() {
         </Card>
       )}
 
-      {/* Deep Search Section with Hide/Show Toggle */}
-      <Card>
+      {/* Deep Search Section - ADHD-friendly blue background */}
+      <Card className="bg-blue-50 border-blue-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>Deep Search</CardTitle>
           <Button
@@ -935,7 +952,11 @@ export default function PropertyDetail() {
         </CardHeader>
       </Card>
 
-      {showDeepSearch && <DeepSearchTabs propertyId={propertyId} />}
+      {showDeepSearch && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <DeepSearchTabs propertyId={propertyId} />
+        </div>
+      )}
 
       {/* Field Visit Check-In - moved to bottom as less frequently used */}
       <div className="grid gap-6 md:grid-cols-2">

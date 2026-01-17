@@ -939,3 +939,12 @@
 - [x] Test with sample property (285 Sw 12th St → Offer Pending)
 - [x] Verify property appears in Pipeline Kanban board
 - [x] ADHD-friendly design with blue button and TrendingUp icon
+
+
+## ADHD-Friendly Layout Improvements (Jan 17, 2026) - COMPLETED ✅
+- [x] Move Family Tree section to after Tasks section (closer to Deep Search)
+- [x] Add blue background color to Deep Search section (bg-blue-50)
+- [x] Add yellow background color to Family Tree section (bg-yellow-50)
+- [x] Ensure Hide/Show buttons work for both sections
+- [x] Test visual hierarchy and color contrast
+- [x] Verified in browser - layout order correct, colors display properly
