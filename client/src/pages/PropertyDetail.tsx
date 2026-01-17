@@ -54,10 +54,10 @@ export default function PropertyDetail() {
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
-  const [showDeepSearch, setShowDeepSearch] = useState(true);
-  const [showFamilyTree, setShowFamilyTree] = useState(true);
+  const [showDeepSearch, setShowDeepSearch] = useState(false); // Default hidden for ADHD
+  const [showFamilyTree, setShowFamilyTree] = useState(false); // Default hidden for ADHD
   const [showFieldVisit, setShowFieldVisit] = useState(false); // Default hidden as requested
-  const [showDeskChrisNotes, setShowDeskChrisNotes] = useState(true);
+  const [showDeskChrisNotes, setShowDeskChrisNotes] = useState(false); // Default hidden for ADHD
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();
@@ -887,15 +887,12 @@ export default function PropertyDetail() {
             {showFamilyTree ? "Hide" : "Show"}
           </Button>
         </CardHeader>
-      </Card>
-
-      {showFamilyTree && (
-        <Card className="bg-yellow-50 border-yellow-200">
+        {showFamilyTree && (
           <CardContent className="pt-6">
             <FamilyTreeEnhanced propertyId={propertyId} />
           </CardContent>
-        </Card>
-      )}
+        )}
+      </Card>
 
       {/* Transfer History */}
       {transferHistory && transferHistory.length > 0 && (
@@ -961,8 +958,8 @@ export default function PropertyDetail() {
         </div>
       )}
 
-      {/* Field Visit Check-In - Hidden by default, show when needed */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      {/* Field Visit Check-In - Hidden by default, show when needed - ADHD-friendly pink background */}
+      <div className="bg-pink-50 rounded-lg border border-pink-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Field Visit Check-In (Birddog)</h3>
           <Button

@@ -960,3 +960,14 @@
 - [x] Test Field Visit hide/show functionality (Show/Hide buttons working)
 - [x] Test Desk-Chris notes section displays correctly
 - [x] Verified green background (bg-green-50) and auto-timestamp placeholder
+
+
+## ADHD Layout Fixes - Duplicate & Default States (Jan 17, 2026) - COMPLETED ✅
+- [x] Remove duplicate Family Tree section (currently showing 2 yellow blocks)
+- [x] Set Deep Search to hidden by default (currently always open)
+- [x] Set Desk-Chris Notes to hidden by default (currently always open)
+- [x] Add pink background (bg-pink-50) to Field Visit Check-In section
+- [x] Test all Hide/Show toggles work correctly
+- [x] Verify only one Family Tree section appears
+- [x] All 4 major sections now hidden by default (Family Tree, Deep Search, Field Visit, Desk-Chris Notes)
+- [x] Color-coded system complete: Yellow (Family), Blue (Research), Pink (Birddog), Green (Chris Notes)

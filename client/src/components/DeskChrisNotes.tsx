@@ -12,6 +12,7 @@ interface DeskChrisNotesProps {
 
 export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
   const [newNote, setNewNote] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false); // Default hidden for ADHD
   const utils = trpc.useUtils();
 
   // Fetch only desk-chris notes
@@ -59,16 +60,28 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
 
   return (
     <Card className="p-6 bg-green-50 border-green-200">
-      <div className="flex items-center gap-2 mb-4">
-        <StickyNote className="h-5 w-5 text-green-600" />
-        <h3 className="text-lg font-semibold">Desk-Chris Notes</h3>
-        <span className="text-sm text-gray-500">
-          (Exclusive notes with auto-timestamp)
-        </span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <StickyNote className="h-5 w-5 text-green-600" />
+          <h3 className="text-lg font-semibold">Desk-Chris Notes</h3>
+          <span className="text-sm text-gray-500">
+            (Exclusive notes with auto-timestamp)
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs"
+        >
+          {isExpanded ? "Hide" : "Show"}
+        </Button>
       </div>
 
-      {/* Add New Note */}
-      <div className="mb-6 space-y-3">
+      {isExpanded && (
+        <>
+          {/* Add New Note */}
+          <div className="mb-6 space-y-3">
         <Textarea
           placeholder="Add a new Desk-Chris note... (timestamp will be added automatically)"
           value={newNote}
@@ -131,6 +144,8 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
           </div>
         )}
       </div>
+        </>
+      )}
     </Card>
   );
 }
