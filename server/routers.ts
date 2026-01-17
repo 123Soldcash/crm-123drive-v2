@@ -1246,6 +1246,7 @@ export const appRouter = router({
         z.object({
           propertyId: z.number(),
           content: z.string().min(1),
+          noteType: z.enum(["general", "desk-chris"]).optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -1253,6 +1254,7 @@ export const appRouter = router({
           propertyId: input.propertyId,
           userId: ctx.user.id,
           content: input.content,
+          noteType: input.noteType,
         });
       }),
 

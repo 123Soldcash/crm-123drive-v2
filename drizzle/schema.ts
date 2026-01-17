@@ -419,6 +419,9 @@ export const notes = mysqlTable("notes", {
   // Note content
   content: text("content").notNull(),
   
+  // Note type for categorization (general, desk-chris, etc.)
+  noteType: mysqlEnum("noteType", ["general", "desk-chris"]).default("general"),
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -948,3 +948,15 @@
 - [x] Ensure Hide/Show buttons work for both sections
 - [x] Test visual hierarchy and color contrast
 - [x] Verified in browser - layout order correct, colors display properly
+
+
+## Field Visit Hide/Show & Desk-Chris Notes (Jan 17, 2026) - COMPLETED ✅
+- [x] Add Hide/Show toggle to Field Visit Check-In section
+- [x] Set Field Visit section to hidden by default
+- [x] Create Desk-Chris Notes section with automatic timestamps (green background)
+- [x] Add noteType ENUM field to notes table ('general', 'desk-chris')
+- [x] Implement note entry form with auto-date on save
+- [x] Display notes with timestamp in chronological order
+- [x] Test Field Visit hide/show functionality (Show/Hide buttons working)
+- [x] Test Desk-Chris notes section displays correctly
+- [x] Verified green background (bg-green-50) and auto-timestamp placeholder

@@ -314,6 +314,7 @@ export async function getNotesByPropertyId(propertyId: number) {
       propertyId: notes.propertyId,
       userId: notes.userId,
       content: notes.content,
+      noteType: notes.noteType,
       createdAt: notes.createdAt,
       updatedAt: notes.updatedAt,
       userName: users.name,

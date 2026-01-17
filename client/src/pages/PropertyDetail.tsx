@@ -30,6 +30,7 @@ import { PropertyCheckIn } from "@/components/PropertyCheckIn";
 import { VisitHistory, PhotoGallery } from "@/components/VisitHistory";
 import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 import { ContactManagement } from "@/components/ContactManagement";
+import { DeskChrisNotes } from "@/components/DeskChrisNotes";
 import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -55,6 +56,8 @@ export default function PropertyDetail() {
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
   const [showDeepSearch, setShowDeepSearch] = useState(true);
   const [showFamilyTree, setShowFamilyTree] = useState(true);
+  const [showFieldVisit, setShowFieldVisit] = useState(false); // Default hidden as requested
+  const [showDeskChrisNotes, setShowDeskChrisNotes] = useState(true);
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();
@@ -958,16 +961,33 @@ export default function PropertyDetail() {
         </div>
       )}
 
-      {/* Field Visit Check-In - moved to bottom as less frequently used */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <PropertyCheckIn propertyId={propertyId} />
-        <VisitHistory propertyId={propertyId} />
+      {/* Field Visit Check-In - Hidden by default, show when needed */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Field Visit Check-In (Birddog)</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFieldVisit(!showFieldVisit)}
+          >
+            {showFieldVisit ? "Hide" : "Show"}
+          </Button>
+        </div>
+        {showFieldVisit && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <PropertyCheckIn propertyId={propertyId} />
+            <VisitHistory propertyId={propertyId} />
+          </div>
+        )}
       </div>
 
       <ActivityTimeline propertyId={propertyId} />
 
       {/* Photos and Notes moved to bottom for better workflow */}
       <PhotoGallery propertyId={propertyId} />
+
+      {/* Desk-Chris Notes - Exclusive notes section with auto-timestamps */}
+      <DeskChrisNotes propertyId={propertyId} />
 
       <NotesSection propertyId={propertyId} />
     </div>
