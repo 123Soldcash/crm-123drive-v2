@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface AutomatedFollowUpsProps {
   propertyId: number;
@@ -38,7 +38,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
   const handleCreateFollowUp = async () => {
     if (!trigger.trim()) {
-      toast.error("Por favor, descreva o gatilho do follow-up");
+      toast.error("Please describe the follow-up trigger");
       return;
     }
 
@@ -50,7 +50,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       if (selectedAction === "Create Task") {
         actionDetailsObj = {
           title: `Follow-up: ${trigger}`,
-          description: `Tarefa de follow-up automático: ${trigger}`,
+          description: `Automated follow-up task: ${trigger}`,
           priority: "Medium",
         };
       } else if (selectedAction === "Send Email") {
@@ -60,7 +60,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         };
       } else if (selectedAction === "Send SMS") {
         actionDetailsObj = {
-          message: actionDetails || `Olá! Seguindo up sobre a propriedade. ${trigger}`,
+          message: actionDetails || `Hi! Following up about the property. ${trigger}`,
         };
       } else if (selectedAction === "Change Stage") {
         actionDetailsObj = {
@@ -70,11 +70,11 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
       // Calculate next run date based on trigger
       let nextRunAt = new Date();
-      if (trigger.includes("30 dias")) {
+      if (trigger.toLowerCase().includes("30 days")) {
         nextRunAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      } else if (trigger.includes("7 dias")) {
+      } else if (trigger.toLowerCase().includes("7 days")) {
         nextRunAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      } else if (trigger.includes("1 dia")) {
+      } else if (trigger.toLowerCase().includes("1 day")) {
         nextRunAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
       } else {
         nextRunAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Default: 3 days
@@ -95,7 +95,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       setActionDetails("");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
-      toast.error("Erro ao criar follow-up");
+      toast.error("Error creating follow-up");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -109,7 +109,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       followUpNotifications.followUpPaused(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
-      toast.error("Erro ao pausar follow-up");
+      toast.error("Error pausing follow-up");
     }
   };
 
@@ -120,12 +120,12 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       followUpNotifications.followUpResumed(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
-      toast.error("Erro ao retomar follow-up");
+      toast.error("Error resuming follow-up");
     }
   };
 
   const handleDelete = async (followUpId: number) => {
-    if (!confirm("Tem certeza que deseja deletar este follow-up?")) return;
+    if (!confirm("Are you sure you want to delete this follow-up?")) return;
 
     try {
       const followUp = followUps.find(fu => fu.id === followUpId);
@@ -133,7 +133,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       followUpNotifications.followUpDeleted(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
-      toast.error("Erro ao deletar follow-up");
+      toast.error("Error deleting follow-up");
     }
   };
 
@@ -141,10 +141,10 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     try {
       const followUp = followUps.find(fu => fu.id === followUpId);
       await executeMutation.mutateAsync({ followUpId });
-      followUpNotifications.followUpExecuted(followUp?.action || "Follow-up", "Propriedade");
+      followUpNotifications.followUpExecuted(followUp?.action || "Follow-up", "Property");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
-      toast.error("Erro ao executar follow-up");
+      toast.error("Error executing follow-up");
     }
   };
 
@@ -205,81 +205,81 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   };
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Carregando follow-ups...</div>;
+    return <div className="text-sm text-muted-foreground">Loading follow-ups...</div>;
   }
 
   return (
     <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-blue-900">Follow-ups Automáticos</CardTitle>
-          <CardDescription className="text-blue-700/70">Gerencie lembretes e automações para este lead</CardDescription>
+          <CardTitle className="text-blue-900">Automated Follow-ups</CardTitle>
+          <CardDescription className="text-blue-700/70">Manage reminders and automations for this lead</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Novo Follow-up
+              New Follow-up
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Follow-up Automático</DialogTitle>
+              <DialogTitle>Create Automated Follow-up</DialogTitle>
               <DialogDescription>
-                Configure um follow-up automático para este lead
+                Configure an automated follow-up for this lead
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
-              {/* Tipo de Follow-up */}
+              {/* Follow-up Type */}
               <div>
-                <label className="text-sm font-medium">Tipo de Follow-up</label>
+                <label className="text-sm font-medium">Follow-up Type</label>
                 <Select value={selectedType} onValueChange={(value) => setSelectedType(value as FollowUpType)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Cold Lead">Lead Frio</SelectItem>
-                    <SelectItem value="No Contact">Sem Contato</SelectItem>
-                    <SelectItem value="Stage Change">Mudança de Estágio</SelectItem>
-                    <SelectItem value="Custom">Personalizado</SelectItem>
+                    <SelectItem value="Cold Lead">Cold Lead</SelectItem>
+                    <SelectItem value="No Contact">No Contact</SelectItem>
+                    <SelectItem value="Stage Change">Stage Change</SelectItem>
+                    <SelectItem value="Custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Gatilho */}
+              {/* Trigger */}
               <div>
-                <label className="text-sm font-medium">Gatilho (quando executar?)</label>
+                <label className="text-sm font-medium">Trigger (when to execute?)</label>
                 <Textarea
-                  placeholder="Ex: Sem contato há 30 dias, Lead ficou FRIO, Passou 7 dias sem resposta..."
+                  placeholder="Ex: No contact for 30 days, Lead became COLD, 7 days without response..."
                   value={trigger}
                   onChange={(e) => setTrigger(e.target.value)}
                   className="min-h-20"
                 />
               </div>
 
-              {/* Ação */}
+              {/* Action */}
               <div>
-                <label className="text-sm font-medium">Ação a Executar</label>
+                <label className="text-sm font-medium">Action to Execute</label>
                 <Select value={selectedAction} onValueChange={(value) => setSelectedAction(value as FollowUpAction)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Create Task">Criar Tarefa</SelectItem>
-                    <SelectItem value="Send Email">Enviar Email</SelectItem>
-                    <SelectItem value="Send SMS">Enviar SMS</SelectItem>
-                    <SelectItem value="Change Stage">Mudar Estágio</SelectItem>
+                    <SelectItem value="Create Task">Create Task</SelectItem>
+                    <SelectItem value="Send Email">Send Email</SelectItem>
+                    <SelectItem value="Send SMS">Send SMS</SelectItem>
+                    <SelectItem value="Change Stage">Change Stage</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Detalhes da Ação */}
+              {/* Action Details */}
               {selectedAction === "Send SMS" && (
                 <div>
-                  <label className="text-sm font-medium">Mensagem SMS</label>
+                  <label className="text-sm font-medium">SMS Message</label>
                   <Textarea
-                    placeholder="Digite a mensagem que será enviada..."
+                    placeholder="Type the message to be sent..."
                     value={actionDetails}
                     onChange={(e) => setActionDetails(e.target.value)}
                     className="min-h-20"
@@ -289,27 +289,21 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
               {selectedAction === "Change Stage" && (
                 <div>
-                  <label className="text-sm font-medium">Novo Estágio</label>
-                  <Select value={actionDetails} onValueChange={setActionDetails}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estágio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FOLLOW_UP_ON_CONTRACT">Follow-up no Contrato</SelectItem>
-                      <SelectItem value="OFFER_PENDING">Oferta Pendente</SelectItem>
-                      <SelectItem value="ANALYZING_DEAL">Analisando Deal</SelectItem>
-                      <SelectItem value="DEAD_LOST">Perdido</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium">New Stage ID</label>
+                  <Input
+                    placeholder="Ex: FOLLOW_UP_ON_CONTRACT"
+                    value={actionDetails}
+                    onChange={(e) => setActionDetails(e.target.value)}
+                  />
                 </div>
               )}
 
               <Button
-                onClick={handleCreateFollowUp}
-                disabled={isSubmitting || createMutation.isPending}
                 className="w-full"
+                onClick={handleCreateFollowUp}
+                disabled={isSubmitting || !trigger.trim()}
               >
-                {isSubmitting ? "Criando..." : "Criar Follow-up"}
+                {isSubmitting ? "Creating..." : "Create Follow-up"}
               </Button>
             </div>
           </DialogContent>
@@ -319,7 +313,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       <CardContent>
         {followUps.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhum follow-up configurado para este lead
+            No follow-ups configured for this lead
           </p>
         ) : (
           <div className="space-y-3">
@@ -336,18 +330,18 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {getStatusIcon(followUp.status)}
                     <Badge variant={getStatusBadgeVariant(followUp.status)}>
-                      {followUp.status === "Active" ? "Ativo" : followUp.status === "Paused" ? "Pausado" : "Concluído"}
+                      {followUp.status}
                     </Badge>
                     <Badge className={getTypeColor(followUp.type)}>{followUp.type}</Badge>
                     <Badge className={getActionBadgeColor(followUp.action)}>{followUp.action}</Badge>
                   </div>
                   <p className="text-sm font-medium">{followUp.trigger}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Próxima execução: {format(new Date(followUp.nextRunAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    Next run: {format(new Date(followUp.nextRunAt), "MM/dd/yyyy HH:mm", { locale: enUS })}
                   </p>
                   {followUp.lastTriggeredAt && (
                     <p className="text-xs text-muted-foreground">
-                      Última execução: {format(new Date(followUp.lastTriggeredAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      Last run: {format(new Date(followUp.lastTriggeredAt), "MM/dd/yyyy HH:mm", { locale: enUS })}
                     </p>
                   )}
                 </div>
@@ -361,7 +355,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                         onClick={() => handleExecute(followUp.id)}
                         disabled={executeMutation.isPending}
                       >
-                        Executar Agora
+                        Execute Now
                       </Button>
                       <Button
                         size="sm"
@@ -388,10 +382,11 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(followUp.id)}
                     disabled={deleteMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

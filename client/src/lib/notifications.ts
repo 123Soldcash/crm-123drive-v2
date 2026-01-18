@@ -1,12 +1,12 @@
 import { toast } from "sonner";
 
 /**
- * Tipos de notificações
+ * Notification types
  */
 export type NotificationType = "success" | "error" | "info" | "warning";
 
 /**
- * Interface para configurar notificações
+ * Interface for configuring notifications
  */
 export interface NotificationConfig {
   type: NotificationType;
@@ -20,127 +20,127 @@ export interface NotificationConfig {
 }
 
 /**
- * Serviço de notificações para o Follow-up System
+ * Notification service for the Follow-up System
  */
 export const followUpNotifications = {
   /**
-   * Notificar quando um follow-up foi criado com sucesso
+   * Notify when a follow-up was successfully created
    */
   followUpCreated: (trigger: string) => {
-    toast.success(`Follow-up criado: ${trigger}`, {
-      description: "O sistema executará automaticamente quando o gatilho for acionado",
+    toast.success(`Follow-up created: ${trigger}`, {
+      description: "The system will execute automatically when the trigger is activated",
       duration: 4000,
     });
   },
 
   /**
-   * Notificar quando um follow-up foi executado
+   * Notify when a follow-up was executed
    */
   followUpExecuted: (action: string, propertyAddress: string) => {
-    toast.success(`Follow-up executado: ${action}`, {
-      description: `Ação realizada para: ${propertyAddress}`,
+    toast.success(`Follow-up executed: ${action}`, {
+      description: `Action performed for: ${propertyAddress}`,
       duration: 4000,
     });
   },
 
   /**
-   * Notificar quando há follow-ups pendentes
+   * Notify when there are pending follow-ups
    */
   pendingFollowUpsAlert: (count: number) => {
-    toast.warning(`${count} follow-up(s) pendente(s)`, {
-      description: "Clique para visualizar e executar",
+    toast.warning(`${count} pending follow-up(s)`, {
+      description: "Click to view and execute",
       duration: 5000,
     });
   },
 
   /**
-   * Notificar quando um follow-up foi pausado
+   * Notify when a follow-up was paused
    */
   followUpPaused: (trigger: string) => {
-    toast.info(`Follow-up pausado: ${trigger}`, {
+    toast.info(`Follow-up paused: ${trigger}`, {
       duration: 3000,
     });
   },
 
   /**
-   * Notificar quando um follow-up foi retomado
+   * Notify when a follow-up was resumed
    */
   followUpResumed: (trigger: string) => {
-    toast.info(`Follow-up retomado: ${trigger}`, {
+    toast.info(`Follow-up resumed: ${trigger}`, {
       duration: 3000,
     });
   },
 
   /**
-   * Notificar quando um follow-up foi deletado
+   * Notify when a follow-up was deleted
    */
   followUpDeleted: (trigger: string) => {
-    toast.info(`Follow-up deletado: ${trigger}`, {
+    toast.info(`Follow-up deleted: ${trigger}`, {
       duration: 3000,
     });
   },
 
   /**
-   * Notificar erro ao criar follow-up
+   * Notify error when creating follow-up
    */
   followUpCreationError: (error: string) => {
-    toast.error("Erro ao criar follow-up", {
+    toast.error("Error creating follow-up", {
       description: error,
       duration: 4000,
     });
   },
 
   /**
-   * Notificar erro ao executar follow-up
+   * Notify error when executing follow-up
    */
   followUpExecutionError: (error: string) => {
-    toast.error("Erro ao executar follow-up", {
+    toast.error("Error executing follow-up", {
       description: error,
       duration: 4000,
     });
   },
 
   /**
-   * Notificar quando múltiplos follow-ups foram executados
+   * Notify when multiple follow-ups were executed
    */
   bulkFollowUpsExecuted: (count: number) => {
-    toast.success(`${count} follow-up(s) executado(s)`, {
-      description: "Todas as ações foram realizadas com sucesso",
+    toast.success(`${count} follow-up(s) executed`, {
+      description: "All actions were performed successfully",
       duration: 4000,
     });
   },
 
   /**
-   * Notificar quando um lead ficou frio e precisa de follow-up
+   * Notify when a lead became cold and needs follow-up
    */
   coldLeadAlert: (propertyAddress: string, daysSinceContact: number) => {
-    toast.warning(`Lead frio detectado`, {
-      description: `${propertyAddress} - Sem contato há ${daysSinceContact} dias`,
+    toast.warning(`Cold lead detected`, {
+      description: `${propertyAddress} - No contact for ${daysSinceContact} days`,
       duration: 5000,
     });
   },
 
   /**
-   * Notificar quando um lead não teve contato
+   * Notify when a lead had no contact
    */
   noContactAlert: (propertyAddress: string) => {
-    toast.warning(`Sem contato`, {
-      description: `${propertyAddress} - Nenhum contato registrado`,
+    toast.warning(`No contact`, {
+      description: `${propertyAddress} - No contact recorded`,
       duration: 5000,
     });
   },
 };
 
 /**
- * Hook para mostrar notificações de follow-up (para uso em componentes React)
+ * Hook to show follow-up notifications (for use in React components)
  */
 export function useFollowUpNotifications() {
   return followUpNotifications;
 }
 
 /**
- * Função para agendar notificações em tempo real
- * (Pode ser expandida para usar Web Notifications API ou WebSockets)
+ * Function to schedule real-time notifications
+ * (Can be expanded to use Web Notifications API or WebSockets)
  */
 export function scheduleFollowUpNotification(
   followUpId: number,
@@ -151,12 +151,12 @@ export function scheduleFollowUpNotification(
   const timeUntilExecution = nextRunAt.getTime() - now.getTime();
 
   if (timeUntilExecution > 0) {
-    // Agendar notificação para 5 minutos antes da execução
+    // Schedule notification for 5 minutes before execution
     const notificationTime = timeUntilExecution - 5 * 60 * 1000;
 
     if (notificationTime > 0) {
       setTimeout(() => {
-        toast.info(`Follow-up será executado em 5 minutos`, {
+        toast.info(`Follow-up will be executed in 5 minutes`, {
           description: trigger,
           duration: 5000,
         });

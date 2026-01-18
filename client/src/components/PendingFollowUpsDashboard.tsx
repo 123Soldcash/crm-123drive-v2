@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Clock, Zap } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { toast } from "sonner";
 
 export function PendingFollowUpsDashboard() {
@@ -19,23 +19,23 @@ export function PendingFollowUpsDashboard() {
 
   const executeMutation = trpc.followups.execute.useMutation({
     onSuccess: () => {
-      toast.success("Follow-up executado com sucesso!");
+      toast.success("Follow-up executed successfully!");
       utils.followups.getPending.invalidate();
       refetch();
     },
     onError: (error) => {
-      toast.error(`Erro ao executar follow-up: ${error.message}`);
+      toast.error(`Error executing follow-up: ${error.message}`);
     },
   });
 
   const handleExecuteAll = async () => {
     if (pendingFollowUps.length === 0) {
-      toast.info("Nenhum follow-up pendente para executar");
+      toast.info("No pending follow-ups to execute");
       return;
     }
 
     const confirmed = confirm(
-      `Tem certeza que deseja executar ${pendingFollowUps.length} follow-up(s)?`
+      `Are you sure you want to execute ${pendingFollowUps.length} follow-up(s)?`
     );
 
     if (!confirmed) return;
@@ -44,9 +44,9 @@ export function PendingFollowUpsDashboard() {
       for (const followUp of pendingFollowUps) {
         await executeMutation.mutateAsync({ followUpId: followUp.id });
       }
-      toast.success(`${pendingFollowUps.length} follow-up(s) executado(s)!`);
+      toast.success(`${pendingFollowUps.length} follow-up(s) executed!`);
     } catch (error) {
-      toast.error("Erro ao executar follow-ups");
+      toast.error("Error executing follow-ups");
     }
   };
 
@@ -54,7 +54,7 @@ export function PendingFollowUpsDashboard() {
     try {
       await executeMutation.mutateAsync({ followUpId });
     } catch (error) {
-      toast.error("Erro ao executar follow-up");
+      toast.error("Error executing follow-up");
     }
   };
 
@@ -62,10 +62,10 @@ export function PendingFollowUpsDashboard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Follow-ups Pendentes</CardTitle>
+          <CardTitle>Pending Follow-ups</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Carregando...</p>
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </CardContent>
       </Card>
     );
@@ -77,10 +77,10 @@ export function PendingFollowUpsDashboard() {
         <div>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Follow-ups Pendentes
+            Pending Follow-ups
           </CardTitle>
           <CardDescription>
-            {pendingFollowUps.length} follow-up(s) aguardando execução
+            {pendingFollowUps.length} follow-up(s) waiting for execution
           </CardDescription>
         </div>
         <div className="flex gap-2">
@@ -99,7 +99,7 @@ export function PendingFollowUpsDashboard() {
               className="gap-2"
             >
               <Zap className="h-4 w-4" />
-              Executar Todos
+              Execute All
             </Button>
           )}
         </div>
@@ -109,9 +109,9 @@ export function PendingFollowUpsDashboard() {
         {pendingFollowUps.length === 0 ? (
           <Alert>
             <CheckCircle className="h-4 w-4" />
-            <AlertTitle>Nenhum Follow-up Pendente</AlertTitle>
+            <AlertTitle>No Pending Follow-ups</AlertTitle>
             <AlertDescription>
-              Todos os seus follow-ups estão em dia! Continue acompanhando seus leads.
+              All your follow-ups are up to date! Keep tracking your leads.
             </AlertDescription>
           </Alert>
         ) : (
@@ -129,10 +129,10 @@ export function PendingFollowUpsDashboard() {
                   </div>
                   <p className="font-medium text-sm mb-1">{followUp.trigger}</p>
                   <p className="text-xs text-muted-foreground mb-1">
-                    Propriedade: {followUp.property?.addressLine1}, {followUp.property?.city} - {followUp.property?.state}
+                    Property: {followUp.property?.addressLine1}, {followUp.property?.city} - {followUp.property?.state}
                   </p>
                   <p className="text-xs text-yellow-700 font-medium">
-                    ⏰ Deveria ter sido executado em: {format(new Date(followUp.nextRunAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    ⏰ Should have been executed on: {format(new Date(followUp.nextRunAt), "MM/dd/yyyy HH:mm", { locale: enUS })}
                   </p>
                 </div>
 
@@ -143,7 +143,7 @@ export function PendingFollowUpsDashboard() {
                   className="gap-2 whitespace-nowrap"
                 >
                   <Zap className="h-4 w-4" />
-                  Executar
+                  Execute
                 </Button>
               </div>
             ))}
