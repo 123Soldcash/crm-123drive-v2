@@ -36,21 +36,21 @@ export async function updateAgent(agentId: number, data: Partial<typeof agents.$
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   await db.update(agents).set(data as any).where(eq(agents.id, agentId));
-  const updated = await db.select().from(agents).where(eq(agents.id, agentId));
+  const updated = await db.select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt }).from(agents).where(eq(agents.id, agentId));
   return updated[0];
 }
 
 export async function getAgent(agentId: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  const agent = await db.select().from(agents).where(eq(agents.id, agentId));
+  const agent = await db.select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt }).from(agents).where(eq(agents.id, agentId));
   return agent[0];
 }
 
 export async function listAgents(filters?: { status?: string; agentType?: string; role?: string }) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  let query = db.select().from(agents);
+  let query = db.select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt }).from(agents);
   
   const conditions: any[] = [];
   if (filters?.status) conditions.push(eq(agents.status, filters.status as any));
@@ -77,7 +77,7 @@ export async function grantPermission(agentId: number, feature: string) {
   
   // Check if permission already exists
   const existing = await db
-    .select()
+    .select({ id: agentPermissions.id, agentId: agentPermissions.agentId, feature: agentPermissions.feature, granted: agentPermissions.granted })
     .from(agentPermissions)
     .where(and(eq(agentPermissions.agentId, agentId), eq(agentPermissions.feature, feature as any)));
   
@@ -137,7 +137,7 @@ export async function hasPermission(agentId: number, feature: string): Promise<b
 export async function getAgentPermissions(agentId: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  return db.select().from(agentPermissions).where(eq(agentPermissions.agentId, agentId));
+  return db.select({ id: agentPermissions.id, agentId: agentPermissions.agentId, feature: agentPermissions.feature, granted: agentPermissions.granted }).from(agentPermissions).where(eq(agentPermissions.agentId, agentId));
 }
 
 // ============ LEAD ASSIGNMENTS ============
@@ -154,7 +154,7 @@ export async function assignLeadToAgent(
   
   // Check if already assigned
   const existing = await db
-    .select()
+    .select({ id: leadAssignments.id, propertyId: leadAssignments.propertyId, agentId: leadAssignments.agentId, assignmentType: leadAssignments.assignmentType, assignedBy: leadAssignments.assignedBy, expiresAt: leadAssignments.expiresAt })
     .from(leadAssignments)
     .where(and(eq(leadAssignments.propertyId, propertyId), eq(leadAssignments.agentId, agentId)));
   
@@ -181,7 +181,7 @@ export async function assignLeadToAgent(
 export async function getLeadAssignments(propertyId: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  return db.select().from(leadAssignments).where(eq(leadAssignments.propertyId, propertyId));
+  return db.select({ id: leadAssignments.id, propertyId: leadAssignments.propertyId, agentId: leadAssignments.agentId, assignmentType: leadAssignments.assignmentType, assignedBy: leadAssignments.assignedBy, expiresAt: leadAssignments.expiresAt }).from(leadAssignments).where(eq(leadAssignments.propertyId, propertyId));
 }
 
 export async function getAgentLeads(agentId: number, includeShared: boolean = false) {
@@ -194,7 +194,7 @@ export async function getAgentLeads(agentId: number, includeShared: boolean = fa
   }
   
   const assignments = await db
-    .select()
+    .select({ id: leadAssignments.id, propertyId: leadAssignments.propertyId, agentId: leadAssignments.agentId, assignmentType: leadAssignments.assignmentType, assignedBy: leadAssignments.assignedBy, expiresAt: leadAssignments.expiresAt })
     .from(leadAssignments)
     .where(and(...conditions));
   
@@ -202,7 +202,7 @@ export async function getAgentLeads(agentId: number, includeShared: boolean = fa
   const propertyIds = assignments.map((a) => a.propertyId);
   if (propertyIds.length === 0) return [];
   
-  return db.select().from(properties).where(or(...propertyIds.map((id) => eq(properties.id, id))));
+  return db.select({ id: properties.id, leadId: properties.leadId, addressLine1: properties.addressLine1, addressLine2: properties.addressLine2, city: properties.city, state: properties.state, zipcode: properties.zipcode, owner1Name: properties.owner1Name, owner2Name: properties.owner2Name, estimatedValue: properties.estimatedValue, equityPercent: properties.equityPercent, leadTemperature: properties.leadTemperature, trackingStatus: properties.trackingStatus, ownerVerified: properties.ownerVerified, assignedAgentId: properties.assignedAgentId }).from(properties).where(or(...propertyIds.map((id) => eq(properties.id, id))));
 }
 
 export async function removeLeadAssignment(propertyId: number, agentId: number) {
@@ -252,7 +252,7 @@ export async function transferLead(
 export async function getLeadTransferHistory(propertyId: number) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  return db.select().from(leadTransferHistory).where(eq(leadTransferHistory.propertyId, propertyId));
+  return db.select({ id: leadTransferHistory.id, propertyId: leadTransferHistory.propertyId, fromAgentId: leadTransferHistory.fromAgentId, toAgentId: leadTransferHistory.toAgentId, transferredBy: leadTransferHistory.transferredBy, reason: leadTransferHistory.reason, status: leadTransferHistory.status, createdAt: leadTransferHistory.createdAt }).from(leadTransferHistory).where(eq(leadTransferHistory.propertyId, propertyId));
 }
 
 // ============ AGENT FILTERING & SEARCH ============
@@ -261,7 +261,7 @@ export async function searchAgentsByMention(query: string) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   const agents_list = await db
-    .select()
+    .select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt })
     .from(agents)
     .where(or(
       eq(agents.status, "Active" as any),
@@ -280,7 +280,7 @@ export async function getExternalAgents() {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   return db
-    .select()
+    .select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt })
     .from(agents)
     .where(or(eq(agents.agentType, "External" as any), eq(agents.agentType, "Birddog" as any), eq(agents.agentType, "Corretor" as any)));
 }
@@ -288,7 +288,7 @@ export async function getExternalAgents() {
 export async function getInternalAgents() {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  return db.select().from(agents).where(eq(agents.agentType, "Internal" as any));
+  return db.select({ id: agents.id, name: agents.name, email: agents.email, phone: agents.phone, role: agents.role, agentType: agents.agentType, status: agents.status, notes: agents.notes, createdAt: agents.createdAt, updatedAt: agents.updatedAt }).from(agents).where(eq(agents.agentType, "Internal" as any));
 }
 
 // ============ AGENT PERFORMANCE ============
