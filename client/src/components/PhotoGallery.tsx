@@ -57,7 +57,7 @@ export function PhotoGallery({ propertyId }: PhotoGalleryProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-orange-50 border-orange-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Property Photos ({photos?.length || 0})</CardTitle>
         <Button

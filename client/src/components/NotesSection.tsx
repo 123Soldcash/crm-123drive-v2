@@ -229,7 +229,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-slate-50 border-slate-200">
       <CardHeader>
         <CardTitle>Notes</CardTitle>
       </CardHeader>

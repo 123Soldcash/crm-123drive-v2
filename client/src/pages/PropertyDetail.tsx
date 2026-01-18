@@ -1001,8 +1001,6 @@ export default function PropertyDetail() {
         )}
       </div>
 
-      <ActivityTimeline propertyId={propertyId} />
-
       {/* Photos and Notes moved to bottom for better workflow */}
       <PhotoGallery propertyId={propertyId} />
 
@@ -1010,6 +1008,9 @@ export default function PropertyDetail() {
       <DeskChrisNotes propertyId={propertyId} />
 
       <NotesSection propertyId={propertyId} />
+
+      {/* Activity Timeline - Last section with purple background */}
+      <ActivityTimeline propertyId={propertyId} />
     </div>
   );
 }

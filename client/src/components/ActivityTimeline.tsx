@@ -1,17 +1,30 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
   FileText, 
   Image as ImageIcon, 
   Clock
 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface ActivityTimelineProps {
   propertyId: number;
 }
 
 export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
+  // localStorage persistence for ADHD-friendly collapsed state
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('showActivityTimeline');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('showActivityTimeline', JSON.stringify(isExpanded));
+  }, [isExpanded]);
+  
   const { data: activities, isLoading } = trpc.properties.getActivities.useQuery({ propertyId });
 
   const getActivityIcon = (type: string) => {
@@ -62,94 +75,86 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
     });
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">Loading activity history...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!activities || activities.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">No activity recorded yet</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
+    <Card className="bg-purple-50 border-purple-200">
       <CardHeader>
-        <CardTitle>Activity Timeline</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Activity Timeline</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-xs"
+          >
+            {isExpanded ? "Hide" : "Show"}
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {activities.map((activity, index) => (
-            <div key={activity.id} className="flex gap-4">
-              {/* Timeline line */}
-              <div className="flex flex-col items-center">
-                <div className="rounded-full bg-background border-2 border-border p-2">
-                  {getActivityIcon(activity.type)}
-                </div>
-                {index < activities.length - 1 && (
-                  <div className="w-0.5 h-full bg-border mt-2" />
-                )}
-              </div>
-
-              {/* Activity content */}
-              <div className="flex-1 pb-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{getActivityTitle(activity)}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      by {activity.user} • {formatDate(activity.timestamp)}
+      {isExpanded && (
+        <CardContent>
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">Loading activity history...</div>
+          ) : !activities || activities.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No activity recorded yet</div>
+          ) : (
+            <div className="space-y-4">
+              {activities.map((activity, index) => (
+                <div key={activity.id} className="flex gap-4">
+                  {/* Timeline line */}
+                  <div className="flex flex-col items-center">
+                    <div className="rounded-full bg-background border-2 border-border p-2">
+                      {getActivityIcon(activity.type)}
                     </div>
-                    
-                    {/* Activity-specific content */}
-                    {activity.type === "note" && activity.details && (
-                      <div className="mt-2 text-sm bg-muted/50 p-3 rounded-md">
-                        {activity.details}
-                      </div>
-                    )}
-                    
-                    {activity.type === "check-in" && activity.metadata?.latitude && (
-                      <div className="mt-2 text-sm text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        Location: {activity.metadata.latitude.toFixed(6)}, {activity.metadata.longitude.toFixed(6)}
-                      </div>
-                    )}
-                    
-                    {activity.type === "photo" && activity.metadata?.url && (
-                      <div className="mt-2">
-                        <img 
-                          src={activity.metadata.url} 
-                          alt="Activity photo" 
-                          className="rounded-md max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => window.open(activity.metadata.url, "_blank")}
-                        />
-                        {activity.details && activity.details !== "Uploaded photo" && (
-                          <div className="mt-1 text-xs text-muted-foreground">{activity.details}</div>
-                        )}
-                      </div>
+                    {index < activities.length - 1 && (
+                      <div className="w-0.5 h-full bg-border mt-2" />
                     )}
                   </div>
+
+                  {/* Activity content */}
+                  <div className="flex-1 pb-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{getActivityTitle(activity)}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          by {activity.user} • {formatDate(activity.timestamp)}
+                        </div>
+                        
+                        {/* Activity-specific content */}
+                        {activity.type === "note" && activity.details && (
+                          <div className="mt-2 text-sm bg-muted/50 p-3 rounded-md">
+                            {activity.details}
+                          </div>
+                        )}
+                        
+                        {activity.type === "check-in" && activity.metadata?.latitude && (
+                          <div className="mt-2 text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            Location: {activity.metadata.latitude.toFixed(6)}, {activity.metadata.longitude.toFixed(6)}
+                          </div>
+                        )}
+                        
+                        {activity.type === "photo" && activity.metadata?.url && (
+                          <div className="mt-2">
+                            <img 
+                              src={activity.metadata.url} 
+                              alt="Activity photo" 
+                              className="rounded-md max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(activity.metadata.url, "_blank")}
+                            />
+                            {activity.details && activity.details !== "Uploaded photo" && (
+                              <div className="mt-1 text-xs text-muted-foreground">{activity.details}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }

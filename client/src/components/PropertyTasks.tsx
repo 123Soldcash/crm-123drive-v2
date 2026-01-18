@@ -103,7 +103,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
 
   return (
     <>
-      <Card>
+      <Card className="bg-red-50 border-red-200">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-4">
