@@ -2643,6 +2643,13 @@ export const appRouter = router({
         const { deleteBuyer } = await import("./db-buyers");
         return await deleteBuyer(input.id);
       }),
+
+    getMatches: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const { getMatchingBuyers } = await import("./db-buyers");
+        return await getMatchingBuyers(input.propertyId);
+      }),
   }),
 });
 

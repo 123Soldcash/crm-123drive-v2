@@ -243,3 +243,67 @@ export async function deleteBuyer(id: number) {
     };
   }
 }
+
+/**
+ * Find buyers whose preferences match a specific property
+ */
+export async function getMatchingBuyers(propertyId: number) {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    // 1. Get property details
+    const { properties } = await import("../drizzle/schema");
+    const property = await db
+      .select()
+      .from(properties)
+      .where(eq(properties.id, propertyId))
+      .then((rows) => rows[0]);
+
+    if (!property) return [];
+
+    // 2. Get all buyers with preferences
+    const allBuyers = await db.select().from(buyers);
+    const allPreferences = await db.select().from(buyerPreferences);
+
+    // 3. Filter buyers based on property details
+    const matches = allBuyers.filter((buyer) => {
+      const pref = allPreferences.find((p) => p.buyerId === buyer.id);
+      if (!pref) return false;
+
+      // Parse JSON fields
+      const states = pref.states ? JSON.parse(pref.states) : [];
+      const cities = pref.cities ? JSON.parse(pref.cities) : [];
+      const propertyTypes = pref.propertyTypes ? JSON.parse(pref.propertyTypes) : [];
+
+      // Location match (State)
+      if (states.length > 0 && !states.includes(property.state)) return false;
+
+      // Location match (City) - Optional, more specific
+      if (cities.length > 0 && !cities.includes(property.city)) return false;
+
+      // Property Type match
+      if (propertyTypes.length > 0 && property.propertyType && !propertyTypes.includes(property.propertyType)) return false;
+
+      // Beds/Baths match
+      if (pref.minBeds && property.totalBedrooms && property.totalBedrooms < pref.minBeds) return false;
+      if (pref.maxBeds && property.totalBedrooms && property.totalBedrooms > pref.maxBeds) return false;
+      
+      const minBaths = pref.minBaths ? parseFloat(pref.minBaths) : null;
+      const maxBaths = pref.maxBaths ? parseFloat(pref.maxBaths) : null;
+      if (minBaths && property.totalBaths && property.totalBaths < minBaths) return false;
+      if (maxBaths && property.totalBaths && property.totalBaths > maxBaths) return false;
+
+      // Price match (Estimated Value)
+      if (pref.minPrice && property.estimatedValue && property.estimatedValue < pref.minPrice) return false;
+      if (pref.maxPrice && property.estimatedValue && property.estimatedValue > pref.maxPrice) return false;
+
+      return true;
+    });
+
+    return matches;
+  } catch (error) {
+    console.error("Error matching buyers:", error);
+    return [];
+  }
+}
