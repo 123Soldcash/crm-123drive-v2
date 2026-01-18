@@ -321,18 +321,7 @@ export const contacts = mysqlTable("contacts", {
   isLitigator: int("isLitigator").default(0).notNull(), // 0=NO, 1=YES - Litigator flag
   hidden: int("hidden").default(0).notNull(), // 0=NO, 1=YES - Hide contact from main view
   
-  // Phone numbers (keeping for backward compatibility)
-  phone1: varchar("phone1", { length: 20 }),
-  phone1Type: varchar("phone1Type", { length: 50 }),
-  phone2: varchar("phone2", { length: 20 }),
-  phone2Type: varchar("phone2Type", { length: 50 }),
-  phone3: varchar("phone3", { length: 20 }),
-  phone3Type: varchar("phone3Type", { length: 50 }),
-  
-  // Email addresses (keeping for backward compatibility)
-  email1: varchar("email1", { length: 255 }),
-  email2: varchar("email2", { length: 255 }),
-  email3: varchar("email3", { length: 255 }),
+
   
   // Contact tracking & status
   currentResident: int("currentResident").default(0).notNull(), // 0=NO, 1=YES
