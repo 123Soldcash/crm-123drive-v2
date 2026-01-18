@@ -223,8 +223,8 @@ export default function BulkAgentAssignment() {
               {propertiesPreview.map((prop) => (
                 <div key={prop.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">{prop.address}</p>
-                    <p className="text-sm text-muted-foreground">{prop.city}, {prop.state} {prop.zip}</p>
+                    <p className="font-medium">{prop.addressLine1}</p>
+                    <p className="text-sm text-muted-foreground">{prop.city}, {prop.state} {prop.zipcode}</p>
                   </div>
                   <div className="flex gap-2">
                     <span className="px-2 py-1 bg-muted rounded text-sm">{prop.leadTemperature}</span>

@@ -42,8 +42,8 @@ export async function getAllDuplicateGroups(
     ownerName: p.owner1Name,
     leadTemperature: p.leadTemperature,
     createdAt: p.createdAt,
-    lat: p.lat,
-    lng: p.lng,
+    lat: p.gpsLatitude || null,
+    lng: p.gpsLongitude || null,
   }));
 
   const duplicateGroups: DuplicateGroup[] = [];

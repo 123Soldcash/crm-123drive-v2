@@ -111,10 +111,10 @@ async function importDealMachineContact(
     propertyId,
     name: contact.name,
     relationship,
-    phone: contact.phones[0] || null,
-    email: contact.emails[0] || null,
-    isDNC: flags.isDNC ? 1 : 0,
-    notes: `Imported from DealMachine. Flags: ${contact.flags || "none"}`,
+    phone1: contact.phones[0] || null,
+    email1: contact.emails[0] || null,
+    dnc: flags.isDNC ? 1 : 0,
+    flags: `Imported from DealMachine. Flags: ${contact.flags || "none"}`,
   });
 
   const contactId = contactResult[0].insertId;
@@ -125,8 +125,8 @@ async function importDealMachineContact(
     if (phone && phone.trim()) {
       await db.insert(contactPhones).values({
         contactId,
-        phone: phone.trim(),
-        isDNC: flags.isDNC ? 1 : 0,
+        phoneNumber: phone.trim(),
+        dnc: flags.isDNC ? 1 : 0,
       });
     }
   }

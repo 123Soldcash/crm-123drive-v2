@@ -28,7 +28,7 @@ export default function ImportDealMachine() {
   const [loading, setLoading] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
 
-  const agentsQuery = trpc.properties.listAgents.useQuery();
+  const agentsQuery = trpc.agents.list.useQuery();
   const importMutation = trpc.properties.importDealMachine.useMutation();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

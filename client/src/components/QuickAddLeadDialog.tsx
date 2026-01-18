@@ -94,7 +94,6 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
 
     createPropertyMutation.mutate({
       ...formData,
-      dealStage,
       leadTemperature: "TBD",
     });
   };
@@ -159,7 +158,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
                               {property.addressLine1}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {property.city}, {property.state} {property.zipCode}
+                              {property.city}, {property.state} {property.zipcode}
                             </p>
                             {property.owner1Name && (
                               <p className="text-xs text-muted-foreground">

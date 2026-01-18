@@ -97,8 +97,8 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
 
   return await db.query.properties.findMany({
     where: conditions.length > 0 ? and(...conditions) : undefined,
-    orderBy: (properties, { desc }) => [desc(properties.stageChangedAt)],
-  });
+    orderBy: (p: any, { desc }: any) => [desc(p.stageChangedAt)],
+  }) as any;
 }
 
 /**

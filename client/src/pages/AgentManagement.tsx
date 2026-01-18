@@ -130,12 +130,12 @@ export default function AgentManagement() {
     updateAgent.mutate({
       id: selectedAgentId,
       name: formData.name,
-      email: formData.email || null,
-      phone: formData.phone || null,
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
       role: formData.role,
       status: formData.status,
       agentType: formData.agentType,
-      notes: formData.notes || null,
+      notes: formData.notes || undefined,
     });
   };
 
