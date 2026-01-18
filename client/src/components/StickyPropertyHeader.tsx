@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Trash2,
   Users,
-  LayoutGrid
+  LayoutGrid,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,17 +58,19 @@ export function StickyPropertyHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const formatCurrency = (value?: number | null) => {
+  const formatCurrency = (value?: number | string | null) => {
     if (!value) return "$0";
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       maximumFractionDigits: 0,
-    }).format(value);
+    }).format(numValue);
   };
 
   const getTempIcon = (temp: string) => {
     switch (temp) {
+      case "SUPER HOT": return <Zap className="h-3 w-3 mr-1 text-blue-400" />;
       case "HOT": return <Flame className="h-3 w-3 mr-1 text-orange-500" />;
       case "WARM": return <ThermometerSun className="h-3 w-3 mr-1 text-amber-500" />;
       case "COLD": return <Snowflake className="h-3 w-3 mr-1 text-blue-500" />;
@@ -133,7 +136,7 @@ export function StickyPropertyHeader({
         <div className="flex items-center gap-4 mb-3">
           <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-100">
             <span className="text-[10px] font-bold text-slate-400 uppercase ml-1 mr-1">Temp:</span>
-            {["HOT", "WARM", "COLD", "TBD"].map((temp) => (
+            {["SUPER HOT", "HOT", "WARM", "COLD", "TBD"].map((temp) => (
               <Button
                 key={temp}
                 variant={property.leadTemperature === temp ? "default" : "ghost"}
@@ -141,7 +144,7 @@ export function StickyPropertyHeader({
                 className={cn(
                   "h-6 px-2 text-[10px] font-bold",
                   property.leadTemperature === temp 
-                    ? (temp === "HOT" ? "bg-orange-500 hover:bg-orange-600" : temp === "WARM" ? "bg-amber-500 hover:bg-amber-600" : temp === "COLD" ? "bg-blue-500 hover:bg-blue-600" : "bg-slate-600")
+                    ? (temp === "SUPER HOT" ? "bg-blue-600 hover:bg-blue-700" : temp === "HOT" ? "bg-orange-500 hover:bg-orange-600" : temp === "WARM" ? "bg-amber-500 hover:bg-amber-600" : temp === "COLD" ? "bg-blue-500 hover:bg-blue-600" : "bg-slate-600")
                     : "text-slate-500 hover:bg-slate-200"
                 )}
                 onClick={() => onUpdateLeadTemperature(temp)}
@@ -190,7 +193,7 @@ export function StickyPropertyHeader({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Beds/Baths</span>
-              <span className="text-xs font-bold text-slate-700">{property.bedrooms}/{property.bathrooms}</span>
+              <span className="text-xs font-bold text-slate-700">{property.bedrooms || "0"}/{property.bathrooms || "0"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Sqft</span>
@@ -222,7 +225,7 @@ export function StickyPropertyHeader({
           <div className="grid grid-cols-1 gap-y-1 pl-4">
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Owner</span>
-              <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{property.primaryOwner || "N/A"}</span>
+              <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{property.primaryOwner || property.ownerName || "N/A"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Location</span>
