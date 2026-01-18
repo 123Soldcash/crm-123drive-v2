@@ -9,12 +9,37 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Phone, Mail, MessageSquare, Facebook, Instagram, Star, AlertTriangle, Scale, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Phone, Mail, MessageSquare, Facebook, Instagram, Star, AlertTriangle, Scale, Plus, Edit, Trash2, Eye, EyeOff, MapPin } from "lucide-react";
 import { PhoneDuplicateAlert } from "./PhoneDuplicateAlert";
 import { toast } from "sonner";
 
 interface ContactManagementProps {
   propertyId: number;
+}
+
+interface PhoneEntry {
+  id?: number;
+  phoneNumber: string;
+  phoneType: string;
+  isPrimary: number;
+}
+
+interface EmailEntry {
+  id?: number;
+  email: string;
+  emailType: string;
+  isPrimary: number;
+}
+
+interface AddressEntry {
+  id?: number;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  zipcode: string;
+  addressType: string;
+  isPrimary: number;
 }
 
 export function ContactManagement({ propertyId }: ContactManagementProps) {
@@ -27,7 +52,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
   const [editingContact, setEditingContact] = useState<any>(null);
   const [showHidden, setShowHidden] = useState(false);
   
-  // Form state
+  // Form state with dynamic arrays
   const [formData, setFormData] = useState({
     name: "",
     relationship: "",
@@ -37,15 +62,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
     dnc: false,
     isLitigator: false,
     deceased: false,
-    phone1: "",
-    phone1Type: "Mobile",
-    phone2: "",
-    phone2Type: "Mobile",
-    phone3: "",
-    phone3Type: "Mobile",
-    email1: "",
-    email2: "",
-    email3: "",
+    phones: [] as PhoneEntry[],
+    emails: [] as EmailEntry[],
+    addresses: [] as AddressEntry[],
   });
   
   const createContactMutation = trpc.communication.createContact.useMutation({
@@ -101,15 +120,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
       dnc: false,
       isLitigator: false,
       deceased: false,
-      phone1: "",
-      phone1Type: "Mobile",
-      phone2: "",
-      phone2Type: "Mobile",
-      phone3: "",
-      phone3Type: "Mobile",
-      email1: "",
-      email2: "",
-      email3: "",
+      phones: [],
+      emails: [],
+      addresses: [],
     });
   };
   
@@ -124,15 +137,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
       dnc: formData.dnc ? 1 : 0,
       isLitigator: formData.isLitigator ? 1 : 0,
       deceased: formData.deceased ? 1 : 0,
-      phone1: formData.phone1 || undefined,
-      phone1Type: formData.phone1Type || undefined,
-      phone2: formData.phone2 || undefined,
-      phone2Type: formData.phone2Type || undefined,
-      phone3: formData.phone3 || undefined,
-      phone3Type: formData.phone3Type || undefined,
-      email1: formData.email1 || undefined,
-      email2: formData.email2 || undefined,
-      email3: formData.email3 || undefined,
+      phones: formData.phones.filter(p => p.phoneNumber),
+      emails: formData.emails.filter(e => e.email),
+      addresses: formData.addresses.filter(a => a.addressLine1 && a.city && a.state && a.zipcode),
     };
     
     if (editingContact) {
@@ -156,15 +163,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
       dnc: contact.dnc === 1,
       isLitigator: contact.isLitigator === 1,
       deceased: contact.deceased === 1,
-      phone1: contact.phone1 || "",
-      phone1Type: contact.phone1Type || "Mobile",
-      phone2: contact.phone2 || "",
-      phone2Type: contact.phone2Type || "Mobile",
-      phone3: contact.phone3 || "",
-      phone3Type: contact.phone3Type || "Mobile",
-      email1: contact.email1 || "",
-      email2: contact.email2 || "",
-      email3: contact.email3 || "",
+      phones: contact.phones || [],
+      emails: contact.emails || [],
+      addresses: contact.addresses || [],
     });
     setIsAddDialogOpen(true);
   };
@@ -173,6 +174,66 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
     if (confirm("Are you sure you want to delete this contact?")) {
       deleteContactMutation.mutate({ id: contactId });
     }
+  };
+
+  const addPhoneField = () => {
+    setFormData({
+      ...formData,
+      phones: [...formData.phones, { phoneNumber: "", phoneType: "Mobile", isPrimary: 0 }],
+    });
+  };
+
+  const removePhoneField = (index: number) => {
+    setFormData({
+      ...formData,
+      phones: formData.phones.filter((_, i) => i !== index),
+    });
+  };
+
+  const updatePhoneField = (index: number, field: string, value: any) => {
+    const updated = [...formData.phones];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, phones: updated });
+  };
+
+  const addEmailField = () => {
+    setFormData({
+      ...formData,
+      emails: [...formData.emails, { email: "", emailType: "Personal", isPrimary: 0 }],
+    });
+  };
+
+  const removeEmailField = (index: number) => {
+    setFormData({
+      ...formData,
+      emails: formData.emails.filter((_, i) => i !== index),
+    });
+  };
+
+  const updateEmailField = (index: number, field: string, value: any) => {
+    const updated = [...formData.emails];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, emails: updated });
+  };
+
+  const addAddressField = () => {
+    setFormData({
+      ...formData,
+      addresses: [...formData.addresses, { addressLine1: "", addressLine2: "", city: "", state: "", zipcode: "", addressType: "Mailing", isPrimary: 0 }],
+    });
+  };
+
+  const removeAddressField = (index: number) => {
+    setFormData({
+      ...formData,
+      addresses: formData.addresses.filter((_, i) => i !== index),
+    });
+  };
+
+  const updateAddressField = (index: number, field: string, value: any) => {
+    const updated = [...formData.addresses];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, addresses: updated });
   };
   
   if (isLoading) {
@@ -202,7 +263,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   Add Contact
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingContact ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                 </DialogHeader>
@@ -302,56 +363,203 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                     />
                   </div>
                   
-                  {/* Phone Numbers */}
-                  <div className="space-y-2">
-                    <Label>Phone Numbers</Label>
-                    {[1, 2, 3].map((num) => (
-                      <div key={num} className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
+                  {/* Phone Numbers - Dynamic */}
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Phone Numbers</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addPhoneField}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Phone
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.phones.map((phone, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="grid grid-cols-4 gap-2">
+                            <Input
+                              placeholder="Phone number"
+                              value={phone.phoneNumber}
+                              onChange={(e) => updatePhoneField(index, "phoneNumber", e.target.value)}
+                              className="col-span-2"
+                            />
+                            <Select
+                              value={phone.phoneType}
+                              onValueChange={(value) => updatePhoneField(index, "phoneType", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Mobile">Mobile</SelectItem>
+                                <SelectItem value="Landline">Landline</SelectItem>
+                                <SelectItem value="Wireless">Wireless</SelectItem>
+                                <SelectItem value="Work">Work</SelectItem>
+                                <SelectItem value="Home">Home</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removePhoneField(index)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {phone.phoneNumber && (
+                            <PhoneDuplicateAlert phoneNumber={phone.phoneNumber} />
+                          )}
+                        </div>
+                      ))}
+                      {formData.phones.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No phone numbers added yet.</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Emails - Dynamic */}
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Email Addresses</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addEmailField}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Email
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.emails.map((email, index) => (
+                        <div key={index} className="grid grid-cols-3 gap-2">
                           <Input
-                            placeholder={`Phone ${num}`}
-                            value={formData[`phone${num}` as keyof typeof formData] as string}
-                            onChange={(e) => setFormData({ ...formData, [`phone${num}`]: e.target.value })}
+                            placeholder="Email address"
+                            type="email"
+                            value={email.email}
+                            onChange={(e) => updateEmailField(index, "email", e.target.value)}
                             className="col-span-2"
                           />
-                          <Select
-                            value={formData[`phone${num}Type` as keyof typeof formData] as string}
-                            onValueChange={(value) => setFormData({ ...formData, [`phone${num}Type`]: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Mobile">Mobile</SelectItem>
-                              <SelectItem value="Landline">Landline</SelectItem>
-                              <SelectItem value="Wireless">Wireless</SelectItem>
-                              <SelectItem value="Work">Work</SelectItem>
-                              <SelectItem value="Home">Home</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-1">
+                            <Select
+                              value={email.emailType}
+                              onValueChange={(value) => updateEmailField(index, "emailType", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Personal">Personal</SelectItem>
+                                <SelectItem value="Work">Work</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeEmailField(index)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        {formData[`phone${num}` as keyof typeof formData] && (
-                          <PhoneDuplicateAlert phoneNumber={formData[`phone${num}` as keyof typeof formData] as string} />
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                      {formData.emails.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No emails added yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mailing Addresses - Dynamic */}
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Mailing Addresses</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addAddressField}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Address
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {formData.addresses.map((address, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-md">
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              placeholder="Street address"
+                              value={address.addressLine1}
+                              onChange={(e) => updateAddressField(index, "addressLine1", e.target.value)}
+                            />
+                            <Input
+                              placeholder="Apt, Suite, etc. (optional)"
+                              value={address.addressLine2 || ""}
+                              onChange={(e) => updateAddressField(index, "addressLine2", e.target.value)}
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <Input
+                              placeholder="City"
+                              value={address.city}
+                              onChange={(e) => updateAddressField(index, "city", e.target.value)}
+                            />
+                            <Input
+                              placeholder="State"
+                              maxLength={2}
+                              value={address.state}
+                              onChange={(e) => updateAddressField(index, "state", e.target.value.toUpperCase())}
+                            />
+                            <Input
+                              placeholder="Zip code"
+                              value={address.zipcode}
+                              onChange={(e) => updateAddressField(index, "zipcode", e.target.value)}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Select
+                              value={address.addressType}
+                              onValueChange={(value) => updateAddressField(index, "addressType", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Mailing">Mailing</SelectItem>
+                                <SelectItem value="Current">Current</SelectItem>
+                                <SelectItem value="Previous">Previous</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAddressField(index)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {formData.addresses.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No addresses added yet.</p>
+                      )}
+                    </div>
                   </div>
                   
-                  {/* Emails */}
-                  <div className="space-y-2">
-                    <Label>Email Addresses</Label>
-                    {[1, 2, 3].map((num) => (
-                      <Input
-                        key={num}
-                        placeholder={`Email ${num}`}
-                        type="email"
-                        value={formData[`email${num}` as keyof typeof formData] as string}
-                        onChange={(e) => setFormData({ ...formData, [`email${num}`]: e.target.value })}
-                      />
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex gap-2 pt-4 border-t">
                     <Button onClick={handleSave} className="flex-1">
                       {editingContact ? "Update Contact" : "Create Contact"}
                     </Button>
@@ -425,87 +633,62 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {/* Phone Numbers - show only individual fields to avoid duplicates */}
-                  {(contact.phone1 || contact.phone2 || contact.phone3) && (
+                  {/* Phone Numbers - Dynamic Display */}
+                  {(contact.phones && contact.phones.length > 0) && (
                     <div className="space-y-1">
-                      {contact.phone1 && (
-                        <div className={`flex items-center gap-2 text-sm ${
+                      {contact.phones.map((phone: any, idx: number) => (
+                        <div key={idx} className={`flex items-center gap-2 text-sm ${
                           contact.dnc === 1 ? 'font-bold text-red-600' : ''
                         }`}>
                           <Phone className={`h-4 w-4 ${
                             contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
                           }`} />
-                          <span>{contact.phone1}</span>
-                          <Badge variant="outline" className="text-xs">{contact.phone1Type}</Badge>
+                          <span>{phone.phoneNumber}</span>
+                          <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
                           {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
                         </div>
-                      )}
-                      {contact.phone2 && (
-                        <div className={`flex items-center gap-2 text-sm ${
-                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
-                        }`}>
-                          <Phone className={`h-4 w-4 ${
-                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
-                          }`} />
-                          <span>{contact.phone2}</span>
-                          <Badge variant="outline" className="text-xs">{contact.phone2Type}</Badge>
-                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
-                        </div>
-                      )}
-                      {contact.phone3 && (
-                        <div className={`flex items-center gap-2 text-sm ${
-                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
-                        }`}>
-                          <Phone className={`h-4 w-4 ${
-                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
-                          }`} />
-                          <span>{contact.phone3}</span>
-                          <Badge variant="outline" className="text-xs">{contact.phone3Type}</Badge>
-                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
-                        </div>
-                      )}
+                      ))}
                     </div>
                   )}
                   
-                  {/* Emails from emails array (imported) or individual fields (manual) */}
-                  {(contact.emails && contact.emails.length > 0 || contact.email1 || contact.email2 || contact.email3) && (
+                  {/* Emails - Dynamic Display */}
+                  {(contact.emails && contact.emails.length > 0) && (
                     <div className="space-y-1">
-                      {contact.emails && contact.emails.map((email: any, idx: number) => (
+                      {contact.emails.map((email: any, idx: number) => (
                         <div key={idx} className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{email.emailAddress || email.email}</span>
+                          <span>{email.email}</span>
+                          <Badge variant="outline" className="text-xs">{email.emailType}</Badge>
                         </div>
                       ))}
-                      {contact.email1 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{contact.email1}</span>
+                    </div>
+                  )}
+
+                  {/* Mailing Addresses - Dynamic Display */}
+                  {(contact.addresses && contact.addresses.length > 0) && (
+                    <div className="space-y-2 border-t pt-2">
+                      {contact.addresses.map((address: any, idx: number) => (
+                        <div key={idx} className="text-sm">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="font-medium">{address.addressType}</p>
+                              <p className="text-muted-foreground">{address.addressLine1}</p>
+                              {address.addressLine2 && <p className="text-muted-foreground">{address.addressLine2}</p>}
+                              <p className="text-muted-foreground">{address.city}, {address.state} {address.zipcode}</p>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      {contact.email2 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{contact.email2}</span>
-                        </div>
-                      )}
-                      {contact.email3 && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{contact.email3}</span>
-                        </div>
-                      )}
+                      ))}
                     </div>
                   )}
                   
                   {/* Current Address */}
                   {contact.currentAddress && (
-                    <div className="text-sm text-muted-foreground">
-                      <strong>Current Address:</strong> {contact.currentAddress}
+                    <div className="text-sm text-muted-foreground border-t pt-2">
+                      <strong>Current Address (Legacy):</strong> {contact.currentAddress}
                     </div>
                   )}
-                  
-                  {/* Quick Actions */}
-                  {/* Action buttons removed - use Call Tracking Table instead */}
                 </CardContent>
               </Card>
             ))}
@@ -521,9 +704,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                 Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingContact ? "Edit Contact" : "Add New Contact"}</DialogTitle>
+                <DialogTitle>Add New Contact</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 {/* Basic Information */}
@@ -621,55 +804,207 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   />
                 </div>
                 
-                {/* Phone Numbers */}
-                <div className="space-y-2">
-                  <Label>Phone Numbers</Label>
-                  {[1, 2, 3].map((num) => (
-                    <div key={num} className="grid grid-cols-3 gap-2">
-                      <Input
-                        placeholder={`Phone ${num}`}
-                        value={formData[`phone${num}` as keyof typeof formData] as string}
-                        onChange={(e) => setFormData({ ...formData, [`phone${num}`]: e.target.value })}
-                        className="col-span-2"
-                      />
-                      <Select
-                        value={formData[`phone${num}Type` as keyof typeof formData] as string}
-                        onValueChange={(value) => setFormData({ ...formData, [`phone${num}Type`]: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Mobile">Mobile</SelectItem>
-                          <SelectItem value="Landline">Landline</SelectItem>
-                          <SelectItem value="Wireless">Wireless</SelectItem>
-                          <SelectItem value="Work">Work</SelectItem>
-                          <SelectItem value="Home">Home</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                {/* Phone Numbers - Dynamic */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">Phone Numbers</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addPhoneField}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Phone
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.phones.map((phone, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="grid grid-cols-4 gap-2">
+                          <Input
+                            placeholder="Phone number"
+                            value={phone.phoneNumber}
+                            onChange={(e) => updatePhoneField(index, "phoneNumber", e.target.value)}
+                            className="col-span-2"
+                          />
+                          <Select
+                            value={phone.phoneType}
+                            onValueChange={(value) => updatePhoneField(index, "phoneType", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Mobile">Mobile</SelectItem>
+                              <SelectItem value="Landline">Landline</SelectItem>
+                              <SelectItem value="Wireless">Wireless</SelectItem>
+                              <SelectItem value="Work">Work</SelectItem>
+                              <SelectItem value="Home">Home</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removePhoneField(index)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {phone.phoneNumber && (
+                          <PhoneDuplicateAlert phoneNumber={phone.phoneNumber} />
+                        )}
+                      </div>
+                    ))}
+                    {formData.phones.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No phone numbers added yet.</p>
+                    )}
+                  </div>
                 </div>
                 
-                {/* Emails */}
-                <div className="space-y-2">
-                  <Label>Email Addresses</Label>
-                  {[1, 2, 3].map((num) => (
-                    <Input
-                      key={num}
-                      placeholder={`Email ${num}`}
-                      type="email"
-                      value={formData[`email${num}` as keyof typeof formData] as string}
-                      onChange={(e) => setFormData({ ...formData, [`email${num}`]: e.target.value })}
-                    />
-                  ))}
+                {/* Emails - Dynamic */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">Email Addresses</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addEmailField}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Email
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.emails.map((email, index) => (
+                      <div key={index} className="grid grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Email address"
+                          type="email"
+                          value={email.email}
+                          onChange={(e) => updateEmailField(index, "email", e.target.value)}
+                          className="col-span-2"
+                        />
+                        <div className="flex gap-1">
+                          <Select
+                            value={email.emailType}
+                            onValueChange={(value) => updateEmailField(index, "emailType", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Personal">Personal</SelectItem>
+                              <SelectItem value="Work">Work</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeEmailField(index)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {formData.emails.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No emails added yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mailing Addresses - Dynamic */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-semibold">Mailing Addresses</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addAddressField}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Address
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {formData.addresses.map((address, index) => (
+                      <div key={index} className="space-y-2 p-3 border rounded-md">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            placeholder="Street address"
+                            value={address.addressLine1}
+                            onChange={(e) => updateAddressField(index, "addressLine1", e.target.value)}
+                          />
+                          <Input
+                            placeholder="Apt, Suite, etc. (optional)"
+                            value={address.addressLine2 || ""}
+                            onChange={(e) => updateAddressField(index, "addressLine2", e.target.value)}
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Input
+                            placeholder="City"
+                            value={address.city}
+                            onChange={(e) => updateAddressField(index, "city", e.target.value)}
+                          />
+                          <Input
+                            placeholder="State"
+                            maxLength={2}
+                            value={address.state}
+                            onChange={(e) => updateAddressField(index, "state", e.target.value.toUpperCase())}
+                          />
+                          <Input
+                            placeholder="Zip code"
+                            value={address.zipcode}
+                            onChange={(e) => updateAddressField(index, "zipcode", e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Select
+                            value={address.addressType}
+                            onValueChange={(value) => updateAddressField(index, "addressType", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Mailing">Mailing</SelectItem>
+                              <SelectItem value="Current">Current</SelectItem>
+                              <SelectItem value="Previous">Previous</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAddressField(index)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {formData.addresses.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No addresses added yet.</p>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-2 pt-4 border-t">
                   <Button onClick={handleSave} className="flex-1">
-                    {editingContact ? "Update Contact" : "Create Contact"}
+                    Create Contact
                   </Button>
-                  <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); setEditingContact(null); resetForm(); }} className="flex-1">
+                  <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }} className="flex-1">
                     Cancel
                   </Button>
                 </div>
