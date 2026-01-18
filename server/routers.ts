@@ -2560,6 +2560,90 @@ export const appRouter = router({
         return await analyzeDeal(input.propertyId, input.offerPrice);
       }),
   }),
+
+  buyers: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          name: z.string(),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          company: z.string().optional(),
+          status: z.enum(["Active", "Inactive", "Verified", "Blacklisted"]).optional(),
+          notes: z.string().optional(),
+          preferences: z.object({
+            states: z.array(z.string()).optional(),
+            cities: z.array(z.string()).optional(),
+            zipcodes: z.array(z.string()).optional(),
+            propertyTypes: z.array(z.string()).optional(),
+            minBeds: z.number().optional(),
+            maxBeds: z.number().optional(),
+            minBaths: z.number().optional(),
+            maxBaths: z.number().optional(),
+            minPrice: z.number().optional(),
+            maxPrice: z.number().optional(),
+            maxRepairCost: z.number().optional(),
+          }).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { createBuyer } = await import("./db-buyers");
+        return await createBuyer(input);
+      }),
+
+    list: protectedProcedure
+      .input(z.object({ search: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        const { getAllBuyers } = await import("./db-buyers");
+        return await getAllBuyers(input?.search);
+      }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getBuyerById } = await import("./db-buyers");
+        return await getBuyerById(input.id);
+      }),
+
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          data: z.object({
+            name: z.string().optional(),
+            email: z.string().email().optional(),
+            phone: z.string().optional(),
+            company: z.string().optional(),
+            status: z.enum(["Active", "Inactive", "Verified", "Blacklisted"]).optional(),
+            notes: z.string().optional(),
+            preferences: z.object({
+              states: z.array(z.string()).optional(),
+              cities: z.array(z.string()).optional(),
+              zipcodes: z.array(z.string()).optional(),
+              propertyTypes: z.array(z.string()).optional(),
+              minBeds: z.number().optional(),
+              maxBeds: z.number().optional(),
+              minBaths: z.number().optional(),
+              maxBaths: z.number().optional(),
+              minPrice: z.number().optional(),
+              maxPrice: z.number().optional(),
+              maxRepairCost: z.number().optional(),
+            }).optional(),
+          }),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { updateBuyer } = await import("./db-buyers");
+        return await updateBuyer(input.id, input.data);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteBuyer } = await import("./db-buyers");
+        return await deleteBuyer(input.id);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
