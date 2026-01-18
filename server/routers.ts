@@ -2492,6 +2492,74 @@ export const appRouter = router({
         return await deleteFollowUp(input.followUpId);
       }),
   }),
+
+  dealCalculator: router({
+    save: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          arv: z.number().positive(),
+          repairCost: z.number().nonnegative(),
+          closingCost: z.number().nonnegative(),
+          assignmentFee: z.number().nonnegative(),
+          desiredProfit: z.number().nonnegative(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { saveDealCalculation } = await import("./db-deal-calculator");
+        return await saveDealCalculation(
+          input.propertyId,
+          input.arv,
+          input.repairCost,
+          input.closingCost,
+          input.assignmentFee,
+          input.desiredProfit
+        );
+      }),
+
+    get: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const { getDealCalculation } = await import("./db-deal-calculator");
+        return await getDealCalculation(input.propertyId);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteDealCalculation } = await import("./db-deal-calculator");
+        return await deleteDealCalculation(input.propertyId);
+      }),
+
+    getAll: protectedProcedure.query(async () => {
+      const { getAllDealCalculations } = await import("./db-deal-calculator");
+      return await getAllDealCalculations();
+    }),
+
+    calculateProfitMargin: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          offerPrice: z.number().nonnegative(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { calculateProfitMargin } = await import("./db-deal-calculator");
+        return await calculateProfitMargin(input.propertyId, input.offerPrice);
+      }),
+
+    analyzeDeal: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          offerPrice: z.number().nonnegative(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { analyzeDeal } = await import("./db-deal-calculator");
+        return await analyzeDeal(input.propertyId, input.offerPrice);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

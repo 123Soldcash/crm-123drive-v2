@@ -41,6 +41,7 @@ import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
+import { DealCalculator } from "@/components/DealCalculator";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function PropertyDetail() {
@@ -900,6 +901,9 @@ export default function PropertyDetail() {
 
       {/* Automated Follow-ups */}
       <AutomatedFollowUps propertyId={propertyId} />
+
+      {/* Deal Calculator */}
+      <DealCalculator propertyId={propertyId} />
 
       {/* Family Tree - ADHD-friendly yellow background */}
       <Card className="bg-yellow-50 border-yellow-200">

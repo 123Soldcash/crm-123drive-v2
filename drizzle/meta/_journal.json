@@ -8,6 +8,13 @@
       "when": 1768705536036,
       "tag": "0000_automated_follow_ups",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1768709247989,
+      "tag": "0001_deal_calculator_table",
+      "breakpoints": true
     }
   ]
 }
