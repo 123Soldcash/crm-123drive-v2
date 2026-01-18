@@ -31,11 +31,16 @@ export interface CreateBuyerInput {
  * Create a new buyer with optional preferences
  */
 export async function createBuyer(input: CreateBuyerInput) {
+  console.log("[Buyers] Attempting to create buyer:", JSON.stringify(input));
   try {
     const db = await getDb();
-    if (!db) throw new Error("Database not available");
+    if (!db) {
+      console.error("[Buyers] Database connection failed");
+      throw new Error("Database not available");
+    }
 
     // 1. Insert the buyer
+    console.log("[Buyers] Inserting into 'buyers' table...");
     const buyerResult = await db.insert(buyers).values({
       name: input.name,
       email: input.email,
@@ -46,9 +51,11 @@ export async function createBuyer(input: CreateBuyerInput) {
     });
 
     const buyerId = buyerResult.insertId;
+    console.log("[Buyers] Buyer inserted successfully, ID:", buyerId);
 
     // 2. Insert preferences if provided
     if (input.preferences) {
+      console.log("[Buyers] Inserting preferences for buyer ID:", buyerId);
       await db.insert(buyerPreferences).values({
         buyerId,
         states: input.preferences.states ? JSON.stringify(input.preferences.states) : null,
@@ -71,7 +78,7 @@ export async function createBuyer(input: CreateBuyerInput) {
       buyerId,
     };
   } catch (error) {
-    console.error("Error creating buyer:", error);
+    console.error("[Buyers] CRITICAL ERROR creating buyer:", error);
     return {
       success: false,
       message: "Error creating buyer",
@@ -84,9 +91,13 @@ export async function createBuyer(input: CreateBuyerInput) {
  * Get all buyers with optional search/filter
  */
 export async function getAllBuyers(search?: string) {
+  console.log("[Buyers] Fetching all buyers, search:", search);
   try {
     const db = await getDb();
-    if (!db) throw new Error("Database not available");
+    if (!db) {
+      console.error("[Buyers] Database connection failed during fetch");
+      throw new Error("Database not available");
+    }
 
     let query = db.select().from(buyers);
 
@@ -103,9 +114,10 @@ export async function getAllBuyers(search?: string) {
     }
 
     const result = await query;
+    console.log(`[Buyers] Successfully fetched ${result.length} buyers`);
     return result;
   } catch (error) {
-    console.error("Error fetching buyers:", error);
+    console.error("[Buyers] CRITICAL ERROR fetching buyers:", error);
     return [];
   }
 }
