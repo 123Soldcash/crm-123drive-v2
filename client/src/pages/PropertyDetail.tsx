@@ -52,7 +52,6 @@ export default function PropertyDetail() {
   const propertyId = Number(params?.id);
   const [noteContent, setNoteContent] = useState("");
   const [newTag, setNewTag] = useState("");
-  const [showDealCalculator, setShowDealCalculator] = useState(false);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<number[]>([]);
@@ -121,7 +120,7 @@ export default function PropertyDetail() {
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
   const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
-  const { data: agentsList, isLoading: agentsLoading, error: agentsError } = trpc.agents.listAll.useQuery();
+  const { data: agentsList } = trpc.agents.listAll.useQuery();
   const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId });
   const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
 
@@ -196,13 +195,6 @@ export default function PropertyDetail() {
     },
   });
 
-  const updateDesk = trpc.properties.updateDesk.useMutation({
-    onSuccess: () => {
-      utils.properties.getById.invalidate({ id: propertyId });
-      toast.success("Desk updated");
-    },
-  });
-
   const handleAddToPipeline = () => {
     if (!selectedPipelineStage) return;
     updateDealStage.mutate({ propertyId, stageId: selectedPipelineStage });
@@ -227,10 +219,10 @@ export default function PropertyDetail() {
 
   const getBackgroundColor = () => {
     switch (property.leadTemperature) {
-      case "SUPER HOT": return "bg-blue-50/30";
-      case "HOT": return "bg-green-50/30";
-      case "WARM": return "bg-yellow-50/30";
-      case "COLD": case "DEAD": return "bg-gray-50/30";
+      case "SUPER HOT": return "bg-blue-50/20";
+      case "HOT": return "bg-green-50/20";
+      case "WARM": return "bg-yellow-50/20";
+      case "COLD": case "DEAD": return "bg-gray-50/20";
       default: return "bg-white";
     }
   };
@@ -283,21 +275,27 @@ export default function PropertyDetail() {
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign Agent to Lead</DialogTitle>
-            <DialogDescription>Assign this property to one or more agents.</DialogDescription>
+            <DialogTitle>Assign Agent</DialogTitle>
+            <DialogDescription>Select agents to assign to this property.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
               {agentsList?.map((agent: any) => (
-                <div key={agent.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`agent-${agent.id}`}
-                    checked={selectedAgents.includes(agent.id)}
-                    onCheckedChange={() => toggleAgentSelection(agent.id)}
-                  />
-                  <label htmlFor={`agent-${agent.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    {agent.name} ({agent.agentType || 'Agent'})
-                  </label>
+                <div
+                  key={agent.id}
+                  onClick={() => toggleAgentSelection(agent.id)}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                    selectedAgents.includes(agent.id)
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-slate-200 hover:border-slate-300"
+                  )}
+                >
+                  <Checkbox checked={selectedAgents.includes(agent.id)} />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold">{agent.name}</span>
+                    <span className="text-[10px] text-slate-500 uppercase">{agent.role}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -350,7 +348,7 @@ export default function PropertyDetail() {
       </div>
 
       {/* Top Sections: Summary, Contacts, and Call Tracking */}
-      {property && <LeadSummary property={property} />}
+      <LeadSummary propertyId={propertyId} />
       <ContactManagement propertyId={propertyId} />
       <CallTrackingTable propertyId={propertyId} />
       
