@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,16 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({ propertyId }: PhotoGalleryProps) {
-  const [isExpanded, setIsExpanded] = useState(false); // Default hidden for ADHD
+  // localStorage persistence for ADHD-friendly collapsed state
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('showPropertyPhotos');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('showPropertyPhotos', JSON.stringify(isExpanded));
+  }, [isExpanded]);
   const { data: photos, isLoading } = trpc.photos.byProperty.useQuery({ propertyId });
   const utils = trpc.useUtils();
 

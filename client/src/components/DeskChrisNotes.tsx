@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, StickyNote } from "lucide-react";
+import { Loader2, StickyNote, Search, Download, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DeskChrisNotesProps {
   propertyId: number;
@@ -12,7 +14,18 @@ interface DeskChrisNotesProps {
 
 export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
   const [newNote, setNewNote] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false); // Default hidden for ADHD
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
+  // localStorage persistence for ADHD-friendly collapsed state
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('showDeskChrisNotes');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('showDeskChrisNotes', JSON.stringify(isExpanded));
+  }, [isExpanded]);
   const utils = trpc.useUtils();
 
   // Fetch only desk-chris notes
@@ -21,6 +34,16 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
   });
 
   const deskChrisNotes = allNotes?.filter((note) => note.noteType === "desk-chris") || [];
+  
+  // Filter notes based on search query
+  const filteredNotes = deskChrisNotes.filter((note) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      note.content.toLowerCase().includes(query) ||
+      (note.userName && note.userName.toLowerCase().includes(query)) ||
+      formatTimestamp(note.createdAt).toLowerCase().includes(query)
+    );
+  });
 
   const createNoteMutation = trpc.notes.create.useMutation({
     onSuccess: () => {
@@ -30,6 +53,17 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
     },
     onError: (error) => {
       toast.error(`Failed to add note: ${error.message}`);
+    },
+  });
+
+  const deleteNoteMutation = trpc.notes.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Note(s) deleted successfully!");
+      setSelectedNotes([]);
+      utils.notes.byProperty.invalidate({ propertyId });
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete note: ${error.message}`);
     },
   });
 
@@ -44,6 +78,59 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
       content: newNote.trim(),
       noteType: "desk-chris",
     });
+  };
+  
+  const handleExportCSV = () => {
+    const csvContent = [
+      ["Date", "Agent", "Notes"],
+      ...deskChrisNotes.map((note) => [
+        formatTimestamp(note.createdAt),
+        note.userName || "Unknown",
+        `"${note.content.replace(/"/g, '""')}"`,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `desk-chris-notes-${propertyId}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully!");
+  };
+  
+  const handleBulkDelete = () => {
+    if (selectedNotes.length === 0) {
+      toast.error("Please select notes to delete");
+      return;
+    }
+    
+    if (confirm(`Delete ${selectedNotes.length} selected note(s)?`)) {
+      selectedNotes.forEach((noteId) => {
+        deleteNoteMutation.mutate({ id: noteId });
+      });
+    }
+  };
+  
+  const toggleSelectAll = () => {
+    if (selectedNotes.length === filteredNotes.length) {
+      setSelectedNotes([]);
+    } else {
+      setSelectedNotes(filteredNotes.map((note) => note.id));
+    }
+  };
+  
+  const toggleSelectNote = (noteId: number) => {
+    setSelectedNotes((prev) =>
+      prev.includes(noteId)
+        ? prev.filter((id) => id !== noteId)
+        : [...prev, noteId]
+    );
   };
 
   const formatTimestamp = (date: Date | string) => {
@@ -105,10 +192,43 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
             </Button>
           </div>
 
+          {/* Search and Bulk Operations */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search notes by text, agent, or date..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={deskChrisNotes.length === 0}
+              className="whitespace-nowrap"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={selectedNotes.length === 0}
+              className="whitespace-nowrap"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete ({selectedNotes.length})
+            </Button>
+          </div>
+
           {/* Notes List - Table Format (ADHD-Friendly) */}
           <div className="space-y-3">
             <h4 className="font-medium text-sm text-gray-700">
-              Notes History ({deskChrisNotes.length})
+              Notes History ({filteredNotes.length} of {deskChrisNotes.length})
             </h4>
 
             {isLoading ? (
@@ -126,6 +246,12 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
                 <table className="w-full border-collapse bg-white">
                   <thead className="sticky top-0 bg-green-100">
                     <tr>
+                      <th className="border border-green-300 px-2 py-2 text-center w-12">
+                        <Checkbox
+                          checked={selectedNotes.length === filteredNotes.length && filteredNotes.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </th>
                       <th className="border border-green-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-48">
                         Date
                       </th>
@@ -138,8 +264,14 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {deskChrisNotes.map((note) => (
+                    {filteredNotes.map((note) => (
                       <tr key={note.id} className="hover:bg-green-50">
+                        <td className="border border-green-200 px-2 py-2 text-center">
+                          <Checkbox
+                            checked={selectedNotes.includes(note.id)}
+                            onCheckedChange={() => toggleSelectNote(note.id)}
+                          />
+                        </td>
                         <td className="border border-green-200 px-4 py-2 text-sm text-gray-700">
                           {formatTimestamp(note.createdAt)}
                         </td>

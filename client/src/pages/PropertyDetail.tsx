@@ -55,10 +55,32 @@ export default function PropertyDetail() {
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedDeskName, setSelectedDeskName] = useState<string>("");
   const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
-  const [showDeepSearch, setShowDeepSearch] = useState(false); // Default hidden for ADHD
-  const [showFamilyTree, setShowFamilyTree] = useState(false); // Default hidden for ADHD
-  const [showFieldVisit, setShowFieldVisit] = useState(false); // Default hidden as requested
-  const [showDeskChrisNotes, setShowDeskChrisNotes] = useState(false); // Default hidden for ADHD
+  // localStorage persistence for ADHD-friendly collapsed state
+  const [showDeepSearch, setShowDeepSearch] = useState(() => {
+    const saved = localStorage.getItem('showDeepSearch');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showFamilyTree, setShowFamilyTree] = useState(() => {
+    const saved = localStorage.getItem('showFamilyTree');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showFieldVisit, setShowFieldVisit] = useState(() => {
+    const saved = localStorage.getItem('showFieldVisit');
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('showDeepSearch', JSON.stringify(showDeepSearch));
+  }, [showDeepSearch]);
+  
+  useEffect(() => {
+    localStorage.setItem('showFamilyTree', JSON.stringify(showFamilyTree));
+  }, [showFamilyTree]);
+  
+  useEffect(() => {
+    localStorage.setItem('showFieldVisit', JSON.stringify(showFieldVisit));
+  }, [showFieldVisit]);
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();

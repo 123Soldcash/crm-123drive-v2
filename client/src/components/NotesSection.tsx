@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, Upload, X } from "lucide-react";
+import { Camera, Trash2, Upload, X, Search, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -16,6 +17,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const [noteText, setNoteText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<Record<number, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -56,6 +59,17 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   
   // Filter to show only general notes (not desk-chris notes)
   const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
+  
+  // Filter notes based on search query
+  const filteredNotes = notes.filter((note) => {
+    const query = searchQuery.toLowerCase();
+    const noteDate = new Date(note.createdAt).toLocaleString();
+    return (
+      note.content.toLowerCase().includes(query) ||
+      (note.userName && note.userName.toLowerCase().includes(query)) ||
+      noteDate.toLowerCase().includes(query)
+    );
+  });
 
   const createNoteMutation = trpc.notes.create.useMutation({
     onSuccess: async (note) => {
@@ -145,6 +159,60 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
       content: noteText,
       noteType: "general", // Explicitly set as general note
     });
+  };
+  
+  const handleExportCSV = () => {
+    const csvContent = [
+      ["Date", "Agent", "Notes"],
+      ...notes.map((note) => [
+        new Date(note.createdAt).toLocaleString(),
+        note.userName || "Unknown",
+        `"${note.content.replace(/"/g, '""')}"`,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `general-notes-${propertyId}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully!");
+  };
+  
+  const handleBulkDelete = () => {
+    if (selectedNotes.length === 0) {
+      toast.error("Please select notes to delete");
+      return;
+    }
+    
+    if (confirm(`Delete ${selectedNotes.length} selected note(s)?`)) {
+      selectedNotes.forEach((noteId) => {
+        deleteNoteMutation.mutate({ id: noteId });
+      });
+      setSelectedNotes([]);
+    }
+  };
+  
+  const toggleSelectAll = () => {
+    if (selectedNotes.length === filteredNotes.length) {
+      setSelectedNotes([]);
+    } else {
+      setSelectedNotes(filteredNotes.map((note) => note.id));
+    }
+  };
+  
+  const toggleSelectNote = (noteId: number) => {
+    setSelectedNotes((prev) =>
+      prev.includes(noteId)
+        ? prev.filter((id) => id !== noteId)
+        : [...prev, noteId]
+    );
   };
 
   if (isLoading) {
@@ -261,16 +329,55 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </Button>
         </div>
 
+        {/* Search and Bulk Operations */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search notes by text, agent, or date..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={notes.length === 0}
+            className="whitespace-nowrap"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            disabled={selectedNotes.length === 0}
+            className="whitespace-nowrap"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete ({selectedNotes.length})
+          </Button>
+        </div>
+
         {/* Notes List - Table Format (ADHD-Friendly) */}
         <div className="space-y-3">
           <h4 className="font-medium text-sm text-gray-700">
-            Notes History ({notes.length})
+            Notes History ({filteredNotes.length} of {notes.length})
           </h4>
           {notes && notes.length > 0 ? (
             <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="w-full border-collapse bg-white">
                 <thead className="sticky top-0 bg-gray-100">
                   <tr>
+                    <th className="border border-gray-300 px-2 py-2 text-center w-12">
+                      <Checkbox
+                        checked={selectedNotes.length === filteredNotes.length && filteredNotes.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
                     <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700 w-48">
                       Date
                     </th>
@@ -286,8 +393,14 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {notes.map((note) => (
+                  {filteredNotes.map((note) => (
                     <tr key={note.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-200 px-2 py-2 text-center">
+                        <Checkbox
+                          checked={selectedNotes.includes(note.id)}
+                          onCheckedChange={() => toggleSelectNote(note.id)}
+                        />
+                      </td>
                       <td className="border border-gray-200 px-4 py-2 text-sm text-gray-700">
                         {new Date(note.createdAt).toLocaleString("en-US", {
                           month: "short",

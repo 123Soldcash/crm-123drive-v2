@@ -984,3 +984,19 @@
 - [x] Display pasted images inline with captions
 - [x] Table format implemented with sticky headers and hover effects
 - [x] Screenshot paste with toast notification "Screenshot pasted! Add a caption if needed."
+
+
+## Notes Enhancement Features (Jan 17, 2026) - COMPLETED ✅
+- [x] Implement localStorage persistence for all collapsible sections
+- [x] Save/restore state for: Family Tree, Deep Search, Field Visit, Property Photos, Desk-Chris Notes
+- [x] Add "Export to CSV" button to Desk-Chris Notes table
+- [x] Add "Export to CSV" button to general Notes table
+- [x] Add checkbox selection for bulk delete in notes tables
+- [x] Add "Delete Selected" button showing count (e.g., "Delete (3)")
+- [x] Implement search/filter box above Desk-Chris Notes table
+- [x] Implement search/filter box above general Notes table
+- [x] Real-time filtering by text, agent name, or date
+- [x] Select All checkbox in table header
+- [x] Individual checkboxes for each note row
+- [x] CSV export with proper formatting and date in filename
+- [x] Bulk delete with confirmation dialog
