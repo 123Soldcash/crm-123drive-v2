@@ -49,6 +49,7 @@ export default function PropertyDetail() {
   const propertyId = Number(params?.id);
   const [noteContent, setNoteContent] = useState("");
   const [newTag, setNewTag] = useState("");
+  const [showDealCalculator, setShowDealCalculator] = useState(false);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedTransferAgent, setSelectedTransferAgent] = useState<string>("");
@@ -902,9 +903,6 @@ export default function PropertyDetail() {
       {/* Automated Follow-ups */}
       <AutomatedFollowUps propertyId={propertyId} />
 
-      {/* Deal Calculator */}
-      <DealCalculator propertyId={propertyId} />
-
       {/* Family Tree - ADHD-friendly yellow background */}
       <Card className="bg-yellow-50 border-yellow-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1019,6 +1017,26 @@ export default function PropertyDetail() {
 
       {/* Activity Timeline - Last section with purple background */}
       <ActivityTimeline propertyId={propertyId} />
+
+      {/* Deal Calculator - Green background with hide/show toggle */}
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Deal Calculator</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDealCalculator(!showDealCalculator)}
+            className="text-xs"
+          >
+            {showDealCalculator ? "Hide" : "Show"}
+          </Button>
+        </CardHeader>
+        {showDealCalculator && (
+          <CardContent>
+            <DealCalculator propertyId={propertyId} />
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }
