@@ -1,26 +1,25 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
   FileText, 
   Image as ImageIcon, 
-  Clock
+  Clock,
+  History
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { CollapsibleSection } from "./CollapsibleSection";
+import { Badge } from "@/components/ui/badge";
 
 interface ActivityTimelineProps {
   propertyId: number;
 }
 
 export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
-  // localStorage persistence for ADHD-friendly collapsed state
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem('showActivityTimeline');
     return saved ? JSON.parse(saved) : false;
   });
   
-  // Save state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('showActivityTimeline', JSON.stringify(isExpanded));
   }, [isExpanded]);
@@ -30,26 +29,22 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "check-in":
-        return <MapPin className="h-4 w-4 text-blue-500" />;
+        return <MapPin className="h-3 w-3 text-blue-500" />;
       case "note":
-        return <FileText className="h-4 w-4 text-green-500" />;
+        return <FileText className="h-3 w-3 text-emerald-500" />;
       case "photo":
-        return <ImageIcon className="h-4 w-4 text-purple-500" />;
+        return <ImageIcon className="h-3 w-3 text-purple-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-3 w-3 text-slate-400" />;
     }
   };
 
   const getActivityTitle = (activity: { type: string; details: string }) => {
     switch (activity.type) {
-      case "check-in":
-        return "Property Check-In";
-      case "note":
-        return "Note Added";
-      case "photo":
-        return "Photo Uploaded";
-      default:
-        return "Activity";
+      case "check-in": return "Property Check-In";
+      case "note": return "Note Added";
+      case "photo": return "Photo Uploaded";
+      default: return "Activity";
     }
   };
 
@@ -62,99 +57,79 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
       hour: "2-digit",
       minute: "2-digit"
     });
   };
 
   return (
-    <Card className="bg-purple-50 border-purple-200">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Activity Timeline</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs"
-          >
-            {isExpanded ? "Hide" : "Show"}
-          </Button>
+    <CollapsibleSection
+      title="Activity Timeline"
+      icon={History}
+      isOpen={isExpanded}
+      onToggle={() => setIsExpanded(!isExpanded)}
+      accentColor="purple"
+      badge={activities && activities.length > 0 ? (
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200 ml-1">
+          {activities.length}
+        </Badge>
+      ) : null}
+    >
+      {isLoading ? (
+        <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-slate-50 rounded-lg border border-dashed">Loading history...</div>
+      ) : !activities || activities.length === 0 ? (
+        <div className="py-6 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
+          <Clock className="h-8 w-8 mx-auto mb-2 text-slate-200" />
+          <p className="text-sm text-slate-500">No activity recorded yet</p>
         </div>
-      </CardHeader>
-      {isExpanded && (
-        <CardContent>
-          {isLoading ? (
-            <div className="text-sm text-muted-foreground">Loading activity history...</div>
-          ) : !activities || activities.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No activity recorded yet</div>
-          ) : (
-            <div className="space-y-4">
-              {activities.map((activity, index) => (
-                <div key={activity.id} className="flex gap-4">
-                  {/* Timeline line */}
-                  <div className="flex flex-col items-center">
-                    <div className="rounded-full bg-background border-2 border-border p-2">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    {index < activities.length - 1 && (
-                      <div className="w-0.5 h-full bg-border mt-2" />
+      ) : (
+        <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
+          {activities.map((activity) => (
+            <div key={activity.id} className="relative flex items-start gap-4">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm z-10 shrink-0">
+                {getActivityIcon(activity.type)}
+              </div>
+
+              <div className="flex-1 pt-1 pb-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-bold text-sm text-slate-900">{getActivityTitle(activity)}</div>
+                  <div className="text-[10px] text-slate-400 font-medium">{formatDate(activity.timestamp)}</div>
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  by <span className="font-semibold text-slate-700">{activity.user}</span>
+                </div>
+                
+                {activity.type === "note" && activity.details && (
+                  <div className="mt-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    {activity.details}
+                  </div>
+                )}
+                
+                {activity.type === "photo" && activity.metadata?.url && (
+                  <div className="mt-2">
+                    <img 
+                      src={activity.metadata.url} 
+                      alt="Activity photo" 
+                      className="rounded-lg border border-slate-200 max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(activity.metadata.url, "_blank")}
+                    />
+                    {activity.details && activity.details !== "Uploaded photo" && (
+                      <div className="mt-1 text-[10px] text-slate-400 italic">{activity.details}</div>
                     )}
                   </div>
-
-                  {/* Activity content */}
-                  <div className="flex-1 pb-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{getActivityTitle(activity)}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          by {activity.user} • {formatDate(activity.timestamp)}
-                        </div>
-                        
-                        {/* Activity-specific content */}
-                        {activity.type === "note" && activity.details && (
-                          <div className="mt-2 text-sm bg-muted/50 p-3 rounded-md">
-                            {activity.details}
-                          </div>
-                        )}
-                        
-                        {activity.type === "check-in" && activity.metadata?.latitude && (
-                          <div className="mt-2 text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            Location: {activity.metadata.latitude.toFixed(6)}, {activity.metadata.longitude.toFixed(6)}
-                          </div>
-                        )}
-                        
-                        {activity.type === "photo" && activity.metadata?.url && (
-                          <div className="mt-2">
-                            <img 
-                              src={activity.metadata.url} 
-                              alt="Activity photo" 
-                              className="rounded-md max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => window.open(activity.metadata.url, "_blank")}
-                            />
-                            {activity.details && activity.details !== "Uploaded photo" && (
-                              <div className="mt-1 text-xs text-muted-foreground">{activity.details}</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
-        </CardContent>
+          ))}
+        </div>
       )}
-    </Card>
+    </CollapsibleSection>
   );
 }
