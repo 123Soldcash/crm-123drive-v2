@@ -153,6 +153,8 @@ export async function getProperties(filters?: {
     assignedAgentId: properties.assignedAgentId,
     marketStatus: properties.marketStatus,
     dealMachineRawData: properties.dealMachineRawData,
+    apnParcelId: properties.apnParcelId,
+    propertyId: properties.propertyId,
     createdAt: properties.createdAt,
   }).from(properties);
   const conditions = [];
@@ -914,6 +916,8 @@ export async function getPropertiesWithAgents(filters?: {
     assignedAgentId: properties.assignedAgentId,
     marketStatus: properties.marketStatus,
     dealMachineRawData: properties.dealMachineRawData,
+    apnParcelId: properties.apnParcelId,
+    propertyId: properties.propertyId,
     createdAt: properties.createdAt,
   }).from(properties);
   const conditions = [];
