@@ -303,7 +303,12 @@ export async function getPropertyById(id: number) {
   
   // Get deep search data
   const deepSearchResult = await db
-    .select()
+    .select({
+      propertyCondition: propertyDeepSearch.propertyCondition,
+      issues: propertyDeepSearch.issues,
+      hasMortgage: propertyDeepSearch.hasMortgage,
+      delinquentTaxTotal: propertyDeepSearch.delinquentTaxTotal,
+    })
     .from(propertyDeepSearch)
     .where(eq(propertyDeepSearch.propertyId, id))
     .limit(1);
