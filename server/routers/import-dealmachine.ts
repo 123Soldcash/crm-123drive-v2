@@ -342,13 +342,11 @@ export const importDealMachineRouter = router({
             for (let e = 1; e <= 10; e++) {
               const email = row[`contact_${i}_email${e}`];
               if (email && String(email).trim()) {
-                const emailType = row[`contact_${i}_email${e}_type`] || 'Personal';
                 await dbInstance.insert(contactEmails).values({
                   contactId: insertedContactId,
                   email: String(email).trim(),
-                  emailType: emailType,
                   isPrimary: e === 1 ? 1 : 0,
-                } as any);
+                });
                 emailsCount++;
               }
             }
@@ -381,7 +379,14 @@ export const importDealMachineRouter = router({
       
       // PHASE 2: Enrich addresses using Google Maps (only for properties with TBD address)
       const propertiesWithGPS = await dbInstance
-        .select()
+        .select({
+          id: properties.id,
+          addressLine1: properties.addressLine1,
+          city: properties.city,
+          state: properties.state,
+          zipcode: properties.zipcode,
+          dealMachineRawData: properties.dealMachineRawData,
+        })
         .from(properties)
         .where(eq(properties.addressLine1, 'TBD'));
       

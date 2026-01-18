@@ -94,7 +94,7 @@ async function startServer() {
   app.post("/api/webhook/zapier", async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts } = await import("../../drizzle/schema");
+      const { properties, contacts, contactPhones, contactEmails } = await import("../../drizzle/schema");
       
       const database = await getDb();
       if (!database) {
@@ -128,19 +128,39 @@ async function startServer() {
         status: "Zapier Import",
       });
 
-      // If contact info provided, add contact
+      // If contact info provided, add contact with relational data
       if (data.Email || data.Phone) {
         const propertyId = (result as any).insertId || (result as any)[0]?.id;
         if (propertyId) {
-          await database.insert(contacts).values({
+          // Insert contact into contacts table
+          const contactResult = await database.insert(contacts).values({
             propertyId,
             name: ownerName,
             relationship: "Owner",
-            phone1: data.Phone,
-            email1: data.Email,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           });
+          
+          const contactId = (contactResult as any).insertId || (contactResult as any)[0]?.id;
+          
+          if (contactId) {
+            // Insert phone if provided
+            if (data.Phone && String(data.Phone).trim()) {
+              await database.insert(contactPhones).values({
+                contactId,
+                phoneNumber: String(data.Phone).trim(),
+                phoneType: "Mobile",
+                isPrimary: 1,
+              });
+            }
+            
+            // Insert email if provided
+            if (data.Email && String(data.Email).trim()) {
+              await database.insert(contactEmails).values({
+                contactId,
+                email: String(data.Email).trim(),
+                isPrimary: 1,
+              });
+            }
+          }
         }
       }
 
