@@ -209,11 +209,11 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   }
 
   return (
-    <Card className="border-l-4 border-l-blue-500">
+    <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-blue-900">Follow-ups Automáticos</CardTitle>
-          <CardDescription>Gerencie lembretes e automações para este lead</CardDescription>
+          <CardDescription className="text-blue-700/70">Gerencie lembretes e automações para este lead</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
