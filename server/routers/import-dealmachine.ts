@@ -342,11 +342,9 @@ export const importDealMachineRouter = router({
             for (let e = 1; e <= 10; e++) {
               const email = row[`contact_${i}_email${e}`];
               if (email && String(email).trim()) {
-                const emailType = row[`contact_${i}_email${e}_type`] || 'Personal';
                 await dbInstance.insert(contactEmails).values({
                   contactId: insertedContactId,
                   email: String(email).trim(),
-                  emailType: emailType,
                   isPrimary: e === 1 ? 1 : 0,
                 } as any);
                 emailsCount++;
