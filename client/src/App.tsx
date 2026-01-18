@@ -13,6 +13,8 @@ import ActivityTracking from "./pages/ActivityTracking";
 import ImportProperties from "./pages/ImportProperties";
 import AgentPerformance from "./pages/AgentPerformance";
 import UserManagement from "./pages/UserManagement";
+import Buyers from "./pages/Buyers";
+import BuyerDetail from "./pages/BuyerDetail";
 import { TasksKanban } from "./pages/TasksKanban";
 import { TasksList } from "./pages/TasksList";
 import { TasksCalendar } from "./pages/TasksCalendar";
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/import" component={() => <DashboardLayout><ImportProperties /></DashboardLayout>} />
       <Route path="/agent-performance" component={() => <DashboardLayout><AgentPerformance /></DashboardLayout>} />
       <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
+      <Route path="/buyers" component={() => <DashboardLayout><Buyers /></DashboardLayout>} />
+      <Route path="/buyers/:id" component={() => <DashboardLayout><BuyerDetail /></DashboardLayout>} />
       <Route path="/agents" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
       <Route path="/agent-management" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
       <Route path="/bulk-assign-agents" component={() => <DashboardLayout><BulkAgentAssignment /></DashboardLayout>} />
