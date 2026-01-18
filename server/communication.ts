@@ -4,11 +4,13 @@ import {
   contacts,
   contactPhones,
   contactEmails,
+  contactAddresses,
   contactSocialMedia,
   communicationLog,
   InsertContact,
   InsertContactPhone,
   InsertContactEmail,
+  InsertContactAddress,
   InsertContactSocialMedia,
   InsertCommunicationLog,
 } from "../drizzle/schema";
@@ -23,38 +25,25 @@ export async function getContactsByProperty(propertyId: number) {
   
   const contactsData = await db.select().from(contacts).where(eq(contacts.propertyId, propertyId));
   
-  // For each contact, fetch phones from BOTH sources:
-  // 1. phone1/phone2/phone3 fields in contacts table
-  // 2. contactPhones table (separate phone records)
-  const contactsWithPhones = await Promise.all(
+  // For each contact, fetch phones, emails, and addresses
+  const contactsWithDetails = await Promise.all(
     contactsData.map(async (contact) => {
-      const phones = [];
-      
-      // Add phones from phone1/phone2/phone3 fields
-      if (contact.phone1) {
-        phones.push({ phoneNumber: contact.phone1, phoneType: contact.phone1Type || 'Mobile' });
-      }
-      if (contact.phone2) {
-        phones.push({ phoneNumber: contact.phone2, phoneType: contact.phone2Type || 'Mobile' });
-      }
-      if (contact.phone3) {
-        phones.push({ phoneNumber: contact.phone3, phoneType: contact.phone3Type || 'Mobile' });
-      }
-      
-      // Add phones from contactPhones table
-      const additionalPhones = await db.select().from(contactPhones).where(eq(contactPhones.contactId, contact.id));
-      additionalPhones.forEach(phone => {
-        phones.push({ phoneNumber: phone.phoneNumber, phoneType: phone.phoneType });
-      });
+      const [phones, emails, addresses] = await Promise.all([
+        db.select().from(contactPhones).where(eq(contactPhones.contactId, contact.id)),
+        db.select().from(contactEmails).where(eq(contactEmails.contactId, contact.id)),
+        db.select().from(contactAddresses).where(eq(contactAddresses.contactId, contact.id)),
+      ]);
       
       return {
         ...contact,
-        phones
+        phones: phones || [],
+        emails: emails || [],
+        addresses: addresses || [],
       };
     })
   );
   
-  return contactsWithPhones;
+  return contactsWithDetails;
 }
 
 export async function getContactById(contactId: number) {
@@ -65,19 +54,73 @@ export async function getContactById(contactId: number) {
   return result[0] || null;
 }
 
-export async function createContact(contact: InsertContact) {
+export async function createContact(contactData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(contacts).values(contact);
-  return result[0].insertId;
+  const { phones, emails, addresses, ...contactBase } = contactData;
+  
+  const result = await db.insert(contacts).values(contactBase);
+  const contactId = result[0].insertId;
+  
+  // Add phones
+  if (phones && Array.isArray(phones)) {
+    for (const phone of phones) {
+      await addPhone({ ...phone, contactId });
+    }
+  }
+  
+  // Add emails
+  if (emails && Array.isArray(emails)) {
+    for (const email of emails) {
+      await addEmail({ ...email, contactId });
+    }
+  }
+  
+  // Add addresses
+  if (addresses && Array.isArray(addresses)) {
+    for (const address of addresses) {
+      await addAddress({ ...address, contactId });
+    }
+  }
+  
+  return contactId;
 }
 
-export async function updateContact(contactId: number, updates: Partial<InsertContact>) {
+export async function updateContact(contactId: number, contactData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.update(contacts).set(updates).where(eq(contacts.id, contactId));
+  const { phones, emails, addresses, ...updates } = contactData;
+  
+  // Update base contact info
+  if (Object.keys(updates).length > 0) {
+    await db.update(contacts).set(updates).where(eq(contacts.id, contactId));
+  }
+  
+  // Update phones (simple approach: delete and recreate)
+  if (phones && Array.isArray(phones)) {
+    await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
+    for (const phone of phones) {
+      await addPhone({ ...phone, contactId });
+    }
+  }
+  
+  // Update emails
+  if (emails && Array.isArray(emails)) {
+    await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
+    for (const email of emails) {
+      await addEmail({ ...email, contactId });
+    }
+  }
+  
+  // Update addresses
+  if (addresses && Array.isArray(addresses)) {
+    await db.delete(contactAddresses).where(eq(contactAddresses.contactId, contactId));
+    for (const address of addresses) {
+      await addAddress({ ...address, contactId });
+    }
+  }
 }
 
 export async function deleteContact(contactId: number) {
@@ -87,6 +130,7 @@ export async function deleteContact(contactId: number) {
   // Delete related records first
   await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
   await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
+  await db.delete(contactAddresses).where(eq(contactAddresses.contactId, contactId));
   await db.delete(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
   await db.delete(communicationLog).where(eq(communicationLog.contactId, contactId));
   
@@ -269,9 +313,10 @@ export async function getContactWithDetails(contactId: number) {
   const contact = await getContactById(contactId);
   if (!contact) return null;
   
-  const [phones, emails, socialMedia, communications] = await Promise.all([
+  const [phones, emails, addresses, socialMedia, communications] = await Promise.all([
     getPhonesByContact(contactId),
     getEmailsByContact(contactId),
+    getAddressesByContact(contactId),
     getSocialMediaByContact(contactId),
     getCommunicationLogByContact(contactId),
   ]);
@@ -280,6 +325,7 @@ export async function getContactWithDetails(contactId: number) {
     ...contact,
     phones,
     emails,
+    addresses,
     socialMedia,
     communications,
   };
@@ -296,48 +342,57 @@ export async function getPropertyContactsWithDetails(propertyId: number) {
   
   const contactsWithDetails = await Promise.all(
     propertyContacts.map(async (contact) => {
-      const [phonesFromTable, emails, socialMedia] = await Promise.all([
+      const [phones, emails, addresses, socialMedia] = await Promise.all([
         getPhonesByContact(contact.id),
         getEmailsByContact(contact.id),
+        getAddressesByContact(contact.id),
         getSocialMediaByContact(contact.id),
       ]);
       
-      // MERGE phones from BOTH sources:
-      // 1. contact.phones array (from phone1/phone2/phone3 fields) - already created by getContactsByProperty
-      // 2. phonesFromTable (from contactPhones table)
-      const phonesFromFields = contact.phones || [];
-      const phonesFromContactTable = phonesFromTable.map(p => ({ phoneNumber: p.phoneNumber, phoneType: p.phoneType || 'Mobile' }));
-      
-      // Deduplicate: only add phones from contactPhones table if they don't already exist in phone1/phone2/phone3
-      const allPhones = [...phonesFromFields];
-      phonesFromContactTable.forEach(phone => {
-        const exists = allPhones.some(existing => 
-          existing.phoneNumber.replace(/\D/g, '') === phone.phoneNumber.replace(/\D/g, '')
-        );
-        if (!exists) {
-          allPhones.push(phone);
-        }
-      });
-      
-      const mergedPhones = allPhones;
-      
       return {
         ...contact,
-        phones: mergedPhones,
+        phones,
         emails,
+        addresses,
         socialMedia,
-        // Preserve phone fields from contact table
-        phone1: contact.phone1,
-        phone1Type: contact.phone1Type,
-        phone2: contact.phone2,
-        phone2Type: contact.phone2Type,
-        phone3: contact.phone3,
-        phone3Type: contact.phone3Type,
       };
     })
   );
   
   return contactsWithDetails;
+}
+
+/**
+ * Contact Address Functions
+ */
+
+export async function getAddressesByContact(contactId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(contactAddresses).where(eq(contactAddresses.contactId, contactId));
+}
+
+export async function addAddress(address: InsertContactAddress) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(contactAddresses).values(address);
+  return result[0].insertId;
+}
+
+export async function updateAddress(addressId: number, updates: Partial<InsertContactAddress>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(contactAddresses).set(updates).where(eq(contactAddresses.id, addressId));
+}
+
+export async function deleteAddress(addressId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(contactAddresses).where(eq(contactAddresses.id, addressId));
 }
 
 /**
