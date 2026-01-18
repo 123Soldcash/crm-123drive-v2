@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { followUpNotifications } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle, Zap } from "lucide-react";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 interface AutomatedFollowUpsProps {
   propertyId: number;
@@ -21,6 +20,7 @@ type FollowUpType = "Cold Lead" | "No Contact" | "Stage Change" | "Custom";
 type FollowUpAction = "Create Task" | "Send Email" | "Send SMS" | "Change Stage";
 
 export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<FollowUpType>("Cold Lead");
   const [selectedAction, setSelectedAction] = useState<FollowUpAction>("Create Task");
@@ -46,7 +46,6 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     try {
       let actionDetailsObj: any = {};
 
-      // Parse action details based on action type
       if (selectedAction === "Create Task") {
         actionDetailsObj = {
           title: `Follow-up: ${trigger}`,
@@ -68,7 +67,6 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         };
       }
 
-      // Calculate next run date based on trigger
       let nextRunAt = new Date();
       if (trigger.toLowerCase().includes("30 days")) {
         nextRunAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -77,7 +75,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       } else if (trigger.toLowerCase().includes("1 day")) {
         nextRunAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
       } else {
-        nextRunAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Default: 3 days
+        nextRunAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
       }
 
       await createMutation.mutateAsync({
@@ -96,7 +94,6 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Error creating follow-up");
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +123,6 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
   const handleDelete = async (followUpId: number) => {
     if (!confirm("Are you sure you want to delete this follow-up?")) return;
-
     try {
       const followUp = followUps.find(fu => fu.id === followUpId);
       await deleteMutation.mutateAsync({ followUpId });
@@ -148,96 +144,40 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Active":
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case "Paused":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "Completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "default";
-      case "Paused":
-        return "secondary";
-      case "Completed":
-        return "outline";
-      default:
-        return "default";
-    }
-  };
-
-  const getActionBadgeColor = (action: string) => {
-    switch (action) {
-      case "Create Task":
-        return "bg-green-100 text-green-800";
-      case "Send Email":
-        return "bg-purple-100 text-purple-800";
-      case "Send SMS":
-        return "bg-orange-100 text-orange-800";
-      case "Change Stage":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Cold Lead":
-        return "bg-red-100 text-red-800";
-      case "No Contact":
-        return "bg-yellow-100 text-yellow-800";
-      case "Stage Change":
-        return "bg-indigo-100 text-indigo-800";
-      case "Custom":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading follow-ups...</div>;
+    return <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-slate-50 rounded-lg border border-dashed">Loading follow-ups...</div>;
   }
 
   return (
-    <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-blue-900">Automated Follow-ups</CardTitle>
-          <CardDescription className="text-blue-700/70">Manage reminders and automations for this lead</CardDescription>
-        </div>
+    <CollapsibleSection
+      title="Automated Follow-ups"
+      icon={Zap}
+      isOpen={isOpen}
+      onToggle={() => setIsOpen(!isOpen)}
+      accentColor="blue"
+      badge={followUps.length > 0 ? (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 ml-1">
+          {followUps.length}
+        </Badge>
+      ) : null}
+      action={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="h-8 text-xs border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Plus className="h-3.5 w-3.5 mr-1" />
               New Follow-up
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Automated Follow-up</DialogTitle>
-              <DialogDescription>
-                Configure an automated follow-up for this lead
-              </DialogDescription>
+              <DialogDescription>Configure an automated follow-up for this lead</DialogDescription>
             </DialogHeader>
-
-            <div className="space-y-4">
-              {/* Follow-up Type */}
-              <div>
-                <label className="text-sm font-medium">Follow-up Type</label>
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Follow-up Type</label>
                 <Select value={selectedType} onValueChange={(value) => setSelectedType(value as FollowUpType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Cold Lead">Cold Lead</SelectItem>
                     <SelectItem value="No Contact">No Contact</SelectItem>
@@ -246,25 +186,19 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Trigger */}
-              <div>
-                <label className="text-sm font-medium">Trigger (when to execute?)</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Trigger (when to execute?)</label>
                 <Textarea
-                  placeholder="Ex: No contact for 30 days, Lead became COLD, 7 days without response..."
+                  placeholder="Ex: No contact for 30 days, Lead became COLD..."
                   value={trigger}
                   onChange={(e) => setTrigger(e.target.value)}
-                  className="min-h-20"
+                  className="min-h-20 text-sm"
                 />
               </div>
-
-              {/* Action */}
-              <div>
-                <label className="text-sm font-medium">Action to Execute</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Action to Execute</label>
                 <Select value={selectedAction} onValueChange={(value) => setSelectedAction(value as FollowUpAction)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Create Task">Create Task</SelectItem>
                     <SelectItem value="Send Email">Send Email</SelectItem>
@@ -273,127 +207,62 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Action Details */}
-              {selectedAction === "Send SMS" && (
-                <div>
-                  <label className="text-sm font-medium">SMS Message</label>
-                  <Textarea
-                    placeholder="Type the message to be sent..."
-                    value={actionDetails}
-                    onChange={(e) => setActionDetails(e.target.value)}
-                    className="min-h-20"
-                  />
-                </div>
-              )}
-
-              {selectedAction === "Change Stage" && (
-                <div>
-                  <label className="text-sm font-medium">New Stage ID</label>
-                  <Input
-                    placeholder="Ex: FOLLOW_UP_ON_CONTRACT"
-                    value={actionDetails}
-                    onChange={(e) => setActionDetails(e.target.value)}
-                  />
-                </div>
-              )}
-
-              <Button
-                className="w-full"
-                onClick={handleCreateFollowUp}
-                disabled={isSubmitting || !trigger.trim()}
-              >
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreateFollowUp} disabled={isSubmitting}>
                 {isSubmitting ? "Creating..." : "Create Follow-up"}
               </Button>
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
-      </CardHeader>
-
-      <CardContent>
-        {followUps.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No follow-ups configured for this lead
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {followUps.map((followUp: any) => (
-              <div
-                key={followUp.id}
-                className={`flex items-start justify-between p-3 border-l-4 rounded-lg hover:shadow-md transition-all ${
-                  followUp.status === "Active" ? "border-l-green-500 bg-green-50/30" :
-                  followUp.status === "Paused" ? "border-l-yellow-500 bg-yellow-50/30" :
-                  "border-l-gray-500 bg-gray-50/30"
-                }`}
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    {getStatusIcon(followUp.status)}
-                    <Badge variant={getStatusBadgeVariant(followUp.status)}>
-                      {followUp.status}
-                    </Badge>
-                    <Badge className={getTypeColor(followUp.type)}>{followUp.type}</Badge>
-                    <Badge className={getActionBadgeColor(followUp.action)}>{followUp.action}</Badge>
-                  </div>
-                  <p className="text-sm font-medium">{followUp.trigger}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Next run: {format(new Date(followUp.nextRunAt), "MM/dd/yyyy HH:mm", { locale: enUS })}
-                  </p>
-                  {followUp.lastTriggeredAt && (
-                    <p className="text-xs text-muted-foreground">
-                      Last run: {format(new Date(followUp.lastTriggeredAt), "MM/dd/yyyy HH:mm", { locale: enUS })}
-                    </p>
-                  )}
+      }
+    >
+      {followUps.length === 0 ? (
+        <div className="py-6 text-center">
+          <Zap className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+          <p className="text-sm text-slate-500">No follow-ups configured for this lead.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {followUps.map((fu) => (
+            <div key={fu.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-white border border-slate-100 shadow-sm">
+                  {fu.status === "Active" ? <Clock className="h-3.5 w-3.5 text-blue-500" /> : 
+                   fu.status === "Paused" ? <AlertCircle className="h-3.5 w-3.5 text-amber-500" /> : 
+                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
                 </div>
-
-                <div className="flex gap-2">
-                  {followUp.status === "Active" && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleExecute(followUp.id)}
-                        disabled={executeMutation.isPending}
-                      >
-                        Execute Now
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handlePause(followUp.id)}
-                        disabled={pauseMutation.isPending}
-                      >
-                        <Pause className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-
-                  {followUp.status === "Paused" && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleResume(followUp.id)}
-                      disabled={resumeMutation.isPending}
-                    >
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDelete(followUp.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-900">{fu.trigger}</span>
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold">
+                      {fu.action}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Next run: {fu.nextRunAt ? format(new Date(fu.nextRunAt), "MMM d, yyyy") : "N/A"}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className="flex items-center gap-1">
+                {fu.status === "Active" ? (
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-amber-600" onClick={() => handlePause(fu.id)}>
+                    <Pause className="h-3.5 w-3.5" />
+                  </Button>
+                ) : fu.status === "Paused" ? (
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600" onClick={() => handleResume(fu.id)}>
+                    <Play className="h-3.5 w-3.5" />
+                  </Button>
+                ) : null}
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600" onClick={() => handleDelete(fu.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </CollapsibleSection>
   );
 }

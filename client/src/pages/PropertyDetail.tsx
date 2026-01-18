@@ -36,6 +36,7 @@ import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { DeepSearchTabs } from "@/components/DeepSearchTabs";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { STAGE_CONFIGS } from "@/lib/stageConfig";
 import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
@@ -907,25 +908,16 @@ export default function PropertyDetail() {
       {/* Buyer Matching - Purple theme */}
       <BuyerMatching propertyId={propertyId} />
 
-      {/* Family Tree - ADHD-friendly yellow background */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Family Tree</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFamilyTree(!showFamilyTree)}
-            className="text-xs"
-          >
-            {showFamilyTree ? "Hide" : "Show"}
-          </Button>
-        </CardHeader>
-        {showFamilyTree && (
-          <CardContent className="pt-6">
-            <FamilyTreeEnhanced propertyId={propertyId} />
-          </CardContent>
-        )}
-      </Card>
+      {/* Family Tree */}
+      <CollapsibleSection
+        title="Family Tree"
+        icon={Users}
+        isOpen={showFamilyTree}
+        onToggle={() => setShowFamilyTree(!showFamilyTree)}
+        accentColor="yellow"
+      >
+        <FamilyTreeEnhanced propertyId={propertyId} />
+      </CollapsibleSection>
 
       {/* Transfer History */}
       {transferHistory && transferHistory.length > 0 && (
@@ -970,46 +962,30 @@ export default function PropertyDetail() {
         </Card>
       )}
 
-      {/* Deep Search Section - ADHD-friendly blue background */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Deep Search</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDeepSearch(!showDeepSearch)}
-            className="text-xs"
-          >
-            {showDeepSearch ? "Hide" : "Show"}
-          </Button>
-        </CardHeader>
-      </Card>
+      {/* Deep Search Section */}
+      <CollapsibleSection
+        title="Deep Search"
+        icon={TrendingUp}
+        isOpen={showDeepSearch}
+        onToggle={() => setShowDeepSearch(!showDeepSearch)}
+        accentColor="blue"
+      >
+        <DeepSearchTabs propertyId={propertyId} />
+      </CollapsibleSection>
 
-      {showDeepSearch && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <DeepSearchTabs propertyId={propertyId} />
+      {/* Field Visit Check-In */}
+      <CollapsibleSection
+        title="Field Visit Check-In (Birddog)"
+        icon={MapPin}
+        isOpen={showFieldVisit}
+        onToggle={() => setShowFieldVisit(!showFieldVisit)}
+        accentColor="pink"
+      >
+        <div className="grid gap-6 md:grid-cols-2">
+          <PropertyCheckIn propertyId={propertyId} />
+          <VisitHistory propertyId={propertyId} />
         </div>
-      )}
-
-      {/* Field Visit Check-In - Hidden by default, show when needed - ADHD-friendly pink background */}
-      <div className="bg-pink-50 rounded-lg border border-pink-200 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Field Visit Check-In (Birddog)</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFieldVisit(!showFieldVisit)}
-          >
-            {showFieldVisit ? "Hide" : "Show"}
-          </Button>
-        </div>
-        {showFieldVisit && (
-          <div className="grid gap-6 md:grid-cols-2">
-            <PropertyCheckIn propertyId={propertyId} />
-            <VisitHistory propertyId={propertyId} />
-          </div>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Photos and Notes moved to bottom for better workflow */}
       <PhotoGallery propertyId={propertyId} />
@@ -1022,25 +998,16 @@ export default function PropertyDetail() {
       {/* Activity Timeline - Last section with purple background */}
       <ActivityTimeline propertyId={propertyId} />
 
-      {/* Deal Calculator - Green background with hide/show toggle */}
-      <Card className="bg-green-50 border-green-200">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Deal Calculator</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDealCalculator(!showDealCalculator)}
-            className="text-xs"
-          >
-            {showDealCalculator ? "Hide" : "Show"}
-          </Button>
-        </CardHeader>
-        {showDealCalculator && (
-          <CardContent>
-            <DealCalculator propertyId={propertyId} />
-          </CardContent>
-        )}
-      </Card>
+      {/* Deal Calculator */}
+      <CollapsibleSection
+        title="Deal Calculator"
+        icon={Star}
+        isOpen={showDealCalculator}
+        onToggle={() => setShowDealCalculator(!showDealCalculator)}
+        accentColor="green"
+      >
+        <DealCalculator propertyId={propertyId} />
+      </CollapsibleSection>
     </div>
   );
 }

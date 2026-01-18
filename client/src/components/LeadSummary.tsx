@@ -143,55 +143,55 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
       {/* ===== HEADER: Key Metrics ===== */}
       <div className="grid grid-cols-5 gap-3">
         {/* Lead Status */}
-        <Card className={`border-2 ${leadTempColor}`}>
+        <Card className="border shadow-sm bg-white">
           <CardContent className="pt-4 pb-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               {leadTempIcon}
             </div>
-            <div className="text-lg font-bold">{property.leadTemperature || "TBD"}</div>
-            <div className="text-xs text-muted-foreground">Lead Status</div>
+            <div className="text-lg font-bold text-slate-900">{property.leadTemperature || "TBD"}</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Lead Status</div>
           </CardContent>
         </Card>
 
         {/* Our Estimate */}
-        <Card className="border-2 border-green-300 bg-green-50">
+        <Card className="border shadow-sm bg-white border-l-4 border-l-emerald-500">
           <CardContent className="pt-4 pb-3 text-center">
-            <DollarSign className="h-5 w-5 text-green-600 mx-auto mb-1" />
-            <div className="text-lg font-bold text-green-700">{formatCurrency(ourEstimate)}</div>
-            <div className="text-xs text-muted-foreground">Our Estimate</div>
+            <DollarSign className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
+            <div className="text-lg font-bold text-slate-900">{formatCurrency(ourEstimate)}</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Our Estimate</div>
           </CardContent>
         </Card>
 
         {/* Equity */}
-        <Card className="border-2 border-purple-300 bg-purple-50">
+        <Card className="border shadow-sm bg-white border-l-4 border-l-purple-500">
           <CardContent className="pt-4 pb-3 text-center">
             <TrendingUp className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-            <div className="text-lg font-bold text-purple-700">{equityPercent}%</div>
-            <div className="text-xs text-muted-foreground">Equity</div>
+            <div className="text-lg font-bold text-slate-900">{equityPercent}%</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Equity</div>
           </CardContent>
         </Card>
 
         {/* MLS Status */}
-        <Card className="border-2 border-blue-300 bg-blue-50">
+        <Card className="border shadow-sm bg-white border-l-4 border-l-blue-500">
           <CardContent className="pt-4 pb-3 text-center">
             <Home className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-            <div className="text-lg font-bold text-blue-700">{propertyData.mlsStatus || "Off Market"}</div>
-            <div className="text-xs text-muted-foreground">MLS Status</div>
+            <div className="text-lg font-bold text-slate-900">{propertyData.mlsStatus || "Off Market"}</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">MLS Status</div>
           </CardContent>
         </Card>
 
         {/* Owner Verified */}
-        <Card className={`border-2 ${property.ownerVerified === 1 ? "border-green-300 bg-green-50" : "border-gray-200"}`}>
+        <Card className={`border shadow-sm bg-white ${property.ownerVerified === 1 ? "border-l-4 border-l-emerald-500" : ""}`}>
           <CardContent className="pt-4 pb-3 text-center">
             {property.ownerVerified === 1 ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto mb-1" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
             ) : (
-              <User className="h-5 w-5 text-gray-400 mx-auto mb-1" />
+              <User className="h-5 w-5 text-slate-300 mx-auto mb-1" />
             )}
-            <div className={`text-lg font-bold ${property.ownerVerified === 1 ? "text-green-700" : "text-gray-500"}`}>
-              {property.ownerVerified === 1 ? "Verified" : "Not Verified"}
+            <div className={`text-lg font-bold ${property.ownerVerified === 1 ? "text-slate-900" : "text-slate-400"}`}>
+              {property.ownerVerified === 1 ? "Verified" : "Pending"}
             </div>
-            <div className="text-xs text-muted-foreground">Owner</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Owner</div>
           </CardContent>
         </Card>
       </div>

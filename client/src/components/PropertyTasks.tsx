@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, User, CheckCircle2, Circle, Clock, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Calendar, User, CheckCircle2, Circle, Clock, Edit, Trash2, Eye, EyeOff, ClipboardList } from "lucide-react";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { Link } from "wouter";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 interface PropertyTasksProps {
   propertyId: number;
 }
 
 export function PropertyTasks({ propertyId }: PropertyTasksProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { data: tasks, isLoading } = trpc.tasks.byProperty.useQuery({ propertyId });
   const utils = trpc.useUtils();
@@ -42,38 +43,18 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "High":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "Medium":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "Low":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
-    }
-  };
-
-  const getPriorityBgColor = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return "bg-red-50 border-red-200";
-      case "Medium":
-        return "bg-yellow-50 border-yellow-200";
-      case "Low":
-        return "bg-green-50 border-green-200";
-      default:
-        return "bg-gray-50 border-gray-200";
+      case "High": return "bg-red-50 text-red-600 border-red-100";
+      case "Medium": return "bg-amber-50 text-amber-600 border-amber-100";
+      case "Low": return "bg-emerald-50 text-emerald-600 border-emerald-100";
+      default: return "bg-slate-50 text-slate-600 border-slate-100";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Done":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case "In Progress":
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      default:
-        return <Circle className="h-4 w-4 text-gray-400" />;
+      case "Done": return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+      case "In Progress": return <Clock className="h-4 w-4 text-blue-500" />;
+      default: return <Circle className="h-4 w-4 text-slate-300" />;
     }
   };
 
@@ -87,163 +68,118 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
   };
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Tasks</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Loading tasks...</p>
-        </CardContent>
-      </Card>
-    );
+    return <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-slate-50 rounded-lg border border-dashed">Loading tasks...</div>;
   }
+
+  const filteredTasks = tasks?.filter(t => showHidden || t.hidden !== 1) || [];
 
   return (
     <>
-      <Card className="bg-red-50 border-red-200">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span>Tasks ({tasks?.length || 0})</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowHidden(!showHidden)}
-              >
-                {showHidden ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-                {showHidden ? "Hide Hidden" : "Show Hidden"}
-              </Button>
-            </div>
+      <CollapsibleSection
+        title="Tasks"
+        icon={ClipboardList}
+        isOpen={isOpen}
+        onToggle={() => setIsOpen(!isOpen)}
+        accentColor="pink"
+        badge={filteredTasks.length > 0 ? (
+          <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200 ml-1">
+            {filteredTasks.length}
+          </Badge>
+        ) : null}
+        action={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-[11px] text-slate-500 hover:text-slate-900"
+              onClick={() => setShowHidden(!showHidden)}
+            >
+              {showHidden ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
+              {showHidden ? "Hide" : "Show Hidden"}
+            </Button>
             <Button
               size="sm"
+              variant="outline"
+              className="h-8 text-xs border-pink-200 text-pink-700 hover:bg-pink-50"
               onClick={() => setCreateDialogOpen(true)}
-              className="gap-2"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5 mr-1" />
               New Task
             </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!tasks || tasks.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground mb-4">
-                No tasks yet. Click the "New Task" button above to create your first task.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {tasks.filter(t => showHidden || t.hidden !== 1).map((task) => (
-                <div
-                  key={task.id}
-                  className={`flex items-start gap-3 p-3 border rounded-lg hover:opacity-90 transition-all ${getPriorityBgColor(task.priority)}`}
+          </div>
+        }
+      >
+        {filteredTasks.length === 0 ? (
+          <div className="py-6 text-center">
+            <ClipboardList className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No tasks yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors"
+              >
+                <button
+                  onClick={() => toggleTaskStatus(task.id, task.status)}
+                  className="mt-0.5 hover:scale-110 transition-transform"
                 >
-                  <button
-                    onClick={() => toggleTaskStatus(task.id, task.status)}
-                    className="mt-0.5 hover:scale-110 transition-transform"
-                  >
-                    {getStatusIcon(task.status)}
-                  </button>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2 mb-1">
-                      <Link href={`/tasks/kanban`}>
-                        <h4 className="font-medium text-sm hover:text-primary cursor-pointer">
-                          {task.title}
-                        </h4>
-                      </Link>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${getPriorityColor(task.priority)}`}
-                      >
-                        {task.priority}
-                      </Badge>
-                    </div>
-                    
-                    {task.description && (
-                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {task.taskType}
-                        </Badge>
-                      </span>
-                      
-                      {task.dueDate && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(task.dueDate).toLocaleDateString()}
-                        </span>
-                      )}
-                      
-                      {task.assignedToName && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {task.assignedToName}
-                        </span>
-                      )}
-                    </div>
+                  {getStatusIcon(task.status)}
+                </button>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Link href={`/tasks/kanban`}>
+                      <h4 className="font-medium text-sm text-slate-900 hover:text-blue-600 cursor-pointer truncate">
+                        {task.title}
+                      </h4>
+                    </Link>
+                    <Badge variant="outline" className={`text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </Badge>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        task.status === "Done"
-                          ? "default"
-                          : task.status === "In Progress"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className="text-xs whitespace-nowrap"
-                    >
-                      {task.status}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => toggleHidden.mutate({ taskId: task.id, hidden: task.hidden === 1 ? 0 : 1 })}
-                      title={task.hidden === 1 ? "Show task" : "Hide task"}
-                    >
-                      {task.hidden === 1 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => {
-                        setEditingTask(task);
-                        setCreateDialogOpen(true);
-                      }}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => {
-                        if (confirm('Delete this task?')) {
-                          deleteTask.mutate({ taskId: task.id });
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                  {task.description && (
+                    <p className="text-[11px] text-slate-500 mb-2 line-clamp-1">
+                      {task.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Badge variant="secondary" className="text-[9px] h-3.5 px-1 bg-slate-100 text-slate-500 border-none">
+                        {task.taskType}
+                      </Badge>
+                    </span>
+                    {task.dueDate && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-2.5 w-2.5" />
+                        {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                    {task.assignedToName && (
+                      <span className="flex items-center gap-1">
+                        <User className="h-2.5 w-2.5" />
+                        {task.assignedToName}
+                      </span>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                
+                <div className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600" onClick={() => { setEditingTask(task); setCreateDialogOpen(true); }}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600" onClick={() => { if (confirm('Delete this task?')) deleteTask.mutate({ taskId: task.id }); }}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
 
       <CreateTaskDialog
         open={createDialogOpen}
