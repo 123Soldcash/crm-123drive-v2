@@ -261,17 +261,17 @@ export const importDealMachineRouter = router({
             // Property details
             propertyType: row.property_type || null,
             yearBuilt: yearBuilt,
-            bedrooms: bedrooms,
-            bathrooms: bathrooms,
-            sqft: sqft,
+            totalBedrooms: bedrooms,
+            totalBaths: bathrooms,
+            buildingSquareFeet: sqft,
             
             // Financial information
             estimatedValue: estimatedValue,
             equityAmount: equityAmount,
             equityPercent: equityPercent,
-            mortgageBalance: mortgageBalance,
-            lastSalePrice: salePrice,
-            lastSaleDate: saleDate,
+            totalLoanBalance: mortgageBalance,
+            salePrice: salePrice,
+            saleDate: saleDate,
             taxAmount: taxAmount,
             
             // Owner information

@@ -182,26 +182,37 @@ export async function getProperties(filters?: {
         )
       );
     
-    // Then, search in contacts table (phone, email, name)
+    // Then, search in contacts table (name)
     const contactMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contacts)
-      .where(
-        or(
-          like(contacts.name, searchTerm),
-          like(contacts.phone1, searchTerm),
-          like(contacts.phone2, searchTerm),
-          like(contacts.phone3, searchTerm),
-          like(contacts.email1, searchTerm),
-          like(contacts.email2, searchTerm),
-          like(contacts.email3, searchTerm)
-        )
-      );
+      .where(like(contacts.name, searchTerm));
     
-    // Combine unique property IDs from both searches
+    // Search in contactPhones table
+    const phoneMatches = await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contactPhones)
+      .innerJoin(contacts, eq(contactPhones.contactId, contacts.id))
+      .where(like(contactPhones.phoneNumber, searchTerm));
+      
+    // Search in contactEmails table
+    const emailMatches = await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contactEmails)
+      .innerJoin(contacts, eq(contactEmails.contactId, contacts.id))
+      .where(like(contactEmails.email, searchTerm));
+    
+    // Combine unique property IDs from all searches
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
     const propertyIdsFromContacts = contactMatches.map(c => c.propertyId);
-    const searchPropertyIds = Array.from(new Set([...propertyIdsFromProperties, ...propertyIdsFromContacts]));
+    const propertyIdsFromPhones = phoneMatches.map(p => p.propertyId);
+    const propertyIdsFromEmails = emailMatches.map(e => e.propertyId);
+    const searchPropertyIds = Array.from(new Set([
+      ...propertyIdsFromProperties, 
+      ...propertyIdsFromContacts,
+      ...propertyIdsFromPhones,
+      ...propertyIdsFromEmails
+    ]));
     
     if (searchPropertyIds.length === 0) {
       return []; // No matches found
@@ -878,26 +889,37 @@ export async function getPropertiesWithAgents(filters?: {
         )
       );
     
-    // Then, search in contacts table (phone, email, name)
+    // Then, search in contacts table (name)
     const contactMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contacts)
-      .where(
-        or(
-          like(contacts.name, searchTerm),
-          like(contacts.phone1, searchTerm),
-          like(contacts.phone2, searchTerm),
-          like(contacts.phone3, searchTerm),
-          like(contacts.email1, searchTerm),
-          like(contacts.email2, searchTerm),
-          like(contacts.email3, searchTerm)
-        )
-      );
+      .where(like(contacts.name, searchTerm));
     
-    // Combine unique property IDs from both searches
+    // Search in contactPhones table
+    const phoneMatches = await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contactPhones)
+      .innerJoin(contacts, eq(contactPhones.contactId, contacts.id))
+      .where(like(contactPhones.phoneNumber, searchTerm));
+      
+    // Search in contactEmails table
+    const emailMatches = await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contactEmails)
+      .innerJoin(contacts, eq(contactEmails.contactId, contacts.id))
+      .where(like(contactEmails.email, searchTerm));
+    
+    // Combine unique property IDs from all searches
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
     const propertyIdsFromContacts = contactMatches.map(c => c.propertyId);
-    const searchPropertyIds = Array.from(new Set([...propertyIdsFromProperties, ...propertyIdsFromContacts]));
+    const propertyIdsFromPhones = phoneMatches.map(p => p.propertyId);
+    const propertyIdsFromEmails = emailMatches.map(e => e.propertyId);
+    const searchPropertyIds = Array.from(new Set([
+      ...propertyIdsFromProperties, 
+      ...propertyIdsFromContacts,
+      ...propertyIdsFromPhones,
+      ...propertyIdsFromEmails
+    ]));
     
     if (searchPropertyIds.length === 0) {
       return []; // No matches found
