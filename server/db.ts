@@ -1,4 +1,4 @@
-import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
+import { eq, and, like, desc, sql, gte, lte, or, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -213,15 +213,15 @@ export async function getProperties(filters?: {
     const phoneMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contactPhones)
-      .innerJoin(contacts, eq(contactPhones.contactId, contacts.id))
-      .where(like(contactPhones.phoneNumber, searchTerm));
+      .leftJoin(contacts, eq(contactPhones.contactId, contacts.id))
+      .where(and(like(contactPhones.phoneNumber, searchTerm), isNotNull(contacts.propertyId)));
       
     // Search in contactEmails table
     const emailMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contactEmails)
-      .innerJoin(contacts, eq(contactEmails.contactId, contacts.id))
-      .where(like(contactEmails.email, searchTerm));
+      .leftJoin(contacts, eq(contactEmails.contactId, contacts.id))
+      .where(and(like(contactEmails.email, searchTerm), isNotNull(contacts.propertyId)));
     
     // Combine unique property IDs from all searches
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
@@ -991,15 +991,15 @@ export async function getPropertiesWithAgents(filters?: {
     const phoneMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contactPhones)
-      .innerJoin(contacts, eq(contactPhones.contactId, contacts.id))
-      .where(like(contactPhones.phoneNumber, searchTerm));
+      .leftJoin(contacts, eq(contactPhones.contactId, contacts.id))
+      .where(and(like(contactPhones.phoneNumber, searchTerm), isNotNull(contacts.propertyId)));
       
     // Search in contactEmails table
     const emailMatches = await db
       .select({ propertyId: contacts.propertyId })
       .from(contactEmails)
-      .innerJoin(contacts, eq(contactEmails.contactId, contacts.id))
-      .where(like(contactEmails.email, searchTerm));
+      .leftJoin(contacts, eq(contactEmails.contactId, contacts.id))
+      .where(and(like(contactEmails.email, searchTerm), isNotNull(contacts.propertyId)));
     
     // Combine unique property IDs from all searches
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
