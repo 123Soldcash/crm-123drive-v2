@@ -23,15 +23,15 @@ export async function getContactsByProperty(propertyId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const contactsData = await db.select().from(contacts).where(eq(contacts.propertyId, propertyId));
+  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.propertyId, propertyId));
   
   // For each contact, fetch phones, emails, and addresses
   const contactsWithDetails = await Promise.all(
     contactsData.map(async (contact) => {
       const [phones, emails, addresses] = await Promise.all([
-        db.select().from(contactPhones).where(eq(contactPhones.contactId, contact.id)),
-        db.select().from(contactEmails).where(eq(contactEmails.contactId, contact.id)),
-        db.select().from(contactAddresses).where(eq(contactAddresses.contactId, contact.id)),
+        db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contact.id)),
+        db.select({ id: contactEmails.id, contactId: contactEmails.contactId, email: contactEmails.email }).from(contactEmails).where(eq(contactEmails.contactId, contact.id)),
+        db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id)),
       ]);
       
       return {
@@ -50,7 +50,7 @@ export async function getContactById(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.select().from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  const result = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
   return result[0] || null;
 }
 
@@ -146,7 +146,7 @@ export async function getPhonesByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select().from(contactPhones).where(eq(contactPhones.contactId, contactId));
+  return await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contactId));
 }
 
 export async function addPhone(phone: InsertContactPhone) {
@@ -179,7 +179,7 @@ export async function getEmailsByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select().from(contactEmails).where(eq(contactEmails.contactId, contactId));
+  return await db.select({ id: contactEmails.id, contactId: contactEmails.contactId, email: contactEmails.email }).from(contactEmails).where(eq(contactEmails.contactId, contactId));
 }
 
 export async function addEmail(email: InsertContactEmail) {
@@ -212,7 +212,7 @@ export async function getSocialMediaByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select().from(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
+  return await db.select({ id: contactSocialMedia.id, contactId: contactSocialMedia.contactId, platform: contactSocialMedia.platform, handle: contactSocialMedia.handle }).from(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
 }
 
 export async function addSocialMedia(social: InsertContactSocialMedia) {
@@ -275,7 +275,7 @@ export async function getCommunicationLogByContact(contactId: number) {
   if (!db) throw new Error("Database not available");
   
   return await db
-    .select()
+    .select({ id: communicationLog.id, contactId: communicationLog.contactId, communicationType: communicationLog.communicationType, communicationDate: communicationLog.communicationDate, notes: communicationLog.notes })
     .from(communicationLog)
     .where(eq(communicationLog.contactId, contactId))
     .orderBy(desc(communicationLog.communicationDate));
@@ -370,7 +370,7 @@ export async function getAddressesByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select().from(contactAddresses).where(eq(contactAddresses.contactId, contactId));
+  return await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contactId));
 }
 
 export async function addAddress(address: InsertContactAddress) {
