@@ -45,6 +45,7 @@ import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
 import { DealCalculator } from "@/components/DealCalculator";
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { StickyPropertyHeader } from "@/components/StickyPropertyHeader";
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
@@ -54,12 +55,9 @@ export default function PropertyDetail() {
   const [showDealCalculator, setShowDealCalculator] = useState(false);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
-  const [selectedTransferAgent, setSelectedTransferAgent] = useState<string>("");
   const [selectedAgents, setSelectedAgents] = useState<number[]>([]);
   const [transferReason, setTransferReason] = useState("");
-  const [deskDialogOpen, setDeskDialogOpen] = useState(false);
-  const [selectedDeskName, setSelectedDeskName] = useState<string>("");
-  const [selectedDeskStatus, setSelectedDeskStatus] = useState<string>("");
+  
   // localStorage persistence for ADHD-friendly collapsed state
   const [showDeepSearch, setShowDeepSearch] = useState(() => {
     const saved = localStorage.getItem('showDeepSearch');
@@ -74,7 +72,6 @@ export default function PropertyDetail() {
     return saved ? JSON.parse(saved) : false;
   });
   
-  // Save state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('showDeepSearch', JSON.stringify(showDeepSearch));
   }, [showDeepSearch]);
@@ -86,12 +83,11 @@ export default function PropertyDetail() {
   useEffect(() => {
     localStorage.setItem('showFieldVisit', JSON.stringify(showFieldVisit));
   }, [showFieldVisit]);
+
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
   const { user } = useAuth();
-  const [, navigate] = useRoute("/properties/:id");
 
-  // Get navigation IDs from localStorage
   const [navigationIds, setNavigationIds] = useState<number[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
 
@@ -103,9 +99,7 @@ export default function PropertyDetail() {
         setNavigationIds(ids);
         const index = ids.indexOf(propertyId);
         setCurrentIndex(index);
-      } catch (e) {
-        // Ignore parse errors
-      }
+      } catch (e) {}
     }
   }, [propertyId]);
 
@@ -124,37 +118,19 @@ export default function PropertyDetail() {
   };
 
   const { data: property, isLoading } = trpc.properties.getById.useQuery({ id: propertyId });
-  const { data: oldContacts } = trpc.contacts.byProperty.useQuery({ propertyId });
-  const { data: verifiedContacts } = trpc.communication.getContactsByProperty.useQuery({ propertyId });
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
   const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
-  const { data: userAgents } = trpc.users.listAgents.useQuery();
   const { data: agentsList, isLoading: agentsLoading, error: agentsError } = trpc.agents.listAll.useQuery();
   const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId });
   const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
 
-  // Get adjacent properties for navigation
-  // TODO: Fix TypeScript type generation issue
-  // const { data: adjacentProperties } = trpc.properties.getAdjacentProperties.useQuery({
-  //   currentPropertyId: propertyId,
-  //   filters: {}, // TODO: Pass current filters from Properties page
-  // });
-
-  // Zillow URL
   const zillowUrl = property
     ? `https://www.zillow.com/homes/${property.addressLine1.replace(/[^a-zA-Z0-9]/g, "-")}-${property.city.replace(/[^a-zA-Z0-9]/g, "-")}-${property.state}-${property.zipcode}_rb/`
     : "";
 
   const utils = trpc.useUtils();
-  const createNote = trpc.notes.create.useMutation({
-    onSuccess: () => {
-      utils.notes.byProperty.invalidate({ propertyId });
-      setNoteContent("");
-      toast.success("Note added successfully");
-    },
-  });
-
+  
   const updateLeadTemperature = trpc.properties.updateLeadTemperature.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
@@ -169,22 +145,12 @@ export default function PropertyDetail() {
     },
   });
 
-  const reassignProperty = trpc.properties.reassignProperty.useMutation({
-    onSuccess: () => {
-      utils.properties.getById.invalidate({ id: propertyId });
-      toast.success("Property reassigned successfully");
-    },
-  });
-
   const updateDealStage = trpc.properties.updateDealStage.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
       setPipelineDialogOpen(false);
       setSelectedPipelineStage("");
       toast.success("Property added to Pipeline successfully!");
-    },
-    onError: (error) => {
-      toast.error(`Failed to add to Pipeline: ${error.message}`);
     },
   });
 
@@ -193,13 +159,9 @@ export default function PropertyDetail() {
       utils.properties.getById.invalidate({ id: propertyId });
       utils.properties.getAssignedAgents.invalidate({ propertyId });
       setTransferDialogOpen(false);
-      setSelectedTransferAgent("");
       setTransferReason("");
       setSelectedAgents([]);
       toast.success("Agent assigned successfully!");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to assign agent");
     },
   });
 
@@ -208,20 +170,14 @@ export default function PropertyDetail() {
       toast.error("Please select at least one agent to assign");
       return;
     }
-    // Assign each selected agent
     selectedAgents.forEach((agentId) => {
-      assignAgent.mutate({
-        propertyId,
-        agentId,
-      });
+      assignAgent.mutate({ propertyId, agentId });
     });
   };
 
   const toggleAgentSelection = (agentId: number) => {
     setSelectedAgents((prev) =>
-      prev.includes(agentId)
-        ? prev.filter((id) => id !== agentId)
-        : [...prev, agentId]
+      prev.includes(agentId) ? prev.filter((id) => id !== agentId) : [...prev, agentId]
     );
   };
 
@@ -240,13 +196,6 @@ export default function PropertyDetail() {
     },
   });
 
-  const deleteNote = trpc.notes.delete.useMutation({
-    onSuccess: () => {
-      utils.notes.byProperty.invalidate({ propertyId });
-      toast.success("Note deleted");
-    },
-  });
-
   const updateDesk = trpc.properties.updateDesk.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
@@ -254,751 +203,180 @@ export default function PropertyDetail() {
     },
   });
 
-  const formatCurrency = (value?: number | null) => {
-    if (!value) return "$0";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const handleAddNote = () => {
-    if (!noteContent.trim()) {
-      toast.error("Please enter a note");
-      return;
-    }
-    createNote.mutate({ propertyId, content: noteContent });
-  };
-
   const handleAddToPipeline = () => {
-    if (!selectedPipelineStage) {
-      toast.error("Please select a Pipeline stage");
-      return;
-    }
-    updateDealStage.mutate({
-      propertyId,
-      newStage: selectedPipelineStage,
-    });
+    if (!selectedPipelineStage) return;
+    updateDealStage.mutate({ propertyId, stageId: selectedPipelineStage });
   };
 
-  if (isLoading) {
+  if (isLoading || !property) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-muted-foreground">Loading property details...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (!property) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="text-muted-foreground">Property not found</div>
-        <Link href="/properties">
-          <Button variant="outline">Back to Properties</Button>
-        </Link>
-      </div>
-    );
-  }
-
-  // Background color based on Lead Temperature
   const getBackgroundColor = () => {
     switch (property.leadTemperature) {
-      case "SUPER HOT":
-        return "bg-blue-50";
-      case "HOT":
-        return "bg-green-50";
-      case "WARM":
-        return "bg-yellow-50";
-      case "COLD":
-        return "bg-gray-50";
-      case "DEAD":
-        return "bg-gray-50";
-      case "TBD":
-      default:
-        return "bg-white";
+      case "SUPER HOT": return "bg-blue-50";
+      case "HOT": return "bg-green-50";
+      case "WARM": return "bg-yellow-50";
+      case "COLD": case "DEAD": return "bg-gray-50";
+      default: return "bg-white";
     }
   };
 
   return (
     <div className={`space-y-6 p-6 rounded-lg ${getBackgroundColor()}`}>
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Link href="/properties">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Properties
-            </Button>
-          </Link>
-          {navigationIds.length > 0 && (
-            <div className="flex items-center gap-1 ml-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrevious}
-                disabled={currentIndex <= 0}
-                title="Previous Lead"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                LEAD BEFORE
-              </Button>
-              <span className="text-sm text-muted-foreground px-2">
-                {currentIndex + 1} / {navigationIds.length}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNext}
-                disabled={currentIndex >= navigationIds.length - 1}
-                title="Next Lead"
-              >
-                NEXT LEAD
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-start gap-6">
-              <div>
-                <h1 className="text-3xl font-bold">{property.addressLine1}</h1>
-                <p className="text-muted-foreground mt-2">
-                  {property.city}, {property.state} {property.zipcode}
-                </p>
-              </div>
+      <StickyPropertyHeader
+        property={property}
+        tags={tags || []}
+        onEdit={() => {}} 
+        onAddToPipeline={() => setPipelineDialogOpen(true)}
+        onAssignAgent={() => setTransferDialogOpen(true)}
+        onUpdateLeadTemperature={(temp) => 
+          updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
+        }
+        onToggleOwnerVerified={() => toggleOwnerVerified.mutate({ propertyId })}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        currentIndex={currentIndex}
+        totalCount={navigationIds.length}
+        zillowUrl={zillowUrl}
+      />
 
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {property && (
-              <EditPropertyDialog
-                propertyId={propertyId}
-                property={property}
-                onSuccess={() => window.location.reload()}
-              />
-            )}
-            <Dialog open={pipelineDialogOpen} onOpenChange={setPipelineDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Add to Pipeline
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add to Deal Pipeline</DialogTitle>
-                  <DialogDescription>
-                    Select the Pipeline stage to add this property to. You can move it between stages later.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Pipeline Stage</label>
-                    <Select value={selectedPipelineStage} onValueChange={setSelectedPipelineStage}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a stage..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id}>
-                            <div className="flex items-center gap-2">
-                              <span>{stage.icon}</span>
-                              <span>{stage.label}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setPipelineDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleAddToPipeline}
-                    disabled={!selectedPipelineStage}
-                  >
-                    Add to Pipeline
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Users className="mr-2 h-4 w-4" />
-                  Assign Agent
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Assign Agent to Lead</DialogTitle>
-                  <DialogDescription>
-                    Assign this property to one or more agents. Multiple agents can work on the same lead.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Agents (Multiple)</label>
-                    <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
-                      {agentsLoading && <p className="text-sm text-gray-500">Loading agents...</p>}
-                      {agentsError && <p className="text-sm text-red-500">Error loading agents: {agentsError.message}</p>}
-                      {!agentsLoading && (!agentsList || agentsList.length === 0) && <p className="text-sm text-gray-500">No agents available</p>}
-                      {agentsList?.map((agent: any) => (
-                        <div key={agent.id} className="flex items-center gap-2">
-                          <Checkbox
-                            checked={selectedAgents.includes(agent.id)}
-                            onCheckedChange={() => toggleAgentSelection(agent.id)}
-                          />
-                          <span className="text-sm">{agent.name} ({agent.agentType})</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Notes (optional)</label>
-                    <Textarea
-                      placeholder="Add any notes about this assignment (e.g., specific responsibilities, follow-up instructions, etc.)"
-                      value={transferReason}
-                      onChange={(e) => setTransferReason(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleTransferLead} disabled={assignAgent.isPending || selectedAgents.length === 0}>
-                    {assignAgent.isPending ? "Assigning..." : `Assign ${selectedAgents.length} Agent${selectedAgents.length !== 1 ? 's' : ''}`}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(zillowUrl, "_blank")}
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              View on Zillow
-            </Button>
-          </div>
-        </div>
-        {assignedAgents && assignedAgents.length > 0 && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Assigned Agents ({assignedAgents.length})</h3>
-            <div className="flex flex-wrap gap-2">
-              {assignedAgents.map((assignment: any) => (
-                <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2">
-                  <Users className="h-3 w-3" />
-                  {assignment.agent?.name} ({assignment.agent?.agentType})
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Lead Temperature:</span>
-              <Select
-                value={property.leadTemperature || "COLD"}
-                onValueChange={(value) =>
-                  updateLeadTemperature.mutate({
-                    propertyId,
-                    temperature: value as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" | "TBD",
-                  })
-                }
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SUPER HOT">
-                    <div className="flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-red-600 animate-pulse" />
-                      <Flame className="h-4 w-4 text-orange-600 -ml-3" />
-                      <span className="font-bold">SUPER HOT</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="HOT">
-                    <div className="flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-red-500" />
-                      <span>HOT</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="DEEP SEARCH">
-                    <div className="flex items-center gap-2">
-                      <span>🔍</span>
-                      <span className="font-semibold text-purple-600">DEEP SEARCH</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="WARM">
-                    <div className="flex items-center gap-2">
-                      <ThermometerSun className="h-4 w-4 text-orange-500" />
-                      <span>WARM</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="COLD">
-                    <div className="flex items-center gap-2">
-                      <Snowflake className="h-4 w-4 text-blue-500" />
-                      <span>COLD</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="TBD">
-                    <div className="flex items-center gap-2">
-                      <span>TBD</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="DEAD">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500">☠️</span>
-                      <span>DEAD</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Badge
-                className="text-xs bg-blue-600 hover:bg-blue-700 text-white border-0 font-semibold px-3 py-1"
-              >
-                {property.leadTemperature || "COLD"}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 bg-green-50 border-2 border-green-500 rounded-lg px-4 py-2">
-              <Checkbox
-                id="owner-verified"
-                checked={property.ownerVerified === 1}
-                onCheckedChange={(checked) =>
-                  toggleOwnerVerified.mutate({
-                    propertyId,
-                    verified: checked as boolean,
-                  })
-                }
-              />
-              <label
-                htmlFor="owner-verified"
-                className="text-sm font-bold cursor-pointer flex items-center gap-2 text-green-700"
-              >
-                {property.ownerVerified === 1 && <Check className="h-5 w-5 text-green-600" />}
-                Owner Verified
-              </label>
-            </div>
-            {/* Desk Status Block */}
-            <Select
-              value={property.deskName || 'BIN'}
-              onValueChange={(value) => {
-                const deskStatus = value === 'ARCHIVED' ? 'ARCHIVED' : value === 'BIN' ? 'BIN' : 'ACTIVE';
-                updateDesk.mutate({
-                  propertyId,
-                  deskName: value,
-                  deskStatus,
-                });
-              }}
-            >
-              <SelectTrigger className={`w-auto border-2 ${
-                property.deskName === 'BIN'
-                  ? 'bg-gray-100 border-gray-400'
-                  : property.deskName === 'DESK_CHRIS'
-                  ? 'bg-red-50 border-red-500'
-                  : property.deskName === 'DESK_1'
-                  ? 'bg-yellow-50 border-yellow-500'
-                  : property.deskName === 'DESK_2'
-                  ? 'bg-green-50 border-green-500'
-                  : property.deskName === 'DESK_3'
-                  ? 'bg-blue-50 border-blue-500'
-                  : property.deskName === 'DESK_4'
-                  ? 'bg-pink-50 border-pink-500'
-                  : property.deskName === 'Desk_Deep_Search'
-                  ? 'bg-orange-50 border-orange-500'
-                  : 'bg-gray-100 border-gray-400'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">
-                    {property.deskName === 'BIN'
-                      ? '🗑️'
-                      : property.deskName === 'DESK_CHRIS'
-                      ? '🏀'
-                      : property.deskName === 'DESK_1'
-                      ? '🟡'
-                      : property.deskName === 'DESK_2'
-                      ? '🟢'
-                      : property.deskName === 'DESK_3'
-                      ? '🔵'
-                      : property.deskName === 'DESK_4'
-                      ? '🩷'
-                      : property.deskName === 'Desk_Deep_Search'
-                      ? '🟠'
-                      : '🗑️'}
-                  </span>
-                  <span className="font-semibold">{property.deskName || 'BIN'}</span>
-                </div>
-              </SelectTrigger>
+      {/* Dialogs */}
+      <Dialog open={pipelineDialogOpen} onOpenChange={setPipelineDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to Deal Pipeline</DialogTitle>
+            <DialogDescription>Select the Pipeline stage to add this property to.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Select value={selectedPipelineStage} onValueChange={setSelectedPipelineStage}>
+              <SelectTrigger><SelectValue placeholder="Choose a stage..." /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="BIN">
-                  <div className="flex items-center gap-2">
-                    <span>🗑️</span>
-                    <span>BIN</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="DESK_CHRIS">
-                  <div className="flex items-center gap-2">
-                    <span>🏀</span>
-                    <span>DESK_CHRIS</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="DESK_1">
-                  <div className="flex items-center gap-2">
-                    <span>🟡</span>
-                    <span>DESK_1</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="DESK_2">
-                  <div className="flex items-center gap-2">
-                    <span>🟢</span>
-                    <span>DESK_2</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="DESK_3">
-                  <div className="flex items-center gap-2">
-                    <span>🔵</span>
-                    <span>DESK_3</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="DESK_4">
-                  <div className="flex items-center gap-2">
-                    <span>🩷</span>
-                    <span>DESK_4</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="Desk_Deep_Search">
-                  <div className="flex items-center gap-2">
-                    <span>🟠</span>
-                    <span>Desk_Deep_Search</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="ARCHIVED">
-                  <div className="flex items-center gap-2">
-                    <span>✅</span>
-                    <span>ARCHIVED</span>
-                  </div>
-                </SelectItem>
+                {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
+                  <SelectItem key={stage.id} value={stage.id}>
+                    <div className="flex items-center gap-2"><span>{stage.icon}</span><span>{stage.label}</span></div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-muted-foreground">Custom Tags:</span>
-            {tags?.map((tag) => (
-              <Badge key={tag.id} variant="secondary" className="flex items-center gap-1">
-                {tag.tag}
-                <button
-                  onClick={() => removeTag.mutate({ tagId: tag.id })}
-                  className="ml-1 hover:text-destructive"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPipelineDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddToPipeline} disabled={!selectedPipelineStage}>Add to Pipeline</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Agent to Lead</DialogTitle>
+            <DialogDescription>Assign this property to one or more agents.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+              {agentsList?.map((agent: any) => (
+                <div key={agent.id} className="flex items-center gap-2">
+                  <Checkbox checked={selectedAgents.includes(agent.id)} onCheckedChange={() => toggleAgentSelection(agent.id)} />
+                  <span className="text-sm">{agent.name} ({agent.agentType})</span>
+                </div>
+              ))}
+            </div>
+            <Textarea placeholder="Notes (optional)" value={transferReason} onChange={(e) => setTransferReason(e.target.value)} rows={3} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleTransferLead} disabled={assignAgent.isPending || selectedAgents.length === 0}>
+              {assignAgent.isPending ? "Assigning..." : `Assign ${selectedAgents.length} Agent(s)`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {assignedAgents && assignedAgents.length > 0 && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <h3 className="text-sm font-medium text-blue-900 mb-2">Assigned Agents ({assignedAgents.length})</h3>
+          <div className="flex flex-wrap gap-2">
+            {assignedAgents.map((assignment: any) => (
+              <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2">
+                <Users className="h-3 w-3" /> {assignment.agent?.name} ({assignment.agent?.agentType})
               </Badge>
             ))}
-            <div className="relative flex items-center gap-2">
-              <div className="relative">
-                <Input
-                  placeholder="Add tag..."
-                  value={newTag}
-                  onChange={(e) => {
-                    setNewTag(e.target.value);
-                    setShowTagSuggestions(e.target.value.length > 0);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newTag.trim()) {
-                      addTag.mutate({ propertyId, tag: newTag.trim() });
-                      setShowTagSuggestions(false);
-                    } else if (e.key === "Escape") {
-                      setShowTagSuggestions(false);
-                    }
-                  }}
-                  onFocus={() => newTag.length > 0 && setShowTagSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                  className="w-40 h-8"
-                />
-                {showTagSuggestions && allTags.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
-                    {allTags
-                      .filter(tag => 
-                        tag.toLowerCase().includes(newTag.toLowerCase()) &&
-                        !tags?.some(t => t.tag === tag)
-                      )
-                      .slice(0, 10)
-                      .map((tag) => (
-                        <div
-                          key={tag}
-                          className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
-                          onClick={() => {
-                            addTag.mutate({ propertyId, tag });
-                            setNewTag("");
-                            setShowTagSuggestions(false);
-                          }}
-                        >
-                          {tag}
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  if (newTag.trim()) {
-                    addTag.mutate({ propertyId, tag: newTag.trim() });
-                    setShowTagSuggestions(false);
-                  }
-                }}
-                disabled={!newTag.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-end gap-2">
+        <div className="relative flex items-center gap-1">
+          <Input
+            placeholder="Add tag..."
+            value={newTag}
+            onChange={(e) => { setNewTag(e.target.value); setShowTagSuggestions(true); }}
+            onFocus={() => setShowTagSuggestions(true)}
+            className="h-8 w-32 text-xs"
+          />
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => newTag.trim() && addTag.mutate({ propertyId, tagName: newTag.trim() })}>
+            <Plus className="h-4 w-4" />
+          </Button>
+          {showTagSuggestions && newTag && (
+            <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {allTags.filter(t => t.name.toLowerCase().includes(newTag.toLowerCase()) && !tags?.some(existing => existing.id === t.id)).map(tag => (
+                <button key={tag.id} className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100" onClick={() => { addTag.mutate({ propertyId, tagName: tag.name }); setShowTagSuggestions(false); }}>
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Row 1: Property Details, Financial Info, Owner Info */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Property Type</p>
-                <p className="font-medium">{property.propertyType || "-"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Year Built</p>
-                <p className="font-medium">{property.yearBuilt || "-"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Bedrooms</p>
-                <p className="font-medium">{property.totalBedrooms || "-"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Bathrooms</p>
-                <p className="font-medium">{property.totalBaths || "-"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Square Feet</p>
-                <p className="font-medium">
-                  {property.buildingSquareFeet?.toLocaleString() || "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Construction</p>
-                <p className="font-medium">{property.constructionType || "-"}</p>
-              </div>
-            </div>
-            <Separator />
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Status</p>
-              <div className="flex flex-wrap gap-2">
-                {property.status?.split(",").map((status, idx) => (
-                  <Badge key={idx} variant="secondary">
-                    {status.trim()}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Estimated Value</p>
-                <p className="font-medium text-lg">
-                  {formatCurrency(property.estimatedValue)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Equity Amount</p>
-                <p className="font-medium text-lg">
-                  {formatCurrency(property.equityAmount)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Equity Percent</p>
-                <p className="font-medium text-lg">
-                  {property.equityPercent ? `${property.equityPercent}%` : "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Mortgage</p>
-                <p className="font-medium text-lg">
-                  {formatCurrency(property.mortgageAmount)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Last Sale Price</p>
-                <p className="font-medium">{formatCurrency(property.salePrice)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Tax Amount</p>
-                <p className="font-medium">{formatCurrency(property.taxAmount)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Owner Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Primary Owner</p>
-              <p className="font-medium">{property.owner1Name || "-"}</p>
-            </div>
-            {property.owner2Name && (
-              <div>
-                <p className="text-sm text-muted-foreground">Secondary Owner</p>
-                <p className="font-medium">{property.owner2Name}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">Owner Location</p>
-              <p className="font-medium">{property.ownerLocation || "-"}</p>
-            </div>
-            {property.subdivisionName && (
-              <div>
-                <p className="text-sm text-muted-foreground">Subdivision</p>
-                <p className="font-medium">{property.subdivisionName}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 2: Contacts (Full Width) */}
-      <Card>
-        <CardContent className="pt-6">
-          <ContactManagement propertyId={propertyId} />
-        </CardContent>
-      </Card>
-
-      {/* Call Tracking Sheet - Right after Contacts */}
-      <Card>
-        <CardContent className="pt-6">
-          <CallTrackingTable propertyId={propertyId} />
-        </CardContent>
-      </Card>
-
+      <LeadSummary property={property} />
       <PropertyTasks propertyId={propertyId} />
-
-      {/* Automated Follow-ups */}
       <AutomatedFollowUps propertyId={propertyId} />
+      
+      <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} borderColor="border-l-orange-500">
+        <DeepSearchTabs property={property} />
+      </CollapsibleSection>
 
-      {/* Family Tree */}
-      <CollapsibleSection
-        title="Family Tree"
-        icon={Users}
-        isOpen={showFamilyTree}
-        onToggle={() => setShowFamilyTree(!showFamilyTree)}
-        accentColor="yellow"
-      >
+      <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} borderColor="border-l-yellow-500">
         <FamilyTreeEnhanced propertyId={propertyId} />
       </CollapsibleSection>
 
-      {/* Transfer History */}
-      {transferHistory && transferHistory.length > 0 && (
-        <CollapsibleSection
-          title="Transfer History"
-          icon={History}
-          isOpen={false}
-          onToggle={() => {}} // This is a bit tricky since we don't have a state for this one, but let's just make it collapsible
-          accentColor="gray"
-        >
-          <div className="space-y-3">
-            {transferHistory.map((transfer: any) => (
-              <div key={transfer.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <ArrowRightLeft className="h-4 w-4 mt-1 text-slate-400" />
-                <div className="flex-1">
-                  <p className="text-sm">
-                    <span className="font-bold text-slate-900">{transfer.fromAgentName}</span>
-                    <span className="mx-2 text-slate-400">→</span>
-                    <span className="font-bold text-slate-900">{transfer.toAgentName}</span>
-                  </p>
-                  {transfer.reason && (
-                    <p className="text-xs text-slate-500 mt-1 italic">
-                      Reason: {transfer.reason}
-                    </p>
-                  )}
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {new Date(transfer.createdAt).toLocaleDateString()} at{" "}
-                    {new Date(transfer.createdAt).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
-
-      {/* Deep Search Section */}
-      <CollapsibleSection
-        title="Deep Search"
-        icon={TrendingUp}
-        isOpen={showDeepSearch}
-        onToggle={() => setShowDeepSearch(!showDeepSearch)}
-        accentColor="blue"
-      >
-        <DeepSearchTabs propertyId={propertyId} />
-      </CollapsibleSection>
-
-      {/* Field Visit Check-In */}
-      <CollapsibleSection
-        title="Field Visit Check-In (Birddog)"
-        icon={MapPin}
-        isOpen={showFieldVisit}
-        onToggle={() => setShowFieldVisit(!showFieldVisit)}
-        accentColor="pink"
-      >
+      <CollapsibleSection title="Field Visit Check-In (Birddog)" icon="📍" isOpen={showFieldVisit} onToggle={() => setShowFieldVisit(!showFieldVisit)} borderColor="border-l-pink-500">
         <div className="grid gap-6 md:grid-cols-2">
           <PropertyCheckIn propertyId={propertyId} />
           <VisitHistory propertyId={propertyId} />
         </div>
       </CollapsibleSection>
 
-      {/* Photos and Notes moved to bottom for better workflow */}
       <PhotoGallery propertyId={propertyId} />
-
-      {/* Desk-Chris Notes - Exclusive notes section with auto-timestamps */}
       <DeskChrisNotes propertyId={propertyId} />
-
+      <ContactManagement propertyId={propertyId} />
+      <CallTrackingTable propertyId={propertyId} />
       <NotesSection propertyId={propertyId} />
-
-      {/* Activity Timeline - Last section with purple background */}
       <ActivityTimeline propertyId={propertyId} />
-
-      {/* Deal Calculator */}
-      <CollapsibleSection
-        title="Deal Calculator"
-        icon={Star}
-        isOpen={showDealCalculator}
-        onToggle={() => setShowDealCalculator(!showDealCalculator)}
-        accentColor="green"
-      >
-        <DealCalculator propertyId={propertyId} />
+      
+      <CollapsibleSection title="Transfer History" icon={<History className="h-5 w-5 text-gray-500" />} borderColor="border-l-gray-400">
+        <div className="space-y-4">
+          {transferHistory?.map((history: any) => (
+            <div key={history.id} className="flex items-start gap-4 p-3 border rounded-md bg-gray-50">
+              <div className="mt-1"><ArrowRightLeft className="h-4 w-4 text-gray-400" /></div>
+              <div>
+                <p className="text-sm font-medium">Assigned to {history.agent?.name}</p>
+                <p className="text-xs text-muted-foreground">{new Date(history.createdAt).toLocaleString()}</p>
+                {history.reason && <p className="text-sm mt-1 text-gray-600 italic">"{history.reason}"</p>}
+              </div>
+            </div>
+          ))}
+          {(!transferHistory || transferHistory.length === 0) && <p className="text-sm text-muted-foreground text-center py-4">No transfer history available.</p>}
+        </div>
       </CollapsibleSection>
 
-      {/* Buyer Matching - Purple theme - Moved to bottom as requested */}
+      <DealCalculator propertyId={propertyId} />
       <BuyerMatching propertyId={propertyId} />
     </div>
   );
