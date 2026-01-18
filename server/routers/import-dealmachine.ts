@@ -80,9 +80,21 @@ export const importDealMachineRouter = router({
           // Extract property data
           const leadId = row.lead_id ? String(row.lead_id) : null;
           const propertyId = row.property_id ? String(row.property_id) : null;
+          const parcelNumber = row.parcel_number ? String(row.parcel_number).trim() : null;
           
-          // Skip if duplicate
-          if (propertyId) {
+          // Skip if duplicate - use parcelNumber as the universal identifier
+          if (parcelNumber) {
+            const existing = await dbInstance
+              .select({ id: properties.id })
+              .from(properties)
+              .where(eq(properties.parcelNumber, parcelNumber))
+              .limit(1);
+            
+            if (existing.length > 0) {
+              console.log(`Parcel ${parcelNumber} already exists. Skipping.`);
+              continue;
+            }
+          } else if (propertyId) {
             const existing = await dbInstance
               .select({ id: properties.id })
               .from(properties)
@@ -90,7 +102,8 @@ export const importDealMachineRouter = router({
               .limit(1);
             
             if (existing.length > 0) {
-              continue; // Skip duplicate
+              console.log(`Property ${propertyId} already exists. Skipping.`);
+              continue;
             }
           }
           
@@ -237,6 +250,7 @@ export const importDealMachineRouter = router({
           // Insert property with all available fields
           const propertyData: any = {
             propertyId,
+            parcelNumber: parcelNumber || undefined,
             leadId,
             addressLine1: row.property_address_line_1 || 'TBD',
             addressLine2: row.property_address_line_2 || null,
