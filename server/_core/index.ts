@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { sql } from "drizzle-orm";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -28,6 +29,59 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Self-healing database migration check
+  try {
+    console.log("[Database] Running self-healing migration check...");
+    const { getDb } = await import("../db");
+    const db = await getDb();
+    if (db) {
+      // Check if buyers table exists by trying a simple query
+      try {
+        await db.execute(sql`SELECT 1 FROM buyers LIMIT 1`);
+        console.log("[Database] 'buyers' table exists.");
+      } catch (e) {
+        console.log("[Database] 'buyers' table missing, creating tables...");
+        // Create buyers table
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS buyers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(320) NOT NULL UNIQUE,
+            phone VARCHAR(20),
+            company VARCHAR(255),
+            status ENUM('Active', 'Inactive', 'Verified', 'Blacklisted') DEFAULT 'Active',
+            notes TEXT,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        // Create buyerPreferences table
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS buyerPreferences (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            buyerId INT NOT NULL,
+            states TEXT,
+            cities TEXT,
+            zipcodes TEXT,
+            propertyTypes TEXT,
+            minBeds INT,
+            maxBeds INT,
+            minBaths DECIMAL(3,1),
+            maxBaths DECIMAL(3,1),
+            minPrice INT,
+            maxPrice INT,
+            maxRepairCost INT,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        console.log("[Database] Tables created successfully.");
+      }
+    }
+  } catch (error) {
+    console.error("[Database] Self-healing migration failed:", error);
+  }
+
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
