@@ -174,15 +174,45 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     }
   };
 
+  const getActionBadgeColor = (action: string) => {
+    switch (action) {
+      case "Create Task":
+        return "bg-green-100 text-green-800";
+      case "Send Email":
+        return "bg-purple-100 text-purple-800";
+      case "Send SMS":
+        return "bg-orange-100 text-orange-800";
+      case "Change Stage":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "Cold Lead":
+        return "bg-red-100 text-red-800";
+      case "No Contact":
+        return "bg-yellow-100 text-yellow-800";
+      case "Stage Change":
+        return "bg-indigo-100 text-indigo-800";
+      case "Custom":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Carregando follow-ups...</div>;
   }
 
   return (
-    <Card>
+    <Card className="border-l-4 border-l-blue-500">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Follow-ups Automáticos</CardTitle>
+          <CardTitle className="text-blue-900">Follow-ups Automáticos</CardTitle>
           <CardDescription>Gerencie lembretes e automações para este lead</CardDescription>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -296,16 +326,20 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
             {followUps.map((followUp: any) => (
               <div
                 key={followUp.id}
-                className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                className={`flex items-start justify-between p-3 border-l-4 rounded-lg hover:shadow-md transition-all ${
+                  followUp.status === "Active" ? "border-l-green-500 bg-green-50/30" :
+                  followUp.status === "Paused" ? "border-l-yellow-500 bg-yellow-50/30" :
+                  "border-l-gray-500 bg-gray-50/30"
+                }`}
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {getStatusIcon(followUp.status)}
                     <Badge variant={getStatusBadgeVariant(followUp.status)}>
                       {followUp.status === "Active" ? "Ativo" : followUp.status === "Paused" ? "Pausado" : "Concluído"}
                     </Badge>
-                    <Badge variant="outline">{followUp.type}</Badge>
-                    <Badge variant="outline">{followUp.action}</Badge>
+                    <Badge className={getTypeColor(followUp.type)}>{followUp.type}</Badge>
+                    <Badge className={getActionBadgeColor(followUp.action)}>{followUp.action}</Badge>
                   </div>
                   <p className="text-sm font-medium">{followUp.trigger}</p>
                   <p className="text-xs text-muted-foreground mt-1">
