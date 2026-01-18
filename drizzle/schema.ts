@@ -700,6 +700,34 @@ export const taskComments = mysqlTable("taskComments", {
 export type TaskComment = typeof taskComments.$inferSelect;
 export type InsertTaskComment = typeof taskComments.$inferInsert;
 
+/**
+ * Automated Follow-up table - tracks automated follow-up tasks
+ */
+export const automatedFollowUps = mysqlTable("automatedFollowUps", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().references(() => properties.id, { onDelete: "cascade" }),
+  
+  // Follow-up details
+  type: mysqlEnum("type", ["Cold Lead", "No Contact", "Stage Change", "Custom"]).notNull(),
+  trigger: text("trigger").notNull(), // e.g., "No contact in 30 days", "Lead Temperature is COLD"
+  action: mysqlEnum("action", ["Create Task", "Send Email", "Send SMS", "Change Stage"]).notNull(),
+  
+  // Action details
+  actionDetails: text("actionDetails"), // JSON string with task details, email template ID, etc.
+  
+  // Status and tracking
+  status: mysqlEnum("status", ["Active", "Paused", "Completed"]).default("Active").notNull(),
+  lastTriggeredAt: timestamp("lastTriggeredAt"),
+  nextRunAt: timestamp("nextRunAt").notNull(),
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AutomatedFollowUp = typeof automatedFollowUps.$inferSelect;
+export type InsertAutomatedFollowUp = typeof automatedFollowUps.$inferInsert;
+
 // Note templates for quick-insert in Log Call dialog
 export const noteTemplates = mysqlTable("noteTemplates", {
   id: int("id").autoincrement().primaryKey(),

@@ -2434,6 +2434,64 @@ export const appRouter = router({
         return result;
       }),
   }),
+
+  followups: router({
+    create: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          type: z.enum(["Cold Lead", "No Contact", "Stage Change", "Custom"]),
+          trigger: z.string(),
+          action: z.enum(["Create Task", "Send Email", "Send SMS", "Change Stage"]),
+          actionDetails: z.record(z.any()),
+          nextRunAt: z.date(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { createAutomatedFollowUp } = await import("./db-automated-followups");
+        return await createAutomatedFollowUp(input);
+      }),
+
+    getByProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const { getFollowUpsByProperty } = await import("./db-automated-followups");
+        return await getFollowUpsByProperty(input.propertyId);
+      }),
+
+    getPending: protectedProcedure.query(async () => {
+      const { getPendingFollowUps } = await import("./db-automated-followups");
+      return await getPendingFollowUps();
+    }),
+
+    execute: protectedProcedure
+      .input(z.object({ followUpId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { executeFollowUp } = await import("./db-automated-followups");
+        return await executeFollowUp(input.followUpId);
+      }),
+
+    pause: protectedProcedure
+      .input(z.object({ followUpId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { pauseFollowUp } = await import("./db-automated-followups");
+        return await pauseFollowUp(input.followUpId);
+      }),
+
+    resume: protectedProcedure
+      .input(z.object({ followUpId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { resumeFollowUp } = await import("./db-automated-followups");
+        return await resumeFollowUp(input.followUpId);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ followUpId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteFollowUp } = await import("./db-automated-followups");
+        return await deleteFollowUp(input.followUpId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
