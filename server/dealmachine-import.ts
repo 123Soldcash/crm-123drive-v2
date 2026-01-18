@@ -33,13 +33,26 @@ export interface ParsedProperty {
 
 export interface ParsedContact {
   name: string;
-  phone?: string;
-  phoneType?: string;
-  dnc: boolean;
-  email?: string;
   relationship: string;
   flags?: string;
+  dnc: boolean;
   dealMachineRawData: string; // JSON string with all extra fields
+  // Dynamic contact information
+  phones: Array<{
+    phoneNumber: string;
+    phoneType: string;
+  }>;
+  emails: Array<{
+    email: string;
+    emailType: string;
+  }>;
+  mailingAddress?: {
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    zipcode: string;
+  };
 }
 
 export interface PropertyWithContacts {
@@ -247,43 +260,76 @@ export function extractContactsFromProperty(
     const contactFlags = row[contactFlagsField]?.trim();
     const relationship = mapFlagsToRelationship(contactFlags);
 
-    // Get primary phone (contact_N_phone1)
-    const phone1Field = `contact_${contactNum}_phone1`;
-    const phone1 = row[phone1Field]?.trim();
-    const phone1TypeField = `contact_${contactNum}_phone1_type`;
-    const phone1Type = row[phone1TypeField]?.trim() || "Mobile";
-
-    // Get primary email (contact_N_email1)
-    const email1Field = `contact_${contactNum}_email1`;
-    const email1 = row[email1Field]?.trim();
-
-    // Store all raw contact data
-    const rawData: any = {};
-    for (let phoneNum = 1; phoneNum <= 3; phoneNum++) {
+    // Collect ALL phones (not just 3)
+    const phones: Array<{ phoneNumber: string; phoneType: string }> = [];
+    const newRawData: any = {};
+    
+    // Try to find all phone numbers (contact_N_phone1, phone2, phone3, etc.)
+    for (let phoneNum = 1; phoneNum <= 10; phoneNum++) {
       const phoneField = `contact_${contactNum}_phone${phoneNum}`;
       const phoneTypeField = `contact_${contactNum}_phone${phoneNum}_type`;
-      if (row[phoneField]) {
-        rawData[phoneField] = row[phoneField];
-        rawData[phoneTypeField] = row[phoneTypeField];
-      }
-    }
-    for (let emailNum = 1; emailNum <= 3; emailNum++) {
-      const emailField = `contact_${contactNum}_email${emailNum}`;
-      if (row[emailField]) {
-        rawData[emailField] = row[emailField];
+      const phoneNumber = row[phoneField]?.trim();
+      
+      if (phoneNumber) {
+        const phoneType = row[phoneTypeField]?.trim() || "Mobile";
+        phones.push({
+          phoneNumber,
+          phoneType,
+        });
+        newRawData[phoneField] = phoneNumber;
+        newRawData[phoneTypeField] = phoneType;
       }
     }
 
-    // Create contact record with primary phone and email
+    // Collect ALL emails (not just 3)
+    const emails: Array<{ email: string; emailType: string }> = [];
+    
+    // Try to find all email addresses (contact_N_email1, email2, email3, etc.)
+    for (let emailNum = 1; emailNum <= 10; emailNum++) {
+      const emailField = `contact_${contactNum}_email${emailNum}`;
+      const emailTypeField = `contact_${contactNum}_email${emailNum}_type`;
+      const email = row[emailField]?.trim();
+      
+      if (email) {
+        const emailType = row[emailTypeField]?.trim() || "Personal";
+        emails.push({
+          email,
+          emailType,
+        });
+        newRawData[emailField] = email;
+        newRawData[emailTypeField] = emailType;
+      }
+    }
+
+    // Try to extract mailing address from contact fields
+    const mailingAddressLine1 = row[`contact_${contactNum}_mailing_address_line1`]?.trim();
+    const mailingAddressLine2 = row[`contact_${contactNum}_mailing_address_line2`]?.trim();
+    const mailingCity = row[`contact_${contactNum}_mailing_city`]?.trim();
+    const mailingState = row[`contact_${contactNum}_mailing_state`]?.trim();
+    const mailingZipcode = row[`contact_${contactNum}_mailing_zipcode`]?.trim();
+
+    let mailingAddress: any = undefined;
+    if (mailingAddressLine1 && mailingCity && mailingState && mailingZipcode) {
+      mailingAddress = {
+        addressLine1: mailingAddressLine1,
+        addressLine2: mailingAddressLine2 || undefined,
+        city: mailingCity,
+        state: mailingState,
+        zipcode: mailingZipcode,
+      };
+      newRawData.mailingAddress = mailingAddress;
+    }
+
+    // Create contact record with all phones, emails, and addresses
     const contact: ParsedContact = {
       name: contactName,
-      phone: phone1,
-      phoneType: phone1Type,
-      dnc: false, // Default to false, can be updated later
-      email: email1,
       relationship,
       flags: contactFlags,
-      dealMachineRawData: JSON.stringify(rawData),
+      dnc: false,
+      phones,
+      emails,
+      mailingAddress,
+      dealMachineRawData: JSON.stringify(newRawData),
     };
 
     contacts.push(contact);
