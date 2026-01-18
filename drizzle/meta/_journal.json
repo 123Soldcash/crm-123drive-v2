@@ -22,6 +22,20 @@
       "when": 1768712789236,
       "tag": "0002_keen_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1768722963806,
+      "tag": "0003_stiff_cerebro",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1768723023805,
+      "tag": "0004_fixed_mojo",
+      "breakpoints": true
     }
   ]
 }

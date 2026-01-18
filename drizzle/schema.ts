@@ -338,37 +338,7 @@ export const contacts = mysqlTable("contacts", {
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
 
-/**
- * Contact Phones table - allows unlimited phone numbers per contact
- */
-export const contactPhones = mysqlTable("contactPhones", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
-  phoneType: varchar("phoneType", { length: 50 }).default("Mobile"), // Mobile, Home, Work, etc.
-  isPrimary: int("isPrimary").default(0).notNull(), // 1=Primary, 0=Secondary
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
 
-export type ContactPhone = typeof contactPhones.$inferSelect;
-export type InsertContactPhone = typeof contactPhones.$inferInsert;
-
-/**
- * Contact Emails table - allows unlimited email addresses per contact
- */
-export const contactEmails = mysqlTable("contactEmails", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  emailType: varchar("emailType", { length: 50 }).default("Personal"), // Personal, Work, etc.
-  isPrimary: int("isPrimary").default(0).notNull(), // 1=Primary, 0=Secondary
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ContactEmail = typeof contactEmails.$inferSelect;
-export type InsertContactEmail = typeof contactEmails.$inferInsert;
 
 /**
  * Contact Addresses table - standardized mailing addresses for Click2Mail/Zapier
@@ -390,7 +360,38 @@ export const contactAddresses = mysqlTable("contactAddresses", {
 export type ContactAddress = typeof contactAddresses.$inferSelect;
 export type InsertContactAddress = typeof contactAddresses.$inferInsert;
 
+/**
+ * Contact Phones table - stores multiple phone numbers per contact
+ */
+export const contactPhones = mysqlTable("contactPhones", {
+  id: int("id").autoincrement().primaryKey(),
+  contactId: int("contactId").notNull(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
+  phoneType: mysqlEnum("phoneType", ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"]).default("Mobile"),
+  isPrimary: int("isPrimary").default(0).notNull(),
+  dnc: int("dnc").default(0).notNull(),
+  carrier: varchar("carrier", { length: 100 }),
+  activityStatus: varchar("activityStatus", { length: 50 }),
+  isPrepaid: int("isPrepaid").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
 
+export type ContactPhone = typeof contactPhones.$inferSelect;
+export type InsertContactPhone = typeof contactPhones.$inferInsert;
+
+/**
+ * Contact Emails table - stores multiple email addresses per contact
+ */
+export const contactEmails = mysqlTable("contactEmails", {
+  id: int("id").autoincrement().primaryKey(),
+  contactId: int("contactId").notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  isPrimary: int("isPrimary").default(0).notNull(), // 0=NO, 1=YES
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ContactEmail = typeof contactEmails.$inferSelect;
+export type InsertContactEmail = typeof contactEmails.$inferInsert;
 
 /**
  * Contact Social Media table - stores social media profiles per contact
