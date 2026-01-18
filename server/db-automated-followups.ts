@@ -94,7 +94,8 @@ export async function getFollowUpsByProperty(propertyId: number) {
 
 /**
  * Listar follow-ups que devem ser executados agora
- */export async function getPendingFollowUps() {
+ */
+export async function getPendingFollowUps() {
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
