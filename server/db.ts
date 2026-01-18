@@ -266,7 +266,7 @@ export async function getPropertyById(id: number) {
     equityAmount: properties.equityAmount,
     equityPercent: properties.equityPercent,
     mortgageAmount: properties.mortgageAmount,
-    mortgageBalance: properties.mortgageBalance,
+    totalLoanBalance: properties.totalLoanBalance,
     taxAmount: properties.taxAmount,
     leadTemperature: properties.leadTemperature,
     trackingStatus: properties.trackingStatus,
