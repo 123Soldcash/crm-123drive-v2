@@ -350,6 +350,58 @@ export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = typeof contacts.$inferInsert;
 
 /**
+ * Contact Phones table - allows unlimited phone numbers per contact
+ */
+export const contactPhones = mysqlTable("contactPhones", {
+  id: int("id").autoincrement().primaryKey(),
+  contactId: int("contactId").notNull(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
+  phoneType: varchar("phoneType", { length: 50 }).default("Mobile"), // Mobile, Home, Work, etc.
+  isPrimary: int("isPrimary").default(0).notNull(), // 1=Primary, 0=Secondary
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContactPhone = typeof contactPhones.$inferSelect;
+export type InsertContactPhone = typeof contactPhones.$inferInsert;
+
+/**
+ * Contact Emails table - allows unlimited email addresses per contact
+ */
+export const contactEmails = mysqlTable("contactEmails", {
+  id: int("id").autoincrement().primaryKey(),
+  contactId: int("contactId").notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  emailType: varchar("emailType", { length: 50 }).default("Personal"), // Personal, Work, etc.
+  isPrimary: int("isPrimary").default(0).notNull(), // 1=Primary, 0=Secondary
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContactEmail = typeof contactEmails.$inferSelect;
+export type InsertContactEmail = typeof contactEmails.$inferInsert;
+
+/**
+ * Contact Addresses table - standardized mailing addresses for Click2Mail/Zapier
+ */
+export const contactAddresses = mysqlTable("contactAddresses", {
+  id: int("id").autoincrement().primaryKey(),
+  contactId: int("contactId").notNull(),
+  addressLine1: varchar("addressLine1", { length: 255 }).notNull(),
+  addressLine2: varchar("addressLine2", { length: 255 }),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 2 }).notNull(),
+  zipcode: varchar("zipcode", { length: 10 }).notNull(),
+  addressType: varchar("addressType", { length: 50 }).default("Mailing"), // Mailing, Current, Previous
+  isPrimary: int("isPrimary").default(0).notNull(), // 1=Primary, 0=Secondary
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContactAddress = typeof contactAddresses.$inferSelect;
+export type InsertContactAddress = typeof contactAddresses.$inferInsert;
+
+/**
  * Contact Phones table - stores multiple phone numbers per contact
  */
 export const contactPhones = mysqlTable("contactPhones", {
