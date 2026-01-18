@@ -338,15 +338,15 @@ export default function PropertyDetail() {
       <PropertyTasks propertyId={propertyId} />
       <AutomatedFollowUps propertyId={propertyId} />
       
-      <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} borderColor="border-l-orange-500">
+      <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
         <DeepSearchTabs property={property} />
       </CollapsibleSection>
 
-      <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} borderColor="border-l-yellow-500">
+      <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} accentColor="yellow">
         <FamilyTreeEnhanced propertyId={propertyId} />
       </CollapsibleSection>
 
-      <CollapsibleSection title="Field Visit Check-In (Birddog)" icon="📍" isOpen={showFieldVisit} onToggle={() => setShowFieldVisit(!showFieldVisit)} borderColor="border-l-pink-500">
+      <CollapsibleSection title="Field Visit Check-In (Birddog)" icon="📍" isOpen={showFieldVisit} onToggle={() => setShowFieldVisit(!showFieldVisit)} accentColor="pink">
         <div className="grid gap-6 md:grid-cols-2">
           <PropertyCheckIn propertyId={propertyId} />
           <VisitHistory propertyId={propertyId} />
@@ -360,7 +360,7 @@ export default function PropertyDetail() {
       <NotesSection propertyId={propertyId} />
       <ActivityTimeline propertyId={propertyId} />
       
-      <CollapsibleSection title="Transfer History" icon={<History className="h-5 w-5 text-gray-500" />} borderColor="border-l-gray-400">
+      <CollapsibleSection title="Transfer History" icon={History} accentColor="gray">
         <div className="space-y-4">
           {transferHistory?.map((history: any) => (
             <div key={history.id} className="flex items-start gap-4 p-3 border rounded-md bg-gray-50">
