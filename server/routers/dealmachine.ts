@@ -98,29 +98,9 @@ export const dealmachineRouter = router({
 
         // Check for duplicate
         const key = `${street}|${city}|${state}|${zipcode}`.toLowerCase();
-        // Fallback strategy for deduplication:
-        // 1. Check parcelNumber (if available)
-        // 2. Fallback to propertyId (if available)
-        // 3. If neither exists, allow creation (will use UUID or address-based dedup)
-        const parcelNumber = data.parcel_number ? String(data.parcel_number).trim() : null;
-        const propertyId = data.property_id ? String(data.property_id) : null;
-        
-        if (parcelNumber) {
-          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.parcelNumber, parcelNumber));
-          if (existing.length > 0) {
-            throw new Error(`Duplicate property: Parcel ${parcelNumber} already exists`);
-          }
-        } else if (insertedPropertyId) {
-          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.propertyId, propertyId));
-          if (existing.length > 0) {
-            throw new Error(`Duplicate property: Property ID ${propertyId} already exists`);
-          }
-        } else {
-          // No parcelNumber or propertyId - check by address as last resort
-          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.addressLine1, street));
-          if (existing.length > 0) {
-            throw new Error(`Duplicate property: ${address}`);
-          }
+        const existing = await db.select().from(properties).where(eq(properties.addressLine1, street));
+        if (existing.length > 0) {
+          throw new Error(`Duplicate property: ${address}`);
         }
 
         // Get next LEAD ID
@@ -141,21 +121,19 @@ export const dealmachineRouter = router({
           listName: 'DealMachine Import',
           entryDate: new Date(),
           dealMachinePropertyId: data.property_id,
-          parcelNumber: parcelNumber || undefined,
-          propertyId: propertyId || undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
 
-        const insertedPropertyId = (result as any).insertId || 0;
+        const propertyId = (result as any).insertId || 0;
         let contactsCreated = 0;
         let phonesCreated = 0;
         let emailsCreated = 0;
 
-        if (insertedPropertyId) {
+        if (propertyId) {
           // Add status tag
           await db.insert(propertyTags).values({
-            propertyId: insertedPropertyId,
+            propertyId,
             tag: 'dealmachine_46col_import',
             createdBy: 1,
             createdAt: new Date(),
@@ -171,7 +149,7 @@ export const dealmachineRouter = router({
 
             // Insert contact
             const contactResult = await db.insert(contacts).values({
-              propertyId: insertedPropertyId,
+              propertyId,
               name: contactName,
               relationship: 'Owner',
               createdAt: new Date(),
@@ -291,8 +269,8 @@ export const dealmachineRouter = router({
               updatedAt: new Date(),
             });
 
-            const insertedPropertyId = (result as any).insertId || 0;
-            if (insertedPropertyId) {
+            const propertyId = (result as any).insertId || 0;
+            if (propertyId) {
               // Add status tag for this import batch
               await db.insert(propertyTags).values({
                 propertyId,

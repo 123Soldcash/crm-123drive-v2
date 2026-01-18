@@ -84,60 +84,10 @@ export const importDealMachineRouter = router({
           
           // Skip if duplicate - use parcelNumber as the universal identifier
           if (parcelNumber) {
-            const propertiesToUpdate = await dbInstance
-              .select({
-                id: properties.id,
-                leadId: properties.leadId,
-                addressLine1: properties.addressLine1,
-                addressLine2: properties.addressLine2,
-                city: properties.city,
-                state: properties.state,
-                zipcode: properties.zipcode,
-                owner1Name: properties.owner1Name,
-                owner2Name: properties.owner2Name,
-                parcelNumber: properties.parcelNumber,
-                propertyId: properties.propertyId,
-                dealMachinePropertyId: properties.dealMachinePropertyId,
-                dealMachineLeadId: properties.dealMachineLeadId,
-                dealMachineRawData: properties.dealMachineRawData,
-                source: properties.source,
-                listName: properties.listName,
-                entryDate: properties.entryDate,
-                leadTemperature: properties.leadTemperature,
-                trackingStatus: properties.trackingStatus,
-                ownerVerified: properties.ownerVerified,
-                assignedAgentId: properties.assignedAgentId,
-                marketStatus: properties.marketStatus,
-                ownerLocation: properties.ownerLocation,
-                estimatedValue: properties.estimatedValue,
-                equityAmount: properties.equityAmount,
-                equityPercent: properties.equityPercent,
-                salePrice: properties.salePrice,
-                saleDate: properties.saleDate,
-                mortgageAmount: properties.mortgageAmount,
-                totalLoanBalance: properties.totalLoanBalance,
-                totalLoanPayment: properties.totalLoanPayment,
-                estimatedRepairCost: properties.estimatedRepairCost,
-                taxYear: properties.taxYear,
-                taxAmount: properties.taxAmount,
-                buildingSquareFeet: properties.buildingSquareFeet,
-                totalBedrooms: properties.totalBedrooms,
-                totalBaths: properties.totalBaths,
-                yearBuilt: properties.yearBuilt,
-                propertyType: properties.propertyType,
-                constructionType: properties.constructionType,
-                apnParcelId: properties.apnParcelId,
-                taxDelinquent: properties.taxDelinquent,
-                taxDelinquentYear: properties.taxDelinquentYear,
-                deskName: properties.deskName,
-                deskStatus: properties.deskStatus,
-                dealStage: properties.dealStage,
-                stageChangedAt: properties.stageChangedAt,
-                createdAt: properties.createdAt,
-                updatedAt: properties.updatedAt,
-              })
+            const existing = await dbInstance
+              .select({ id: properties.id })
               .from(properties)
-              .where(eq(properties.addressLine1, 'TBD'));r, parcelNumber))
+              .where(eq(properties.parcelNumber, parcelNumber))
               .limit(1);
             
             if (existing.length > 0) {
@@ -392,9 +342,11 @@ export const importDealMachineRouter = router({
             for (let e = 1; e <= 10; e++) {
               const email = row[`contact_${i}_email${e}`];
               if (email && String(email).trim()) {
+                const emailType = row[`contact_${i}_email${e}_type`] || 'Personal';
                 await dbInstance.insert(contactEmails).values({
                   contactId: insertedContactId,
                   email: String(email).trim(),
+                  emailType: emailType,
                   isPrimary: e === 1 ? 1 : 0,
                 } as any);
                 emailsCount++;
@@ -428,14 +380,8 @@ export const importDealMachineRouter = router({
       }
       
       // PHASE 2: Enrich addresses using Google Maps (only for properties with TBD address)
-        const propertiesWithGPS = await dbInstance
-              .select({
-                id: properties.id,
-                addressLine1: properties.addressLine1,
-                city: properties.city,
-                state: properties.state,
-                zipcode: properties.zipcode,
-              })
+      const propertiesWithGPS = await dbInstance
+        .select()
         .from(properties)
         .where(eq(properties.addressLine1, 'TBD'));
       

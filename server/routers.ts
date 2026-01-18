@@ -20,7 +20,6 @@ import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
 import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
 import { importDealMachineRouter } from "./routers/import-dealmachine";
-import { duplicateDetectionRouter } from "./routers/duplicate-detection";
 import { findDuplicates } from "./utils/duplicateDetection";
 
 export const appRouter = router({
@@ -1280,7 +1279,6 @@ export const appRouter = router({
   }),
 
   importDealMachine: importDealMachineRouter,
-  duplicateDetection: duplicateDetectionRouter,
   
   import: router({
     uploadProperties: protectedProcedure

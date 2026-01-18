@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Plus, ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
+import { Loader2, Search, Plus, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_CONFIGS } from "@/lib/stageConfig";
 import { useLocation } from "wouter";
@@ -21,8 +20,6 @@ interface QuickAddLeadDialogProps {
 export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLeadDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState<any>(null);
-  const [userConfirmedDuplicate, setUserConfirmedDuplicate] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: "",
     city: "",
@@ -39,15 +36,6 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
   const { data: searchResults, isLoading: isSearching } = trpc.properties.search.useQuery(
     { query: searchQuery },
     { enabled: searchQuery.length >= 3 && !showCreateForm }
-  );
-
-  // Search for potential duplicates when form data changes
-  const { data: potentialDuplicates, isLoading: isCheckingDuplicates } = trpc.duplicateDetection.searchPotentialDuplicates.useQuery(
-    {
-      address: formData.addressLine1,
-      ownerName: formData.owner1Name,
-    },
-    { enabled: showCreateForm && (formData.addressLine1.length > 3 || formData.owner1Name.length > 2) }
   );
 
   // Update stage mutation
@@ -79,8 +67,6 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
   const resetDialog = () => {
     setSearchQuery("");
     setShowCreateForm(false);
-    setDuplicateWarning(null);
-    setUserConfirmedDuplicate(false);
     setFormData({
       addressLine1: "",
       city: "",
@@ -106,20 +92,6 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
       return;
     }
 
-    // Check for duplicates
-    if (potentialDuplicates?.found && !userConfirmedDuplicate) {
-      setDuplicateWarning(potentialDuplicates);
-      return;
-    }
-
-    createPropertyMutation.mutate({
-      ...formData,
-      leadTemperature: "TBD",
-    });
-  };
-
-  const handleCreateDespiteDuplicate = () => {
-    setUserConfirmedDuplicate(true);
     createPropertyMutation.mutate({
       ...formData,
       leadTemperature: "TBD",
@@ -250,64 +222,17 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
         ) : (
           // CREATE FORM MODE
           <form onSubmit={handleCreateNew} className="space-y-4">
-            {/* Duplicate Warning Alert */}
-            {duplicateWarning?.found && (
-              <Alert className="border-yellow-500 bg-yellow-50">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
-                  <div className="font-semibold mb-2">⚠️ Possible duplicate found!</div>
-                  <div className="space-y-2 mb-3">
-                    {duplicateWarning.duplicates?.slice(0, 2).map((dup: any) => (
-                      <div key={dup.id} className="text-sm bg-white p-2 rounded border border-yellow-200">
-                        <p className="font-medium">{dup.address}</p>
-                        <p className="text-xs text-gray-600">{dup.city}, {dup.state} {dup.zipcode}</p>
-                        {dup.owner && <p className="text-xs text-gray-600">Owner: {dup.owner}</p>}
-                        <p className="text-xs text-yellow-700 mt-1">Match Score: {dup.matchScore}%</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setDuplicateWarning(null)}
-                      className="flex-1"
-                    >
-                      Use Existing
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleCreateDespiteDuplicate}
-                      className="flex-1"
-                    >
-                      Add Anyway
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
             <div className="space-y-2">
               <Label htmlFor="addressLine1">
                 Address <span className="text-red-500">*</span>
               </Label>
-              <div className="relative">
-                <Input
-                  id="addressLine1"
-                  placeholder="1234 Main Street"
-                  value={formData.addressLine1}
-                  onChange={(e) => {
-                    setFormData({ ...formData, addressLine1: e.target.value });
-                    setDuplicateWarning(null);
-                    setUserConfirmedDuplicate(false);
-                  }}
-                  autoFocus
-                />
-                {isCheckingDuplicates && (
-                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
-                )}
-              </div>
+              <Input
+                id="addressLine1"
+                placeholder="1234 Main Street"
+                value={formData.addressLine1}
+                onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                autoFocus
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -353,11 +278,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
                 id="owner1Name"
                 placeholder="John Doe"
                 value={formData.owner1Name}
-                onChange={(e) => {
-                  setFormData({ ...formData, owner1Name: e.target.value });
-                  setDuplicateWarning(null);
-                  setUserConfirmedDuplicate(false);
-                }}
+                onChange={(e) => setFormData({ ...formData, owner1Name: e.target.value })}
               />
             </div>
 
