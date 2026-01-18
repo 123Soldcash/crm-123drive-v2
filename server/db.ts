@@ -251,7 +251,7 @@ export async function getPropertyById(id: number) {
   const db = await getDb();
   if (!db) return null;
 
-  // First get the property
+  // First get the property with ALL fields
   const propertyResult = await db.select({
     id: properties.id,
     leadId: properties.leadId,
@@ -263,18 +263,43 @@ export async function getPropertyById(id: number) {
     owner1Name: properties.owner1Name,
     owner2Name: properties.owner2Name,
     estimatedValue: properties.estimatedValue,
+    equityAmount: properties.equityAmount,
     equityPercent: properties.equityPercent,
+    mortgageAmount: properties.mortgageAmount,
+    mortgageBalance: properties.mortgageBalance,
+    taxAmount: properties.taxAmount,
     leadTemperature: properties.leadTemperature,
     trackingStatus: properties.trackingStatus,
     ownerVerified: properties.ownerVerified,
     assignedAgentId: properties.assignedAgentId,
     marketStatus: properties.marketStatus,
     dealMachineRawData: properties.dealMachineRawData,
+    apnParcelId: properties.apnParcelId,
+    propertyId: properties.propertyId,
+    propertyType: properties.propertyType,
+    totalBedrooms: properties.totalBedrooms,
+    totalBaths: properties.totalBaths,
+    buildingSquareFeet: properties.buildingSquareFeet,
+    yearBuilt: properties.yearBuilt,
+    ownerLocation: properties.ownerLocation,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.id, id)).limit(1);
   if (propertyResult.length === 0) return null;
   
-  // Then get deep search data
+  // Get contacts for this property
+  const contactsResult = await db.select({
+    id: contacts.id,
+    name: contacts.name,
+    relationship: contacts.relationship,
+    phone1: contacts.phone1,
+    phone2: contacts.phone2,
+    phone3: contacts.phone3,
+    email1: contacts.email1,
+    email2: contacts.email2,
+    email3: contacts.email3,
+  }).from(contacts).where(eq(contacts.propertyId, id));
+  
+  // Get deep search data
   const deepSearchResult = await db
     .select()
     .from(propertyDeepSearch)
@@ -286,6 +311,7 @@ export async function getPropertyById(id: number) {
   // Combine the data
   const result = [{
     ...propertyResult[0],
+    contacts: contactsResult,
     propertyCondition: deepSearchData?.propertyCondition || null,
     issues: deepSearchData?.issues || null,
     hasMortgage: deepSearchData?.hasMortgage || null,
