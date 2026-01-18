@@ -193,57 +193,85 @@ export function StickyPropertyHeader({
           </div>
         </div>
 
-        {/* Bottom Row: Compact Info Grid (Pict 3 Style) */}
-        <div className="grid grid-cols-3 gap-4 bg-slate-50/50 rounded-xl border border-slate-100 p-3">
-          {/* Property Details */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 border-r border-slate-200 pr-4">
+        {/* Bottom Row: Ultra-Compact Info Grid (4 Columns) */}
+        <div className="grid grid-cols-4 gap-3 bg-slate-50/50 rounded-xl border border-slate-100 p-2.5">
+          {/* Property Details Column */}
+          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 border-r border-slate-200 pr-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Type</span>
-              <span className="text-xs font-bold text-slate-700">{property.propertyType || "N/A"}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Type</span>
+              <span className="text-[11px] font-bold text-slate-700">{property.propertyType || "N/A"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Built</span>
-              <span className="text-xs font-bold text-slate-700">{yearBuilt}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Built</span>
+              <span className="text-[11px] font-bold text-slate-700">{yearBuilt}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Beds/Baths</span>
-              <span className="text-xs font-bold text-slate-700">{beds}/{baths}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Beds/Baths</span>
+              <span className="text-[11px] font-bold text-slate-700">{beds}/{baths}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Sqft</span>
-              <span className="text-xs font-bold text-slate-700">{sqft}</span>
-            </div>
-          </div>
-
-          {/* Financial Info */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 border-r border-slate-200 px-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Value</span>
-              <span className="text-xs font-bold text-emerald-600">{formatCurrency(property.estimatedValue)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Equity</span>
-              <span className="text-xs font-bold text-blue-600">{formatCurrency(property.equityAmount)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Mortgage</span>
-              <span className="text-xs font-bold text-rose-600">{formatCurrency(property.mortgageBalance || property.mortgageAmount)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Taxes</span>
-              <span className="text-xs font-bold text-slate-700">{formatCurrency(property.taxAmount || property.estimatedTaxes)}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Sqft</span>
+              <span className="text-[11px] font-bold text-slate-700">{sqft}</span>
             </div>
           </div>
 
-          {/* Owner Info */}
-          <div className="grid grid-cols-1 gap-y-1 pl-4">
+          {/* Financial Info Column */}
+          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 border-r border-slate-200 px-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Owner</span>
-              <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{ownerName}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Value</span>
+              <span className="text-[11px] font-bold text-emerald-600">{formatCurrency(property.estimatedValue)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase">Location</span>
-              <span className="text-xs font-bold text-slate-700">{location}</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Equity</span>
+              <span className="text-[11px] font-bold text-blue-600">{formatCurrency(property.equityAmount)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Mortgage</span>
+              <span className="text-[11px] font-bold text-rose-600">{formatCurrency(property.mortgageBalance || property.mortgageAmount)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Taxes</span>
+              <span className="text-[11px] font-bold text-slate-700">{formatCurrency(property.taxAmount || property.estimatedTaxes)}</span>
+            </div>
+          </div>
+
+          {/* Identifiers Column */}
+          <div className="grid grid-cols-1 gap-y-0.5 border-r border-slate-200 px-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">APN</span>
+              <span className="text-[11px] font-bold text-purple-600 font-mono">{property.apnParcelId || property.parcelNumber || "N/A"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Prop ID</span>
+              <span className="text-[11px] font-bold text-slate-600 font-mono truncate max-w-[80px]">{property.propertyId || "N/A"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Lead Temp</span>
+              <span className="text-[11px] font-bold text-slate-700">{property.leadTemperature || "TBD"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Status</span>
+              <span className="text-[11px] font-bold text-slate-700">{property.trackingStatus || "N/A"}</span>
+            </div>
+          </div>
+
+          {/* Owner Info Column */}
+          <div className="grid grid-cols-1 gap-y-0.5 pl-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Owner</span>
+              <span className="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">{ownerName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Location</span>
+              <span className="text-[11px] font-bold text-slate-700">{location}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Equity %</span>
+              <span className="text-[11px] font-bold text-slate-700">{property.equityPercent || "0"}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Verified</span>
+              <span className="text-[11px] font-bold">{property.ownerVerified ? "✓" : "✗"}</span>
             </div>
           </div>
         </div>
