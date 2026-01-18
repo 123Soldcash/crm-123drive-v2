@@ -106,18 +106,18 @@ export const dealmachineRouter = router({
         const propertyId = data.property_id ? String(data.property_id) : null;
         
         if (parcelNumber) {
-          const existing = await db.select().from(properties).where(eq(properties.parcelNumber, parcelNumber));
+          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.parcelNumber, parcelNumber));
           if (existing.length > 0) {
             throw new Error(`Duplicate property: Parcel ${parcelNumber} already exists`);
           }
         } else if (insertedPropertyId) {
-          const existing = await db.select().from(properties).where(eq(properties.propertyId, propertyId));
+          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.propertyId, propertyId));
           if (existing.length > 0) {
             throw new Error(`Duplicate property: Property ID ${propertyId} already exists`);
           }
         } else {
           // No parcelNumber or propertyId - check by address as last resort
-          const existing = await db.select().from(properties).where(eq(properties.addressLine1, street));
+          const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.addressLine1, street));
           if (existing.length > 0) {
             throw new Error(`Duplicate property: ${address}`);
           }
