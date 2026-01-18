@@ -905,9 +905,6 @@ export default function PropertyDetail() {
       {/* Automated Follow-ups */}
       <AutomatedFollowUps propertyId={propertyId} />
 
-      {/* Buyer Matching - Purple theme */}
-      <BuyerMatching propertyId={propertyId} />
-
       {/* Family Tree */}
       <CollapsibleSection
         title="Family Tree"
@@ -1008,6 +1005,9 @@ export default function PropertyDetail() {
       >
         <DealCalculator propertyId={propertyId} />
       </CollapsibleSection>
+
+      {/* Buyer Matching - Purple theme - Moved to bottom as requested */}
+      <BuyerMatching propertyId={propertyId} />
     </div>
   );
 }
