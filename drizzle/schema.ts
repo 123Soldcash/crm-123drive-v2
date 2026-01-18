@@ -237,33 +237,72 @@ export type InsertProperty = typeof properties.$inferInsert;
 /**
  * Deal Calculations table - stores financial calculations for each property
  */
-export const dealCalculations = mysqlTable("dealCalculations", {
-  id: int("id").autoincrement().primaryKey(),
-  propertyId: int("propertyId").notNull().unique(), // One calculation per property
-  
-  // Input Values
-  arv: decimal("arv", { precision: 10, scale: 2 }), // After Repair Value
-  repairCost: decimal("repairCost", { precision: 10, scale: 2 }),
-  closingCost: decimal("closingCost", { precision: 10, scale: 2 }),
-  assignmentFee: decimal("assignmentFee", { precision: 10, scale: 2 }),
-  desiredProfit: decimal("desiredProfit", { precision: 10, scale: 2 }),
-  
-  // Calculated Values
-  maxOffer: decimal("maxOffer", { precision: 10, scale: 2 }), // Maximum Allowable Offer (MAO)
-  maoFormula: text("maoFormula"), // Stores the formula used for transparency
-  
-  // Metadata
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+	export const dealCalculations = mysqlTable("dealCalculations", {
 
-export type DealCalculation = typeof dealCalculations.$inferSelect;
-export type InsertDealCalculation = typeof dealCalculations.$inferInsert;
+	  arv: decimal("arv", { precision: 10, scale: 2 }), // After Repair Value
+	  repairCost: decimal("repairCost", { precision: 10, scale: 2 }),
+	  closingCost: decimal("closingCost", { precision: 10, scale: 2 }),
+	  assignmentFee: decimal("assignmentFee", { precision: 10, scale: 2 }),
+	  desiredProfit: decimal("desiredProfit", { precision: 10, scale: 2 }),
+	  
+	  // Calculated Values
+	  maxOffer: decimal("maxOffer", { precision: 10, scale: 2 }), // Maximum Allowable Offer (MAO)
+	  maoFormula: text("maoFormula"), // Stores the formula used for transparency
+	  
+	  // Metadata
+	  createdAt: timestamp("createdAt").defaultNow().notNull(),
+	  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+	});
+	
+	export type DealCalculation = typeof dealCalculations.$inferSelect;
+	export type InsertDealCalculation = typeof dealCalculations.$inferInsert;
+	
+	/**
+	 * Buyers table - stores cash buyer information
+	 */
+	export const buyers = mysqlTable("buyers", {
+	  id: int("id").autoincrement().primaryKey(),
+	  name: varchar("name", { length: 255 }).notNull(),
+	  email: varchar("email", { length: 320 }).notNull().unique(),
+	  phone: varchar("phone", { length: 20 }),
+	  company: varchar("company", { length: 255 }),
+	  status: mysqlEnum("status", ["Active", "Inactive", "Verified", "Blacklisted"]).default("Active"),
+	  notes: text("notes"),
+	  createdAt: timestamp("createdAt").defaultNow().notNull(),
+	  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+	});
+	
+	export type Buyer = typeof buyers.$inferSelect;
+	export type InsertBuyer = typeof buyers.$inferInsert;
+	
+	/**
+	 * Buyer Preferences table - stores property criteria for each buyer
+	 */
+	export const buyerPreferences = mysqlTable("buyerPreferences", {
+	  id: int("id").autoincrement().primaryKey(),
+	  buyerId: int("buyerId").notNull(),
+	  // Location Preferences
+	  states: text("states"), // JSON array of preferred states
+	  cities: text("cities"), // JSON array of preferred cities
+	  zipcodes: text("zipcodes"), // JSON array of preferred zipcodes
+	  // Property Type Preferences
+	  propertyTypes: text("propertyTypes"), // JSON array of preferred property types (e.g., Single Family, Multi-Family)
+	  minBeds: int("minBeds"),
+	  maxBeds: int("maxBeds"),
+	  minBaths: decimal("minBaths", { precision: 3, scale: 1 }),
+	  maxBaths: decimal("maxBaths", { precision: 3, scale: 1 }),
+	  // Financial Preferences
+	  minPrice: int("minPrice"),
+	  maxPrice: int("maxPrice"),
+	  maxRepairCost: int("maxRepairCost"),
+	  // Metadata
+	  createdAt: timestamp("createdAt").defaultNow().notNull(),
+	  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+	});
+	
+	export type BuyerPreference = typeof buyerPreferences.$inferSelect;
+	export type InsertBuyerPreference = typeof buyerPreferences.$inferInsert;
 
-/**
- * Contacts table - stores contact information for property owners
- * Enhanced for communication tracking system
- */
 export const contacts = mysqlTable("contacts", {
   id: int("id").autoincrement().primaryKey(),
   propertyId: int("propertyId").notNull(),
