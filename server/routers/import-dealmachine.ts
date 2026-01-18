@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { properties, contacts, contactPhones, contactEmails } from "../../drizzle/schema";
+import { properties, contacts, contactPhones, contactEmails, contactAddresses } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { makeRequest } from "../_core/map";
 
@@ -291,7 +291,7 @@ export const importDealMachineRouter = router({
           
           const insertedPropertyId = insertedProperty.id;
           
-          // PHASE 1: Import contacts (1-20) with all 11 fields each
+            // PHASE 1: Import contacts (1-20) with all fields each
           for (let i = 1; i <= 20; i++) {
             const contactName = row[`contact_${i}_name`];
             if (!contactName) continue;
@@ -305,44 +305,57 @@ export const importDealMachineRouter = router({
               flags: contactFlags,
             };
             
-            await dbInstance.insert(contacts).values(contactData);
+            const contactResult = await dbInstance.insert(contacts).values(contactData);
+            const insertedContactId = contactResult[0].insertId;
             contactsCount++;
             
-            // Get all contacts for this property and find the last one
-            const allContacts = await dbInstance
-              .select({ id: contacts.id })
-              .from(contacts)
-              .where(eq(contacts.propertyId, insertedPropertyId));
-            
-            const insertedContact = allContacts[allContacts.length - 1];
-            
-            if (!insertedContact) continue;
-            
-            const insertedContactId = insertedContact.id;
-            
-            // Import phones (phone1, phone2, phone3)
-            for (let p = 1; p <= 3; p++) {
+            // Import ALL phones (up to 10)
+            for (let p = 1; p <= 10; p++) {
               const phoneNumber = row[`contact_${i}_phone${p}`];
               if (phoneNumber && String(phoneNumber).trim()) {
+                const phoneType = row[`contact_${i}_phone${p}_type`] || (p === 1 ? 'Mobile' : p === 2 ? 'Home' : 'Work');
                 await dbInstance.insert(contactPhones).values({
                   contactId: insertedContactId,
                   phoneNumber: String(phoneNumber).trim(),
-                  phoneType: p === 1 ? 'Mobile' : p === 2 ? 'Home' : 'Work',
+                  phoneType: phoneType,
+                  isPrimary: p === 1 ? 1 : 0,
                 } as any);
                 phonesCount++;
               }
             }
             
-            // Import emails (email1, email2, email3)
-            for (let e = 1; e <= 3; e++) {
+            // Import ALL emails (up to 10)
+            for (let e = 1; e <= 10; e++) {
               const email = row[`contact_${i}_email${e}`];
               if (email && String(email).trim()) {
+                const emailType = row[`contact_${i}_email${e}_type`] || 'Personal';
                 await dbInstance.insert(contactEmails).values({
                   contactId: insertedContactId,
                   email: String(email).trim(),
+                  emailType: emailType,
+                  isPrimary: e === 1 ? 1 : 0,
                 } as any);
                 emailsCount++;
               }
+            }
+
+            // Import Mailing Address
+            const mailingAddressLine1 = row[`contact_${i}_mailing_address_line1`];
+            const mailingCity = row[`contact_${i}_mailing_city`];
+            const mailingState = row[`contact_${i}_mailing_state`];
+            const mailingZipcode = row[`contact_${i}_mailing_zipcode`];
+
+            if (mailingAddressLine1 && mailingCity && mailingState && mailingZipcode) {
+              await dbInstance.insert(contactAddresses).values({
+                contactId: insertedContactId,
+                addressLine1: String(mailingAddressLine1).trim(),
+                addressLine2: row[`contact_${i}_mailing_address_line2`] ? String(row[`contact_${i}_mailing_address_line2`]).trim() : null,
+                city: String(mailingCity).trim(),
+                state: String(mailingState).trim().substring(0, 2),
+                zipcode: String(mailingZipcode).trim(),
+                addressType: 'Mailing',
+                isPrimary: 1,
+              } as any);
             }
           }
           
