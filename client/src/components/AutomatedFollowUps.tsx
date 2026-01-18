@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { followUpNotifications } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
@@ -104,8 +104,9 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
   const handlePause = async (followUpId: number) => {
     try {
+      const followUp = followUps.find(fu => fu.id === followUpId);
       await pauseMutation.mutateAsync({ followUpId });
-      followUpNotifications.followUpPaused(trigger);
+      followUpNotifications.followUpPaused(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao pausar follow-up");
@@ -114,8 +115,9 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
   const handleResume = async (followUpId: number) => {
     try {
+      const followUp = followUps.find(fu => fu.id === followUpId);
       await resumeMutation.mutateAsync({ followUpId });
-      followUpNotifications.followUpResumed(trigger);
+      followUpNotifications.followUpResumed(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao retomar follow-up");
@@ -126,8 +128,9 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     if (!confirm("Tem certeza que deseja deletar este follow-up?")) return;
 
     try {
+      const followUp = followUps.find(fu => fu.id === followUpId);
       await deleteMutation.mutateAsync({ followUpId });
-      followUpNotifications.followUpDeleted(trigger);
+      followUpNotifications.followUpDeleted(followUp?.trigger || "Follow-up");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao deletar follow-up");
@@ -136,8 +139,9 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
   const handleExecute = async (followUpId: number) => {
     try {
+      const followUp = followUps.find(fu => fu.id === followUpId);
       await executeMutation.mutateAsync({ followUpId });
-      followUpNotifications.followUpExecuted(followUp.action, "Propriedade");
+      followUpNotifications.followUpExecuted(followUp?.action || "Follow-up", "Propriedade");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao executar follow-up");

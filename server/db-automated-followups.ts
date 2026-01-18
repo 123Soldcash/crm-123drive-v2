@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { automatedFollowUps, properties, tasks, notes } from "@/drizzle/schema";
+import { automatedFollowUps, properties, tasks, notes } from "../drizzle/schema";
 import { eq, lt, and, isNull } from "drizzle-orm";
 import { toast } from "sonner";
 
