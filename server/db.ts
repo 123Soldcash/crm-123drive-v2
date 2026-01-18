@@ -1,8 +1,8 @@
 import { eq, and, like, desc, sql, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { ne } from 'drizzle-orm';
+
 import * as schema from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2145,4 +2145,400 @@ export async function upsertContacts(
   }
   
   return results;
+}
+
+
+/**
+ * ============================================================================
+ * DYNAMIC CONTACT PHONES, EMAILS, AND ADDRESSES - NEW FUNCTIONS
+ * ============================================================================
+ */
+
+/**
+ * Add a phone number to a contact
+ */
+export async function addContactPhoneNew(
+  contactId: number,
+  phoneNumber: string,
+  phoneType: string = "Mobile",
+  isPrimary: number = 0
+): Promise<any> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const validTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
+  const type = validTypes.includes(phoneType) ? phoneType : "Mobile";
+
+  const result = await db.insert(contactPhones).values({
+    contactId,
+    phoneNumber,
+    phoneType: type as any,
+    isPrimary,
+  });
+
+  return result;
+}
+
+/**
+ * Get all phone numbers for a contact
+ */
+export async function getContactPhones(contactId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const phones = await db
+    .select()
+    .from(contactPhones)
+    .where(eq(contactPhones.contactId, contactId))
+    .orderBy(contactPhones.isPrimary);
+
+  return phones;
+}
+
+/**
+ * Update a contact phone number
+ */
+export async function updateContactPhone(
+  phoneId: number,
+  phoneNumber: string,
+  phoneType: string,
+  isPrimary: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db
+    .update(contactPhones)
+    .set({
+      phoneNumber,
+      phoneType,
+      isPrimary,
+      updatedAt: new Date(),
+    })
+    .where(eq(contactPhones.id, phoneId));
+}
+
+/**
+ * Delete a contact phone number
+ */
+export async function deleteContactPhone(phoneId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db.delete(contactPhones).where(eq(contactPhones.id, phoneId));
+}
+
+/**
+ * Add an email to a contact
+ */
+export async function addContactEmailNew(
+  contactId: number,
+  email: string,
+  emailType: string = "Personal",
+  isPrimary: number = 0
+): Promise<any> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const validTypes = ["Personal", "Work", "Other"];
+  const type = validTypes.includes(emailType) ? emailType : "Personal";
+
+  const result = await db.insert(contactEmails).values({
+    contactId,
+    email,
+    emailType: type as any,
+    isPrimary,
+  });
+
+  return result;
+}
+
+/**
+ * Get all emails for a contact
+ */
+export async function getContactEmails(contactId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const emails = await db
+    .select()
+    .from(contactEmails)
+    .where(eq(contactEmails.contactId, contactId))
+    .orderBy(contactEmails.isPrimary);
+
+  return emails;
+}
+
+/**
+ * Update a contact email
+ */
+export async function updateContactEmail(
+  emailId: number,
+  email: string,
+  emailType: string,
+  isPrimary: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db
+    .update(contactEmails)
+    .set({
+      email,
+      emailType,
+      isPrimary,
+      updatedAt: new Date(),
+    })
+    .where(eq(contactEmails.id, emailId));
+}
+
+/**
+ * Delete a contact email
+ */
+export async function deleteContactEmail(emailId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db.delete(contactEmails).where(eq(contactEmails.id, emailId));
+}
+
+/**
+ * Add a mailing address to a contact
+ */
+export async function addContactAddress(
+  contactId: number,
+  addressLine1: string,
+  city: string,
+  state: string,
+  zipcode: string,
+  addressLine2?: string,
+  addressType: string = "Mailing",
+  isPrimary: number = 0
+): Promise<any> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const validTypes = ["Mailing", "Current", "Previous"];
+  const type = validTypes.includes(addressType) ? addressType : "Mailing";
+
+  const result = await db.insert(contactAddresses).values({
+    contactId,
+    addressLine1,
+    addressLine2: addressLine2 || null,
+    city,
+    state,
+    zipcode,
+    addressType: type as any,
+    isPrimary,
+  });
+
+  return result;
+}
+
+/**
+ * Get all addresses for a contact
+ */
+export async function getContactAddresses(contactId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const addresses = await db
+    .select()
+    .from(contactAddresses)
+    .where(eq(contactAddresses.contactId, contactId))
+    .orderBy(contactAddresses.isPrimary);
+
+  return addresses;
+}
+
+/**
+ * Update a contact address
+ */
+export async function updateContactAddress(
+  addressId: number,
+  addressLine1: string,
+  addressLine2: string | null,
+  city: string,
+  state: string,
+  zipcode: string,
+  addressType: string,
+  isPrimary: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db
+    .update(contactAddresses)
+    .set({
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      zipcode,
+      addressType,
+      isPrimary,
+      updatedAt: new Date(),
+    })
+    .where(eq(contactAddresses.id, addressId));
+}
+
+/**
+ * Delete a contact address
+ */
+export async function deleteContactAddress(addressId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db.delete(contactAddresses).where(eq(contactAddresses.id, addressId));
+}
+
+/**
+ * Get a contact with all associated phones, emails, and addresses
+ */
+export async function getContactWithDetails(contactId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const contact = await db
+    .select()
+    .from(contacts)
+    .where(eq(contacts.id, contactId))
+    .limit(1);
+
+  if (!contact || contact.length === 0) {
+    return null;
+  }
+
+  const phones = await getContactPhones(contactId);
+  const emails = await getContactEmails(contactId);
+  const addresses = await getContactAddresses(contactId);
+
+  return {
+    ...contact[0],
+    phones,
+    emails,
+    addresses,
+  };
+}
+
+/**
+ * Create a new contact with phones, emails, and addresses
+ */
+export async function createContactWithDetails(
+  propertyId: number,
+  contactData: {
+    name: string;
+    relationship?: string;
+    age?: number;
+    deceased?: number;
+    currentAddress?: string;
+    flags?: string;
+    isDecisionMaker?: number;
+    dnc?: number;
+    isLitigator?: number;
+    hidden?: number;
+    currentResident?: number;
+    contacted?: number;
+    onBoard?: number;
+    notOnBoard?: number;
+    phones?: Array<{ phoneNumber: string; phoneType?: string; isPrimary?: number }>;
+    emails?: Array<{ email: string; emailType?: string; isPrimary?: number }>;
+    addresses?: Array<{
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      state: string;
+      zipcode: string;
+      addressType?: string;
+      isPrimary?: number;
+    }>;
+  }
+): Promise<any> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  // Create the contact
+  const contactResult = await db.insert(contacts).values({
+    propertyId,
+    name: contactData.name,
+    relationship: contactData.relationship,
+    age: contactData.age,
+    deceased: contactData.deceased || 0,
+    currentAddress: contactData.currentAddress,
+    flags: contactData.flags,
+    isDecisionMaker: contactData.isDecisionMaker || 0,
+    dnc: contactData.dnc || 0,
+    isLitigator: contactData.isLitigator || 0,
+    hidden: contactData.hidden || 0,
+    currentResident: contactData.currentResident || 0,
+    contacted: contactData.contacted || 0,
+    onBoard: contactData.onBoard || 0,
+    notOnBoard: contactData.notOnBoard || 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  const contactId = contactResult.insertId as number;
+
+  // Add phones
+  if (contactData.phones && contactData.phones.length > 0) {
+    for (const phone of contactData.phones) {
+      await addContactPhoneNew(
+        contactId,
+        phone.phoneNumber,
+        phone.phoneType || "Mobile",
+        phone.isPrimary || 0
+      );
+    }
+  }
+
+  // Add emails
+  if (contactData.emails && contactData.emails.length > 0) {
+    for (const email of contactData.emails) {
+      await addContactEmailNew(
+        contactId,
+        email.email,
+        email.emailType || "Personal",
+        email.isPrimary || 0
+      );
+    }
+  }
+
+  // Add addresses
+  if (contactData.addresses && contactData.addresses.length > 0) {
+    for (const address of contactData.addresses) {
+      await addContactAddress(
+        contactId,
+        address.addressLine1,
+        address.city,
+        address.state,
+        address.zipcode,
+        address.addressLine2,
+        address.addressType || "Mailing",
+        address.isPrimary || 0
+      );
+    }
+  }
+
+  return { contactId, ...contactResult };
 }
