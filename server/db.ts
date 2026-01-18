@@ -135,7 +135,26 @@ export async function getProperties(filters?: {
   const db = await getDb();
   if (!db) return [];
 
-  let query = db.select().from(properties);
+  let query = db.select({
+    id: properties.id,
+    leadId: properties.leadId,
+    addressLine1: properties.addressLine1,
+    addressLine2: properties.addressLine2,
+    city: properties.city,
+    state: properties.state,
+    zipcode: properties.zipcode,
+    owner1Name: properties.owner1Name,
+    owner2Name: properties.owner2Name,
+    estimatedValue: properties.estimatedValue,
+    equityPercent: properties.equityPercent,
+    leadTemperature: properties.leadTemperature,
+    trackingStatus: properties.trackingStatus,
+    ownerVerified: properties.ownerVerified,
+    assignedAgentId: properties.assignedAgentId,
+    marketStatus: properties.marketStatus,
+    dealMachineRawData: properties.dealMachineRawData,
+    createdAt: properties.createdAt,
+  }).from(properties);
   const conditions = [];
 
   // Agent filtering: non-admin users only see their assigned properties
@@ -233,7 +252,26 @@ export async function getPropertyById(id: number) {
   if (!db) return null;
 
   // First get the property
-  const propertyResult = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
+  const propertyResult = await db.select({
+    id: properties.id,
+    leadId: properties.leadId,
+    addressLine1: properties.addressLine1,
+    addressLine2: properties.addressLine2,
+    city: properties.city,
+    state: properties.state,
+    zipcode: properties.zipcode,
+    owner1Name: properties.owner1Name,
+    owner2Name: properties.owner2Name,
+    estimatedValue: properties.estimatedValue,
+    equityPercent: properties.equityPercent,
+    leadTemperature: properties.leadTemperature,
+    trackingStatus: properties.trackingStatus,
+    ownerVerified: properties.ownerVerified,
+    assignedAgentId: properties.assignedAgentId,
+    marketStatus: properties.marketStatus,
+    dealMachineRawData: properties.dealMachineRawData,
+    createdAt: properties.createdAt,
+  }).from(properties).where(eq(properties.id, id)).limit(1);
   if (propertyResult.length === 0) return null;
   
   // Then get deep search data
@@ -832,7 +870,26 @@ export async function getPropertiesWithAgents(filters?: {
   if (!db) return [];
 
   // First get all properties
-  let query = db.select().from(properties);
+  let query = db.select({
+    id: properties.id,
+    leadId: properties.leadId,
+    addressLine1: properties.addressLine1,
+    addressLine2: properties.addressLine2,
+    city: properties.city,
+    state: properties.state,
+    zipcode: properties.zipcode,
+    owner1Name: properties.owner1Name,
+    owner2Name: properties.owner2Name,
+    estimatedValue: properties.estimatedValue,
+    equityPercent: properties.equityPercent,
+    leadTemperature: properties.leadTemperature,
+    trackingStatus: properties.trackingStatus,
+    ownerVerified: properties.ownerVerified,
+    assignedAgentId: properties.assignedAgentId,
+    marketStatus: properties.marketStatus,
+    dealMachineRawData: properties.dealMachineRawData,
+    createdAt: properties.createdAt,
+  }).from(properties);
   const conditions = [];
 
   // Agent filtering: non-admin users only see properties they are assigned to
@@ -1667,7 +1724,28 @@ export async function bulkAssignAgentToProperties(
   if (!database) throw new Error('Database not initialized');
   
   // Build query based on filters
-  let query = database.select().from(properties);
+  let query = database.select({
+    id: properties.id,
+    leadId: properties.leadId,
+    addressLine1: properties.addressLine1,
+    addressLine2: properties.addressLine2,
+    city: properties.city,
+    state: properties.state,
+    zipcode: properties.zipcode,
+    owner1Name: properties.owner1Name,
+    owner2Name: properties.owner2Name,
+    estimatedValue: properties.estimatedValue,
+    equityPercent: properties.equityPercent,
+    leadTemperature: properties.leadTemperature,
+    trackingStatus: properties.trackingStatus,
+    ownerVerified: properties.ownerVerified,
+    assignedAgentId: properties.assignedAgentId,
+    marketStatus: properties.marketStatus,
+    dealMachineRawData: properties.dealMachineRawData,
+    createdAt: properties.createdAt,
+    deskName: properties.deskName,
+    deskStatus: properties.deskStatus,
+  }).from(properties);
   
   // Apply filters
   if (filters.leadTemperature && filters.leadTemperature !== 'All') {
@@ -1731,7 +1809,28 @@ export async function getPropertiesWithFilters(filters: {
   }
 
   try {
-    let query = database.select().from(properties);
+    let query = database.select({
+      id: properties.id,
+      leadId: properties.leadId,
+      addressLine1: properties.addressLine1,
+      addressLine2: properties.addressLine2,
+      city: properties.city,
+      state: properties.state,
+      zipcode: properties.zipcode,
+      owner1Name: properties.owner1Name,
+      owner2Name: properties.owner2Name,
+      estimatedValue: properties.estimatedValue,
+      equityPercent: properties.equityPercent,
+      leadTemperature: properties.leadTemperature,
+      trackingStatus: properties.trackingStatus,
+      ownerVerified: properties.ownerVerified,
+      assignedAgentId: properties.assignedAgentId,
+      marketStatus: properties.marketStatus,
+      dealMachineRawData: properties.dealMachineRawData,
+      createdAt: properties.createdAt,
+      deskName: properties.deskName,
+      deskStatus: properties.deskStatus,
+    }).from(properties);
     const conditions: any[] = [];
 
     // Filter by lead temperature
