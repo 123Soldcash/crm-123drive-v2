@@ -221,11 +221,11 @@ export const properties = mysqlTable("properties", {
     "TITLE_SEARCH",
     "TITLE_INSURANCE",
     "CLOSING",
-    "CLOSED_WON",
+  "CLOSED_WON",
     "DEAD_LOST"
   ]).default("NEW_LEAD"),
   stageChangedAt: timestamp("stageChangedAt").defaultNow().notNull(),
-  
+
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -233,6 +233,32 @@ export const properties = mysqlTable("properties", {
 
 export type Property = typeof properties.$inferSelect;
 export type InsertProperty = typeof properties.$inferInsert;
+
+/**
+ * Deal Calculations table - stores financial calculations for each property
+ */
+export const dealCalculations = mysqlTable("dealCalculations", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().unique(), // One calculation per property
+  
+  // Input Values
+  arv: decimal("arv", { precision: 10, scale: 2 }), // After Repair Value
+  repairCost: decimal("repairCost", { precision: 10, scale: 2 }),
+  closingCost: decimal("closingCost", { precision: 10, scale: 2 }),
+  assignmentFee: decimal("assignmentFee", { precision: 10, scale: 2 }),
+  desiredProfit: decimal("desiredProfit", { precision: 10, scale: 2 }),
+  
+  // Calculated Values
+  maxOffer: decimal("maxOffer", { precision: 10, scale: 2 }), // Maximum Allowable Offer (MAO)
+  maoFormula: text("maoFormula"), // Stores the formula used for transparency
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DealCalculation = typeof dealCalculations.$inferSelect;
+export type InsertDealCalculation = typeof dealCalculations.$inferInsert;
 
 /**
  * Contacts table - stores contact information for property owners
