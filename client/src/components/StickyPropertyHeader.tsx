@@ -80,9 +80,9 @@ export function StickyPropertyHeader({
 
   return (
     <div className={cn(
-      "z-50 transition-all duration-300 ease-in-out",
+      "z-40 transition-all duration-300 ease-in-out",
       isSticky 
-        ? "fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b shadow-md py-2 px-6 animate-in slide-in-from-top" 
+        ? "fixed top-0 right-0 left-0 md:left-64 bg-white/95 backdrop-blur-sm border-b shadow-md py-2 px-6 animate-in slide-in-from-top" 
         : "relative mb-6"
     )}>
       <div className="max-w-[1600px] mx-auto">

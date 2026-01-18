@@ -117,7 +117,7 @@ export default function PropertyDetail() {
     }
   };
 
-  const { data: property, isLoading } = trpc.properties.getById.useQuery({ id: propertyId });
+  const { data: property, isLoading, error } = trpc.properties.getById.useQuery({ id: propertyId });
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
   const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
@@ -208,10 +208,19 @@ export default function PropertyDetail() {
     updateDealStage.mutate({ propertyId, stageId: selectedPipelineStage });
   };
 
-  if (isLoading || !property) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="text-rose-500 font-bold">Error loading property data</div>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
       </div>
     );
   }
@@ -340,10 +349,16 @@ export default function PropertyDetail() {
         </div>
       </div>
 
+      {/* Top Sections: Summary, Contacts, and Call Tracking */}
       {property && <LeadSummary property={property} />}
+      <ContactManagement propertyId={propertyId} />
+      <CallTrackingTable propertyId={propertyId} />
+      
+      {/* Middle Sections: Tasks and Follow-ups */}
       <PropertyTasks propertyId={propertyId} />
       <AutomatedFollowUps propertyId={propertyId} />
       
+      {/* Collapsible Sections */}
       <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
         <DeepSearchTabs property={property} />
       </CollapsibleSection>
@@ -361,8 +376,6 @@ export default function PropertyDetail() {
 
       <PhotoGallery propertyId={propertyId} />
       <DeskChrisNotes propertyId={propertyId} />
-      <ContactManagement propertyId={propertyId} />
-      <CallTrackingTable propertyId={propertyId} />
       <NotesSection propertyId={propertyId} />
       <ActivityTimeline propertyId={propertyId} />
       
