@@ -58,9 +58,12 @@ export function StickyPropertyHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Robust financial formatting with fallbacks for ADHD-friendly focus
   const formatCurrency = (value?: number | string | null) => {
-    if (!value) return "$0";
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (value === null || value === undefined) return "$0";
+    const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value;
+    if (isNaN(numValue) || numValue === 0) return "$0";
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -77,6 +80,17 @@ export function StickyPropertyHeader({
       default: return null;
     }
   };
+
+  // Robust data mapping to handle DealMachine and manual entry variations
+  const ownerName = property.primaryOwner || property.owner1Name || property.ownerName || "N/A";
+  const location = property.ownerOccupied === "Yes" || property.ownerOccupied === true || property.ownerOccupied === "Owner Occupied" 
+    ? "Owner Occupied" 
+    : "Absentee";
+  
+  const beds = property.bedrooms !== null && property.bedrooms !== undefined ? String(property.bedrooms) : "0";
+  const baths = property.bathrooms !== null && property.bathrooms !== undefined ? String(property.bathrooms) : "0";
+  const sqft = property.squareFeet ? Number(property.squareFeet).toLocaleString() : "N/A";
+  const yearBuilt = property.yearBuilt || "N/A";
 
   return (
     <div className={cn(
@@ -189,15 +203,15 @@ export function StickyPropertyHeader({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Built</span>
-              <span className="text-xs font-bold text-slate-700">{property.yearBuilt || "N/A"}</span>
+              <span className="text-xs font-bold text-slate-700">{yearBuilt}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Beds/Baths</span>
-              <span className="text-xs font-bold text-slate-700">{property.bedrooms || "0"}/{property.bathrooms || "0"}</span>
+              <span className="text-xs font-bold text-slate-700">{beds}/{baths}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Sqft</span>
-              <span className="text-xs font-bold text-slate-700">{property.squareFeet?.toLocaleString() || "N/A"}</span>
+              <span className="text-xs font-bold text-slate-700">{sqft}</span>
             </div>
           </div>
 
@@ -213,11 +227,11 @@ export function StickyPropertyHeader({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Mortgage</span>
-              <span className="text-xs font-bold text-rose-600">{formatCurrency(property.mortgageBalance)}</span>
+              <span className="text-xs font-bold text-rose-600">{formatCurrency(property.mortgageBalance || property.mortgageAmount)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Taxes</span>
-              <span className="text-xs font-bold text-slate-700">{formatCurrency(property.taxAmount)}</span>
+              <span className="text-xs font-bold text-slate-700">{formatCurrency(property.taxAmount || property.estimatedTaxes)}</span>
             </div>
           </div>
 
@@ -225,11 +239,11 @@ export function StickyPropertyHeader({
           <div className="grid grid-cols-1 gap-y-1 pl-4">
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Owner</span>
-              <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{property.primaryOwner || property.ownerName || "N/A"}</span>
+              <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{ownerName}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-slate-400 font-bold uppercase">Location</span>
-              <span className="text-xs font-bold text-slate-700">{property.ownerOccupied ? "Owner Occupied" : "Absentee"}</span>
+              <span className="text-xs font-bold text-slate-700">{location}</span>
             </div>
           </div>
         </div>

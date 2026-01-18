@@ -64,12 +64,23 @@ export async function importDealMachineProperty(
       source: "DealMachine",
       listName: listName || null,
       entryDate: new Date(),
+      // Added missing property details for ADHD-friendly sticky header
+      bedrooms: mappedProperty.totalBedrooms || null,
+      bathrooms: mappedProperty.totalBaths || null,
+      squareFeet: mappedProperty.buildingSquareFeet || null,
+      yearBuilt: mappedProperty.yearBuilt || null,
+      estimatedValue: mappedProperty.estimatedValue || null,
+      equityAmount: mappedProperty.equityAmount || null,
+      equityPercent: mappedProperty.equityPercent || null,
       dealMachineRawData: JSON.stringify({
         county: mappedProperty.county,
         lat: mappedProperty.lat,
         lng: mappedProperty.lng,
         dealMachineUrl: mappedProperty.dealMachineUrl,
         propertyFlags: mappedProperty.propertyFlags,
+        taxAmount: mappedProperty.taxAmount,
+        salePrice: mappedProperty.salePrice,
+        saleDate: mappedProperty.saleDate,
       }),
     });
 
