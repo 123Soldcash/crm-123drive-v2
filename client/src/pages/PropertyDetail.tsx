@@ -218,10 +218,10 @@ export default function PropertyDetail() {
 
   const getBackgroundColor = () => {
     switch (property.leadTemperature) {
-      case "SUPER HOT": return "bg-blue-50";
-      case "HOT": return "bg-green-50";
-      case "WARM": return "bg-yellow-50";
-      case "COLD": case "DEAD": return "bg-gray-50";
+      case "SUPER HOT": return "bg-blue-50/30";
+      case "HOT": return "bg-green-50/30";
+      case "WARM": return "bg-yellow-50/30";
+      case "COLD": case "DEAD": return "bg-gray-50/30";
       default: return "bg-white";
     }
   };
@@ -281,8 +281,14 @@ export default function PropertyDetail() {
             <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
               {agentsList?.map((agent: any) => (
                 <div key={agent.id} className="flex items-center gap-2">
-                  <Checkbox checked={selectedAgents.includes(agent.id)} onCheckedChange={() => toggleAgentSelection(agent.id)} />
-                  <span className="text-sm">{agent.name} ({agent.agentType})</span>
+                  <Checkbox
+                    id={`agent-${agent.id}`}
+                    checked={selectedAgents.includes(agent.id)}
+                    onCheckedChange={() => toggleAgentSelection(agent.id)}
+                  />
+                  <label htmlFor={`agent-${agent.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {agent.name} ({agent.agentType || 'Agent'})
+                  </label>
                 </div>
               ))}
             </div>
@@ -334,7 +340,7 @@ export default function PropertyDetail() {
         </div>
       </div>
 
-      <LeadSummary property={property} />
+      {property && <LeadSummary property={property} />}
       <PropertyTasks propertyId={propertyId} />
       <AutomatedFollowUps propertyId={propertyId} />
       
