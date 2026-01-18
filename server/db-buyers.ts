@@ -1,6 +1,6 @@
 import { getDb } from "./db";
 import { buyers, buyerPreferences } from "../drizzle/schema";
-import { eq, and, like, or } from "drizzle-orm";
+import { eq, and, like, or, sql } from "drizzle-orm";
 
 /**
  * Types for Buyer Management
@@ -90,15 +90,14 @@ export async function getAllBuyers(search?: string) {
 
     let query = db.select().from(buyers);
 
-    if (search) {
-      const searchPattern = `%${search}%`;
-      // @ts-ignore - Drizzle types can be tricky with or/like
+    if (search && search.trim() !== "") {
+      const searchPattern = `%${search.trim()}%`;
       query = query.where(
         or(
           like(buyers.name, searchPattern),
           like(buyers.email, searchPattern),
-          like(buyers.company, searchPattern),
-          like(buyers.phone, searchPattern)
+          sql`${buyers.company} LIKE ${searchPattern}`,
+          sql`${buyers.phone} LIKE ${searchPattern}`
         )
       );
     }
