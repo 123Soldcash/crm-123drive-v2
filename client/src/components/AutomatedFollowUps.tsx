@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { followUpNotifications } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,7 +89,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         nextRunAt,
       });
 
-      toast.success("Follow-up criado com sucesso!");
+      followUpNotifications.followUpCreated(trigger);
       setIsDialogOpen(false);
       setTrigger("");
       setActionDetails("");
@@ -104,7 +105,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   const handlePause = async (followUpId: number) => {
     try {
       await pauseMutation.mutateAsync({ followUpId });
-      toast.success("Follow-up pausado");
+      followUpNotifications.followUpPaused(trigger);
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao pausar follow-up");
@@ -114,7 +115,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   const handleResume = async (followUpId: number) => {
     try {
       await resumeMutation.mutateAsync({ followUpId });
-      toast.success("Follow-up retomado");
+      followUpNotifications.followUpResumed(trigger);
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao retomar follow-up");
@@ -126,7 +127,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
 
     try {
       await deleteMutation.mutateAsync({ followUpId });
-      toast.success("Follow-up deletado");
+      followUpNotifications.followUpDeleted(trigger);
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao deletar follow-up");
@@ -136,7 +137,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   const handleExecute = async (followUpId: number) => {
     try {
       await executeMutation.mutateAsync({ followUpId });
-      toast.success("Follow-up executado!");
+      followUpNotifications.followUpExecuted(followUp.action, "Propriedade");
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Erro ao executar follow-up");

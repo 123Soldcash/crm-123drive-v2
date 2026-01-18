@@ -4,6 +4,7 @@ import { Building2, Flame, ThermometerSun, Snowflake, Check, MapPin } from "luci
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CallMetricsDashboard } from "@/components/CallMetricsDashboard";
+import { PendingFollowUpsDashboard } from "@/components/PendingFollowUpsDashboard";
 import {
   Select,
   SelectContent,
@@ -238,6 +239,9 @@ export default function Dashboard() {
 
       {/* Call Metrics Dashboard */}
       <CallMetricsDashboard />
+
+      {/* Pending Follow-ups Dashboard */}
+      <PendingFollowUpsDashboard />
     </div>
   );
 }
