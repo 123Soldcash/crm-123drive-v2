@@ -7,6 +7,7 @@ import {
   contactAddresses,
   contactSocialMedia,
   communicationLog,
+  properties,
   InsertContact,
   InsertContactPhone,
   InsertContactEmail,
@@ -16,6 +17,24 @@ import {
 } from "../drizzle/schema";
 
 /**
+ * Helper function to resolve propertyId from URL parameter (which could be leadId or database id)
+ */
+async function resolvePropertyDbId(urlId: number): Promise<number | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // First try to find by leadId (since URLs typically use leadId)
+  let result = await db.select({ id: properties.id }).from(properties).where(eq(properties.leadId, urlId)).limit(1);
+  if (result.length > 0) return result[0].id;
+  
+  // Fallback to database id
+  result = await db.select({ id: properties.id }).from(properties).where(eq(properties.id, urlId)).limit(1);
+  if (result.length > 0) return result[0].id;
+  
+  return null;
+}
+
+/**
  * Contact Management Functions
  */
 
@@ -23,7 +42,11 @@ export async function getContactsByProperty(propertyId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.propertyId, propertyId));
+  // Resolve the actual database id from the URL parameter (which could be leadId)
+  const dbPropertyId = await resolvePropertyDbId(propertyId);
+  if (!dbPropertyId) return [];
+  
+  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
   
   // For each contact, fetch phones, emails, and addresses
   const contactsWithDetails = await Promise.all(
