@@ -46,7 +46,10 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
 
   const utils = trpc.useUtils();
   
-  const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ propertyId });
+  const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery(
+    { propertyId },
+    { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
+  );
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<any>(null);

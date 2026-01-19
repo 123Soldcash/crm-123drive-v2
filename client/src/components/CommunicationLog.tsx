@@ -104,7 +104,10 @@ export function CommunicationLog({ propertyId, contactId }: CommunicationLogProp
   });
 
   // Fetch contacts for dropdown
-  const { data: contacts } = trpc.communication.getContactsByProperty.useQuery({ propertyId });
+  const { data: contacts } = trpc.communication.getContactsByProperty.useQuery(
+    { propertyId },
+    { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
+  );
 
   // Add communication mutation
   const addCommunication = trpc.communication.addCommunicationLog.useMutation({
