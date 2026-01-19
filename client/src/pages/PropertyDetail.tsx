@@ -209,9 +209,11 @@ export default function PropertyDetail() {
   }
 
   if (error || !property) {
+    console.error('PropertyDetail error:', error);
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="text-rose-500 font-bold">Error loading property data</div>
+        <div className="text-sm text-gray-500 max-w-md text-center">{error?.message || 'Property not found'}</div>
         <Button onClick={() => window.location.reload()}>Retry</Button>
       </div>
     );
