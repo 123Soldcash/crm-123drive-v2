@@ -500,7 +500,7 @@ export const appRouter = router({
     getTransferHistory: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        return await db.getLeadTransfersByPropertyId(input.propertyId);
+        return await db.getLeadTransfers(input.propertyId);
       }),
 
     getPendingTransfers: protectedProcedure
