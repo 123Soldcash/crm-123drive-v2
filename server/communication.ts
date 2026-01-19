@@ -48,14 +48,33 @@ export async function getContactsByProperty(propertyId: number) {
   
   const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
   
-  // For each contact, fetch phones, emails, and addresses
+  // For each contact, fetch phones, emails, and addresses with error handling for missing tables
   const contactsWithDetails = await Promise.all(
     contactsData.map(async (contact) => {
-      const [phones, emails, addresses] = await Promise.all([
-        db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contact.id)),
-        db.select({ id: contactEmails.id, contactId: contactEmails.contactId, email: contactEmails.email }).from(contactEmails).where(eq(contactEmails.contactId, contact.id)),
-        db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id)),
-      ]);
+      let phones: any[] = [];
+      let emails: any[] = [];
+      let addresses: any[] = [];
+      
+      // Fetch phones - table should exist
+      try {
+        phones = await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
+      } catch (e) {
+        console.error('Error fetching phones:', e);
+      }
+      
+      // Fetch emails - table should exist
+      try {
+        emails = await db.select({ id: contactEmails.id, contactId: contactEmails.contactId, email: contactEmails.email }).from(contactEmails).where(eq(contactEmails.contactId, contact.id));
+      } catch (e) {
+        console.error('Error fetching emails:', e);
+      }
+      
+      // Fetch addresses - table may not exist
+      try {
+        addresses = await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id));
+      } catch (e) {
+        // Table doesn't exist, ignore
+      }
       
       return {
         ...contact,
