@@ -1574,54 +1574,6 @@ export async function getNextLeadId(): Promise<number> {
   return currentMax + 1;
 }
 
-export async function getPropertiesWithAgents(filters?: {
-  search?: string;
-  userId?: number;
-  userRole?: string;
-  status?: string;
-  leadTemperature?: string;
-  visited?: boolean;
-}) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  let query = db
-    .select({
-      id: properties.id,
-      leadId: properties.leadId,
-      addressLine1: properties.addressLine1,
-      city: properties.city,
-      state: properties.state,
-      zipcode: properties.zipcode,
-      owner1Name: properties.owner1Name,
-      leadTemperature: properties.leadTemperature,
-      status: properties.status,
-      assignedAgentId: properties.assignedAgentId,
-      parcelNumber: properties.parcelNumber,
-      propertyId: properties.propertyId,
-    })
-    .from(properties);
-  
-  if (filters?.search) {
-    query = query.where(
-      or(
-        like(properties.addressLine1, `%${filters.search}%`),
-        like(properties.city, `%${filters.search}%`),
-        like(properties.owner1Name, `%${filters.search}%`)
-      )
-    );
-  }
-  
-  if (filters?.status) {
-    query = query.where(eq(properties.status, filters.status));
-  }
-  
-  if (filters?.leadTemperature) {
-    query = query.where(eq(properties.leadTemperature, filters.leadTemperature));
-  }
-  
-  return await query.limit(100);
-}
 
 export async function updatePropertyStatus(propertyId: number, status: string): Promise<void> {
   const db = await getDb();
