@@ -316,9 +316,9 @@ export async function getPropertyById(id: number) {
   // --- V3: Fetch relational contact data (phones, emails, addresses) ---
   const contactIds = contactsResult.map(c => c.id);
 
-  const phonesResult = contactIds.length > 0 ? await db.select().from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(id => sql`${id}`), sql`, `)})`) : [];
-  const emailsResult = contactIds.length > 0 ? await db.select().from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(id => sql`${id}`), sql`, `)})`) : [];
-  const addressesResult = contactIds.length > 0 ? await db.select().from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(id => sql`${id}`), sql`, `)})`) : [];
+  const phonesResult = contactIds.length > 0 ? await db.select().from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  const emailsResult = contactIds.length > 0 ? await db.select().from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  const addressesResult = contactIds.length > 0 ? await db.select().from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
 
   // Map relational data back to contacts
   const contactsMap = new Map(contactsResult.map(c => [c.id, { ...c, phones: [], emails: [], addresses: [] }]));
