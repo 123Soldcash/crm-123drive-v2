@@ -95,10 +95,64 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
     conditions.push(eq(properties.assignedAgentId, agentId));
   }
 
-  return await db.query.properties.findMany({
-    where: conditions.length > 0 ? and(...conditions) : undefined,
-    orderBy: (p: any, { desc }: any) => [desc(p.stageChangedAt)],
-  }) as any;
+  // Use explicit select to include all columns needed for sorting
+  return await db
+    .select({
+      id: properties.id,
+      leadId: properties.leadId,
+      addressLine1: properties.addressLine1,
+      addressLine2: properties.addressLine2,
+      city: properties.city,
+      state: properties.state,
+      zipcode: properties.zipcode,
+      subdivisionName: properties.subdivisionName,
+      status: properties.status,
+      trackingStatus: properties.trackingStatus,
+      leadTemperature: properties.leadTemperature,
+      ownerVerified: properties.ownerVerified,
+      assignedAgentId: properties.assignedAgentId,
+      marketStatus: properties.marketStatus,
+      ownerLocation: properties.ownerLocation,
+      estimatedValue: properties.estimatedValue,
+      equityAmount: properties.equityAmount,
+      equityPercent: properties.equityPercent,
+      salePrice: properties.salePrice,
+      saleDate: properties.saleDate,
+      mortgageAmount: properties.mortgageAmount,
+      totalLoanBalance: properties.totalLoanBalance,
+      totalLoanPayment: properties.totalLoanPayment,
+      estimatedRepairCost: properties.estimatedRepairCost,
+      taxYear: properties.taxYear,
+      taxAmount: properties.taxAmount,
+      owner1Name: properties.owner1Name,
+      owner2Name: properties.owner2Name,
+      buildingSquareFeet: properties.buildingSquareFeet,
+      totalBedrooms: properties.totalBedrooms,
+      totalBaths: properties.totalBaths,
+      yearBuilt: properties.yearBuilt,
+      propertyType: properties.propertyType,
+      constructionType: properties.constructionType,
+      apnParcelId: properties.apnParcelId,
+      taxDelinquent: properties.taxDelinquent,
+      taxDelinquentYear: properties.taxDelinquentYear,
+      parcelNumber: properties.parcelNumber,
+      propertyId: properties.propertyId,
+      dealMachinePropertyId: properties.dealMachinePropertyId,
+      dealMachineLeadId: properties.dealMachineLeadId,
+      dealMachineRawData: properties.dealMachineRawData,
+      source: properties.source,
+      listName: properties.listName,
+      entryDate: properties.entryDate,
+      deskName: properties.deskName,
+      deskStatus: properties.deskStatus,
+      dealStage: properties.dealStage,
+      stageChangedAt: properties.stageChangedAt,
+      createdAt: properties.createdAt,
+      updatedAt: properties.updatedAt,
+    })
+    .from(properties)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy((p) => [sql`${properties.stageChangedAt} DESC`]);
 }
 
 /**
