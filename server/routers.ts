@@ -389,69 +389,60 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
-        console.log('[CREATE PROPERTY] Using DealMachine-style approach');
-        console.log('[CREATE PROPERTY] Input:', JSON.stringify(input));
+        console.log('[CREATE PROPERTY V3] Using PURE RAW SQL');
+        console.log('[CREATE PROPERTY V3] Input:', JSON.stringify(input));
         
-        // Generate a unique propertyId (timestamp-based like DealMachine)
+        // Generate a unique propertyId
         const propertyId = `MANUAL-${Date.now()}`;
+        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         
-        // Build property data exactly like DealMachine import does
-        const propertyData: any = {
-          propertyId,
-          leadId: null,
-          addressLine1: input.addressLine1,
-          addressLine2: null,
-          city: input.city || 'TBD',
-          state: input.state || 'FL',
-          zipcode: input.zipcode || '00000',
-          
-          // Property details (all nullable)
-          propertyType: null,
-          yearBuilt: null,
-          totalBedrooms: null,
-          totalBaths: null,
-          buildingSquareFeet: null,
-          
-          // Financial information (all nullable)
-          estimatedValue: null,
-          equityAmount: null,
-          equityPercent: null,
-          totalLoanBalance: null,
-          salePrice: null,
-          saleDate: null,
-          taxAmount: null,
-          
-          // Owner information
-          owner1Name: input.owner1Name || null,
-          owner2Name: null,
-          ownerMailingAddress: null,
-          ownerMailingCity: null,
-          ownerMailingState: null,
-          ownerMailingZip: null,
-          
-          // DealMachine references (null for manual entry)
-          dealMachinePropertyId: null,
-          dealMachineLeadId: null,
-          dealMachineRawData: null,
-          
-          // Assignment
-          assignedAgentId: ctx.user?.id || null,
+        // Escape strings for SQL
+        const escapeStr = (s: string | null | undefined) => {
+          if (s === null || s === undefined) return 'NULL';
+          return `'${String(s).replace(/'/g, "''")}'`;
         };
         
-        console.log('[CREATE PROPERTY] Property data:', JSON.stringify(propertyData));
+        // Build RAW SQL INSERT - only required fields + a few optional
+        const rawSQL = `
+          INSERT INTO properties (
+            propertyId,
+            addressLine1,
+            city,
+            state,
+            zipcode,
+            owner1Name,
+            leadTemperature,
+            source,
+            entryDate,
+            stageChangedAt,
+            createdAt
+          ) VALUES (
+            ${escapeStr(propertyId)},
+            ${escapeStr(input.addressLine1)},
+            ${escapeStr(input.city || 'TBD')},
+            ${escapeStr(input.state || 'FL')},
+            ${escapeStr(input.zipcode || '00000')},
+            ${escapeStr(input.owner1Name)},
+            ${escapeStr(input.leadTemperature || 'TBD')},
+            'Manual',
+            '${now}',
+            '${now}',
+            '${now}'
+          )
+        `;
         
-        await dbInstance.insert(properties).values(propertyData);
+        console.log('[CREATE PROPERTY V3] Executing SQL:', rawSQL);
         
-        // Get inserted property ID
-        const [insertedProperty] = await dbInstance
-          .select({ id: properties.id })
-          .from(properties)
-          .where(eq(properties.propertyId, propertyId))
-          .limit(1);
+        // Execute raw SQL
+        await dbInstance.execute(sql.raw(rawSQL));
         
-        console.log('[CREATE PROPERTY] Success! ID:', insertedProperty?.id);
+        // Get the inserted ID
+        const [result] = await dbInstance.execute(sql.raw('SELECT LAST_INSERT_ID() as id'));
+        const insertedId = (result as any)?.[0]?.id;
         
-        return { success: true, id: insertedProperty?.id };
+        console.log('[CREATE PROPERTY V3] Success! ID:', insertedId);
+        
+        return { success: true, id: Number(insertedId) };
       }),
 
     getById: protectedProcedure
