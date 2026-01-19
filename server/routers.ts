@@ -389,36 +389,30 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
-        console.log('[CREATE PROPERTY] Using raw SQL approach');
+        console.log('[CREATE PROPERTY] Using Drizzle ORM with explicit fields');
         console.log('[CREATE PROPERTY] Input:', JSON.stringify(input));
         
-        // Use raw SQL to avoid Drizzle ORM issues with optional fields
-        const fields = ['addressLine1', 'city', 'state', 'zipcode'];
-        const values = [input.addressLine1, input.city || "", input.state || "", input.zipcode || ""];
+        // Build insert data with only non-undefined fields
+        const insertData: any = {
+          addressLine1: input.addressLine1,
+          city: input.city || "",
+          state: input.state || "",
+          zipcode: input.zipcode || "",
+        };
         
-        // Add optional fields only if they have values
+        // Only add optional fields if they have values
         if (input.owner1Name) {
-          fields.push('owner1Name');
-          values.push(input.owner1Name);
+          insertData.owner1Name = input.owner1Name;
         }
         if (input.leadTemperature) {
-          fields.push('leadTemperature');
-          values.push(input.leadTemperature);
-        }
-        if (input.status) {
-          fields.push('status');
-          values.push(input.status);
+          insertData.leadTemperature = input.leadTemperature;
         }
         
-        const placeholders = values.map(() => '?').join(', ');
-        const sql = `INSERT INTO properties (${fields.join(', ')}) VALUES (${placeholders})`;
+        console.log('[CREATE PROPERTY] Insert data:', JSON.stringify(insertData));
         
-        console.log('[CREATE PROPERTY] SQL:', sql);
-        console.log('[CREATE PROPERTY] Values:', values);
+        const [result] = await dbInstance.insert(properties).values(insertData);
         
-        const [result]: any = await dbInstance.execute(sql, values);
-        
-        console.log('[CREATE PROPERTY] Success! ID:', result.insertId);
+        console.log('[CREATE PROPERTY] Success! Result:', result);
         
         return { success: true, id: Number(result.insertId) };
       }),
