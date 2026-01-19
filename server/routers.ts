@@ -389,17 +389,22 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
-        const result: any = await dbInstance.insert(properties).values({
+        // Build values object with only defined fields
+        const values: any = {
           addressLine1: input.addressLine1,
           city: input.city || "",
           state: input.state || "",
           zipcode: input.zipcode || "",
-          owner1Name: input.owner1Name || null,
-          leadTemperature: input.leadTemperature || "TBD",
-          status: input.status || "New Prospect",
           ownerVerified: 0,
-          source: "Manual" as any,
-        });
+          source: "Manual",
+        };
+        
+        // Only add optional fields if they have values
+        if (input.owner1Name) values.owner1Name = input.owner1Name;
+        if (input.leadTemperature) values.leadTemperature = input.leadTemperature;
+        if (input.status) values.status = input.status;
+        
+        const result: any = await dbInstance.insert(properties).values(values);
         
         return { success: true, id: Number(result.insertId) };
       }),
