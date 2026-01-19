@@ -17,17 +17,17 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 
-// Fixed desk options
+// Fixed desk options with colors
 const DESK_OPTIONS = [
-  { value: "BIN", label: "🗑️ BIN (Novas Leads)", description: "Leads não processadas" },
-  { value: "DESK_CHRIS", label: "👤 Desk Chris", description: "Leads do Chris" },
-  { value: "DESK_DEEP_SEARCH", label: "🔍 Desk Deep Search", description: "Leads para pesquisa aprofundada" },
-  { value: "DESK_1", label: "📋 Desk 1", description: "Mesa de trabalho 1" },
-  { value: "DESK_2", label: "📋 Desk 2", description: "Mesa de trabalho 2" },
-  { value: "DESK_3", label: "📋 Desk 3", description: "Mesa de trabalho 3" },
-  { value: "DESK_4", label: "📋 Desk 4", description: "Mesa de trabalho 4" },
-  { value: "DESK_5", label: "📋 Desk 5", description: "Mesa de trabalho 5" },
-  { value: "ARCHIVED", label: "✅ Archived", description: "Leads arquivadas/finalizadas" },
+  { value: "BIN", label: "🗑️ BIN", description: "Novas leads não processadas", color: "bg-gray-200 text-gray-700" },
+  { value: "DESK_CHRIS", label: "🏀 Desk Chris", description: "Leads do Chris", color: "bg-orange-200 text-orange-800" },
+  { value: "DESK_DEEP_SEARCH", label: "🔍 Deep Search", description: "Leads para pesquisa aprofundada", color: "bg-purple-200 text-purple-800" },
+  { value: "DESK_1", label: "🟦 Desk 1", description: "Mesa de trabalho 1", color: "bg-sky-200 text-sky-800" },
+  { value: "DESK_2", label: "🟩 Desk 2", description: "Mesa de trabalho 2", color: "bg-emerald-200 text-emerald-800" },
+  { value: "DESK_3", label: "🟧 Desk 3", description: "Mesa de trabalho 3", color: "bg-pink-200 text-pink-800" },
+  { value: "DESK_4", label: "🔵 Desk 4", description: "Mesa de trabalho 4", color: "bg-blue-600 text-white" },
+  { value: "DESK_5", label: "🟨 Desk 5", description: "Mesa de trabalho 5", color: "bg-amber-200 text-amber-800" },
+  { value: "ARCHIVED", label: "⬛ Archived", description: "Leads arquivadas/finalizadas", color: "bg-gray-800 text-white" },
 ];
 
 interface DeskDialogProps {
@@ -95,8 +95,10 @@ export function DeskDialog({
               <SelectContent>
                 {DESK_OPTIONS.map((desk) => (
                   <SelectItem key={desk.value} value={desk.value}>
-                    <div className="flex flex-col">
-                      <span>{desk.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-xs ${desk.color}`}>
+                        {desk.label}
+                      </span>
                     </div>
                   </SelectItem>
                 ))}

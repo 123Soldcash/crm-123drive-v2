@@ -905,11 +905,16 @@ export default function Properties() {
                           setDeskDialogOpen(true);
                         }}
                         className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${
-                          !property.deskName || property.deskName === 'BIN' ? 'bg-gray-100 text-gray-600' :
-                          property.deskName === 'DESK_CHRIS' ? 'bg-blue-100 text-blue-800' :
-                          property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-100 text-purple-800' :
-                          property.deskName === 'ARCHIVED' ? 'bg-green-100 text-green-800' :
-                          'bg-yellow-100 text-yellow-800'
+                          !property.deskName || property.deskName === 'BIN' ? 'bg-gray-200 text-gray-700' :
+                          property.deskName === 'DESK_CHRIS' ? 'bg-orange-200 text-orange-800' :
+                          property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-200 text-purple-800' :
+                          property.deskName === 'DESK_1' ? 'bg-sky-200 text-sky-800' :
+                          property.deskName === 'DESK_2' ? 'bg-emerald-200 text-emerald-800' :
+                          property.deskName === 'DESK_3' ? 'bg-pink-200 text-pink-800' :
+                          property.deskName === 'DESK_4' ? 'bg-blue-600 text-white' :
+                          property.deskName === 'DESK_5' ? 'bg-amber-200 text-amber-800' :
+                          property.deskName === 'ARCHIVED' ? 'bg-gray-800 text-white' :
+                          'bg-gray-200 text-gray-700'
                         }`}
                       >
                         {!property.deskName || property.deskName === 'BIN' ? '🗑️ BIN' :
