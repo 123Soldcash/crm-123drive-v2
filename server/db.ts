@@ -357,9 +357,39 @@ export async function getPropertyById(id: number) {
   // --- V3: Fetch relational contact data (phones, emails, addresses) ---
   const contactIds = contactsResult.map(c => c.id);
 
-  const phonesResult = contactIds.length > 0 ? await db.select().from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
-  const emailsResult = contactIds.length > 0 ? await db.select().from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
-  const addressesResult = contactIds.length > 0 ? await db.select().from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  const phonesResult = contactIds.length > 0 ? await db.select({
+    id: contactPhones.id,
+    contactId: contactPhones.contactId,
+    phoneNumber: contactPhones.phoneNumber,
+    phoneType: contactPhones.phoneType,
+    isPrimary: contactPhones.isPrimary,
+    dnc: contactPhones.dnc,
+    carrier: contactPhones.carrier,
+    activityStatus: contactPhones.activityStatus,
+    isPrepaid: contactPhones.isPrepaid,
+    createdAt: contactPhones.createdAt,
+  }).from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  
+  const emailsResult = contactIds.length > 0 ? await db.select({
+    id: contactEmails.id,
+    contactId: contactEmails.contactId,
+    email: contactEmails.email,
+    isPrimary: contactEmails.isPrimary,
+    createdAt: contactEmails.createdAt,
+  }).from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  
+  const addressesResult = contactIds.length > 0 ? await db.select({
+    id: contactAddresses.id,
+    contactId: contactAddresses.contactId,
+    addressLine1: contactAddresses.addressLine1,
+    addressLine2: contactAddresses.addressLine2,
+    city: contactAddresses.city,
+    state: contactAddresses.state,
+    zipcode: contactAddresses.zipcode,
+    addressType: contactAddresses.addressType,
+    isPrimary: contactAddresses.isPrimary,
+    createdAt: contactAddresses.createdAt,
+  }).from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
 
   // Map relational data back to contacts
   const contactsMap = new Map(contactsResult.map(c => [c.id, { ...c, phones: [], emails: [], addresses: [] }]));
