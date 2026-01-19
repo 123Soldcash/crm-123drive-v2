@@ -1467,7 +1467,8 @@ export const appRouter = router({
     getContactsByProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        return await communication.getPropertyContactsWithDetails(input.propertyId);
+        const { getPropertyContactsSimple } = await import("./contacts-simple.js");
+        return await getPropertyContactsSimple(input.propertyId);
       }),
 
     getContactById: protectedProcedure
