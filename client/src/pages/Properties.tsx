@@ -78,7 +78,7 @@ interface FilterState {
   dealStage: string;
 }
 
-const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
+const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
 
 export default function Properties() {
   const { user } = useAuth();
@@ -558,12 +558,13 @@ export default function Properties() {
                 {DESK_OPTIONS.map((desk) => {
                   const deskEmoji = 
                     desk === "BIN" ? "🗑️" :
-                    desk === "DESK_CHRIS" ? "🏀" :
-                    desk === "DESK_1" ? "🟡" :
-                    desk === "DESK_2" ? "🟢" :
-                    desk === "DESK_3" ? "🔵" :
-                    desk === "DESK_4" ? "🩷" :
-                    desk === "DESK_5" ? "🟠" :
+                    desk === "DESK_CHRIS" ? "👤" :
+                    desk === "DESK_DEEP_SEARCH" ? "🔍" :
+                    desk === "DESK_1" ? "📋" :
+                    desk === "DESK_2" ? "📋" :
+                    desk === "DESK_3" ? "📋" :
+                    desk === "DESK_4" ? "📋" :
+                    desk === "DESK_5" ? "📋" :
                     desk === "ARCHIVED" ? "✅" : "";
                   return (
                     <SelectItem key={desk} value={desk}>
@@ -903,9 +904,19 @@ export default function Properties() {
                           setSelectedPropertyForDesk(property);
                           setDeskDialogOpen(true);
                         }}
-                        className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 cursor-pointer transition"
+                        className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${
+                          !property.deskName || property.deskName === 'BIN' ? 'bg-gray-100 text-gray-600' :
+                          property.deskName === 'DESK_CHRIS' ? 'bg-blue-100 text-blue-800' :
+                          property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-100 text-purple-800' :
+                          property.deskName === 'ARCHIVED' ? 'bg-green-100 text-green-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}
                       >
-                        {property.deskName || "🗑️ BIN"}
+                        {!property.deskName || property.deskName === 'BIN' ? '🗑️ BIN' :
+                         property.deskName === 'DESK_CHRIS' ? '👤 Chris' :
+                         property.deskName === 'DESK_DEEP_SEARCH' ? '🔍 Deep Search' :
+                         property.deskName === 'ARCHIVED' ? '✅ Archived' :
+                         `📋 ${property.deskName.replace('DESK_', '')}`}
                       </button>
                     </TableCell>
                   )}
