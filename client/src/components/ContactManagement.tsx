@@ -46,16 +46,10 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
 
   const utils = trpc.useUtils();
   
-  const { data: contacts, isLoading, error } = trpc.communication.getContactsByProperty.useQuery(
+  const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery(
     { propertyId },
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
-  
-  // DEBUG: Log what we're getting from the API
-  console.log('[ContactManagement] PropertyId:', propertyId);
-  console.log('[ContactManagement] IsLoading:', isLoading);
-  console.log('[ContactManagement] Error:', error);
-  console.log('[ContactManagement] Contacts:', contacts);
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<any>(null);

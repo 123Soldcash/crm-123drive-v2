@@ -21,7 +21,7 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  console.log(`[ContactsSimple] Fetching contacts for property identifier: ${propertyIdentifier}`);
+
 
   // Step 1: Find the actual database ID for this property
   let propertyDbId: number | null = null;
@@ -35,7 +35,7 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
 
   if (byLeadId.length > 0) {
     propertyDbId = byLeadId[0].id;
-    console.log(`[ContactsSimple] Found property by leadId, dbId: ${propertyDbId}`);
+
   } else {
     // Try by database ID
     const byDbId = await db
@@ -46,12 +46,12 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
 
     if (byDbId.length > 0) {
       propertyDbId = byDbId[0].id;
-      console.log(`[ContactsSimple] Found property by dbId: ${propertyDbId}`);
+  
     }
   }
 
   if (!propertyDbId) {
-    console.log(`[ContactsSimple] Property not found for identifier: ${propertyIdentifier}`);
+
     return [];
   }
 
@@ -61,7 +61,7 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
     .from(contacts)
     .where(eq(contacts.propertyId, propertyDbId));
 
-  console.log(`[ContactsSimple] Found ${contactsList.length} contacts for property ${propertyDbId}`);
+
 
   // Step 3: For each contact, get phones and emails
   const contactsWithDetails = await Promise.all(
@@ -87,10 +87,10 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
           .where(eq(contactAddresses.contactId, contact.id));
       } catch (e) {
         // Table might not exist
-        console.log(`[ContactsSimple] Could not fetch addresses: ${e}`);
+        // Addresses table might not exist
       }
 
-      console.log(`[ContactsSimple] Contact ${contact.id} (${contact.name}): ${phones.length} phones, ${emails.length} emails`);
+
 
       return {
         ...contact,
