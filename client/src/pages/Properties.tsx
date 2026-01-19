@@ -36,7 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
 import { DeskDialog } from "@/components/DeskDialog";
-import { AddressAutocomplete, type AddressDetails } from "@/components/AddressAutocomplete";
+import { AddressAutocompleteWithCRM, type AddressDetails } from "@/components/AddressAutocompleteWithCRM";
 import { DuplicateDetectionAlert } from "@/components/DuplicateDetectionAlert";
 import { STAGE_CONFIGS, type DealStage } from "@/lib/stageConfig";
 
@@ -1095,7 +1095,7 @@ function AddPropertyDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <AddressAutocomplete
+            <AddressAutocompleteWithCRM
               value={formData.addressLine1}
               onChange={(address: string) => {
                 setFormData({
@@ -1107,7 +1107,7 @@ function AddPropertyDialog() {
               onAddressSelect={(details: AddressDetails) => {
                 setFormData({
                   ...formData,
-                  addressLine1: details.address,
+                  addressLine1: details.street || details.address,
                   city: details.city,
                   state: details.state,
                   zipcode: details.zipCode,
@@ -1116,7 +1116,11 @@ function AddPropertyDialog() {
                 });
                 setIgnoreDuplicates(false); // Reset ignore flag when address changes
               }}
-              placeholder="123 Main Street"
+              onExistingLeadSelect={(leadId: number) => {
+                // Navigate to existing lead
+                window.location.href = `/properties/${leadId}`;
+              }}
+              placeholder="Digite o endereço para buscar..."
             />
           </div>
           

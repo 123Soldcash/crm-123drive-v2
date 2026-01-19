@@ -335,6 +335,38 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Search properties by address for autocomplete
+    searchByAddress: protectedProcedure
+      .input(
+        z.object({
+          search: z.string(),
+        })
+      )
+      .query(async ({ input }) => {
+        if (input.search.length < 3) return [];
+        
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        // Search for matching addresses using LIKE
+        const searchTerm = `%${input.search}%`;
+        const results = await dbInstance
+          .select({
+            id: properties.id,
+            addressLine1: properties.addressLine1,
+            city: properties.city,
+            state: properties.state,
+            zipcode: properties.zipcode,
+            owner1Name: properties.owner1Name,
+            leadTemperature: properties.leadTemperature,
+          })
+          .from(properties)
+          .where(sql`${properties.addressLine1} LIKE ${searchTerm}`)
+          .limit(10);
+        
+        return results;
+      }),
+
     searchDuplicates: protectedProcedure
       .input(
         z.object({
