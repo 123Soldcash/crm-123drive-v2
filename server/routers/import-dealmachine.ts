@@ -80,7 +80,9 @@ export const importDealMachineRouter = router({
           // Extract property data
           const leadId = row.lead_id ? String(row.lead_id) : null;
           const propertyId = row.property_id ? String(row.property_id) : null;
-          const parcelNumber = row.parcel_number ? String(row.parcel_number).trim() : null;
+          // Support both parcel_number and apn_parcel_id
+          const parcelNumber = row.parcel_number ? String(row.parcel_number).trim() : 
+                               row.apn_parcel_id ? String(row.apn_parcel_id).trim() : null;
           
           // Skip if duplicate - use parcelNumber as the universal identifier
           if (parcelNumber) {
