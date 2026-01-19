@@ -356,43 +356,69 @@ export async function getPropertyById(id: number) {
 
   // --- V3: Fetch relational contact data (phones, emails, addresses) ---
   const contactIds = contactsResult.map(c => c.id);
-
-  const phonesResult = contactIds.length > 0 ? await db.select({
-    id: contactPhones.id,
-    contactId: contactPhones.contactId,
-    phoneNumber: contactPhones.phoneNumber,
-    phoneType: contactPhones.phoneType,
-    isPrimary: contactPhones.isPrimary,
-    dnc: contactPhones.dnc,
-    carrier: contactPhones.carrier,
-    activityStatus: contactPhones.activityStatus,
-    isPrepaid: contactPhones.isPrepaid,
-    createdAt: contactPhones.createdAt,
-  }).from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
   
-  const emailsResult = contactIds.length > 0 ? await db.select({
-    id: contactEmails.id,
-    contactId: contactEmails.contactId,
-    email: contactEmails.email,
-    isPrimary: contactEmails.isPrimary,
-    createdAt: contactEmails.createdAt,
-  }).from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  // Initialize empty arrays for contact data - will be populated if tables exist
+  let phonesResult: any[] = [];
+  let emailsResult: any[] = [];
+  let addressesResult: any[] = [];
   
-  const addressesResult = contactIds.length > 0 ? await db.select({
-    id: contactAddresses.id,
-    contactId: contactAddresses.contactId,
-    addressLine1: contactAddresses.addressLine1,
-    addressLine2: contactAddresses.addressLine2,
-    city: contactAddresses.city,
-    state: contactAddresses.state,
-    zipcode: contactAddresses.zipcode,
-    addressType: contactAddresses.addressType,
-    isPrimary: contactAddresses.isPrimary,
-    createdAt: contactAddresses.createdAt,
-  }).from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`) : [];
+  // Try to fetch phones - table may not exist
+  if (contactIds.length > 0) {
+    try {
+      phonesResult = await db.select({
+        id: contactPhones.id,
+        contactId: contactPhones.contactId,
+        phoneNumber: contactPhones.phoneNumber,
+        phoneType: contactPhones.phoneType,
+        isPrimary: contactPhones.isPrimary,
+        dnc: contactPhones.dnc,
+        carrier: contactPhones.carrier,
+        activityStatus: contactPhones.activityStatus,
+        isPrepaid: contactPhones.isPrepaid,
+        createdAt: contactPhones.createdAt,
+      }).from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`);
+    } catch (e) {
+      console.log('contactPhones table query failed, skipping:', e);
+    }
+  }
+  
+  // Try to fetch emails - table may not exist
+  if (contactIds.length > 0) {
+    try {
+      emailsResult = await db.select({
+        id: contactEmails.id,
+        contactId: contactEmails.contactId,
+        email: contactEmails.email,
+        isPrimary: contactEmails.isPrimary,
+        createdAt: contactEmails.createdAt,
+      }).from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`);
+    } catch (e) {
+      console.log('contactEmails table query failed, skipping:', e);
+    }
+  }
+  
+  // Try to fetch addresses - table may not exist
+  if (contactIds.length > 0) {
+    try {
+      addressesResult = await db.select({
+        id: contactAddresses.id,
+        contactId: contactAddresses.contactId,
+        addressLine1: contactAddresses.addressLine1,
+        addressLine2: contactAddresses.addressLine2,
+        city: contactAddresses.city,
+        state: contactAddresses.state,
+        zipcode: contactAddresses.zipcode,
+        addressType: contactAddresses.addressType,
+        isPrimary: contactAddresses.isPrimary,
+        createdAt: contactAddresses.createdAt,
+      }).from(contactAddresses).where(sql`${contactAddresses.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`);
+    } catch (e) {
+      console.log('contactAddresses table query failed, skipping:', e);
+    }
+  }
 
   // Map relational data back to contacts
-  const contactsMap = new Map(contactsResult.map(c => [c.id, { ...c, phones: [], emails: [], addresses: [] }]));
+  const contactsMap = new Map(contactsResult.map(c => [c.id, { ...c, phones: [] as any[], emails: [] as any[], addresses: [] as any[] }]));
 
   phonesResult.forEach(p => {
     if (contactsMap.has(p.contactId)) {
