@@ -249,6 +249,24 @@ export async function getProperties(filters?: {
   return results;
 }
 
+
+// Alias function for backward compatibility - the router calls getPropertiesWithAgents
+export async function getPropertiesWithAgents(filters?: {
+  search?: string;
+  ownerLocation?: string;
+  minEquity?: number;
+  maxEquity?: number;
+  trackingStatus?: string;
+  leadTemperature?: "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD";
+  ownerVerified?: boolean;
+  visited?: boolean;
+  userId?: number;
+  userRole?: string;
+}) {
+  // Simply call getProperties - the agent filtering logic is already there
+  return await getProperties(filters);
+}
+
 export async function getPropertyById(id: number) {
   const db = await getDb();
   if (!db) return null;
