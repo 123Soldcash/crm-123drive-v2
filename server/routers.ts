@@ -389,22 +389,28 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
-        // Build values object with only defined fields
-        const values: any = {
-          addressLine1: input.addressLine1,
-          city: input.city || "",
-          state: input.state || "",
-          zipcode: input.zipcode || "",
-          ownerVerified: 0,
-          source: "Manual",
-        };
+        // Use raw SQL to avoid Drizzle ORM issues with optional fields
+        const fields = ['addressLine1', 'city', 'state', 'zipcode', 'ownerVerified', 'source'];
+        const values = [input.addressLine1, input.city || "", input.state || "", input.zipcode || "", 0, "Manual"];
         
-        // Only add optional fields if they have values
-        if (input.owner1Name) values.owner1Name = input.owner1Name;
-        if (input.leadTemperature) values.leadTemperature = input.leadTemperature;
-        if (input.status) values.status = input.status;
+        // Add optional fields only if they have values
+        if (input.owner1Name) {
+          fields.push('owner1Name');
+          values.push(input.owner1Name);
+        }
+        if (input.leadTemperature) {
+          fields.push('leadTemperature');
+          values.push(input.leadTemperature);
+        }
+        if (input.status) {
+          fields.push('status');
+          values.push(input.status);
+        }
         
-        const result: any = await dbInstance.insert(properties).values(values);
+        const placeholders = values.map(() => '?').join(', ');
+        const sql = `INSERT INTO properties (${fields.join(', ')}) VALUES (${placeholders})`;
+        
+        const [result]: any = await dbInstance.execute(sql, values);
         
         return { success: true, id: Number(result.insertId) };
       }),
