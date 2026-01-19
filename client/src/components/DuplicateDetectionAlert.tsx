@@ -47,7 +47,7 @@ export function DuplicateDetectionAlert({
       similarityThreshold: 85,
     },
     {
-      enabled: debouncedAddress.length > 10 || (ownerName && ownerName.length > 3), // Only search if address is substantial
+      enabled: debouncedAddress.length > 10 || (!!ownerName && ownerName.length > 3), // Only search if address is substantial
       refetchOnWindowFocus: false,
     }
   );
