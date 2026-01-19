@@ -438,6 +438,58 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          addressLine1: z.string().optional(),
+          city: z.string().optional(),
+          state: z.string().optional(),
+          zipcode: z.string().optional(),
+          leadTemperature: z.string().optional(),
+          estimatedValue: z.number().optional(),
+          equityPercent: z.number().optional(),
+          owner1Name: z.string().optional(),
+          owner2Name: z.string().optional(),
+          totalBedrooms: z.number().optional(),
+          totalBaths: z.number().optional(),
+          buildingSquareFeet: z.number().optional(),
+          yearBuilt: z.number().optional(),
+          source: z.string().optional(),
+          listName: z.string().optional(),
+          entryDate: z.date().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new Error("Database not available");
+        
+        // Build update object with only provided fields
+        const updateData: any = {};
+        if (input.addressLine1 !== undefined) updateData.addressLine1 = input.addressLine1;
+        if (input.city !== undefined) updateData.city = input.city;
+        if (input.state !== undefined) updateData.state = input.state;
+        if (input.zipcode !== undefined) updateData.zipcode = input.zipcode;
+        if (input.leadTemperature !== undefined) updateData.leadTemperature = input.leadTemperature;
+        if (input.estimatedValue !== undefined) updateData.estimatedValue = input.estimatedValue;
+        if (input.equityPercent !== undefined) updateData.equityPercent = input.equityPercent;
+        if (input.owner1Name !== undefined) updateData.owner1Name = input.owner1Name;
+        if (input.owner2Name !== undefined) updateData.owner2Name = input.owner2Name;
+        if (input.totalBedrooms !== undefined) updateData.totalBedrooms = input.totalBedrooms;
+        if (input.totalBaths !== undefined) updateData.totalBaths = input.totalBaths;
+        if (input.buildingSquareFeet !== undefined) updateData.buildingSquareFeet = input.buildingSquareFeet;
+        if (input.yearBuilt !== undefined) updateData.yearBuilt = input.yearBuilt;
+        if (input.source !== undefined) updateData.source = input.source;
+        if (input.listName !== undefined) updateData.listName = input.listName;
+        if (input.entryDate !== undefined) updateData.entryDate = input.entryDate;
+        
+        await dbInstance
+          .update(properties)
+          .set(updateData)
+          .where(eq(properties.id, input.id));
+        return { success: true };
+      }),
+
     forMap: protectedProcedure.query(async ({ ctx }) => {
       return await db.getPropertiesForMap({
         userId: ctx.user?.id,
