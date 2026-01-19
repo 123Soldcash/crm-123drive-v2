@@ -389,32 +389,69 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
-        console.log('[CREATE PROPERTY] Using Drizzle ORM with explicit fields');
+        console.log('[CREATE PROPERTY] Using DealMachine-style approach');
         console.log('[CREATE PROPERTY] Input:', JSON.stringify(input));
         
-        // Build insert data with only non-undefined fields
-        const insertData: any = {
+        // Generate a unique propertyId (timestamp-based like DealMachine)
+        const propertyId = `MANUAL-${Date.now()}`;
+        
+        // Build property data exactly like DealMachine import does
+        const propertyData: any = {
+          propertyId,
+          leadId: null,
           addressLine1: input.addressLine1,
-          city: input.city || "",
-          state: input.state || "",
-          zipcode: input.zipcode || "",
+          addressLine2: null,
+          city: input.city || 'TBD',
+          state: input.state || 'FL',
+          zipcode: input.zipcode || '00000',
+          
+          // Property details (all nullable)
+          propertyType: null,
+          yearBuilt: null,
+          totalBedrooms: null,
+          totalBaths: null,
+          buildingSquareFeet: null,
+          
+          // Financial information (all nullable)
+          estimatedValue: null,
+          equityAmount: null,
+          equityPercent: null,
+          totalLoanBalance: null,
+          salePrice: null,
+          saleDate: null,
+          taxAmount: null,
+          
+          // Owner information
+          owner1Name: input.owner1Name || null,
+          owner2Name: null,
+          ownerMailingAddress: null,
+          ownerMailingCity: null,
+          ownerMailingState: null,
+          ownerMailingZip: null,
+          
+          // DealMachine references (null for manual entry)
+          dealMachinePropertyId: null,
+          dealMachineLeadId: null,
+          dealMachineRawData: null,
+          
+          // Assignment
+          assignedAgentId: ctx.user?.id || null,
         };
         
-        // Only add optional fields if they have values
-        if (input.owner1Name) {
-          insertData.owner1Name = input.owner1Name;
-        }
-        if (input.leadTemperature) {
-          insertData.leadTemperature = input.leadTemperature;
-        }
+        console.log('[CREATE PROPERTY] Property data:', JSON.stringify(propertyData));
         
-        console.log('[CREATE PROPERTY] Insert data:', JSON.stringify(insertData));
+        await dbInstance.insert(properties).values(propertyData);
         
-        const [result] = await dbInstance.insert(properties).values(insertData);
+        // Get inserted property ID
+        const [insertedProperty] = await dbInstance
+          .select({ id: properties.id })
+          .from(properties)
+          .where(eq(properties.propertyId, propertyId))
+          .limit(1);
         
-        console.log('[CREATE PROPERTY] Success! Result:', result);
+        console.log('[CREATE PROPERTY] Success! ID:', insertedProperty?.id);
         
-        return { success: true, id: Number(result.insertId) };
+        return { success: true, id: insertedProperty?.id };
       }),
 
     getById: protectedProcedure
