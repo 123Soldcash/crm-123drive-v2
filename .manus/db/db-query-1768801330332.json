@@ -1,0 +1,55 @@
+{
+  "query": "SELECT `id`, `leadId`, `addressLine1`, `city`, `state`, `dealStage`, `stageChangedAt` FROM `properties` ORDER BY `stageChangedAt` DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT `id`, `leadId`, `addressLine1`, `city`, `state`, `dealStage`, `stageChangedAt` FROM `properties` ORDER BY `stageChangedAt` DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "930022",
+      "leadId": "1652561797",
+      "addressLine1": "19740 Nw 6th Pl",
+      "city": "Miami",
+      "state": "FL",
+      "dealStage": "NEW_LEAD",
+      "stageChangedAt": "2026-01-18 08:35:22"
+    },
+    {
+      "id": "930019",
+      "leadId": "1595873839",
+      "addressLine1": "1335 Ne 204th St",
+      "city": "Miami",
+      "state": "FL",
+      "dealStage": "NEW_LEAD",
+      "stageChangedAt": "2026-01-18 08:35:22"
+    },
+    {
+      "id": "930021",
+      "leadId": "1595877977",
+      "addressLine1": "8740 Nw 32nd Ct",
+      "city": "Miami",
+      "state": "FL",
+      "dealStage": "NEW_LEAD",
+      "stageChangedAt": "2026-01-18 08:35:22"
+    },
+    {
+      "id": "930020",
+      "leadId": "1595874115",
+      "addressLine1": "7221 Nw 17th Ave",
+      "city": "Miami",
+      "state": "FL",
+      "dealStage": "NEW_LEAD",
+      "stageChangedAt": "2026-01-18 08:35:22"
+    },
+    {
+      "id": "930023",
+      "leadId": "1762136939",
+      "addressLine1": "615 Ne 164th St",
+      "city": "Miami",
+      "state": "FL",
+      "dealStage": "NEW_LEAD",
+      "stageChangedAt": "2026-01-18 08:35:22"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcity\tstate\tdealStage\tstageChangedAt\n930022\t1652561797\t19740 Nw 6th Pl\tMiami\tFL\tNEW_LEAD\t2026-01-18 08:35:22\n930019\t1595873839\t1335 Ne 204th St\tMiami\tFL\tNEW_LEAD\t2026-01-18 08:35:22\n930021\t1595877977\t8740 Nw 32nd Ct\tMiami\tFL\tNEW_LEAD\t2026-01-18 08:35:22\n930020\t1595874115\t7221 Nw 17th Ave\tMiami\tFL\tNEW_LEAD\t2026-01-18 08:35:22\n930023\t1762136939\t615 Ne 164th St\tMiami\tFL\tNEW_LEAD\t2026-01-18 08:35:22\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}
