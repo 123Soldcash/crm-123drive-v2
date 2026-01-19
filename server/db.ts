@@ -272,7 +272,8 @@ export async function getPropertyById(id: number) {
   if (!db) return null;
 
   // First get the property with ALL fields
-  const propertyResult = await db.select({
+  // Try to find by leadId first (since URLs use leadId), then fall back to database id
+  let propertyResult = await db.select({
     id: properties.id,
     leadId: properties.leadId,
     addressLine1: properties.addressLine1,
@@ -303,15 +304,55 @@ export async function getPropertyById(id: number) {
     yearBuilt: properties.yearBuilt,
     ownerLocation: properties.ownerLocation,
     createdAt: properties.createdAt,
-  }).from(properties).where(eq(properties.id, id)).limit(1);
+  }).from(properties).where(eq(properties.leadId, id)).limit(1);
+  
+  // If not found by leadId, try by database id as fallback
+  if (propertyResult.length === 0) {
+    propertyResult = await db.select({
+      id: properties.id,
+      leadId: properties.leadId,
+      addressLine1: properties.addressLine1,
+      addressLine2: properties.addressLine2,
+      city: properties.city,
+      state: properties.state,
+      zipcode: properties.zipcode,
+      owner1Name: properties.owner1Name,
+      owner2Name: properties.owner2Name,
+      estimatedValue: properties.estimatedValue,
+      equityAmount: properties.equityAmount,
+      equityPercent: properties.equityPercent,
+      mortgageAmount: properties.mortgageAmount,
+      totalLoanBalance: properties.totalLoanBalance,
+      taxAmount: properties.taxAmount,
+      leadTemperature: properties.leadTemperature,
+      trackingStatus: properties.trackingStatus,
+      ownerVerified: properties.ownerVerified,
+      assignedAgentId: properties.assignedAgentId,
+      marketStatus: properties.marketStatus,
+      dealMachineRawData: properties.dealMachineRawData,
+      apnParcelId: properties.apnParcelId,
+      propertyId: properties.propertyId,
+      propertyType: properties.propertyType,
+      totalBedrooms: properties.totalBedrooms,
+      totalBaths: properties.totalBaths,
+      buildingSquareFeet: properties.buildingSquareFeet,
+      yearBuilt: properties.yearBuilt,
+      ownerLocation: properties.ownerLocation,
+      createdAt: properties.createdAt,
+    }).from(properties).where(eq(properties.id, id)).limit(1);
+  }
+  
   if (propertyResult.length === 0) return null;
+  
+  // Use the actual database id for related queries
+  const propertyDbId = propertyResult[0].id;
   
   // Get contacts for this property
   const contactsResult = await db.select({
     id: contacts.id,
     name: contacts.name,
     relationship: contacts.relationship,
-  }).from(contacts).where(eq(contacts.propertyId, id));
+  }).from(contacts).where(eq(contacts.propertyId, propertyDbId));
 
   // --- V3: Fetch relational contact data (phones, emails, addresses) ---
   const contactIds = contactsResult.map(c => c.id);
@@ -351,7 +392,7 @@ export async function getPropertyById(id: number) {
       delinquentTaxTotal: propertyDeepSearch.delinquentTaxTotal,
     })
     .from(propertyDeepSearch)
-    .where(eq(propertyDeepSearch.propertyId, id))
+    .where(eq(propertyDeepSearch.propertyId, propertyDbId))
     .limit(1);
   
   const deepSearchData = deepSearchResult.length > 0 ? deepSearchResult[0] : null;
