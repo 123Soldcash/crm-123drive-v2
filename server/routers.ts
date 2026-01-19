@@ -389,9 +389,12 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new Error("Database not available");
         
+        console.log('[CREATE PROPERTY] Using raw SQL approach');
+        console.log('[CREATE PROPERTY] Input:', JSON.stringify(input));
+        
         // Use raw SQL to avoid Drizzle ORM issues with optional fields
-        const fields = ['addressLine1', 'city', 'state', 'zipcode', 'ownerVerified', 'source'];
-        const values = [input.addressLine1, input.city || "", input.state || "", input.zipcode || "", 0, "Manual"];
+        const fields = ['addressLine1', 'city', 'state', 'zipcode'];
+        const values = [input.addressLine1, input.city || "", input.state || "", input.zipcode || ""];
         
         // Add optional fields only if they have values
         if (input.owner1Name) {
@@ -410,7 +413,12 @@ export const appRouter = router({
         const placeholders = values.map(() => '?').join(', ');
         const sql = `INSERT INTO properties (${fields.join(', ')}) VALUES (${placeholders})`;
         
+        console.log('[CREATE PROPERTY] SQL:', sql);
+        console.log('[CREATE PROPERTY] Values:', values);
+        
         const [result]: any = await dbInstance.execute(sql, values);
+        
+        console.log('[CREATE PROPERTY] Success! ID:', result.insertId);
         
         return { success: true, id: Number(result.insertId) };
       }),
