@@ -1,6 +1,6 @@
 import { getDb } from "./db";
 import { properties, stageHistory } from "../drizzle/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, desc } from "drizzle-orm";
 
 /**
  * Update property deal stage and record history
@@ -152,7 +152,7 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
     })
     .from(properties)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy((p) => [sql`${properties.stageChangedAt} DESC`]);
+    .orderBy(desc(properties.stageChangedAt));
 }
 
 /**
