@@ -170,7 +170,12 @@ export const appRouter = router({
       }),
     getAllTags: protectedProcedure
       .query(async () => {
-        return await db.getAllUniqueTags();
+        const db_instance = await db.getDb();
+        if (!db_instance) return [];
+        const { propertyTags } = await import('../drizzle/schema.js');
+        const { sql } = await import('drizzle-orm');
+        const result = await db_instance.select({ tag: propertyTags.tag }).from(propertyTags).groupBy(propertyTags.tag);
+        return result.map(r => r.tag);
       }),
 
     getActivities: protectedProcedure
@@ -1058,10 +1063,18 @@ export const appRouter = router({
 
   savedSearches: router({
     list: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getSavedSearchesByUserId(ctx.user.id);
+      const db_instance = await db.getDb();
+      if (!db_instance) return [];
+      const { savedSearches } = await import('../drizzle/schema.js');
+      const { eq } = await import('drizzle-orm');
+      return await db_instance.select().from(savedSearches).where(eq(savedSearches.userId, ctx.user.id));
     }),
     listWithCounts: protectedProcedure.query(async ({ ctx }) => {
-      const searches = await db.getSavedSearchesByUserId(ctx.user.id);
+      const db_instance = await db.getDb();
+      if (!db_instance) return [];
+      const { savedSearches } = await import('../drizzle/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const searches = await db_instance.select().from(savedSearches).where(eq(savedSearches.userId, ctx.user.id));
       
       // Calculate property count for each saved search
       const searchesWithCounts = await Promise.all(
@@ -1238,7 +1251,7 @@ export const appRouter = router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        return await db.getNotesByPropertyId(input.propertyId);
+        return await db.getPropertyNotes(input.propertyId);
       }),
 
     create: protectedProcedure

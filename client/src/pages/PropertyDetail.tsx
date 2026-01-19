@@ -45,6 +45,7 @@ import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
 import { DealCalculator } from "@/components/DealCalculator";
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import { StickyPropertyHeader } from "@/components/StickyPropertyHeader";
 
 export default function PropertyDetail() {
