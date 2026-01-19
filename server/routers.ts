@@ -397,6 +397,8 @@ export const appRouter = router({
           owner1Name: input.owner1Name || null,
           leadTemperature: input.leadTemperature || "TBD",
           status: input.status || "New Prospect",
+          ownerVerified: 0,
+          source: "Manual" as any,
         });
         
         return { success: true, id: Number(result.insertId) };

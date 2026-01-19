@@ -86,6 +86,7 @@ export default function PropertyDetail() {
 
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { user } = useAuth();
 
   const [navigationIds, setNavigationIds] = useState<number[]>([]);
@@ -235,7 +236,7 @@ export default function PropertyDetail() {
       <StickyPropertyHeader
         property={property}
         tags={tags || []}
-        onEdit={() => {}} 
+        onEdit={() => setEditDialogOpen(true)} 
         onAddToPipeline={() => setPipelineDialogOpen(true)}
         onAssignAgent={() => setTransferDialogOpen(true)}
         onUpdateLeadTemperature={(temp) => 
@@ -312,6 +313,12 @@ export default function PropertyDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditPropertyDialog
+        property={property}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
 
       {assignedAgents && assignedAgents.length > 0 && (
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
