@@ -1539,37 +1539,98 @@ export async function createContactWithDetails(
   }
   return { contactId, ...contactResult };
 }
+// ============================================
+// Missing Functions - Restored for Compatibility
+// ============================================
 
-
-export async function getPropertyById(id: number) {
+export async function getNextLeadId(): Promise<number> {
   const db = await getDb();
-
-  const propertyResult = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
-  if (propertyResult.length === 0) return null;
+  if (!db) throw new Error("Database not available");
   
-  const property = propertyResult[0];
-  const propertyContacts = await db.select().from(contacts).where(eq(contacts.propertyId, id));
+  // Get the highest leadId from properties table
+  const result = await db
+    .select({ maxLeadId: sql<number>`MAX(CAST(${properties.leadId} AS UNSIGNED))` })
+    .from(properties);
+  
+  const currentMax = result[0]?.maxLeadId || 0;
+  return currentMax + 1;
+}
 
-  const contactsWithDetails = await Promise.all(
-    propertyContacts.map(async (contact) => {
-      const [phones, emails, addresses] = await Promise.all([
-        db.select().from(contactPhones).where(eq(contactPhones.contactId, contact.id)),
-        db.select().from(contactEmails).where(eq(contactEmails.contactId, contact.id)),
-        db.select().from(contactAddresses).where(eq(contactAddresses.contactId, contact.id)),
-      ]);
-      return { ...contact, phones, emails, addresses };
+export async function getPropertiesWithAgents(filters?: {
+  search?: string;
+  userId?: number;
+  userRole?: string;
+  status?: string;
+  leadTemperature?: string;
+  visited?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  let query = db
+    .select({
+      id: properties.id,
+      leadId: properties.leadId,
+      addressLine1: properties.addressLine1,
+      city: properties.city,
+      state: properties.state,
+      zipcode: properties.zipcode,
+      owner1Name: properties.owner1Name,
+      leadTemperature: properties.leadTemperature,
+      status: properties.status,
+      assignedAgentId: properties.assignedAgentId,
+      parcelNumber: properties.parcelNumber,
+      propertyId: properties.propertyId,
     })
-  );
+    .from(properties);
+  
+  if (filters?.search) {
+    query = query.where(
+      or(
+        like(properties.addressLine1, `%${filters.search}%`),
+        like(properties.city, `%${filters.search}%`),
+        like(properties.owner1Name, `%${filters.search}%`)
+      )
+    );
+  }
+  
+  if (filters?.status) {
+    query = query.where(eq(properties.status, filters.status));
+  }
+  
+  if (filters?.leadTemperature) {
+    query = query.where(eq(properties.leadTemperature, filters.leadTemperature));
+  }
+  
+  return await query.limit(100);
+}
 
-  const deepSearchResult = await db.select().from(propertyDeepSearch).where(eq(propertyDeepSearch.propertyId, id)).limit(1);
-  const propertyNotes = await db.select().from(notes).where(eq(notes.propertyId, id)).orderBy(desc(notes.createdAt));
-  const propertyTasks = await db.select().from(tasks).where(eq(tasks.propertyId, id)).orderBy(desc(tasks.createdAt));
+export async function updatePropertyStatus(propertyId: number, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(properties)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(properties.id, propertyId));
+}
 
-  return {
-    ...property,
-    contacts: contactsWithDetails,
-    notes: propertyNotes,
-    tasks: propertyTasks,
-    deepSearch: deepSearchResult[0] || null,
-  };
+export async function updateLeadTemperature(propertyId: number, temperature: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(properties)
+    .set({ leadTemperature: temperature, updatedAt: new Date() })
+    .where(eq(properties.id, propertyId));
+}
+
+export async function reassignProperty(propertyId: number, assignedAgentId: number | null, reassignedByUserId?: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(properties)
+    .set({ assignedAgentId, updatedAt: new Date() })
+    .where(eq(properties.id, propertyId));
 }
