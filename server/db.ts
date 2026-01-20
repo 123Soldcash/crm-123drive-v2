@@ -303,6 +303,8 @@ export async function getPropertyById(id: number) {
     buildingSquareFeet: properties.buildingSquareFeet,
     yearBuilt: properties.yearBuilt,
     ownerLocation: properties.ownerLocation,
+    deskName: properties.deskName,
+    deskStatus: properties.deskStatus,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.leadId, id)).limit(1);
   
@@ -337,9 +339,11 @@ export async function getPropertyById(id: number) {
       totalBaths: properties.totalBaths,
       buildingSquareFeet: properties.buildingSquareFeet,
       yearBuilt: properties.yearBuilt,
-      ownerLocation: properties.ownerLocation,
-      createdAt: properties.createdAt,
-    }).from(properties).where(eq(properties.id, id)).limit(1);
+    ownerLocation: properties.ownerLocation,
+    deskName: properties.deskName,
+    deskStatus: properties.deskStatus,
+    createdAt: properties.createdAt,
+  }).from(properties).where(eq(properties.id, id)).limit(1);
   }
   
   if (propertyResult.length === 0) return null;
