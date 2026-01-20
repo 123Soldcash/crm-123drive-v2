@@ -233,10 +233,13 @@ export default function PropertyDetail() {
 
   const getBackgroundColor = () => {
     switch (property.leadTemperature) {
-      case "SUPER HOT": return "bg-blue-50/20";
-      case "HOT": return "bg-green-50/20";
-      case "WARM": return "bg-yellow-50/20";
-      case "COLD": case "DEAD": return "bg-gray-50/20";
+      case "SUPER HOT": return "bg-blue-100";
+      case "HOT": return "bg-green-100";
+      case "WARM": return "bg-amber-100";
+      case "COLD": return "bg-gray-200";
+      case "DEAD": return "bg-purple-100";
+      case "DEEP SEARCH": return "bg-purple-100";
+      case "TBD": return "bg-white";
       default: return "bg-white";
     }
   };
