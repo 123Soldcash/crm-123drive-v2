@@ -374,8 +374,7 @@ export default function PropertyDetail() {
         </div>
       </div>
 
-      {/* Top Sections: Summary, Contacts, and Call Tracking */}
-      <LeadSummary propertyId={propertyId} />
+      {/* Top Sections: Contacts and Call Tracking */}
       <ContactManagement propertyId={propertyId} />
       <CallTrackingTable propertyId={propertyId} />
       
@@ -385,7 +384,7 @@ export default function PropertyDetail() {
       
       {/* Collapsible Sections */}
       <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
-        <DeepSearchTabs property={property} />
+        <DeepSearchTabs propertyId={propertyId} />
       </CollapsibleSection>
 
       <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} accentColor="yellow">
