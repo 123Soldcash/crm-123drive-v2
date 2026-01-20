@@ -34,19 +34,19 @@ export function DeepSearchHeader({
   const getTemperatureStyle = () => {
     switch (leadTemperature) {
       case "SUPER HOT":
-        return "bg-gradient-to-r from-blue-500 to-blue-700 text-white animate-pulse";
+        return "bg-gradient-to-r from-blue-600 to-blue-800 text-white animate-pulse";
       case "HOT":
-        return "bg-gradient-to-r from-green-500 to-green-700 text-white";
+        return "bg-gradient-to-r from-green-600 to-green-800 text-white";
       case "DEEP SEARCH":
-        return "bg-gradient-to-r from-purple-500 to-purple-700 text-white";
+        return "bg-gradient-to-r from-purple-600 to-purple-800 text-white";
       case "WARM":
-        return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white";
+        return "bg-gradient-to-r from-amber-500 to-amber-700 text-white";
       case "COLD":
-        return "bg-gradient-to-r from-gray-400 to-gray-600 text-white";
+        return "bg-gradient-to-r from-gray-500 to-gray-700 text-white";
       case "DEAD":
-        return "bg-gradient-to-r from-gray-700 to-gray-900 text-white";
+        return "bg-gradient-to-r from-purple-700 to-purple-900 text-white";
       default:
-        return "bg-gradient-to-r from-gray-200 to-gray-400 text-gray-700";
+        return "bg-white border-2 border-gray-400 text-gray-700";
     }
   };
 

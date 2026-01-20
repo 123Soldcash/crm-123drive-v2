@@ -176,7 +176,7 @@ export function StickyPropertyHeader({
                 className={cn(
                   "h-6 px-2 text-[10px] font-bold",
                   property.leadTemperature === temp 
-                    ? (temp === "SUPER HOT" ? "bg-blue-600 hover:bg-blue-700" : temp === "HOT" ? "bg-orange-500 hover:bg-orange-600" : temp === "WARM" ? "bg-amber-500 hover:bg-amber-600" : temp === "COLD" ? "bg-blue-500 hover:bg-blue-600" : "bg-slate-600")
+                    ? (temp === "SUPER HOT" ? "bg-blue-700 hover:bg-blue-800 text-white" : temp === "HOT" ? "bg-green-700 hover:bg-green-800 text-white" : temp === "WARM" ? "bg-amber-600 hover:bg-amber-700 text-white" : temp === "COLD" ? "bg-gray-600 hover:bg-gray-700 text-white" : "bg-white border-2 border-gray-400 text-gray-700")
                     : "text-slate-500 hover:bg-slate-200"
                 )}
                 onClick={() => onUpdateLeadTemperature(temp)}

@@ -84,12 +84,13 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
     <Skull className="h-5 w-5 text-gray-500" />;
 
   const leadTempColor =
-    property.leadTemperature === "SUPER HOT" ? "bg-blue-100 border-blue-400 text-blue-800" :
-    property.leadTemperature === "HOT" ? "bg-red-100 border-red-400 text-red-800" :
-    property.leadTemperature === "DEEP SEARCH" ? "bg-purple-100 border-purple-400 text-purple-800" :
-    property.leadTemperature === "WARM" ? "bg-yellow-100 border-yellow-400 text-yellow-800" :
-    property.leadTemperature === "COLD" ? "bg-blue-50 border-blue-300 text-blue-700" :
-    property.leadTemperature === "TBD" ? "bg-gray-50 border-gray-300 text-gray-700" :
+    property.leadTemperature === "SUPER HOT" ? "bg-blue-700 border-blue-800 text-white" :
+    property.leadTemperature === "HOT" ? "bg-green-700 border-green-800 text-white" :
+    property.leadTemperature === "DEEP SEARCH" ? "bg-purple-700 border-purple-800 text-white" :
+    property.leadTemperature === "WARM" ? "bg-amber-600 border-amber-700 text-white" :
+    property.leadTemperature === "COLD" ? "bg-gray-600 border-gray-700 text-white" :
+    property.leadTemperature === "TBD" ? "bg-white border-gray-400 text-gray-700" :
+    property.leadTemperature === "DEAD" ? "bg-purple-800 border-purple-900 text-white" :
     "bg-gray-100 border-gray-300 text-gray-700";
 
   // Parse JSON fields
