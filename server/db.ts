@@ -1701,3 +1701,58 @@ export async function reassignProperty(propertyId: number, assignedAgentId: numb
     .set({ assignedAgentId, updatedAt: new Date() })
     .where(eq(properties.id, propertyId));
 }
+
+
+// ============================================
+// Desk Management Functions
+// ============================================
+
+export async function updateDesk(propertyId: number, deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "ARCHIVED"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(properties)
+    .set({ 
+      deskName: deskName || null, 
+      deskStatus,
+      updatedAt: new Date() 
+    })
+    .where(eq(properties.id, propertyId));
+}
+
+export async function getDeskStats(): Promise<{ deskName: string | null; count: number }[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select({
+      deskName: properties.deskName,
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(properties)
+    .groupBy(properties.deskName);
+  
+  return result;
+}
+
+export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE" | "ARCHIVED"): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  let query = db.select().from(properties);
+  
+  const conditions = [];
+  if (deskName) {
+    conditions.push(eq(properties.deskName, deskName));
+  }
+  if (deskStatus) {
+    conditions.push(eq(properties.deskStatus, deskStatus));
+  }
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query;
+}
