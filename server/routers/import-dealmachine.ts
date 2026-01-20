@@ -113,7 +113,9 @@ export const importDealMachineRouter = router({
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, parcelNumber=${parcelNumber}, address=${row.property_address_line_1}`);
           debug.push(`Row ${rowIndex + 1}: Processing ${row.property_address_line_1 || 'NO ADDRESS'}`);
           
-          // Skip if duplicate - check by APN first, then by address
+          // TEMPORARILY DISABLED: Skip if duplicate - check by APN first, then by address
+          // TODO: Re-enable after testing
+          /*
           if (parcelNumber) {
             // Check by parcel number (APN)
             const existing = await dbInstance
@@ -155,6 +157,9 @@ export const importDealMachineRouter = router({
               }
             }
           }
+          */
+          
+          debug.push(`Row ${rowIndex + 1}: DUPLICATE CHECK DISABLED - Proceeding with import`);
           
           // Prepare comprehensive dealMachineRawData with ALL 393 fields
           const rawData: any = {
