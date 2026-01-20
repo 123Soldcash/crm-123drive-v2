@@ -1803,3 +1803,41 @@ export async function upsertPropertyDeepSearch(propertyId: number, data: Partial
       .values({ propertyId, ...data });
   }
 }
+
+
+export async function updatePropertyDeepSearch(input: { propertyId: number; [key: string]: any }): Promise<{ success: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { propertyId, ...data } = input;
+  
+  // Check if record exists
+  const existing = await db
+    .select({ id: propertyDeepSearch.id })
+    .from(propertyDeepSearch)
+    .where(eq(propertyDeepSearch.propertyId, propertyId))
+    .limit(1);
+  
+  // Remove undefined values from data
+  const cleanData: Record<string, any> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      cleanData[key] = value;
+    }
+  }
+  
+  if (existing.length > 0) {
+    // Update existing record
+    await db
+      .update(propertyDeepSearch)
+      .set({ ...cleanData, updatedAt: new Date() })
+      .where(eq(propertyDeepSearch.propertyId, propertyId));
+  } else {
+    // Insert new record
+    await db
+      .insert(propertyDeepSearch)
+      .values({ propertyId, ...cleanData });
+  }
+  
+  return { success: true };
+}
