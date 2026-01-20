@@ -51,6 +51,16 @@ export default function ImportProperties() {
           { duration: 10000 }
         );
       }
+      
+      // Show debug info (for troubleshooting)
+      if ((result as any).debug && (result as any).debug.length > 0) {
+        console.log('[DealMachine Import Debug]:', (result as any).debug);
+        // Show debug info in a toast if no properties were imported
+        if (result.propertiesCount === 0) {
+          const debugInfo = (result as any).debug.slice(0, 5).join(' | ');
+          toast.info(`Debug: ${debugInfo}`, { duration: 15000 });
+        }
+      }
     },
     onError: (error) => {
       setIsUploading(false);

@@ -95,6 +95,9 @@ export const importDealMachineRouter = router({
       let emailsCount = 0;
       let skippedCount = 0;
       const errors: string[] = [];
+      const debug: string[] = [];
+      
+      debug.push(`Starting import: ${data.length} rows found in Excel file`);
       
       // PHASE 1: Import all properties and contacts with ALL 393 fields
       for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
@@ -108,6 +111,7 @@ export const importDealMachineRouter = router({
                                row.apn_parcel_id ? String(row.apn_parcel_id).trim() : null;
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, parcelNumber=${parcelNumber}, address=${row.property_address_line_1}`);
+          debug.push(`Row ${rowIndex + 1}: Processing ${row.property_address_line_1 || 'NO ADDRESS'}`);
           
           // Skip if duplicate - use parcelNumber as the universal identifier
           if (parcelNumber) {
@@ -119,6 +123,7 @@ export const importDealMachineRouter = router({
             
             if (existing.length > 0) {
               console.log(`[DealMachine Import] Row ${rowIndex + 1}: Parcel ${parcelNumber} already exists. Skipping.`);
+              debug.push(`Row ${rowIndex + 1}: SKIPPED - Parcel ${parcelNumber} already exists`);
               skippedCount++;
               continue;
             }
@@ -131,6 +136,7 @@ export const importDealMachineRouter = router({
             
             if (existing.length > 0) {
               console.log(`[DealMachine Import] Row ${rowIndex + 1}: Property ${propertyId} already exists. Skipping.`);
+              debug.push(`Row ${rowIndex + 1}: SKIPPED - Property ${propertyId} already exists`);
               skippedCount++;
               continue;
             }
@@ -351,11 +357,13 @@ export const importDealMachineRouter = router({
           };
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Inserting property...`);
+          debug.push(`Row ${rowIndex + 1}: Attempting INSERT into database...`);
           
           await dbInstance.insert(properties).values(propertyData);
           propertiesCount++;
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Property inserted successfully!`);
+          debug.push(`Row ${rowIndex + 1}: SUCCESS - Property inserted!`);
           
           // Get inserted property ID
           const [insertedProperty] = await dbInstance
@@ -441,6 +449,7 @@ export const importDealMachineRouter = router({
           const errorMsg = error instanceof Error ? error.message : String(error);
           console.error(`[DealMachine Import] Row ${rowIndex + 1}: Error importing row:`, errorMsg);
           errors.push(`Row ${rowIndex + 1} (${row.property_address_line_1 || 'unknown'}): ${errorMsg}`);
+          debug.push(`Row ${rowIndex + 1}: ERROR - ${errorMsg}`);
           // Continue with next row
         }
       }
@@ -531,6 +540,7 @@ export const importDealMachineRouter = router({
         emailsCount,
         skippedCount,
         errors,
+        debug,
       };
     }),
 });
