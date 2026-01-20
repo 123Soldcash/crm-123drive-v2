@@ -2,7 +2,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { properties, contacts, contactPhones, contactEmails, contactAddresses } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { makeRequest } from "../_core/map";
 
 // Helper function to convert Excel serial date to JavaScript Date
@@ -113,8 +113,9 @@ export const importDealMachineRouter = router({
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, parcelNumber=${parcelNumber}, address=${row.property_address_line_1}`);
           debug.push(`Row ${rowIndex + 1}: Processing ${row.property_address_line_1 || 'NO ADDRESS'}`);
           
-          // Skip if duplicate - use parcelNumber as the universal identifier
+          // Skip if duplicate - check by APN first, then by address
           if (parcelNumber) {
+            // Check by parcel number (APN)
             const existing = await dbInstance
               .select({ id: properties.id })
               .from(properties)
@@ -127,18 +128,31 @@ export const importDealMachineRouter = router({
               skippedCount++;
               continue;
             }
-          } else if (propertyId) {
-            const existing = await dbInstance
-              .select({ id: properties.id })
-              .from(properties)
-              .where(eq(properties.propertyId, propertyId))
-              .limit(1);
+          } else {
+            // No APN - check by address (addressLine1 + city + zipcode)
+            const addressLine1 = row.property_address_line_1;
+            const city = row.property_address_city;
+            const zipcode = row.property_address_zipcode;
             
-            if (existing.length > 0) {
-              console.log(`[DealMachine Import] Row ${rowIndex + 1}: Property ${propertyId} already exists. Skipping.`);
-              debug.push(`Row ${rowIndex + 1}: SKIPPED - Property ${propertyId} already exists`);
-              skippedCount++;
-              continue;
+            if (addressLine1 && city && zipcode) {
+              const existing = await dbInstance
+                .select({ id: properties.id })
+                .from(properties)
+                .where(
+                  and(
+                    eq(properties.addressLine1, addressLine1),
+                    eq(properties.city, city),
+                    eq(properties.zipcode, zipcode)
+                  )
+                )
+                .limit(1);
+              
+              if (existing.length > 0) {
+                console.log(`[DealMachine Import] Row ${rowIndex + 1}: Address ${addressLine1}, ${city} ${zipcode} already exists. Skipping.`);
+                debug.push(`Row ${rowIndex + 1}: SKIPPED - Address already exists`);
+                skippedCount++;
+                continue;
+              }
             }
           }
           
