@@ -1841,3 +1841,114 @@ export async function updatePropertyDeepSearch(input: { propertyId: number; [key
   
   return { success: true };
 }
+
+
+// ============================================
+// Task Functions
+// ============================================
+
+export async function createTask(taskData: any): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(tasks).values(taskData);
+  const insertId = result[0].insertId;
+  
+  // Return the created task
+  const created = await db.select().from(tasks).where(eq(tasks.id, insertId)).limit(1);
+  return created[0];
+}
+
+export async function getTasks(filters: { 
+  status?: string; 
+  priority?: string; 
+  assignedToId?: number;
+  propertyId?: number;
+  hidden?: number;
+}): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const conditions: any[] = [];
+  
+  if (filters.status) {
+    conditions.push(eq(tasks.status, filters.status as any));
+  }
+  if (filters.priority) {
+    conditions.push(eq(tasks.priority, filters.priority as any));
+  }
+  if (filters.assignedToId) {
+    conditions.push(eq(tasks.assignedToId, filters.assignedToId));
+  }
+  if (filters.propertyId) {
+    conditions.push(eq(tasks.propertyId, filters.propertyId));
+  }
+  if (filters.hidden !== undefined) {
+    conditions.push(eq(tasks.hidden, filters.hidden));
+  }
+  
+  let query = db.select().from(tasks);
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(desc(tasks.createdAt));
+}
+
+export async function getTaskById(taskId: number): Promise<any | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  return result[0] || null;
+}
+
+export async function getTasksByPropertyId(propertyId: number): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.propertyId, propertyId))
+    .orderBy(desc(tasks.createdAt));
+}
+
+export async function updateTask(taskId: number, updateData: any): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(tasks).set(updateData).where(eq(tasks.id, taskId));
+  
+  // Return updated task
+  const updated = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  return updated[0];
+}
+
+export async function deleteTask(taskId: number): Promise<{ success: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(tasks).where(eq(tasks.id, taskId));
+  return { success: true };
+}
+
+export async function getTaskStatistics(userId?: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get counts by status
+  const allTasks = await db.select().from(tasks);
+  
+  const stats = {
+    total: allTasks.length,
+    toDo: allTasks.filter(t => t.status === "To Do").length,
+    inProgress: allTasks.filter(t => t.status === "In Progress").length,
+    done: allTasks.filter(t => t.status === "Done").length,
+    highPriority: allTasks.filter(t => t.priority === "High").length,
+    overdue: allTasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "Done").length,
+  };
+  
+  return stats;
+}
