@@ -1760,3 +1760,46 @@ export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE
   
   return await query;
 }
+
+
+// ============================================
+// Deep Search Functions
+// ============================================
+
+export async function getPropertyDeepSearch(propertyId: number): Promise<any | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(propertyDeepSearch)
+    .where(eq(propertyDeepSearch.propertyId, propertyId))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function upsertPropertyDeepSearch(propertyId: number, data: Partial<any>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if record exists
+  const existing = await db
+    .select({ id: propertyDeepSearch.id })
+    .from(propertyDeepSearch)
+    .where(eq(propertyDeepSearch.propertyId, propertyId))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing record
+    await db
+      .update(propertyDeepSearch)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(propertyDeepSearch.propertyId, propertyId));
+  } else {
+    // Insert new record
+    await db
+      .insert(propertyDeepSearch)
+      .values({ propertyId, ...data });
+  }
+}
