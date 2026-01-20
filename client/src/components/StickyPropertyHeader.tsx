@@ -19,6 +19,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Desk options with colors
+const DESK_OPTIONS = [
+  { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
+  { value: "DESK_CHRIS", label: "🏀 Chris", color: "bg-orange-200 text-orange-800 border-orange-300" },
+  { value: "DESK_DEEP_SEARCH", label: "🔍 Deep Search", color: "bg-purple-200 text-purple-800 border-purple-300" },
+  { value: "DESK_1", label: "🟦 Desk 1", color: "bg-sky-200 text-sky-800 border-sky-300" },
+  { value: "DESK_2", label: "🟩 Desk 2", color: "bg-emerald-200 text-emerald-800 border-emerald-300" },
+  { value: "DESK_3", label: "🟧 Desk 3", color: "bg-pink-200 text-pink-800 border-pink-300" },
+  { value: "DESK_4", label: "🔵 Desk 4", color: "bg-blue-600 text-white border-blue-700" },
+  { value: "DESK_5", label: "🟨 Desk 5", color: "bg-amber-200 text-amber-800 border-amber-300" },
+  { value: "ARCHIVED", label: "⬛ Archived", color: "bg-gray-800 text-white border-gray-900" },
+];
+
 interface StickyPropertyHeaderProps {
   property: any;
   tags: any[];
@@ -27,6 +40,7 @@ interface StickyPropertyHeaderProps {
   onAssignAgent: () => void;
   onUpdateLeadTemperature: (temp: string) => void;
   onToggleOwnerVerified: () => void;
+  onUpdateDesk: (deskName: string) => void;
   onPrevious: () => void;
   onNext: () => void;
   currentIndex: number;
@@ -42,6 +56,7 @@ export function StickyPropertyHeader({
   onAssignAgent,
   onUpdateLeadTemperature,
   onToggleOwnerVerified,
+  onUpdateDesk,
   onPrevious,
   onNext,
   currentIndex,
@@ -49,6 +64,9 @@ export function StickyPropertyHeader({
   zillowUrl
 }: StickyPropertyHeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
+  const [deskDropdownOpen, setDeskDropdownOpen] = useState(false);
+
+  const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || DESK_OPTIONS[0];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -183,6 +201,43 @@ export function StickyPropertyHeader({
             {property.ownerVerified ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <X className="h-3.5 w-3.5 mr-1.5" />}
             Owner Verified
           </Button>
+
+          {/* Desk Selector Dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-8 text-[11px] font-bold border-2",
+                currentDesk.color
+              )}
+              onClick={() => setDeskDropdownOpen(!deskDropdownOpen)}
+            >
+              {currentDesk.label}
+              <ChevronRight className={cn("h-3.5 w-3.5 ml-1 transition-transform", deskDropdownOpen && "rotate-90")} />
+            </Button>
+            {deskDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-[160px]">
+                {DESK_OPTIONS.map((desk) => (
+                  <button
+                    key={desk.value}
+                    className={cn(
+                      "w-full px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2",
+                      property.deskName === desk.value && "bg-slate-100"
+                    )}
+                    onClick={() => {
+                      onUpdateDesk(desk.value);
+                      setDeskDropdownOpen(false);
+                    }}
+                  >
+                    <span className={cn("px-2 py-0.5 rounded text-[10px]", desk.color)}>
+                      {desk.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (

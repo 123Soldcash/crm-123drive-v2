@@ -146,6 +146,16 @@ export default function PropertyDetail() {
     },
   });
 
+  const updateDesk = trpc.properties.updateDesk.useMutation({
+    onSuccess: () => {
+      utils.properties.getById.invalidate({ id: propertyId });
+      toast.success("Desk updated successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to update desk: " + error.message);
+    },
+  });
+
   const updateDealStage = trpc.properties.updateDealStage.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
@@ -243,6 +253,10 @@ export default function PropertyDetail() {
           updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
         }
         onToggleOwnerVerified={() => toggleOwnerVerified.mutate({ propertyId })}
+        onUpdateDesk={(deskName) => {
+          const deskStatus = deskName === "BIN" ? "BIN" : deskName === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
+          updateDesk.mutate({ propertyId, deskName: deskName === "BIN" ? undefined : deskName, deskStatus });
+        }}
         onPrevious={handlePrevious}
         onNext={handleNext}
         currentIndex={currentIndex}
