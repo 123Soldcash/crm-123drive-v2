@@ -37,10 +37,20 @@ export default function ImportProperties() {
       setIsUploading(false);
       setImportProgress(null);
       
+      // Show success message
       toast.success(
         `Successfully imported ${result.propertiesCount} properties, ${result.contactsCount} contacts, ${result.phonesCount} phones, ${result.emailsCount} emails!`,
         { duration: 6000 }
       );
+      
+      // Show errors if any (for debugging)
+      if (result.errors && result.errors.length > 0) {
+        console.log('[DealMachine Import Errors]:', result.errors);
+        toast.error(
+          `Import had ${result.errors.length} error(s): ${result.errors[0]}`,
+          { duration: 10000 }
+        );
+      }
     },
     onError: (error) => {
       setIsUploading(false);
