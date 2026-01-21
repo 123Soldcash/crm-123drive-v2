@@ -43,6 +43,13 @@
       "when": 1768724331427,
       "tag": "0005_last_mephistopheles",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1768964938017,
+      "tag": "0006_busy_rafael_vega",
+      "breakpoints": true
     }
   ]
 }
