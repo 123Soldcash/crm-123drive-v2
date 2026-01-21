@@ -184,9 +184,6 @@ export const properties = mysqlTable("properties", {
   taxDelinquent: varchar("taxDelinquent", { length: 10 }),
   taxDelinquentYear: int("taxDelinquentYear"),
   
-  // Parcel/APN - Universal property identifier (works across all data sources)
-  parcelNumber: varchar("parcelNumber", { length: 100 }).unique(), // Unique parcel number (APN) - universal across all data sources
-  
   // DealMachine integration
   propertyId: varchar("propertyId", { length: 100 }), // Property ID from DealMachine (NOT unique - can be duplicated from different sources)
   dealMachinePropertyId: varchar("dealMachinePropertyId", { length: 100 }),
