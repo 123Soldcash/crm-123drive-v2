@@ -811,6 +811,7 @@ export const appRouter = router({
           delinquentTax2021: z.number().nullable().optional(),
           delinquentTax2020: z.number().nullable().optional(),
           delinquentTaxTotal: z.number().optional(),
+          taxesNotes: z.string().optional(),
           hasMortgage: z.number().optional(),
           mortgageAmount: z.number().nullable().optional(),
           equityPercent: z.number().nullable().optional(),
