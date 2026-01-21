@@ -1091,3 +1091,12 @@
 - [x] Create update plan showing additions and updates (NO DELETIONS)
 - [x] Execute updates after user approval
 - [x] Verify all contacts are correct in database and UI
+
+
+## PHONE NUMBERS VERIFICATION & CRM NAMING
+- [x] Check database for all Charlotte Holland phone numbers from Excel
+- [x] Identify which of the 10 phone numbers are missing from CRM
+- [x] Add missing phone numbers to Charlotte Holland contact (added to contactPhones table)
+- [x] Verify all numbers display correctly in UI (backend already fetches from contactPhones)
+- [ ] Discuss CRM naming options with user
+- [ ] Implement chosen CRM name in app title and branding

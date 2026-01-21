@@ -1,0 +1,130 @@
+{
+  "query": "SELECT * FROM contactPhones WHERE contactId = 1 ORDER BY isPrimary DESC, id ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT * FROM contactPhones WHERE contactId = 1 ORDER BY isPrimary DESC, id ASC;",
+  "rows": [
+    {
+      "id": "270001",
+      "contactId": "1",
+      "phoneNumber": "9549462807",
+      "phoneType": "Mobile",
+      "isPrimary": "1",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270002",
+      "contactId": "1",
+      "phoneNumber": "7032005639",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270003",
+      "contactId": "1",
+      "phoneNumber": "9542900295",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270004",
+      "contactId": "1",
+      "phoneNumber": "9546913986",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270005",
+      "contactId": "1",
+      "phoneNumber": "9547832900",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270006",
+      "contactId": "1",
+      "phoneNumber": "9547224162",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270007",
+      "contactId": "1",
+      "phoneNumber": "2062030165",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270008",
+      "contactId": "1",
+      "phoneNumber": "9547860630",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270009",
+      "contactId": "1",
+      "phoneNumber": "9545666110",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    },
+    {
+      "id": "270010",
+      "contactId": "1",
+      "phoneNumber": "9547860024",
+      "phoneType": "Mobile",
+      "isPrimary": "0",
+      "dnc": "0",
+      "createdAt": "2026-01-21 18:54:15",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcontactId\tphoneNumber\tphoneType\tisPrimary\tdnc\tcreatedAt\tcarrier\tactivityStatus\tisPrepaid\n270001\t1\t9549462807\tMobile\t1\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270002\t1\t7032005639\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270003\t1\t9542900295\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270004\t1\t9546913986\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270005\t1\t9547832900\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270006\t1\t9547224162\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270007\t1\t2062030165\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270008\t1\t9547860630\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270009\t1\t9545666110\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n270010\t1\t9547860024\tMobile\t0\t0\t2026-01-21 18:54:15\tNULL\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
