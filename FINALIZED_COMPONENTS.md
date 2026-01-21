@@ -49,6 +49,15 @@ This document lists all components and features that are **100% complete** and s
 
 ---
 
+## 🔧 Troubleshooting Guide
+
+For common errors and their solutions when working with this CRM, see **TROUBLESHOOTING_GUIDE.md** in the project root. This guide documents:
+- React import errors and fixes
+- Database function mismatches
+- Photo upload issues
+- Missing database tables
+- TypeScript errors
+
 ## 🔄 Change Request Process
 
 If changes are needed to finalized components:

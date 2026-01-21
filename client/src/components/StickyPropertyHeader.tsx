@@ -100,7 +100,12 @@ export function StickyPropertyHeader({
   };
 
   // Robust data mapping to handle DealMachine and manual entry variations
-  const ownerName = property.primaryOwner || property.owner1Name || property.ownerName || "N/A";
+  // Display both owner1Name and owner2Name if they exist
+  const owner1 = property.primaryOwner || property.owner1Name || property.ownerName;
+  const owner2 = property.owner2Name;
+  const ownerName = owner1 && owner2 
+    ? `${owner1}, ${owner2}` 
+    : owner1 || "N/A";
   const location = property.ownerOccupied === "Yes" || property.ownerOccupied === true || property.ownerOccupied === "Owner Occupied" 
     ? "Owner Occupied" 
     : "Absentee";
