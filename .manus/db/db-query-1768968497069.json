@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, propertyId, addressLine1, city, state, zipcode FROM properties WHERE addressLine1 LIKE '%285 Sw 12th%' AND city = 'Pompano Beach' AND state = 'FL';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, propertyId, addressLine1, city, state, zipcode FROM properties WHERE addressLine1 LIKE '%285 Sw 12th%' AND city = 'Pompano Beach' AND state = 'FL';",
+  "rows": [
+    {
+      "id": "660003",
+      "propertyId": "227813660",
+      "addressLine1": "285 Sw 12th St",
+      "city": "Pompano Beach",
+      "state": "FL",
+      "zipcode": "33060"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpropertyId\taddressLine1\tcity\tstate\tzipcode\n660003\t227813660\t285 Sw 12th St\tPompano Beach\tFL\t33060\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1,0 +1,38 @@
+{
+  "query": "SELECT c.name, c.relationship, c.flags, GROUP_CONCAT(DISTINCT cp.phoneNumber) as phones, GROUP_CONCAT(DISTINCT ce.email) as emails\nFROM contacts c\nLEFT JOIN contactPhones cp ON c.id = cp.contactId\nLEFT JOIN contactEmails ce ON c.id = ce.contactId\nWHERE c.propertyId = (SELECT id FROM properties WHERE addressLine1 LIKE '%285 Sw 12th%' AND city = 'Pompano Beach')\nGROUP BY c.id, c.name, c.relationship, c.flags;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.name, c.relationship, c.flags, GROUP_CONCAT(DISTINCT cp.phoneNumber) as phones, GROUP_CONCAT(DISTINCT ce.email) as emails\nFROM contacts c\nLEFT JOIN contactPhones cp ON c.id = cp.contactId\nLEFT JOIN contactEmails ce ON c.id = ce.contactId\nWHERE c.propertyId = (SELECT id FROM properties WHERE addressLine1 LIKE '%285 Sw 12th%' AND city = 'Pompano Beach')\nGROUP BY c.id, c.name, c.relationship, c.flags;",
+  "rows": [
+    {
+      "name": "Charlotte Holland OV",
+      "relationship": "Owner",
+      "flags": "Seller",
+      "phones": "9549462807",
+      "emails": "dorothyveach@att.net"
+    },
+    {
+      "name": "Sarah Froehike",
+      "relationship": "Owner",
+      "flags": "Seller | Other",
+      "phones": "NULL",
+      "emails": "NULL"
+    },
+    {
+      "name": "Jennifer Browning",
+      "relationship": "Owner",
+      "flags": "Seller | Other",
+      "phones": "3174080986",
+      "emails": "NULL"
+    },
+    {
+      "name": "Jennifer",
+      "relationship": "Family",
+      "flags": "Seller | Niece",
+      "phones": "8123504589",
+      "emails": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\trelationship\tflags\tphones\temails\nCharlotte Holland OV\tOwner\tSeller\t9549462807\tdorothyveach@att.net\nSarah Froehike\tOwner\tSeller | Other\tNULL\tNULL\nJennifer Browning\tOwner\tSeller | Other\t3174080986\tNULL\nJennifer\tFamily\tSeller | Niece\t8123504589\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
