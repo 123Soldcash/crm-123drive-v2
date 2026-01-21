@@ -28,15 +28,21 @@ function parseNumber(value: any): number | null {
 }
 
 // Helper function to safely parse percentage strings like "100.00%"
+// Returns integer percentage (e.g., "100.00%" -> 100, "75.5%" -> 76)
 function parsePercent(value: any): number | null {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'string') {
     const cleaned = value.replace(/%/g, '').trim();
     const num = Number(cleaned);
-    return isNaN(num) ? null : num / 100; // Convert to decimal
+    // Return as integer percentage (round to nearest whole number)
+    return isNaN(num) ? null : Math.round(num);
   }
   const num = Number(value);
-  return isNaN(num) ? null : num;
+  // If it's already a decimal (0-1), convert to percentage
+  if (num > 0 && num <= 1) {
+    return Math.round(num * 100);
+  }
+  return isNaN(num) ? null : Math.round(num);
 }
 
 // Helper function to safely parse dates
@@ -381,6 +387,7 @@ export const importDealMachineRouter = router({
             
             // Market information
             marketStatus: row.market_status || null,
+            status: row.lead_status || null, // Original status from DealMachine
             
             // DealMachine references
             dealMachinePropertyId: propertyId,
@@ -406,7 +413,17 @@ export const importDealMachineRouter = router({
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Inserting property...`);
           debug.push(`Row ${rowIndex + 1}: Attempting INSERT into database...`);
           
-          await dbInstance.insert(properties).values(propertyData);
+          // Log the property data for debugging
+          console.log(`[DealMachine Import] Row ${rowIndex + 1}: PropertyData keys:`, Object.keys(propertyData));
+          console.log(`[DealMachine Import] Row ${rowIndex + 1}: PropertyData values:`, JSON.stringify(propertyData, null, 2));
+          
+          try {
+            await dbInstance.insert(properties).values(propertyData);
+          } catch (insertError: any) {
+            console.error(`[DealMachine Import] Row ${rowIndex + 1}: INSERT FAILED:`, insertError.message);
+            console.error(`[DealMachine Import] Row ${rowIndex + 1}: Full error:`, insertError);
+            throw insertError;
+          }
           propertiesCount++;
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Property inserted successfully!`);
