@@ -112,34 +112,32 @@ export const importDealMachineRouter = router({
           // Extract property data
           const leadId = row.lead_id ? String(row.lead_id) : null;
           const propertyId = row.property_id ? String(row.property_id) : null;
-          // Support both parcel_number and apn_parcel_id
-          const parcelNumber = row.parcel_number ? String(row.parcel_number).trim() : 
-                               row.apn_parcel_id ? String(row.apn_parcel_id).trim() : null;
+          const apnParcelId = row.apn_parcel_id ? String(row.apn_parcel_id).trim() : null;
           
-          console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, parcelNumber=${parcelNumber}, address=${row.property_address_line_1}`);
+          console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, apnParcelId=${apnParcelId}, address=${row.property_address_line_1}`);
           debug.push(`Row ${rowIndex + 1}: Processing ${row.property_address_line_1 || 'NO ADDRESS'}`);
           
-          // Skip if duplicate - check by APN first, then by address
+          // Skip if duplicate - check by propertyId (unique in database)
           try {
-            if (parcelNumber) {
-              // Check by parcel number (APN)
+            if (propertyId) {
+              // Check by propertyId (DealMachine property ID)
               const existing = await dbInstance
                 .select({ id: properties.id })
                 .from(properties)
-                .where(eq(properties.parcelNumber, parcelNumber))
+                .where(eq(properties.propertyId, propertyId))
                 .limit(1);
               
               if (existing.length > 0) {
-                console.log(`[DealMachine Import] Row ${rowIndex + 1}: Parcel ${parcelNumber} already exists. Skipping.`);
-                debug.push(`Row ${rowIndex + 1}: SKIPPED - Parcel ${parcelNumber} already exists`);
+                console.log(`[DealMachine Import] Row ${rowIndex + 1}: PropertyId ${propertyId} already exists. Skipping.`);
+                debug.push(`Row ${rowIndex + 1}: SKIPPED - PropertyId ${propertyId} already exists`);
                 skippedCount++;
                 continue;
               }
             } else {
-              // No APN - check by address (addressLine1 + city + zipcode)
+              // No propertyId - check by address (addressLine1 + city + zipcode)
               const addressLine1 = row.property_address_line_1;
               const city = row.property_address_city;
-              const zipcode = row.property_address_zipcode;
+              const zipcode = row.property_address_zipcode ? String(row.property_address_zipcode) : null;
               
               if (addressLine1 && city && zipcode) {
                 const existing = await dbInstance
@@ -341,8 +339,7 @@ export const importDealMachineRouter = router({
             // Core identifiers (FIXED: added leadId and propertyId)
             leadId: leadId ? parseInt(leadId) : null,
             propertyId: propertyId,
-            parcelNumber: parcelNumber || null,
-            apnParcelId: row.apn_parcel_id ? String(row.apn_parcel_id) : null,
+            apnParcelId: apnParcelId,
             
             // Address information
             addressLine1: row.property_address_line_1 || 'TBD',
