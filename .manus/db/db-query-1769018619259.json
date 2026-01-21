@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE contacts SET phone1 = '3174080986', phone1Type = 'Mobile', relationship = 'Grandchild (Stepdaughter of Decedent)' WHERE propertyId = 132 AND name = 'Jennifer L. Browning';\nUPDATE contacts SET relationship = 'Mother of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'Fanny Burns Veach';\nUPDATE contacts SET relationship = 'Spouse of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'George A Holland';\nUPDATE contacts SET relationship = 'Father of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'John Veach';\nUPDATE contacts SET relationship = 'Grandchild (Stepdaughter of Decedent)' WHERE propertyId = 132 AND name = 'Sarah M. Froehike';\nUPDATE contacts SET relationship = 'Owner (Deceased)' WHERE propertyId = 132 AND name LIKE '%VEACH, DOROTHY L EST%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE contacts SET phone1 = '3174080986', phone1Type = 'Mobile', relationship = 'Grandchild (Stepdaughter of Decedent)' WHERE propertyId = 132 AND name = 'Jennifer L. Browning';\nUPDATE contacts SET relationship = 'Mother of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'Fanny Burns Veach';\nUPDATE contacts SET relationship = 'Spouse of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'George A Holland';\nUPDATE contacts SET relationship = 'Father of Decedent (Deceased)' WHERE propertyId = 132 AND name = 'John Veach';\nUPDATE contacts SET relationship = 'Grandchild (Stepdaughter of Decedent)' WHERE propertyId = 132 AND name = 'Sarah M. Froehike';\nUPDATE contacts SET relationship = 'Owner (Deceased)' WHERE propertyId = 132 AND name LIKE '%VEACH, DOROTHY L EST%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 80
+}

@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE contacts SET phone1 = '9547860024', phone1Type = 'Mobile', relationship = 'Daughter / Personal Representative / Primary Heir' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';\nUPDATE contacts SET phone2 = '9549462807', phone2Type = 'Mobile' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';\nUPDATE contacts SET phone3 = '7032005639', phone3Type = 'Mobile' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE contacts SET phone1 = '9547860024', phone1Type = 'Mobile', relationship = 'Daughter / Personal Representative / Primary Heir' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';\nUPDATE contacts SET phone2 = '9549462807', phone2Type = 'Mobile' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';\nUPDATE contacts SET phone3 = '7032005639', phone3Type = 'Mobile' WHERE propertyId = 132 AND name LIKE '%Charlotte Holland%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 78
+}
