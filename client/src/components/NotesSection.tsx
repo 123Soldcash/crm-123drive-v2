@@ -3,7 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, Upload, X, Search, Download, FileText } from "lucide-react";
+import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -19,6 +20,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const [photoCaptions, setPhotoCaptions] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -120,6 +122,16 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     },
   });
 
+  const deletePhotoMutation = trpc.photos.delete.useMutation({
+    onSuccess: () => {
+      utils.photos.byProperty.invalidate({ propertyId });
+      toast.success("Photo deleted");
+    },
+    onError: () => {
+      toast.error("Failed to delete photo");
+    },
+  });
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -175,6 +187,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   }
 
   return (
+    <>
     <CollapsibleSection
       title="General Notes"
       icon={FileText}
@@ -286,8 +299,28 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       <img 
                         src={photo.fileUrl} 
                         alt={photo.caption || "Note photo"}
-                        className="w-full h-24 object-cover rounded-md border border-slate-200"
+                        className="w-full h-24 object-cover rounded-md border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
                       />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 bg-red-500/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Delete this photo?")) {
+                            deletePhotoMutation.mutate({ id: photo.id });
+                          }
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <div 
+                        className="absolute top-1 left-1 h-6 w-6 bg-slate-900/60 hover:bg-slate-900/80 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
+                      >
+                        <ZoomIn className="h-3 w-3 text-white" />
+                      </div>
                       {photo.caption && (
                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 rounded-b-md">
                           {photo.caption}
@@ -302,5 +335,26 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
         </div>
       </div>
     </CollapsibleSection>
+
+    {/* Photo Lightbox */}
+    <Dialog open={!!lightboxPhoto} onOpenChange={() => setLightboxPhoto(null)}>
+      <DialogContent className="max-w-4xl p-0">
+        {lightboxPhoto && (
+          <div className="relative">
+            <img 
+              src={lightboxPhoto.url} 
+              alt={lightboxPhoto.caption || "Photo"}
+              className="w-full h-auto max-h-[80vh] object-contain"
+            />
+            {lightboxPhoto.caption && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-white p-4 text-sm">
+                {lightboxPhoto.caption}
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

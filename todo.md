@@ -1039,3 +1039,12 @@
 - [ ] Compare Excel data with existing contacts to identify updates and additions
 - [ ] Update existing contacts and add new ones (preserve existing data)
 - [ ] Verify all contacts are correctly updated in the CRM
+
+
+## GENERAL NOTES PHOTO ENHANCEMENTS
+- [x] Fix General Notes save functionality (db.createNote → db.addPropertyNote)
+- [x] Fix photo upload and display (added createPhoto and getPhotosByPropertyId functions)
+- [x] Display photos in 3-column grid below notes with captions
+- [x] Add photo deletion functionality for individual photos
+- [x] Implement photo lightbox for click-to-enlarge viewing
+- [ ] Test complete note-with-photos workflow

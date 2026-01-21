@@ -626,6 +626,27 @@ export async function getPhotosByPropertyId(propertyId: number) {
   return results;
 }
 
+export async function deletePhoto(photoId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Verify the photo belongs to the user before deleting
+  const photo = await db
+    .select()
+    .from(photos)
+    .where(eq(photos.id, photoId))
+    .limit(1);
+
+  if (photo.length === 0) {
+    throw new Error("Photo not found");
+  }
+
+  // Delete from database
+  await db.delete(photos).where(eq(photos.id, photoId));
+  
+  return { success: true };
+}
+
 export async function addPropertyTag(tag: InsertPropertyTag) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
