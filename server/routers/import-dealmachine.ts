@@ -332,17 +332,23 @@ export const importDealMachineRouter = router({
           
           // Insert property with all available fields
           const propertyData: any = {
-            propertyId,
+            // Core identifiers (FIXED: added leadId and propertyId)
+            leadId: leadId ? parseInt(leadId) : null,
+            propertyId: propertyId,
             parcelNumber: parcelNumber || null,
-            leadId,
+            apnParcelId: row.apn_parcel_id ? String(row.apn_parcel_id) : null,
+            
+            // Address information
             addressLine1: row.property_address_line_1 || 'TBD',
             addressLine2: row.property_address_line_2 || null,
             city: row.property_address_city || 'TBD',
             state: row.property_address_state || 'FL',
             zipcode: row.property_address_zipcode ? String(row.property_address_zipcode) : '00000',
+            subdivisionName: row.subdivision_name || null,
             
             // Property details
             propertyType: row.property_type || null,
+            constructionType: row.construction_type || null,
             yearBuilt: yearBuilt,
             totalBedrooms: bedrooms,
             totalBaths: bathrooms,
@@ -352,18 +358,29 @@ export const importDealMachineRouter = router({
             estimatedValue: estimatedValue,
             equityAmount: equityAmount,
             equityPercent: equityPercent,
+            mortgageAmount: parseNumber(row.mortgage_amount),
             totalLoanBalance: mortgageBalance,
+            totalLoanPayment: parseNumber(row.total_loan_payment),
+            estimatedRepairCost: parseNumber(row.estimated_repair_cost),
             salePrice: salePrice,
             saleDate: saleDate,
+            
+            // Tax information
             taxAmount: taxAmount,
+            taxYear: parseNumber(row.tax_year),
+            taxDelinquent: row.tax_delinquent || null,
+            taxDelinquentYear: parseNumber(row.tax_delinquent_year),
             
             // Owner information
             owner1Name: row.owner_1_name || null,
             owner2Name: row.owner_2_name || null,
-            ownerMailingAddress: row.owner_address_line_1 || row.mailing_address || null,
-            ownerMailingCity: row.owner_address_city || row.mailing_city || null,
-            ownerMailingState: row.owner_address_state || row.mailing_state || null,
-            ownerMailingZip: row.owner_address_zip || row.mailing_zipcode || null,
+            ownerLocation: row.owner_location || null,
+            // NOTE: ownerMailingAddress, ownerMailingCity, ownerMailingState, ownerMailingZip
+            // were REMOVED because they don't exist in the CRM schema
+            // Owner mailing data is stored in dealMachineRawData JSON
+            
+            // Market information
+            marketStatus: row.market_status || null,
             
             // DealMachine references
             dealMachinePropertyId: propertyId,
