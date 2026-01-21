@@ -166,6 +166,7 @@ export const properties = mysqlTable("properties", {
   estimatedRepairCost: int("estimatedRepairCost"),
   taxYear: int("taxYear"),
   taxAmount: int("taxAmount"),
+  taxesNotes: text("taxesNotes"), // Notes for taxes section
   
   // Owner information
   owner1Name: varchar("owner1Name", { length: 255 }),

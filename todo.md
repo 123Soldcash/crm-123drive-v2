@@ -1021,3 +1021,6 @@
 - [x] Verify Activity Timeline is in last position
 - [x] Complete 8-color system: Red, Yellow, Blue, Pink, Orange, Green, Slate, Purple
 - [x] Update lead at 285 Sw 12th St, Pompano Beach, FL with 4 contacts (Charlotte Holland OV, Jennifer Browning, Sarah Froehike, Jennifer)
+- [x] Add Notes field to Deep Search Taxes section
+- [x] Update database schema to store taxesNotes
+- [x] Display notes in summary with line breaks preserved (each Enter = new line)
