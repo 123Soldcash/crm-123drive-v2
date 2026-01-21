@@ -1062,6 +1062,9 @@
 - [x] Display photos within table rows below note content
 - [x] Keep delete, search, and export functionality
 
+## CRITICAL BUG FIXES
+- [x] Fix ReferenceError: useRef is not defined (added missing import to NotesSection.tsx)
+
 ## DELETE FUNCTIONALITY BUG FIX
 - [x] Investigate which delete function is not working (notes or photos)
 - [x] Fix the delete mutation or button click handler (added missing deleteNote function to db.ts)
