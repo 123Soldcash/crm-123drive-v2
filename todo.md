@@ -1024,3 +1024,4 @@
 - [x] Add Notes field to Deep Search Taxes section
 - [x] Update database schema to store taxesNotes
 - [x] Display notes in summary with line breaks preserved (each Enter = new line)
+- [x] Fix save functionality for Taxes Notes field

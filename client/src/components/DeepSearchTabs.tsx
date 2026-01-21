@@ -595,6 +595,7 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
       delinquentTax2022: tax2022 ? parseInt(tax2022) : null,
       delinquentTax2021: tax2021 ? parseInt(tax2021) : null,
       delinquentTax2020: tax2020 ? parseInt(tax2020) : null,
+      taxesNotes,
       hasMortgage: hasMortgage ? 1 : 0,
       mortgageAmount: mortgageAmount ? parseInt(mortgageAmount) : null,
       equityPercent: equityPercent ? parseInt(equityPercent) : null,
