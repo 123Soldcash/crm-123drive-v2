@@ -1032,3 +1032,10 @@
 - [x] Create new separate "Taxes Notes" block in Deep Search Financial tab
 - [x] Update summary to display new Taxes Notes block with line breaks
 - [ ] Test and verify new Taxes Notes block saves correctly
+
+## UPDATE LEAD 285 SW 12TH ST CONTACTS
+- [x] Parse Excel file to extract all contact details (names, phones, emails, relationships)
+- [ ] Restore deleted contacts (accidentally deleted - need to restore)
+- [ ] Compare Excel data with existing contacts to identify updates and additions
+- [ ] Update existing contacts and add new ones (preserve existing data)
+- [ ] Verify all contacts are correctly updated in the CRM

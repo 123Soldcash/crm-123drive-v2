@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE contacts SET \n  phone2 = '703-200-5639',\n  phone2Type = 'Mobile',\n  phone3 = '954-290-0295',\n  phone3Type = 'Mobile',\n  email1 = 'scamperling@gmail.com',\n  email2 = 'holly7711@gmail.com',\n  email3 = 'holly7711@aol.com'\nWHERE propertyId = 132 AND name = 'Charlotte Holland OV';\n\nUPDATE contacts SET \n  email1 = 'jenniferb4315@gmail.com',\n  email2 = 'temptj@hotmail.com',\n  email3 = 'jennifer.browning@att.net'\nWHERE propertyId = 132 AND name = 'Jennifer Browning';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE contacts SET \n  phone2 = '703-200-5639',\n  phone2Type = 'Mobile',\n  phone3 = '954-290-0295',\n  phone3Type = 'Mobile',\n  email1 = 'scamperling@gmail.com',\n  email2 = 'holly7711@gmail.com',\n  email3 = 'holly7711@aol.com'\nWHERE propertyId = 132 AND name = 'Charlotte Holland OV';\n\nUPDATE contacts SET \n  email1 = 'jenniferb4315@gmail.com',\n  email2 = 'temptj@hotmail.com',\n  email3 = 'jennifer.browning@att.net'\nWHERE propertyId = 132 AND name = 'Jennifer Browning';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 66
+}

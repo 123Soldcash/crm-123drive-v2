@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO contacts (propertyId, name, relationship, phone1, phone1Type, email1, email2, email3, notes) VALUES\n(132, 'Charlotte Holland OV', 'Seller', '(954) 946-2807', 'Landline', 'dorothyveach@att.net', NULL, NULL, NULL),\n(132, 'Jennifer Browning', 'Seller | Other', '(317) 408-0986', 'Mobile', NULL, NULL, NULL, NULL),\n(132, 'Sarah Froehike', 'Seller | Other', NULL, NULL, NULL, NULL, NULL, NULL),\n(132, 'Jennifer', 'Seller | Niece', '(812) 350-4589', 'Mobile', NULL, NULL, NULL, NULL);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO contacts (propertyId, name, relationship, phone1, phone1Type, email1, email2, email3, notes) VALUES\n(132, 'Charlotte Holland OV', 'Seller', '(954) 946-2807', 'Landline', 'dorothyveach@att.net', NULL, NULL, NULL),\n(132, 'Jennifer Browning', 'Seller | Other', '(317) 408-0986', 'Mobile', NULL, NULL, NULL, NULL),\n(132, 'Sarah Froehike', 'Seller | Other', NULL, NULL, NULL, NULL, NULL, NULL),\n(132, 'Jennifer', 'Seller | Niece', '(812) 350-4589', 'Mobile', NULL, NULL, NULL, NULL);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'notes' in 'field list'"
+  ]
+}

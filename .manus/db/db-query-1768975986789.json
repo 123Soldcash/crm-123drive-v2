@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, name, relationship, phone1, phone2, phone3, email1, email2, email3, deceased FROM contacts WHERE propertyId = 132 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, relationship, phone1, phone2, phone3, email1, email2, email3, deceased FROM contacts WHERE propertyId = 132 ORDER BY id;",
+  "rows": [
+    {
+      "id": "960023",
+      "name": "Charlotte Holland OV",
+      "relationship": "Seller",
+      "phone1": "(954) 946-2807",
+      "phone2": "703-200-5639",
+      "phone3": "954-290-0295",
+      "email1": "scamperling@gmail.com",
+      "email2": "holly7711@gmail.com",
+      "email3": "holly7711@aol.com",
+      "deceased": "0"
+    },
+    {
+      "id": "960024",
+      "name": "Jennifer Browning",
+      "relationship": "Seller | Other",
+      "phone1": "(317) 408-0986",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "jenniferb4315@gmail.com",
+      "email2": "temptj@hotmail.com",
+      "email3": "jennifer.browning@att.net",
+      "deceased": "0"
+    },
+    {
+      "id": "960025",
+      "name": "Sarah Froehike",
+      "relationship": "Seller | Other",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "0"
+    },
+    {
+      "id": "960026",
+      "name": "Jennifer",
+      "relationship": "Seller | Niece",
+      "phone1": "(812) 350-4589",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "0"
+    },
+    {
+      "id": "960027",
+      "name": "VEACH, DOROTHY L EST",
+      "relationship": "Owner (Deceased)",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "1"
+    },
+    {
+      "id": "960028",
+      "name": "George A. Holland",
+      "relationship": "Spouse of Decedent (Deceased)",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "1"
+    },
+    {
+      "id": "960029",
+      "name": "John Veach",
+      "relationship": "Father of Decedent (Deceased)",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "1"
+    },
+    {
+      "id": "960030",
+      "name": "Fanny Burns Veach",
+      "relationship": "Mother of Decedent (Deceased)",
+      "phone1": "NULL",
+      "phone2": "NULL",
+      "phone3": "NULL",
+      "email1": "NULL",
+      "email2": "NULL",
+      "email3": "NULL",
+      "deceased": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trelationship\tphone1\tphone2\tphone3\temail1\temail2\temail3\tdeceased\n960023\tCharlotte Holland OV\tSeller\t(954) 946-2807\t703-200-5639\t954-290-0295\tscamperling@gmail.com\tholly7711@gmail.com\tholly7711@aol.com\t0\n960024\tJennifer Browning\tSeller | Other\t(317) 408-0986\tNULL\tNULL\tjenniferb4315@gmail.com\ttemptj@hotmail.com\tjennifer.browning@att.net\t0\n960025\tSarah Froehike\tSeller | Other\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0\n960026\tJennifer\tSeller | Niece\t(812) 350-4589\tNULL\tNULL\tNULL\tNULL\tNULL\t0\n960027\tVEACH, DOROTHY L EST\tOwner (Deceased)\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t1\n960028\tGeorge A. Holland\tSpouse of Decedent (Deceased)\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t1\n960029\tJohn Veach\tFather of Decedent (Deceased)\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t1\n960030\tFanny Burns Veach\tMother of Decedent (Deceased)\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}
