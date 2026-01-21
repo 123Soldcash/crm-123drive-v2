@@ -541,6 +541,18 @@ export async function addPropertyNote(note: InsertNote) {
   return result;
 }
 
+export async function deleteNote(noteId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Delete the note (only if it belongs to the user)
+  const result = await db
+    .delete(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
+  
+  return result;
+}
+
 export async function getPropertyVisits(propertyId: number) {
   const db = await getDb();
   if (!db) return [];
