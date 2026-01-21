@@ -113,53 +113,55 @@ export const importDealMachineRouter = router({
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: propertyId=${propertyId}, parcelNumber=${parcelNumber}, address=${row.property_address_line_1}`);
           debug.push(`Row ${rowIndex + 1}: Processing ${row.property_address_line_1 || 'NO ADDRESS'}`);
           
-          // TEMPORARILY DISABLED: Skip if duplicate - check by APN first, then by address
-          // TODO: Re-enable after testing
-          /*
-          if (parcelNumber) {
-            // Check by parcel number (APN)
-            const existing = await dbInstance
-              .select({ id: properties.id })
-              .from(properties)
-              .where(eq(properties.parcelNumber, parcelNumber))
-              .limit(1);
-            
-            if (existing.length > 0) {
-              console.log(`[DealMachine Import] Row ${rowIndex + 1}: Parcel ${parcelNumber} already exists. Skipping.`);
-              debug.push(`Row ${rowIndex + 1}: SKIPPED - Parcel ${parcelNumber} already exists`);
-              skippedCount++;
-              continue;
-            }
-          } else {
-            // No APN - check by address (addressLine1 + city + zipcode)
-            const addressLine1 = row.property_address_line_1;
-            const city = row.property_address_city;
-            const zipcode = row.property_address_zipcode;
-            
-            if (addressLine1 && city && zipcode) {
+          // Skip if duplicate - check by APN first, then by address
+          try {
+            if (parcelNumber) {
+              // Check by parcel number (APN)
               const existing = await dbInstance
                 .select({ id: properties.id })
                 .from(properties)
-                .where(
-                  and(
-                    eq(properties.addressLine1, addressLine1),
-                    eq(properties.city, city),
-                    eq(properties.zipcode, zipcode)
-                  )
-                )
+                .where(eq(properties.parcelNumber, parcelNumber))
                 .limit(1);
               
               if (existing.length > 0) {
-                console.log(`[DealMachine Import] Row ${rowIndex + 1}: Address ${addressLine1}, ${city} ${zipcode} already exists. Skipping.`);
-                debug.push(`Row ${rowIndex + 1}: SKIPPED - Address already exists`);
+                console.log(`[DealMachine Import] Row ${rowIndex + 1}: Parcel ${parcelNumber} already exists. Skipping.`);
+                debug.push(`Row ${rowIndex + 1}: SKIPPED - Parcel ${parcelNumber} already exists`);
                 skippedCount++;
                 continue;
               }
+            } else {
+              // No APN - check by address (addressLine1 + city + zipcode)
+              const addressLine1 = row.property_address_line_1;
+              const city = row.property_address_city;
+              const zipcode = row.property_address_zipcode;
+              
+              if (addressLine1 && city && zipcode) {
+                const existing = await dbInstance
+                  .select({ id: properties.id })
+                  .from(properties)
+                  .where(
+                    and(
+                      eq(properties.addressLine1, addressLine1),
+                      eq(properties.city, city),
+                      eq(properties.zipcode, zipcode)
+                    )
+                  )
+                  .limit(1);
+                
+                if (existing.length > 0) {
+                  console.log(`[DealMachine Import] Row ${rowIndex + 1}: Address ${addressLine1}, ${city} ${zipcode} already exists. Skipping.`);
+                  debug.push(`Row ${rowIndex + 1}: SKIPPED - Address already exists`);
+                  skippedCount++;
+                  continue;
+                }
+              }
             }
+            debug.push(`Row ${rowIndex + 1}: No duplicate found - Proceeding with import`);
+          } catch (dupCheckError: any) {
+            console.error(`[DealMachine Import] Row ${rowIndex + 1}: Duplicate check failed:`, dupCheckError.message);
+            debug.push(`Row ${rowIndex + 1}: WARNING - Duplicate check failed, proceeding anyway`);
+            // Continue with import even if duplicate check fails
           }
-          */
-          
-          debug.push(`Row ${rowIndex + 1}: DUPLICATE CHECK DISABLED - Proceeding with import`);
           
           // Prepare comprehensive dealMachineRawData with ALL 393 fields
           const rawData: any = {
@@ -331,7 +333,7 @@ export const importDealMachineRouter = router({
           // Insert property with all available fields
           const propertyData: any = {
             propertyId,
-            parcelNumber: parcelNumber || undefined,
+            parcelNumber: parcelNumber || null,
             leadId,
             addressLine1: row.property_address_line_1 || 'TBD',
             addressLine2: row.property_address_line_2 || null,
