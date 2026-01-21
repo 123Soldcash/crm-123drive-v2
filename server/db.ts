@@ -594,6 +594,38 @@ export async function addPropertyPhoto(photo: InsertPhoto) {
   return result;
 }
 
+export async function createPhoto(photo: InsertPhoto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(photos).values(photo);
+  return result[0];
+}
+
+export async function getPhotosByPropertyId(propertyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const results = await db
+    .select({
+      id: photos.id,
+      propertyId: photos.propertyId,
+      visitId: photos.visitId,
+      noteId: photos.noteId,
+      fileKey: photos.fileKey,
+      fileUrl: photos.fileUrl,
+      caption: photos.caption,
+      latitude: photos.latitude,
+      longitude: photos.longitude,
+      createdAt: photos.createdAt,
+    })
+    .from(photos)
+    .where(eq(photos.propertyId, propertyId))
+    .orderBy(desc(photos.createdAt));
+
+  return results;
+}
+
 export async function addPropertyTag(tag: InsertPropertyTag) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

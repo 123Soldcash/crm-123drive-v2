@@ -64,6 +64,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const utils = trpc.useUtils();
   const { data: allNotes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
   const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
+  const { data: allPhotos } = trpc.photos.byProperty.useQuery({ propertyId });
   
   const filteredNotes = notes.filter((note) => {
     const query = searchQuery.toLowerCase();
@@ -278,6 +279,24 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                 </Button>
               </div>
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{note.content}</p>
+              {allPhotos?.filter(photo => photo.noteId === note.id).length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {allPhotos.filter(photo => photo.noteId === note.id).map((photo) => (
+                    <div key={photo.id} className="relative group">
+                      <img 
+                        src={photo.fileUrl} 
+                        alt={photo.caption || "Note photo"}
+                        className="w-full h-24 object-cover rounded-md border border-slate-200"
+                      />
+                      {photo.caption && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 rounded-b-md">
+                          {photo.caption}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
