@@ -1,4 +1,29 @@
-import { useState, useRef, useEffect } from "react";
+/**
+ * ============================================================================
+ * GENERAL NOTES SECTION - FINALIZED COMPONENT
+ * ============================================================================
+ * 
+ * STATUS: ✅ 100% COMPLETE - DO NOT MODIFY WITHOUT EXPLICIT APPROVAL
+ * 
+ * This component is FINALIZED and should NOT be changed in future updates.
+ * Any modifications must be explicitly requested and approved by the user.
+ * 
+ * FEATURES IMPLEMENTED:
+ * - Table layout with Date, Agent, Notes columns
+ * - Photo upload and display (3-column grid)
+ * - Photo lightbox (click to enlarge)
+ * - Photo deletion with confirmation
+ * - Note deletion (user can only delete own notes)
+ * - Search functionality
+ * - CSV export
+ * - Paste images (Ctrl+V)
+ * 
+ * LAST MODIFIED: 2026-01-21
+ * CHECKPOINT: bd2f97fc
+ * ============================================================================
+ */
+
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +34,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
-
 interface NotesSectionProps {
   propertyId: number;
 }
