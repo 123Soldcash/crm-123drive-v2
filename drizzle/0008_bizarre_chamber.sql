@@ -1,0 +1,1 @@
+ALTER TABLE `propertyDeepSearch` ADD `taxesNotes` text;

@@ -766,7 +766,10 @@ export const appRouter = router({
     getDeepSearch: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        return await db.getPropertyDeepSearch(input.propertyId);
+        const result = await db.getPropertyDeepSearch(input.propertyId);
+        console.log('[DEBUG] getDeepSearch result for property', input.propertyId, ':', result);
+        console.log('[DEBUG] taxesNotes field:', result?.taxesNotes);
+        return result;
       }),
 
     updateDeepSearch: protectedProcedure

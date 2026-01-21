@@ -478,6 +478,8 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
       setTax2022(deepSearch.delinquentTax2022?.toString() || "");
       setTax2021(deepSearch.delinquentTax2021?.toString() || "");
       setTax2020(deepSearch.delinquentTax2020?.toString() || "");
+      console.log('[DEBUG Frontend] deepSearch.taxesNotes:', deepSearch.taxesNotes);
+      console.log('[DEBUG Frontend] taxesNotes type:', typeof deepSearch.taxesNotes);
       setTaxesNotes(deepSearch.taxesNotes || "");
       
       setHasMortgage(deepSearch.hasMortgage === 1);
@@ -1113,16 +1115,22 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                 <div className="text-right font-bold text-red-800">
                   Total Delinquent: ${totalTax.toLocaleString()}
                 </div>
-                <div className="space-y-2 mt-4 pt-4 border-t">
-                  <Label htmlFor="taxesNotes" className="font-semibold">Taxes Notes</Label>
-                  <Textarea
-                    id="taxesNotes"
-                    placeholder="Add notes about taxes (each line will be displayed separately in the summary)"
-                    value={taxesNotes}
-                    onChange={(e) => setTaxesNotes(e.target.value)}
-                    className="min-h-24 text-sm"
-                  />
+
+              </div>
+
+              {/* Taxes Notes - Separate Block */}
+              <div className="space-y-4 p-4 border rounded bg-amber-50">
+                <div className="flex items-center space-x-2">
+                  <Label className="font-semibold text-lg">📝 Taxes Notes</Label>
                 </div>
+                <Textarea
+                  id="taxesNotes"
+                  placeholder="Add notes about taxes (each line will be displayed separately in the summary)"
+                  value={taxesNotes}
+                  onChange={(e) => setTaxesNotes(e.target.value)}
+                  className="min-h-32 text-sm bg-white"
+                />
+                <p className="text-xs text-gray-500">💡 Press Enter to create a new line. Each line will appear separately in the summary.</p>
               </div>
 
               {/* Mortgage */}

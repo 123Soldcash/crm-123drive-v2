@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE propertyDeepSearch SET taxesNotes = '2025 Annual bill $9,619.62 Print (PDF)\\n2024 Annual bill $3,339.98 Print (PDF)\\n2023 Annual bill $3,272.99 Print (PDF)\\nTotal amount due: $16,232.59\\n\\n2022 Paid Individual Tax Certificate - WWW-22-00237933 - Pay by Charlotte Holland' WHERE propertyId = 132;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE propertyDeepSearch SET taxesNotes = '2025 Annual bill $9,619.62 Print (PDF)\\n2024 Annual bill $3,339.98 Print (PDF)\\n2023 Annual bill $3,272.99 Print (PDF)\\nTotal amount due: $16,232.59\\n\\n2022 Paid Individual Tax Certificate - WWW-22-00237933 - Pay by Charlotte Holland' WHERE propertyId = 132;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 53
+}

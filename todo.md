@@ -1025,3 +1025,10 @@
 - [x] Update database schema to store taxesNotes
 - [x] Display notes in summary with line breaks preserved (each Enter = new line)
 - [x] Fix save functionality for Taxes Notes field (added taxesNotes to backend input schema)
+- [ ] Debug Taxes Notes loading issue - backend not returning taxesNotes field to frontend
+
+## TAXES NOTES BLOCK REDESIGN
+- [x] Remove Taxes Notes from Delinquent Taxes block
+- [x] Create new separate "Taxes Notes" block in Deep Search Financial tab
+- [x] Update summary to display new Taxes Notes block with line breaks
+- [ ] Test and verify new Taxes Notes block saves correctly

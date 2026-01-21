@@ -665,6 +665,7 @@ export const propertyDeepSearch = mysqlTable("propertyDeepSearch", {
   delinquentTax2021: int("delinquentTax2021"),
   delinquentTax2020: int("delinquentTax2020"),
   delinquentTaxTotal: int("delinquentTaxTotal"),
+  taxesNotes: text("taxesNotes"), // Notes for taxes section
   
   // Mortgage
   hasMortgage: int("hasMortgage").default(0), // 0=NO, 1=YES
