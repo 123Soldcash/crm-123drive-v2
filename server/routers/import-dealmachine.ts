@@ -378,6 +378,12 @@ export const importDealMachineRouter = router({
             trackingStatus: 'Not Visited',
             ownerVerified: 0,
             dealStage: 'NEW_LEAD',
+            
+            // Timestamp fields (required with defaults)
+            entryDate: new Date(),
+            stageChangedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
           };
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Inserting property...`);
