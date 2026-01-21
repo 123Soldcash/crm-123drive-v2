@@ -1100,3 +1100,9 @@
 - [x] Verify all numbers display correctly in UI (backend already fetches from contactPhones)
 - [ ] Discuss CRM naming options with user
 - [ ] Implement chosen CRM name in app title and branding
+
+
+## ADD JENNIFER BROWNING PHONE NUMBER
+- [x] Get Jennifer Browning's contact ID from database (contactId: 2)
+- [x] Add phone number 3174080986 to contactPhones table
+- [x] Verify phone number displays in CRM UI

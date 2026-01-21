@@ -1,0 +1,22 @@
+{
+  "query": "SELECT * FROM contactPhones WHERE contactId = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT * FROM contactPhones WHERE contactId = 2;",
+  "rows": [
+    {
+      "id": "270011",
+      "contactId": "2",
+      "phoneNumber": "3174080986",
+      "phoneType": "Mobile",
+      "isPrimary": "1",
+      "dnc": "0",
+      "createdAt": "2026-01-21 19:00:49",
+      "carrier": "NULL",
+      "activityStatus": "NULL",
+      "isPrepaid": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcontactId\tphoneNumber\tphoneType\tisPrimary\tdnc\tcreatedAt\tcarrier\tactivityStatus\tisPrepaid\n270011\t2\t3174080986\tMobile\t1\t0\t2026-01-21 19:00:49\tNULL\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

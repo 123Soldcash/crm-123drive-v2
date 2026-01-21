@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM contacts WHERE propertyId = 132 AND name LIKE '%Jennifer%Browning%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id FROM contacts WHERE propertyId = 132 AND name LIKE '%Jennifer%Browning%';",
+  "rows": [
+    {
+      "id": "960024"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n960024\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}
