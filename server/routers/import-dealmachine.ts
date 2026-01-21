@@ -375,6 +375,9 @@ export const importDealMachineRouter = router({
             leadTemperature: 'TBD',
             deskStatus: 'BIN',
             source: 'DealMachine',
+            trackingStatus: 'Not Visited',
+            ownerVerified: 0,
+            dealStage: 'NEW_LEAD',
           };
           
           console.log(`[DealMachine Import] Row ${rowIndex + 1}: Inserting property...`);
