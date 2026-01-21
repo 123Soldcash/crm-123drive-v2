@@ -276,67 +276,84 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </Button>
         </div>
 
-        <div className="space-y-3">
-          {filteredNotes.map((note) => (
-            <div key={note.id} className="p-3 rounded-lg border border-slate-100 bg-white shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                    {note.userName?.substring(0, 2).toUpperCase() || "UN"}
-                  </div>
-                  <span className="text-xs font-bold text-slate-900">{note.userName}</span>
-                  <span className="text-[10px] text-slate-400">{new Date(note.createdAt).toLocaleString()}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-slate-300 hover:text-red-500"
-                  onClick={() => deleteNoteMutation.mutate({ id: note.id })}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-              <p className="text-sm text-slate-600 whitespace-pre-wrap">{note.content}</p>
-              {allPhotos?.filter(photo => photo.noteId === note.id).length > 0 && (
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {allPhotos.filter(photo => photo.noteId === note.id).map((photo) => (
-                    <div key={photo.id} className="relative group">
-                      <img 
-                        src={photo.fileUrl} 
-                        alt={photo.caption || "Note photo"}
-                        className="w-full h-24 object-cover rounded-md border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 bg-red-500/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm("Delete this photo?")) {
-                            deletePhotoMutation.mutate({ id: photo.id });
-                          }
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                      <div 
-                        className="absolute top-1 left-1 h-6 w-6 bg-slate-900/60 hover:bg-slate-900/80 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
-                      >
-                        <ZoomIn className="h-3 w-3 text-white" />
+        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="text-left p-3 text-xs font-semibold text-slate-700 w-32">Date</th>
+                <th className="text-left p-3 text-xs font-semibold text-slate-700 w-40">Agent</th>
+                <th className="text-left p-3 text-xs font-semibold text-slate-700">Notes</th>
+                <th className="w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredNotes.map((note) => (
+                <tr key={note.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                  <td className="p-3 text-xs text-slate-600 align-top">
+                    {new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <br />
+                    <span className="text-[10px] text-slate-400">
+                      {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </td>
+                  <td className="p-3 text-xs text-slate-700 font-medium align-top">
+                    {note.userName || "Unknown"}
+                  </td>
+                  <td className="p-3 text-sm text-slate-600 align-top">
+                    <p className="whitespace-pre-wrap">{note.content}</p>
+                    {allPhotos?.filter(photo => photo.noteId === note.id).length > 0 && (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {allPhotos.filter(photo => photo.noteId === note.id).map((photo) => (
+                          <div key={photo.id} className="relative group">
+                            <img 
+                              src={photo.fileUrl} 
+                              alt={photo.caption || "Note photo"}
+                              className="w-full h-24 object-cover rounded-md border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6 bg-red-500/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm("Delete this photo?")) {
+                                  deletePhotoMutation.mutate({ id: photo.id });
+                                }
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <div 
+                              className="absolute top-1 left-1 h-6 w-6 bg-slate-900/60 hover:bg-slate-900/80 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
+                            >
+                              <ZoomIn className="h-3 w-3 text-white" />
+                            </div>
+                            {photo.caption && (
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 rounded-b-md">
+                                {photo.caption}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      {photo.caption && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 rounded-b-md">
-                          {photo.caption}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                    )}
+                  </td>
+                  <td className="p-3 align-top">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-slate-300 hover:text-red-500"
+                      onClick={() => deleteNoteMutation.mutate({ id: note.id })}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </CollapsibleSection>

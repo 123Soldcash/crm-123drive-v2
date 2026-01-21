@@ -1053,3 +1053,11 @@
 - [x] Investigate why photos are not displaying after upload in General Notes
 - [x] Fix photo upload and noteId association (added query invalidation)
 - [x] Verify photos display correctly below notes after save
+
+## GENERAL NOTES TABLE REDESIGN
+- [x] Redesign notes display from cards to table format
+- [x] Add Date column showing formatted timestamp
+- [x] Add Agent column showing user name
+- [x] Add Notes column showing content
+- [x] Display photos within table rows below note content
+- [x] Keep delete, search, and export functionality
