@@ -1048,3 +1048,8 @@
 - [x] Add photo deletion functionality for individual photos
 - [x] Implement photo lightbox for click-to-enlarge viewing
 - [ ] Test complete note-with-photos workflow
+
+## PHOTO DISPLAY BUG FIX
+- [x] Investigate why photos are not displaying after upload in General Notes
+- [x] Fix photo upload and noteId association (added query invalidation)
+- [x] Verify photos display correctly below notes after save

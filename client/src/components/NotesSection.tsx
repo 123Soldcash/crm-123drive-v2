@@ -109,6 +109,11 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const uploadPhotosMutation = trpc.photos.uploadBulk.useMutation({
     onSuccess: () => {
       utils.photos.byProperty.invalidate({ propertyId });
+      utils.notes.byProperty.invalidate({ propertyId });
+    },
+    onError: (error) => {
+      console.error("Photo upload error:", error);
+      toast.error("Failed to upload photos");
     },
   });
 

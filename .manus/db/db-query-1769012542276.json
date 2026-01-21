@@ -1,0 +1,101 @@
+{
+  "query": "SELECT * FROM photos ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT * FROM photos ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "90001",
+      "propertyId": "780007",
+      "visitId": "NULL",
+      "noteId": "150004",
+      "userId": "1",
+      "fileKey": "properties/780007/photos/1768694396077-xurcxt.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/780007/photos/1768694396077-xurcxt.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-17 23:59:56"
+    },
+    {
+      "id": "60010",
+      "propertyId": "630016",
+      "visitId": "NULL",
+      "noteId": "90005",
+      "userId": "1",
+      "fileKey": "properties/630016/photos/1768234963299-cpps2m.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630016/photos/1768234963299-cpps2m.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-12 16:22:43"
+    },
+    {
+      "id": "60009",
+      "propertyId": "630008",
+      "visitId": "NULL",
+      "noteId": "90004",
+      "userId": "1",
+      "fileKey": "properties/630008/photos/1768234851803-o1as0f.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851803-o1as0f.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-12 16:20:52"
+    },
+    {
+      "id": "60008",
+      "propertyId": "630008",
+      "visitId": "NULL",
+      "noteId": "90004",
+      "userId": "1",
+      "fileKey": "properties/630008/photos/1768234851504-z66cfa.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851504-z66cfa.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-12 16:20:51"
+    },
+    {
+      "id": "60007",
+      "propertyId": "630008",
+      "visitId": "NULL",
+      "noteId": "90004",
+      "userId": "1",
+      "fileKey": "properties/630008/photos/1768234851169-618zta.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851169-618zta.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-12 16:20:51"
+    },
+    {
+      "id": "60006",
+      "propertyId": "630008",
+      "visitId": "NULL",
+      "noteId": "90004",
+      "userId": "1",
+      "fileKey": "properties/630008/photos/1768234850785-5ouxpk.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234850785-5ouxpk.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-12 16:20:51"
+    },
+    {
+      "id": "30001",
+      "propertyId": "300019",
+      "visitId": "NULL",
+      "noteId": "30001",
+      "userId": "1",
+      "fileKey": "properties/300019/photos/1767835776132-ya1a3.jpg",
+      "fileUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/300019/photos/1767835776132-ya1a3.jpg",
+      "caption": "NULL",
+      "latitude": "NULL",
+      "longitude": "NULL",
+      "createdAt": "2026-01-08 01:29:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpropertyId\tvisitId\tnoteId\tuserId\tfileKey\tfileUrl\tcaption\tlatitude\tlongitude\tcreatedAt\n90001\t780007\tNULL\t150004\t1\tproperties/780007/photos/1768694396077-xurcxt.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/780007/photos/1768694396077-xurcxt.jpg\tNULL\tNULL\tNULL\t2026-01-17 23:59:56\n60010\t630016\tNULL\t90005\t1\tproperties/630016/photos/1768234963299-cpps2m.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630016/photos/1768234963299-cpps2m.jpg\tNULL\tNULL\tNULL\t2026-01-12 16:22:43\n60009\t630008\tNULL\t90004\t1\tproperties/630008/photos/1768234851803-o1as0f.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851803-o1as0f.jpg\tNULL\tNULL\tNULL\t2026-01-12 16:20:52\n60008\t630008\tNULL\t90004\t1\tproperties/630008/photos/1768234851504-z66cfa.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851504-z66cfa.jpg\tNULL\tNULL\tNULL\t2026-01-12 16:20:51\n60007\t630008\tNULL\t90004\t1\tproperties/630008/photos/1768234851169-618zta.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234851169-618zta.jpg\tNULL\tNULL\tNULL\t2026-01-12 16:20:51\n60006\t630008\tNULL\t90004\t1\tproperties/630008/photos/1768234850785-5ouxpk.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/630008/photos/1768234850785-5ouxpk.jpg\tNULL\tNULL\tNULL\t2026-01-12 16:20:51\n30001\t300019\tNULL\t30001\t1\tproperties/300019/photos/1767835776132-ya1a3.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310419663028597186/RDbAfwHQBDqo37pina3pDu/properties/300019/photos/1767835776132-ya1a3.jpg\tNULL\tNULL\tNULL\t2026-01-08 01:29:36\n",
+  "stderr": "",
+  "execution_time_ms": 93
+}
