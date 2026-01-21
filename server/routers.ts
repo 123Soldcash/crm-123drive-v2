@@ -1394,12 +1394,23 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        return await db.createNote({
+        const result = await db.addPropertyNote({
           propertyId: input.propertyId,
           userId: ctx.user.id,
           content: input.content,
           noteType: input.noteType,
         });
+        // Return the created note with user info for immediate display
+        return {
+          id: result[0].insertId,
+          propertyId: input.propertyId,
+          userId: ctx.user.id,
+          content: input.content,
+          noteType: input.noteType || "general",
+          userName: ctx.user.name,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
       }),
 
     update: protectedProcedure

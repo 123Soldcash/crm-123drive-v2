@@ -520,10 +520,13 @@ export async function getPropertyNotes(propertyId: number) {
     .select({
       id: notes.id,
       content: notes.content,
+      noteType: notes.noteType,
+      userName: users.name,
       createdAt: notes.createdAt,
       updatedAt: notes.updatedAt,
     })
     .from(notes)
+    .leftJoin(users, eq(notes.userId, users.id))
     .where(eq(notes.propertyId, propertyId))
     .orderBy(desc(notes.createdAt));
 

@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, email1, email2, email3 FROM contacts WHERE propertyId = 132 AND name = 'Charlotte Holland OV';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email1, email2, email3 FROM contacts WHERE propertyId = 132 AND name = 'Charlotte Holland OV';",
+  "rows": [
+    {
+      "id": "960023",
+      "name": "Charlotte Holland OV",
+      "email1": "scamperling@gmail.com",
+      "email2": "holly7711@gmail.com",
+      "email3": "holly7711@aol.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail1\temail2\temail3\n960023\tCharlotte Holland OV\tscamperling@gmail.com\tholly7711@gmail.com\tholly7711@aol.com\n",
+  "stderr": "",
+  "execution_time_ms": 554
+}
