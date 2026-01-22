@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2019,4 +2019,63 @@ export async function getTaskStatistics(userId?: number): Promise<any> {
   };
   
   return stats;
+}
+
+
+// ============================================
+// FAMILY TREE FUNCTIONS
+// ============================================
+
+/**
+ * Create a new family member for a property
+ */
+export async function createFamilyMember(data: InsertFamilyMember) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(familyMembers).values(data);
+  
+  // Return the created family member
+  const insertId = result[0].insertId;
+  const created = await db.select().from(familyMembers).where(eq(familyMembers.id, insertId)).limit(1);
+  return created[0];
+}
+
+/**
+ * Get all family members for a property
+ */
+export async function getFamilyMembers(propertyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(familyMembers)
+    .where(eq(familyMembers.propertyId, propertyId))
+    .orderBy(desc(familyMembers.createdAt));
+}
+
+/**
+ * Update a family member
+ */
+export async function updateFamilyMember(id: number, data: Partial<InsertFamilyMember>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(familyMembers).set(data).where(eq(familyMembers.id, id));
+  
+  // Return updated family member
+  const updated = await db.select().from(familyMembers).where(eq(familyMembers.id, id)).limit(1);
+  return updated[0];
+}
+
+/**
+ * Delete a family member
+ */
+export async function deleteFamilyMember(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(familyMembers).where(eq(familyMembers.id, id));
+  return { success: true };
 }
