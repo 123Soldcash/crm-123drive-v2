@@ -1,4 +1,4 @@
-CREATE TABLE `buyerPreferences` (
+CREATE TABLE IF NOT EXISTS `buyerPreferences` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`buyerId` int NOT NULL,
 	`states` text,
@@ -17,7 +17,7 @@ CREATE TABLE `buyerPreferences` (
 	CONSTRAINT `buyerPreferences_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `buyers` (
+CREATE TABLE IF NOT EXISTS `buyers` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(255) NOT NULL,
 	`email` varchar(320) NOT NULL,
@@ -32,6 +32,7 @@ CREATE TABLE `buyers` (
 );
 --> statement-breakpoint
 ALTER TABLE `dealCalculations` DROP INDEX `dealCalculations_propertyId_unique`;--> statement-breakpoint
+ALTER TABLE `dealCalculations` MODIFY COLUMN `id` int NOT NULL;--> statement-breakpoint
 ALTER TABLE `dealCalculations` DROP PRIMARY KEY;--> statement-breakpoint
 ALTER TABLE `dealCalculations` DROP COLUMN `id`;--> statement-breakpoint
 ALTER TABLE `dealCalculations` DROP COLUMN `propertyId`;
