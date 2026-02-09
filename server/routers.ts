@@ -2341,72 +2341,89 @@ export const appRouter = router({
 
         const userId = ctx.user?.role === 'admin' ? undefined : ctx.user?.id;
 
-        // Get all communication logs
-        const allLogs = await database
-          .select()
-          .from(communicationLog)
-          .execute();
+        // Get all communication logs with null safety
+        let allLogs: any[] = [];
+        try {
+          const result = await database
+            .select()
+            .from(communicationLog)
+            .execute();
+          allLogs = result || [];
+        } catch (e) {
+          console.error('[getCallStats] Error fetching logs:', e);
+          allLogs = [];
+        }
 
-        // Filter by user if not admin
-        const logs = userId 
-          ? allLogs.filter((log: any) => log.agentId === userId)
-          : allLogs;
+        // Filter by user if not admin - ensure logs is always an array
+        const logs = (userId 
+          ? allLogs.filter((log: any) => log && log.agentId === userId)
+          : allLogs) || [];
 
-        // Calculate today's calls
+        // Calculate today's calls with null checks
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const todayCalls = logs.filter((log: any) => {
+        const todayCalls = Array.isArray(logs) ? logs.filter((log: any) => {
+          if (!log || !log.createdAt) return false;
           const logDate = new Date(log.createdAt);
           return logDate >= today;
-        });
+        }) : [];
 
-        // Calculate conversion rate by disposition
+        // Calculate conversion rate by disposition with null checks
         const dispositionCounts: Record<string, number> = {};
-        logs.forEach((log: any) => {
-          if (log.disposition) {
-            dispositionCounts[log.disposition] = (dispositionCounts[log.disposition] || 0) + 1;
-          }
-        });
+        if (Array.isArray(logs)) {
+          logs.forEach((log: any) => {
+            if (log && log.disposition) {
+              dispositionCounts[log.disposition] = (dispositionCounts[log.disposition] || 0) + 1;
+            }
+          });
+        }
 
-        const hotLeads = logs.filter((log: any) => 
-          log.disposition?.includes('HOT LEAD')
-        ).length;
-        const warmLeads = logs.filter((log: any) => 
-          log.disposition?.includes('WARM LEAD')
-        ).length;
-        const totalCalls = logs.length;
+        // Safe filtering with null checks
+        const hotLeads = Array.isArray(logs) ? logs.filter((log: any) => 
+          log && log.disposition?.includes('HOT LEAD')
+        ).length : 0;
+        const warmLeads = Array.isArray(logs) ? logs.filter((log: any) => 
+          log && log.disposition?.includes('WARM LEAD')
+        ).length : 0;
+        const totalCalls = Array.isArray(logs) ? logs.length : 0;
         const conversionRate = totalCalls > 0 
           ? ((hotLeads + warmLeads) / totalCalls * 100).toFixed(1)
           : '0.0';
 
-        // Calculate agent rankings
+        // Calculate agent rankings with safe handling
         const agentStats: Record<string, { calls: number; hotLeads: number; warmLeads: number }> = {};
-        logs.forEach((log: any) => {
-          const agent = log.agentName || 'Unknown';
-          if (!agentStats[agent]) {
-            agentStats[agent] = { calls: 0, hotLeads: 0, warmLeads: 0 };
-          }
-          agentStats[agent].calls++;
-          if (log.disposition?.includes('HOT LEAD')) {
-            agentStats[agent].hotLeads++;
-          }
-          if (log.disposition?.includes('WARM LEAD')) {
-            agentStats[agent].warmLeads++;
-          }
-        });
+        if (Array.isArray(logs)) {
+          logs.forEach((log: any) => {
+            if (!log) return;
+            const agent = log.agentName || 'Unknown';
+            if (!agentStats[agent]) {
+              agentStats[agent] = { calls: 0, hotLeads: 0, warmLeads: 0 };
+            }
+            agentStats[agent].calls++;
+            if (log.disposition?.includes('HOT LEAD')) {
+              agentStats[agent].hotLeads++;
+            }
+            if (log.disposition?.includes('WARM LEAD')) {
+              agentStats[agent].warmLeads++;
+            }
+          });
+        }
 
-        const agentRankings = Object.entries(agentStats)
-          .map(([agent, stats]) => ({
-            agent,
-            calls: stats.calls,
-            hotLeads: stats.hotLeads,
-            warmLeads: stats.warmLeads,
-            conversionRate: stats.calls > 0 
-              ? ((stats.hotLeads + stats.warmLeads) / stats.calls * 100).toFixed(1)
-              : '0.0',
-          }))
-          .sort((a, b) => b.calls - a.calls)
-          .slice(0, 10);
+        // Safe Object.entries with null check
+        const agentRankings = agentStats && Object.keys(agentStats).length > 0
+          ? Object.entries(agentStats)
+            .map(([agent, stats]) => ({
+              agent,
+              calls: stats?.calls ?? 0,
+              hotLeads: stats?.hotLeads ?? 0,
+              warmLeads: stats?.warmLeads ?? 0,
+              conversionRate: (stats?.calls ?? 0) > 0 
+                ? (((stats?.hotLeads ?? 0) + (stats?.warmLeads ?? 0)) / (stats?.calls ?? 1) * 100).toFixed(1)
+                : '0.0',
+            }))
+            .sort((a, b) => b.calls - a.calls)
+            .slice(0, 10)
+          : [];
 
         return {
           totalCallsToday: todayCalls.length,
@@ -2414,10 +2431,12 @@ export const appRouter = router({
           conversionRate,
           hotLeads,
           warmLeads,
-          dispositionBreakdown: Object.entries(dispositionCounts)
-            .map(([disposition, count]) => ({ disposition, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10),
+          dispositionBreakdown: dispositionCounts && Object.keys(dispositionCounts).length > 0
+            ? Object.entries(dispositionCounts)
+              .map(([disposition, count]) => ({ disposition, count: count ?? 0 }))
+              .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+              .slice(0, 10)
+            : [],
           agentRankings,
         };
       }),
