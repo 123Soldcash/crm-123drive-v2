@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>("all");
   const [stats, setStats] = useState({
     total: 0,
+    superHot: 0,
     hot: 0,
     warm: 0,
     cold: 0,
@@ -39,6 +40,7 @@ export default function Dashboard() {
     if (dashboardStats) {
       setStats({
         total: dashboardStats.total || 0,
+        superHot: dashboardStats.superHot || 0,
         hot: dashboardStats.hot || 0,
         warm: dashboardStats.warm || 0,
         cold: dashboardStats.cold || 0,
@@ -104,7 +106,22 @@ export default function Dashboard() {
       {/* Lead Temperature Cards */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Lead Temperature</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Link href="/properties?leadTemperature=SUPER%20HOT">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">SUPER HOT</CardTitle>
+                <span className="text-2xl">🔥</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-700">
+                  {isLoading ? "..." : stats.superHot}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Click to view leads</p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/properties?leadTemperature=HOT">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

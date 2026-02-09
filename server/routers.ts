@@ -2569,7 +2569,8 @@ export const appRouter = router({
         // Calculate stats
         const stats = {
           total: filtered.length,
-          hot: filtered.filter((p: any) => p.leadTemperature === "HOT" || p.leadTemperature === "SUPER HOT").length,
+          superHot: filtered.filter((p: any) => p.leadTemperature === "SUPER HOT").length,
+          hot: filtered.filter((p: any) => p.leadTemperature === "HOT").length,
           warm: filtered.filter((p: any) => p.leadTemperature === "WARM").length,
           cold: filtered.filter((p: any) => p.leadTemperature === "COLD").length,
           dead: filtered.filter((p: any) => p.leadTemperature === "DEAD").length,
