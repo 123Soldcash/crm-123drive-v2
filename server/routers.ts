@@ -768,7 +768,6 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const result = await db.getPropertyDeepSearch(input.propertyId);
         console.log('[DEBUG] getDeepSearch result for property', input.propertyId, ':', result);
-        console.log('[DEBUG] taxesNotes field:', result?.taxesNotes);
         return result;
       }),
 
@@ -814,7 +813,6 @@ export const appRouter = router({
           delinquentTax2021: z.number().nullable().optional(),
           delinquentTax2020: z.number().nullable().optional(),
           delinquentTaxTotal: z.number().optional(),
-          taxesNotes: z.string().optional(),
           hasMortgage: z.number().optional(),
           mortgageAmount: z.number().nullable().optional(),
           equityPercent: z.number().nullable().optional(),

@@ -378,7 +378,6 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
   const [tax2022, setTax2022] = useState("");
   const [tax2021, setTax2021] = useState("");
   const [tax2020, setTax2020] = useState("");
-  const [taxesNotes, setTaxesNotes] = useState("");
   
   // Mortgage fields
   const [hasMortgage, setHasMortgage] = useState(false);
@@ -478,9 +477,6 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
       setTax2022(deepSearch.delinquentTax2022?.toString() || "");
       setTax2021(deepSearch.delinquentTax2021?.toString() || "");
       setTax2020(deepSearch.delinquentTax2020?.toString() || "");
-      console.log('[DEBUG Frontend] deepSearch.taxesNotes:', deepSearch.taxesNotes);
-      console.log('[DEBUG Frontend] taxesNotes type:', typeof deepSearch.taxesNotes);
-      setTaxesNotes(deepSearch.taxesNotes || "");
       
       setHasMortgage(deepSearch.hasMortgage === 1);
       setMortgageAmount(deepSearch.mortgageAmount?.toString() || "");
@@ -597,7 +593,6 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
       delinquentTax2022: tax2022 ? parseInt(tax2022) : null,
       delinquentTax2021: tax2021 ? parseInt(tax2021) : null,
       delinquentTax2020: tax2020 ? parseInt(tax2020) : null,
-      taxesNotes,
       hasMortgage: hasMortgage ? 1 : 0,
       mortgageAmount: mortgageAmount ? parseInt(mortgageAmount) : null,
       equityPercent: equityPercent ? parseInt(equityPercent) : null,
@@ -1124,9 +1119,7 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                   <Label className="font-semibold text-lg">📝 Taxes Notes</Label>
                 </div>
                 <Textarea
-                  id="taxesNotes"
                   placeholder="Add notes about taxes (each line will be displayed separately in the summary)"
-                  value={taxesNotes}
                   onChange={(e) => setTaxesNotes(e.target.value)}
                   className="min-h-32 text-sm bg-white"
                 />

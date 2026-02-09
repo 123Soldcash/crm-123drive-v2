@@ -421,24 +421,60 @@ export async function getPropertyById(id: number) {
     }
   }
 
-  // Map relational data back to contacts
-  const contactsMap = new Map(contactsResult.map(c => [c.id, { ...c, phones: [] as any[], emails: [] as any[], addresses: [] as any[] }]));
+  // Map relational data back to contacts - ensure no undefined values
+  const contactsMap = new Map(
+    contactsResult.map(c => [
+      c.id, 
+      { 
+        ...c, 
+        name: c.name ?? '', 
+        relationship: c.relationship ?? '',
+        phones: [] as any[], 
+        emails: [] as any[], 
+        addresses: [] as any[] 
+      }
+    ])
+  );
 
-  phonesResult.forEach(p => {
-    if (contactsMap.has(p.contactId)) {
-      contactsMap.get(p.contactId)!.phones.push(p);
-    }
-  });
-  emailsResult.forEach(e => {
-    if (contactsMap.has(e.contactId)) {
-      contactsMap.get(e.contactId)!.emails.push(e);
-    }
-  });
-  addressesResult.forEach(a => {
-    if (contactsMap.has(a.contactId)) {
-      contactsMap.get(a.contactId)!.addresses.push(a);
-    }
-  });
+  // Safely add relational data with error handling
+  try {
+    phonesResult.forEach(p => {
+      if (p && contactsMap.has(p.contactId)) {
+        const contact = contactsMap.get(p.contactId);
+        if (contact && Array.isArray(contact.phones)) {
+          contact.phones.push(p);
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error processing phones:', e);
+  }
+
+  try {
+    emailsResult.forEach(e => {
+      if (e && contactsMap.has(e.contactId)) {
+        const contact = contactsMap.get(e.contactId);
+        if (contact && Array.isArray(contact.emails)) {
+          contact.emails.push(e);
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error processing emails:', e);
+  }
+
+  try {
+    addressesResult.forEach(a => {
+      if (a && contactsMap.has(a.contactId)) {
+        const contact = contactsMap.get(a.contactId);
+        if (contact && Array.isArray(contact.addresses)) {
+          contact.addresses.push(a);
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error processing addresses:', e);
+  }
 
   const finalContacts = Array.from(contactsMap.values());
   // ------------------------------------------------------------------
@@ -457,17 +493,30 @@ export async function getPropertyById(id: number) {
   
   const deepSearchData = deepSearchResult.length > 0 ? deepSearchResult[0] : null;
   
-  // Combine the data
-  const result = [{
-    ...propertyResult[0],
-    contacts: finalContacts,
-    propertyCondition: deepSearchData?.propertyCondition || null,
-    issues: deepSearchData?.issues || null,
-    hasMortgage: deepSearchData?.hasMortgage || null,
-    delinquentTaxTotal: deepSearchData?.delinquentTaxTotal || null,
-  }];
+  // Combine the data - ensure no undefined fields
+  const property = propertyResult[0];
+  const safeProperty = {
+    ...property,
+    addressLine1: property.addressLine1 ?? '',
+    addressLine2: property.addressLine2 ?? '',
+    city: property.city ?? '',
+    state: property.state ?? '',
+    zipcode: property.zipcode ?? '',
+    owner1Name: property.owner1Name ?? '',
+    owner2Name: property.owner2Name ?? '',
+    propertyType: property.propertyType ?? '',
+    ownerLocation: property.ownerLocation ?? '',
+    deskName: property.deskName ?? '',
+    deskStatus: property.deskStatus ?? '',
+    leadTemperature: property.leadTemperature ?? 'TBD',
+    contacts: finalContacts ?? [],
+    propertyCondition: deepSearchData?.propertyCondition ?? null,
+    issues: deepSearchData?.issues ?? null,
+    hasMortgage: deepSearchData?.hasMortgage ?? 0,
+    delinquentTaxTotal: deepSearchData?.delinquentTaxTotal ?? 0,
+  };
   
-  return result.length > 0 ? result[0] : null;
+  return safeProperty;
 }
 
 export async function getPropertiesForMap(filters?: { userId?: number; userRole?: string }) {

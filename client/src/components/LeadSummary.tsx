@@ -485,12 +485,6 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
                   </tbody>
                 </table>
               </div>
-              {propertyData.taxesNotes && (
-                <div className="mt-3 bg-red-50 rounded p-3 border border-red-100">
-                  <div className="text-xs text-muted-foreground font-semibold mb-1">Taxes Notes</div>
-                  <div className="text-sm whitespace-pre-wrap text-gray-700">{propertyData.taxesNotes}</div>
-                </div>
-              )}
             </div>
           )}
 

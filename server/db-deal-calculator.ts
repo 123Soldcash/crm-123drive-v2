@@ -102,30 +102,45 @@ export async function saveDealCalculation(
  */
 export async function getDealCalculation(propertyId: number) {
   const db = await getDb();
-
-  const result = await db
-    .select()
-    .from(dealCalculations)
-    .where(eq(dealCalculations.propertyId, propertyId))
-    .limit(1);
-
-  if (result.length === 0) {
+  
+  if (!db) {
+    console.error("[getDealCalculation] Database not available");
     return null;
   }
 
-  return {
-    id: result[0].id,
-    propertyId: result[0].propertyId,
-    arv: parseFloat(result[0].arv || "0"),
-    repairCost: parseFloat(result[0].repairCost || "0"),
-    closingCost: parseFloat(result[0].closingCost || "0"),
-    assignmentFee: parseFloat(result[0].assignmentFee || "0"),
-    desiredProfit: parseFloat(result[0].desiredProfit || "0"),
-    maxOffer: parseFloat(result[0].maxOffer || "0"),
-    maoFormula: result[0].maoFormula,
-    createdAt: result[0].createdAt,
-    updatedAt: result[0].updatedAt,
-  };
+  if (!propertyId || propertyId <= 0) {
+    console.error("[getDealCalculation] Invalid propertyId:", propertyId);
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(dealCalculations)
+      .where(eq(dealCalculations.propertyId, propertyId))
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return {
+      id: result[0].id,
+      propertyId: result[0].propertyId,
+      arv: parseFloat(result[0].arv || "0"),
+      repairCost: parseFloat(result[0].repairCost || "0"),
+      closingCost: parseFloat(result[0].closingCost || "0"),
+      assignmentFee: parseFloat(result[0].assignmentFee || "0"),
+      desiredProfit: parseFloat(result[0].desiredProfit || "0"),
+      maxOffer: parseFloat(result[0].maxOffer || "0"),
+      maoFormula: result[0].maoFormula,
+      createdAt: result[0].createdAt,
+      updatedAt: result[0].updatedAt,
+    };
+  } catch (error) {
+    console.error("[getDealCalculation] Query error:", error);
+    return null;
+  }
 }
 
 /**
