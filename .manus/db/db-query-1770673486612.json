@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `contactAddresses` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `contactId` int NOT NULL,\n  `addressLine1` varchar(255),\n  `addressLine2` varchar(255),\n  `city` varchar(100),\n  `state` varchar(50),\n  `zipcode` varchar(20),\n  `addressType` varchar(50),\n  `isPrimary` int DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY(`id`),\n  FOREIGN KEY(`contactId`) REFERENCES `contacts`(`id`) ON DELETE CASCADE\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute CREATE TABLE IF NOT EXISTS `contactAddresses` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `contactId` int NOT NULL,\n  `addressLine1` varchar(255),\n  `addressLine2` varchar(255),\n  `city` varchar(100),\n  `state` varchar(50),\n  `zipcode` varchar(20),\n  `addressType` varchar(50),\n  `isPrimary` int DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY(`id`),\n  FOREIGN KEY(`contactId`) REFERENCES `contacts`(`id`) ON DELETE CASCADE\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1761
+}

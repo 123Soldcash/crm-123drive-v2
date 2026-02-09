@@ -437,64 +437,77 @@ export async function getPropertyById(id: number) {
   );
 
   // Safely add relational data with error handling
-  try {
-    phonesResult.forEach(p => {
-      if (p && contactsMap.has(p.contactId)) {
-        const contact = contactsMap.get(p.contactId);
-        if (contact && Array.isArray(contact.phones)) {
-          contact.phones.push(p);
+  if (Array.isArray(phonesResult)) {
+    try {
+      phonesResult.forEach(p => {
+        if (p && contactsMap.has(p.contactId)) {
+          const contact = contactsMap.get(p.contactId);
+          if (contact && Array.isArray(contact.phones)) {
+            contact.phones.push(p);
+          }
         }
-      }
-    });
-  } catch (e) {
-    console.error('Error processing phones:', e);
+      });
+    } catch (e) {
+      console.error('Error processing phones:', e);
+    }
   }
 
-  try {
-    emailsResult.forEach(e => {
-      if (e && contactsMap.has(e.contactId)) {
-        const contact = contactsMap.get(e.contactId);
-        if (contact && Array.isArray(contact.emails)) {
-          contact.emails.push(e);
+  if (Array.isArray(emailsResult)) {
+    try {
+      emailsResult.forEach(e => {
+        if (e && contactsMap.has(e.contactId)) {
+          const contact = contactsMap.get(e.contactId);
+          if (contact && Array.isArray(contact.emails)) {
+            contact.emails.push(e);
+          }
         }
-      }
-    });
-  } catch (e) {
-    console.error('Error processing emails:', e);
+      });
+    } catch (e) {
+      console.error('Error processing emails:', e);
+    }
   }
 
-  try {
-    addressesResult.forEach(a => {
-      if (a && contactsMap.has(a.contactId)) {
-        const contact = contactsMap.get(a.contactId);
-        if (contact && Array.isArray(contact.addresses)) {
-          contact.addresses.push(a);
+  if (Array.isArray(addressesResult)) {
+    try {
+      addressesResult.forEach(a => {
+        if (a && contactsMap.has(a.contactId)) {
+          const contact = contactsMap.get(a.contactId);
+          if (contact && Array.isArray(contact.addresses)) {
+            contact.addresses.push(a);
+          }
         }
-      }
-    });
-  } catch (e) {
-    console.error('Error processing addresses:', e);
+      });
+    } catch (e) {
+      console.error('Error processing addresses:', e);
+    }
   }
 
   const finalContacts = Array.from(contactsMap.values());
   // ------------------------------------------------------------------
   
   // Get deep search data
-  const deepSearchResult = await db
-    .select({
-      propertyCondition: propertyDeepSearch.propertyCondition,
-      issues: propertyDeepSearch.issues,
-      hasMortgage: propertyDeepSearch.hasMortgage,
-      delinquentTaxTotal: propertyDeepSearch.delinquentTaxTotal,
-    })
-    .from(propertyDeepSearch)
-    .where(eq(propertyDeepSearch.propertyId, propertyDbId))
-    .limit(1);
-  
-  const deepSearchData = deepSearchResult.length > 0 ? deepSearchResult[0] : null;
+  let deepSearchData = null;
+  try {
+    const deepSearchResult = await db
+      .select({
+        propertyCondition: propertyDeepSearch.propertyCondition,
+        issues: propertyDeepSearch.issues,
+        hasMortgage: propertyDeepSearch.hasMortgage,
+        delinquentTaxTotal: propertyDeepSearch.delinquentTaxTotal,
+      })
+      .from(propertyDeepSearch)
+      .where(eq(propertyDeepSearch.propertyId, propertyDbId))
+      .limit(1);
+    
+    deepSearchData = deepSearchResult && deepSearchResult.length > 0 ? deepSearchResult[0] : null;
+  } catch (e) {
+    console.log('Deep search data query failed, skipping:', e);
+  }
   
   // Combine the data - ensure no undefined fields
-  const property = propertyResult[0];
+  const property = propertyResult && propertyResult.length > 0 ? propertyResult[0] : null;
+  if (!property) return null;
+  
   const safeProperty = {
     ...property,
     addressLine1: property.addressLine1 ?? '',
