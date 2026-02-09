@@ -234,11 +234,14 @@ export const properties = mysqlTable("properties", {
 export type Property = typeof properties.$inferSelect;
 export type InsertProperty = typeof properties.$inferInsert;
 
-/**
- * Deal Calculations table - stores financial calculations for each property
- */
+	/**
+	 * Deal Calculations table - stores financial calculations for each property
+	 * References properties.apn (Assessor Parcel Number) as unique identifier
+	 */
 	export const dealCalculations = mysqlTable("dealCalculations", {
-
+	  id: int("id").autoincrement().primaryKey(),
+	  apn: varchar("apn", { length: 50 }).notNull().unique(), // Foreign key to properties.apn
+	  
 	  arv: decimal("arv", { precision: 10, scale: 2 }), // After Repair Value
 	  repairCost: decimal("repairCost", { precision: 10, scale: 2 }),
 	  closingCost: decimal("closingCost", { precision: 10, scale: 2 }),

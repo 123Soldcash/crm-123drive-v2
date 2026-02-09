@@ -31,7 +31,7 @@ export async function calculateMAO(
  * Create or update a deal calculation for a property
  */
 export async function saveDealCalculation(
-  propertyId: number,
+  apn: string,
   arv: number,
   repairCost: number,
   closingCost: number,
@@ -39,6 +39,11 @@ export async function saveDealCalculation(
   desiredProfit: number
 ) {
   const db = await getDb();
+
+  if (!db || !apn) {
+    console.error("[saveDealCalculation] Invalid parameters: db or apn missing");
+    return null;
+  }
 
   // Calculate MAO
   const { mao, formula } = await calculateMAO(
@@ -49,18 +54,33 @@ export async function saveDealCalculation(
     desiredProfit
   );
 
-  // Check if calculation already exists
-  const existing = await db
-    .select()
-    .from(dealCalculations)
-    .where(eq(dealCalculations.propertyId, propertyId))
-    .limit(1);
+  try {
+    // Check if calculation already exists
+    const existing = await db
+      .select()
+      .from(dealCalculations)
+      .where(eq(dealCalculations.apn, apn))
+      .limit(1);
 
-  if (existing.length > 0) {
-    // Update existing calculation
-    await db
-      .update(dealCalculations)
-      .set({
+    if (existing.length > 0) {
+      // Update existing calculation
+      await db
+        .update(dealCalculations)
+        .set({
+          arv: arv.toString(),
+          repairCost: repairCost.toString(),
+          closingCost: closingCost.toString(),
+          assignmentFee: assignmentFee.toString(),
+          desiredProfit: desiredProfit.toString(),
+          maxOffer: mao.toString(),
+          maoFormula: formula,
+          updatedAt: new Date(),
+        })
+        .where(eq(dealCalculations.apn, apn));
+    } else {
+      // Create new calculation
+      await db.insert(dealCalculations).values({
+        apn,
         arv: arv.toString(),
         repairCost: repairCost.toString(),
         closingCost: closingCost.toString(),
@@ -68,39 +88,29 @@ export async function saveDealCalculation(
         desiredProfit: desiredProfit.toString(),
         maxOffer: mao.toString(),
         maoFormula: formula,
-        updatedAt: new Date(),
-      })
-      .where(eq(dealCalculations.propertyId, propertyId));
-  } else {
-    // Create new calculation
-    await db.insert(dealCalculations).values({
-      propertyId,
-      arv: arv.toString(),
-      repairCost: repairCost.toString(),
-      closingCost: closingCost.toString(),
-      assignmentFee: assignmentFee.toString(),
-      desiredProfit: desiredProfit.toString(),
-      maxOffer: mao.toString(),
-      maoFormula: formula,
-    });
-  }
+      });
+    }
 
-  return {
-    propertyId,
-    arv,
-    repairCost,
-    closingCost,
-    assignmentFee,
-    desiredProfit,
-    maxOffer: mao,
-    maoFormula: formula,
-  };
+    return {
+      apn,
+      arv,
+      repairCost,
+      closingCost,
+      assignmentFee,
+      desiredProfit,
+      maxOffer: mao,
+      maoFormula: formula,
+    };
+  } catch (error) {
+    console.error("[saveDealCalculation] Error:", error);
+    return null;
+  }
 }
 
 /**
- * Get deal calculation for a property
+ * Get deal calculation for a property by APN
  */
-export async function getDealCalculation(propertyId: number) {
+export async function getDealCalculation(apn: string) {
   const db = await getDb();
   
   if (!db) {
@@ -108,8 +118,8 @@ export async function getDealCalculation(propertyId: number) {
     return null;
   }
 
-  if (!propertyId || propertyId <= 0) {
-    console.error("[getDealCalculation] Invalid propertyId:", propertyId);
+  if (!apn || apn.trim().length === 0) {
+    console.error("[getDealCalculation] Invalid APN:", apn);
     return null;
   }
 
@@ -117,7 +127,7 @@ export async function getDealCalculation(propertyId: number) {
     const result = await db
       .select()
       .from(dealCalculations)
-      .where(eq(dealCalculations.propertyId, propertyId))
+      .where(eq(dealCalculations.apn, apn))
       .limit(1);
 
     if (result.length === 0) {
@@ -126,7 +136,7 @@ export async function getDealCalculation(propertyId: number) {
 
     return {
       id: result[0].id,
-      propertyId: result[0].propertyId,
+      apn: result[0].apn,
       arv: parseFloat(result[0].arv || "0"),
       repairCost: parseFloat(result[0].repairCost || "0"),
       closingCost: parseFloat(result[0].closingCost || "0"),
@@ -144,16 +154,26 @@ export async function getDealCalculation(propertyId: number) {
 }
 
 /**
- * Delete deal calculation for a property
+ * Delete deal calculation for a property by APN
  */
-export async function deleteDealCalculation(propertyId: number) {
+export async function deleteDealCalculation(apn: string) {
   const db = await getDb();
 
-  await db
-    .delete(dealCalculations)
-    .where(eq(dealCalculations.propertyId, propertyId));
+  if (!db || !apn) {
+    console.error("[deleteDealCalculation] Invalid parameters");
+    return { success: false };
+  }
 
-  return { success: true };
+  try {
+    await db
+      .delete(dealCalculations)
+      .where(eq(dealCalculations.apn, apn));
+
+    return { success: true };
+  } catch (error) {
+    console.error("[deleteDealCalculation] Error:", error);
+    return { success: false };
+  }
 }
 
 /**
@@ -204,10 +224,10 @@ export async function getAllDealCalculations() {
  * Calculate profit margin based on offer price
  */
 export async function calculateProfitMargin(
-  propertyId: number,
+  apn: string,
   offerPrice: number
 ): Promise<{ profit: number; profitMargin: number }> {
-  const calculation = await getDealCalculation(propertyId);
+  const calculation = await getDealCalculation(apn);
 
   if (!calculation) {
     return { profit: 0, profitMargin: 0 };
@@ -229,8 +249,8 @@ export async function calculateProfitMargin(
 /**
  * Analyze deal viability
  */
-export async function analyzeDeal(propertyId: number, offerPrice: number) {
-  const calculation = await getDealCalculation(propertyId);
+export async function analyzeDeal(apn: string, offerPrice: number) {
+  const calculation = await getDealCalculation(apn);
 
   if (!calculation) {
     return {
@@ -240,7 +260,7 @@ export async function analyzeDeal(propertyId: number, offerPrice: number) {
   }
 
   const { profit, profitMargin } = await calculateProfitMargin(
-    propertyId,
+    apn,
     offerPrice
   );
 
