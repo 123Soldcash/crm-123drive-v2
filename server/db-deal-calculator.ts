@@ -31,7 +31,7 @@ export async function calculateMAO(
  * Create or update a deal calculation for a property
  */
 export async function saveDealCalculation(
-  apn: string,
+  apn: string | null | undefined,
   arv: number,
   repairCost: number,
   closingCost: number,
@@ -40,8 +40,9 @@ export async function saveDealCalculation(
 ) {
   const db = await getDb();
 
-  if (!db || !apn) {
-    console.error("[saveDealCalculation] Invalid parameters: db or apn missing");
+  // Validate APN is a string and not empty
+  if (!db || !apn || typeof apn !== 'string' || apn.trim().length === 0) {
+    console.error("[saveDealCalculation] Invalid parameters: db or apn missing/invalid");
     return null;
   }
 
@@ -110,7 +111,7 @@ export async function saveDealCalculation(
 /**
  * Get deal calculation for a property by APN
  */
-export async function getDealCalculation(apn: string) {
+export async function getDealCalculation(apn: string | null | undefined) {
   const db = await getDb();
   
   if (!db) {
@@ -118,8 +119,9 @@ export async function getDealCalculation(apn: string) {
     return null;
   }
 
-  if (!apn || apn.trim().length === 0) {
-    console.error("[getDealCalculation] Invalid APN:", apn);
+  // Validate APN is a string and not empty
+  if (!apn || typeof apn !== 'string' || apn.trim().length === 0) {
+    console.error("[getDealCalculation] Invalid APN:", apn, "type:", typeof apn);
     return null;
   }
 
@@ -156,10 +158,10 @@ export async function getDealCalculation(apn: string) {
 /**
  * Delete deal calculation for a property by APN
  */
-export async function deleteDealCalculation(apn: string) {
+export async function deleteDealCalculation(apn: string | null | undefined) {
   const db = await getDb();
 
-  if (!db || !apn) {
+  if (!db || !apn || typeof apn !== 'string' || apn.trim().length === 0) {
     console.error("[deleteDealCalculation] Invalid parameters");
     return { success: false };
   }
@@ -224,9 +226,12 @@ export async function getAllDealCalculations() {
  * Calculate profit margin based on offer price
  */
 export async function calculateProfitMargin(
-  apn: string,
+  apn: string | null | undefined,
   offerPrice: number
 ): Promise<{ profit: number; profitMargin: number }> {
+  if (!apn || typeof apn !== 'string') {
+    return { profit: 0, profitMargin: 0 };
+  }
   const calculation = await getDealCalculation(apn);
 
   if (!calculation) {
@@ -249,7 +254,10 @@ export async function calculateProfitMargin(
 /**
  * Analyze deal viability
  */
-export async function analyzeDeal(apn: string, offerPrice: number) {
+export async function analyzeDeal(apn: string | null | undefined, offerPrice: number) {
+  if (!apn || typeof apn !== 'string') {
+    return null;
+  }
   const calculation = await getDealCalculation(apn);
 
   if (!calculation) {
