@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,39 +21,71 @@ export function TwilioBrowserCallButton({
 
   const [callState, setCallState] = useState<"idle" | "connecting" | "ringing" | "in-call">("idle");
   const [isMuted, setIsMuted] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
 
-  // Get Twilio access token
-  const { data: tokenData } = trpc.twilio.getAccessToken.useQuery();
+  // Get Twilio access token - only fetch when needed
+  const { data: tokenData, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(undefined, {
+    enabled: false, // Don't fetch automatically
+  });
 
-  // Initialize Twilio Device when token is available
-  useEffect(() => {
-    if (!tokenData?.token) return;
+  // Initialize Twilio Device on demand (when user clicks call button)
+  const initializeDevice = async () => {
+    if (isInitializing) return;
+    
+    try {
+      setIsInitializing(true);
 
-    const device = new Device(tokenData.token, {
-      logLevel: 1,
-      codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
-    });
+      // Fetch token if not already available
+      let token = tokenData?.token;
+      if (!token) {
+        const result = await refetchToken();
+        token = result.data?.token;
+      }
 
-    device.on("registered", () => {
-      console.log("[Twilio] Device registered");
-    });
+      if (!token) {
+        toast.error("Failed to get calling credentials");
+        setIsInitializing(false);
+        return;
+      }
 
-    device.on("error", (error) => {
-      console.error("[Twilio] Device error:", error);
+      // Only initialize if not already initialized
+      if (deviceRef.current) {
+        await makeCall();
+        setIsInitializing(false);
+        return;
+      }
+
+      const device = new Device(token, {
+        logLevel: 1,
+        codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+      });
+
+      device.on("registered", () => {
+        console.log("[Twilio] Device registered");
+      });
+
+      device.on("error", (error) => {
+        console.error("[Twilio] Device error:", error);
+        toast.error(error.message || "Failed to initialize calling device");
+        setCallState("idle");
+        setIsInitializing(false);
+      });
+
+      device.register();
+      deviceRef.current = device;
+      setIsInitializing(false);
+
+      // Make the call after device is ready
+      await makeCall();
+    } catch (error: any) {
+      console.error("[Twilio] Initialization error:", error);
       toast.error(error.message || "Failed to initialize calling device");
       setCallState("idle");
-    });
-
-    device.register();
-    deviceRef.current = device;
-
-    return () => {
-      device.destroy();
-      deviceRef.current = null;
-    };
-  }, [tokenData, toast]);
+      setIsInitializing(false);
+    }
+  };
 
   const makeCall = async () => {
     if (!deviceRef.current) {
@@ -125,12 +157,25 @@ export function TwilioBrowserCallButton({
     }
   };
 
+  // Cleanup on unmount
+  const cleanup = () => {
+    if (deviceRef.current) {
+      deviceRef.current.destroy();
+      deviceRef.current = null;
+    }
+    if (callRef.current) {
+      callRef.current.disconnect();
+      callRef.current = null;
+    }
+  };
+
   if (callState === "idle") {
     return (
       <Button
         variant="ghost"
         size="sm"
-        onClick={makeCall}
+        onClick={initializeDevice}
+        disabled={isInitializing}
         className="h-8 w-8 p-0 hover:bg-green-50"
         title={`Call ${contactName}`}
       >
