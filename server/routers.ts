@@ -858,7 +858,12 @@ export const appRouter = router({
         if (!ctx.user?.id) {
           throw new Error("User not authenticated");
         }
-        const result = await db.assignAgentToProperty(input.propertyId, input.agentId, ctx.user.id);
+        const result = await db.assignAgentToProperty({
+          propertyId: input.propertyId,
+          agentId: input.agentId,
+          assignedBy: ctx.user.id,
+          assignedAt: new Date(),
+        });
         return { success: true, result };
       }),
 

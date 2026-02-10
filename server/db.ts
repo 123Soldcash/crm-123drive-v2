@@ -741,12 +741,17 @@ export async function assignAgentToProperty(assignment: InsertPropertyAgent) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  // Update the assignedAgentId in the properties table
-  await db.update(properties).set({ assignedAgentId: assignment.agentId }).where(eq(properties.id, assignment.propertyId));
+  try {
+    // Update the assignedAgentId in the properties table
+    await db.update(properties).set({ assignedAgentId: assignment.agentId }).where(eq(properties.id, assignment.propertyId));
 
-  // Log the assignment in the propertyAgents table
-  const result = await db.insert(propertyAgents).values(assignment);
-  return result;
+    // Log the assignment in the propertyAgents table
+    const result = await db.insert(propertyAgents).values(assignment);
+    return result;
+  } catch (error) {
+    console.error('Error assigning agent to property:', error);
+    throw new Error(`Failed to assign agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 export async function getPropertyAgents(propertyId: number) {
