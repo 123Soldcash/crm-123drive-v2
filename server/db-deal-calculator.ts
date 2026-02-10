@@ -29,9 +29,10 @@ export async function calculateMAO(
 
 /**
  * Create or update a deal calculation for a property
+ * Note: propertyId is used as the lookup key, but we need to get the APN from the property first
  */
 export async function saveDealCalculation(
-  apn: string | null | undefined,
+  propertyId: number,
   arv: number,
   repairCost: number,
   closingCost: number,
@@ -40,22 +41,42 @@ export async function saveDealCalculation(
 ) {
   const db = await getDb();
 
-  // Validate APN is a string and not empty
-  if (!db || !apn || typeof apn !== 'string' || apn.trim().length === 0) {
-    console.error("[saveDealCalculation] Invalid parameters: db or apn missing/invalid");
+  // Validate inputs
+  if (!db || !propertyId || propertyId <= 0) {
+    console.error("[saveDealCalculation] Invalid parameters: db or propertyId missing/invalid");
     return null;
   }
 
-  // Calculate MAO
-  const { mao, formula } = await calculateMAO(
-    arv,
-    repairCost,
-    closingCost,
-    assignmentFee,
-    desiredProfit
-  );
+  // Validate financial values
+  if (arv <= 0) {
+    console.error("[saveDealCalculation] ARV must be positive");
+    return null;
+  }
 
   try {
+    // Get the property to find its APN
+    const propertyResult = await db
+      .select({ apn: properties.apn })
+      .from(properties)
+      .where(eq(properties.id, propertyId))
+      .limit(1);
+
+    if (!propertyResult || propertyResult.length === 0) {
+      console.error("[saveDealCalculation] Property not found for propertyId:", propertyId);
+      return null;
+    }
+
+    const apn = propertyResult[0].apn;
+
+    // Calculate MAO
+    const { mao, formula } = await calculateMAO(
+      arv,
+      repairCost,
+      closingCost,
+      assignmentFee,
+      desiredProfit
+    );
+
     // Check if calculation already exists
     const existing = await db
       .select()
@@ -93,7 +114,7 @@ export async function saveDealCalculation(
     }
 
     return {
-      apn,
+      propertyId,
       arv,
       repairCost,
       closingCost,
@@ -109,9 +130,9 @@ export async function saveDealCalculation(
 }
 
 /**
- * Get deal calculation for a property by APN
+ * Get deal calculation for a property by propertyId
  */
-export async function getDealCalculation(apn: string | null | undefined) {
+export async function getDealCalculation(propertyId: number | null | undefined) {
   const db = await getDb();
   
   if (!db) {
@@ -119,13 +140,27 @@ export async function getDealCalculation(apn: string | null | undefined) {
     return null;
   }
 
-  // Validate APN is a string and not empty
-  if (!apn || typeof apn !== 'string' || apn.trim().length === 0) {
-    console.error("[getDealCalculation] Invalid APN:", apn, "type:", typeof apn);
+  // Validate propertyId
+  if (!propertyId || propertyId <= 0) {
+    console.error("[getDealCalculation] Invalid propertyId:", propertyId, "type:", typeof propertyId);
     return null;
   }
 
   try {
+    // Get the property to find its APN
+    const propertyResult = await db
+      .select({ apn: properties.apn })
+      .from(properties)
+      .where(eq(properties.id, propertyId))
+      .limit(1);
+
+    if (!propertyResult || propertyResult.length === 0) {
+      console.error("[getDealCalculation] Property not found for propertyId:", propertyId);
+      return null;
+    }
+
+    const apn = propertyResult[0].apn;
+
     const result = await db
       .select()
       .from(dealCalculations)
@@ -138,7 +173,7 @@ export async function getDealCalculation(apn: string | null | undefined) {
 
     return {
       id: result[0].id,
-      apn: result[0].apn,
+      propertyId,
       arv: parseFloat(result[0].arv || "0"),
       repairCost: parseFloat(result[0].repairCost || "0"),
       closingCost: parseFloat(result[0].closingCost || "0"),
@@ -156,17 +191,31 @@ export async function getDealCalculation(apn: string | null | undefined) {
 }
 
 /**
- * Delete deal calculation for a property by APN
+ * Delete deal calculation for a property by propertyId
  */
-export async function deleteDealCalculation(apn: string | null | undefined) {
+export async function deleteDealCalculation(propertyId: number | null | undefined) {
   const db = await getDb();
 
-  if (!db || !apn || typeof apn !== 'string' || apn.trim().length === 0) {
+  if (!db || !propertyId || propertyId <= 0) {
     console.error("[deleteDealCalculation] Invalid parameters");
     return { success: false };
   }
 
   try {
+    // Get the property to find its APN
+    const propertyResult = await db
+      .select({ apn: properties.apn })
+      .from(properties)
+      .where(eq(properties.id, propertyId))
+      .limit(1);
+
+    if (!propertyResult || propertyResult.length === 0) {
+      console.error("[deleteDealCalculation] Property not found for propertyId:", propertyId);
+      return { success: false };
+    }
+
+    const apn = propertyResult[0].apn;
+
     await db
       .delete(dealCalculations)
       .where(eq(dealCalculations.apn, apn));
@@ -226,13 +275,13 @@ export async function getAllDealCalculations() {
  * Calculate profit margin based on offer price
  */
 export async function calculateProfitMargin(
-  apn: string | null | undefined,
+  propertyId: number | null | undefined,
   offerPrice: number
 ): Promise<{ profit: number; profitMargin: number }> {
-  if (!apn || typeof apn !== 'string') {
+  if (!propertyId || propertyId <= 0) {
     return { profit: 0, profitMargin: 0 };
   }
-  const calculation = await getDealCalculation(apn);
+  const calculation = await getDealCalculation(propertyId);
 
   if (!calculation) {
     return { profit: 0, profitMargin: 0 };
@@ -254,11 +303,11 @@ export async function calculateProfitMargin(
 /**
  * Analyze deal viability
  */
-export async function analyzeDeal(apn: string | null | undefined, offerPrice: number) {
-  if (!apn || typeof apn !== 'string') {
+export async function analyzeDeal(propertyId: number | null | undefined, offerPrice: number) {
+  if (!propertyId || propertyId <= 0) {
     return null;
   }
-  const calculation = await getDealCalculation(apn);
+  const calculation = await getDealCalculation(propertyId);
 
   if (!calculation) {
     return {
@@ -268,7 +317,7 @@ export async function analyzeDeal(apn: string | null | undefined, offerPrice: nu
   }
 
   const { profit, profitMargin } = await calculateProfitMargin(
-    apn,
+    propertyId,
     offerPrice
   );
 

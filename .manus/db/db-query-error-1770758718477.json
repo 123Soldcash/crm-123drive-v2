@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE dealCalculations DROP COLUMN IF EXISTS apn; ALTER TABLE dealCalculations ADD COLUMN propertyId INT NOT NULL UNIQUE AFTER id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE dealCalculations DROP COLUMN IF EXISTS apn; ALTER TABLE dealCalculations ADD COLUMN propertyId INT NOT NULL UNIQUE AFTER id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'rdbafwhqbdqo37pina3pdu.dealCalculations' doesn't exist"
+  ]
+}

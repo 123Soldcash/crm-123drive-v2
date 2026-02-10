@@ -32,6 +32,36 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
     { enabled: !!propertyId }
   );
 
+  // Setup mutation for saving calculation
+  const saveMutation = trpc.dealCalculator.save.useMutation({
+    onSuccess: (result) => {
+      setCalculations(result);
+      toast.success("Deal calculation saved successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to save calculation: " + error.message);
+      console.error(error);
+    },
+  });
+
+  // Setup mutation for deleting calculation
+  const deleteMutation = trpc.dealCalculator.delete.useMutation({
+    onSuccess: () => {
+      setCalculations(null);
+      setFormData({
+        arv: "",
+        repairCost: "",
+        closingCost: "",
+        assignmentFee: "",
+        desiredProfit: "",
+      });
+      toast.success("Calculation deleted");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete calculation: " + error.message);
+    },
+  });
+
   // Populate form with existing data
   useEffect(() => {
     if (existingCalculation) {
@@ -67,25 +97,31 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const result = await trpc.dealCalculator.save.mutate({
-        propertyId,
-        arv: parseFloat(formData.arv),
-        repairCost: parseFloat(formData.repairCost),
-        closingCost: parseFloat(formData.closingCost),
-        assignmentFee: parseFloat(formData.assignmentFee),
-        desiredProfit: parseFloat(formData.desiredProfit),
-      });
+    // Validate that all values are positive numbers
+    const arv = parseFloat(formData.arv);
+    const repairCost = parseFloat(formData.repairCost);
+    const closingCost = parseFloat(formData.closingCost);
+    const assignmentFee = parseFloat(formData.assignmentFee);
+    const desiredProfit = parseFloat(formData.desiredProfit);
 
-      setCalculations(result);
-      toast.success("Deal calculation saved successfully!");
-    } catch (error) {
-      toast.error("Failed to save calculation");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+    if (isNaN(arv) || isNaN(repairCost) || isNaN(closingCost) || isNaN(assignmentFee) || isNaN(desiredProfit)) {
+      toast.error("All fields must be valid numbers");
+      return;
     }
+
+    if (arv <= 0) {
+      toast.error("ARV must be greater than 0");
+      return;
+    }
+
+    saveMutation.mutate({
+      propertyId,
+      arv,
+      repairCost,
+      closingCost,
+      assignmentFee,
+      desiredProfit,
+    });
   };
 
   const handleAnalyzeDeal = async () => {
@@ -120,20 +156,7 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this calculation?")) {
-      try {
-        await trpc.dealCalculator.delete.mutate({ propertyId });
-        setCalculations(null);
-        setFormData({
-          arv: "",
-          repairCost: "",
-          closingCost: "",
-          assignmentFee: "",
-          desiredProfit: "",
-        });
-        toast.success("Calculation deleted");
-      } catch (error) {
-        toast.error("Failed to delete calculation");
-      }
+      deleteMutation.mutate({ propertyId });
     }
   };
 
@@ -248,10 +271,10 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
 
           <Button
             onClick={handleCalculate}
-            disabled={isLoading}
+            disabled={saveMutation.isPending}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {isLoading ? "Calculating..." : "Calculate MAO"}
+            {saveMutation.isPending ? "Calculating..." : "Calculate MAO"}
           </Button>
         </div>
 
@@ -306,7 +329,7 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
               />
               <Button
                 onClick={handleAnalyzeDeal}
-                disabled={isLoading}
+                disabled={saveMutation.isPending}
                 variant="outline"
               >
                 Analyze
@@ -357,10 +380,11 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
         {calculations && (
           <Button
             onClick={handleDelete}
+            disabled={deleteMutation.isPending}
             variant="destructive"
             className="w-full"
           >
-            Delete Calculation
+            {deleteMutation.isPending ? "Deleting..." : "Delete Calculation"}
           </Button>
         )}
       </CardContent>
