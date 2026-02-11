@@ -751,7 +751,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 />
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="font-medium align-top">
-                                {contact.name}
+                                {contact.name || <span className="text-muted-foreground italic">No Name</span>}
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="align-top">
                                 <Badge variant="outline" className="text-xs">
@@ -895,26 +895,33 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       );
                     })
                   ) : (
-                    <TableRow key={contact.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{contact.name}</TableCell>
+                    <TableRow key={contact.id} className="hover:bg-muted/50 border-t-2 border-t-muted">
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={selectedContacts.has(contact.id)}
+                          onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
+                          aria-label={`Select ${contact.name || 'Unknown'}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{contact.name || <span className="text-muted-foreground italic">No Name</span>}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
                           {contact.relationship || "N/A"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox checked={!!contact.dnc} disabled className="mx-auto" />
+                      <TableCell className="text-center px-0">
+                        {contact.dnc ? <span className="text-pink-600 font-bold text-sm">🚫</span> : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox checked={!!contact.isLitigator} disabled className="mx-auto" />
+                      <TableCell className="text-center px-0">
+                        {contact.isLitigator ? <span className="text-red-600 font-bold text-sm">⚖️</span> : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox checked={!!contact.deceased} disabled className="mx-auto" />
+                      <TableCell className="text-center px-0">
+                        {contact.deceased ? <Skull className="h-3 w-3 text-purple-600 mx-auto" /> : null}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox checked={!!contact.isDecisionMaker} disabled className="mx-auto" />
+                      <TableCell className="text-center px-0">
+                        {contact.isDecisionMaker ? <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 mx-auto" /> : null}
                       </TableCell>
-                      <TableCell colSpan={10} className="text-center text-sm text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
                         No phone numbers
                       </TableCell>
                     </TableRow>

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT c.id, c.name, c.relationship, c.propertyId FROM contacts c WHERE c.name LIKE '%joe%' OR c.name LIKE '%test%' OR c.name LIKE '%Joe%' OR c.name LIKE '%TEST%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.name, c.relationship, c.propertyId FROM contacts c WHERE c.name LIKE '%joe%' OR c.name LIKE '%test%' OR c.name LIKE '%Joe%' OR c.name LIKE '%TEST%';",
+  "rows": [
+    {
+      "id": "1140001",
+      "name": "joe",
+      "relationship": "Owner",
+      "propertyId": "1050023"
+    },
+    {
+      "id": "1200001",
+      "name": "TEST",
+      "relationship": "NULL",
+      "propertyId": "1050023"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trelationship\tpropertyId\n1140001\tjoe\tOwner\t1050023\n1200001\tTEST\tNULL\t1050023\n",
+  "stderr": "",
+  "execution_time_ms": 1512
+}

@@ -1130,3 +1130,10 @@
 - [x] Create comprehensive Vitest tests for Call Tracking Sheet (50+ test cases)
 - [x] Test data integrity for all fields
 - [x] Validate table rendering and field display
+
+## BUG FIX - Call Tracking Sheet Field Misalignment
+- [x] Fix contact name and relationship fields showing wrong data in table rows
+- [x] Ensure each contact row displays name under Contact Name and relationship under Contact Relationship
+- [x] Handle contacts with no name gracefully (shows 'No Name' placeholder)
+- [x] Added missing checkbox column to no-phones row
+- [x] Validate fix in browser

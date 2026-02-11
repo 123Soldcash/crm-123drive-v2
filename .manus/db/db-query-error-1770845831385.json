@@ -1,0 +1,8 @@
+{
+  "query": "SELECT c.id, c.name, c.relationship, c.propertyId, p.address FROM contacts c LEFT JOIN properties p ON c.propertyId = p.id WHERE c.name IN ('joe', 'TEST', 'Joe') OR c.name LIKE '%joe%' OR c.name LIKE '%test%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT c.id, c.name, c.relationship, c.propertyId, p.address FROM contacts c LEFT JOIN properties p ON c.propertyId = p.id WHERE c.name IN ('joe', 'TEST', 'Joe') OR c.name LIKE '%joe%' OR c.name LIKE '%test%' LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'p.address' in 'field list'"
+  ]
+}
