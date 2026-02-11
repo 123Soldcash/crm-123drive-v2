@@ -1106,3 +1106,18 @@
 - [x] Get Jennifer Browning's contact ID from database (contactId: 2)
 - [x] Add phone number 3174080986 to contactPhones table
 - [x] Verify phone number displays in CRM UI
+
+
+## REVISÃO V15 - CONTACTS SECTION REDESIGN (NEW)
+- [x] Create ContactsSection component with unified design
+- [x] Implement contact creation functionality
+- [x] Implement contact editing functionality
+- [x] Display call history linked to each contact
+- [x] Add contact flags (DNC, Litigator, Deceased, Decision Maker)
+- [x] Add phone/email display with hide toggle
+- [x] Add call button integration
+- [ ] Add getCallHistory tRPC procedure to backend
+- [ ] Update PropertyDetail page to use ContactsSection
+- [ ] Remove old CallTrackingTable section from PropertyDetail
+- [ ] Create comprehensive tests for ContactsSection
+- [ ] Validate all contact workflows (create, edit, view history)
