@@ -1146,3 +1146,11 @@
 - [x] Auto-refresh Call Tracking table after save (invalidates contacts.byProperty, communication.getContactsByProperty, properties.getById)
 - [x] Create comprehensive Vitest tests for ContactEditModal (18 tests passed)
 - [x] Validate in browser - click, edit, save, refresh cycle working
+
+## BUG FIX - ContactEditModal Phone Save Not Working
+- [x] Investigated why phone save doesn't work (Zod validation: contactId expected not id, age null rejected)
+- [x] Fixed mutation to use contactId, age undefined instead of null
+- [x] Used addPhone/addEmail mutations for new entries
+- [x] Ensured page refreshes after save (invalidates all relevant queries)
+- [x] Created comprehensive Vitest tests (32 tests passed)
+- [x] Validated fix in browser - phone 5559876543 saved and appeared in table

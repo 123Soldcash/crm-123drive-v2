@@ -130,7 +130,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     }
   }, [contact]);
 
-  const updateContactMutation = trpc.contacts.updateContact.useMutation({
+  const updateContactMutation = trpc.communication.updateContact.useMutation({
     onSuccess: () => {
       toast.success("Contact updated successfully!");
       // Invalidate all relevant queries to refresh the page
@@ -144,25 +144,74 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     },
   });
 
-  const handleSave = () => {
+  const addPhoneMutation = trpc.communication.addPhone.useMutation({
+    onSuccess: () => {
+      utils.contacts.byProperty.invalidate({ propertyId });
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to add phone: ${error.message}`);
+    },
+  });
+
+  const addEmailMutation = trpc.communication.addEmail.useMutation({
+    onSuccess: () => {
+      utils.contacts.byProperty.invalidate({ propertyId });
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to add email: ${error.message}`);
+    },
+  });
+
+  const handleSave = async () => {
     if (!contact?.id) return;
 
-    updateContactMutation.mutate({
-      id: contact.id,
-      name: name || undefined,
-      relationship: relationship || undefined,
-      age: age ? parseInt(age, 10) : null,
-      currentAddress: currentAddress || undefined,
-      flags: flags || undefined,
-      deceased: deceased ? 1 : 0,
-      isDecisionMaker: isDecisionMaker ? 1 : 0,
-      dnc: dnc ? 1 : 0,
-      isLitigator: isLitigator ? 1 : 0,
-      currentResident: currentResident ? 1 : 0,
-      contacted: contacted ? 1 : 0,
-      onBoard: onBoard ? 1 : 0,
-      notOnBoard: notOnBoard ? 1 : 0,
-    });
+    try {
+      // 1. Update contact details
+      await updateContactMutation.mutateAsync({
+        contactId: contact.id,
+        name: name || undefined,
+        relationship: relationship || undefined,
+        age: age ? parseInt(age, 10) : undefined,
+        currentAddress: currentAddress || undefined,
+        flags: flags || undefined,
+        deceased: deceased ? 1 : 0,
+        isDecisionMaker: isDecisionMaker ? 1 : 0,
+        dnc: dnc ? 1 : 0,
+        isLitigator: isLitigator ? 1 : 0,
+        currentResident: currentResident ? 1 : 0,
+        contacted: contacted ? 1 : 0,
+        onBoard: onBoard ? 1 : 0,
+        notOnBoard: notOnBoard ? 1 : 0,
+      });
+
+      // 2. Add new phones (ones not in original contact)
+      const originalPhones = (contact.phones || []).map((p: any) => p.phoneNumber);
+      const newPhones = phones.filter(p => !originalPhones.includes(p.phoneNumber));
+      for (const phone of newPhones) {
+        await addPhoneMutation.mutateAsync({
+          contactId: contact.id,
+          phoneNumber: phone.phoneNumber,
+          phoneType: phone.phoneType as any || "Mobile",
+          isPrimary: phone.isPrimary || 0,
+          dnc: phone.dnc || 0,
+        });
+      }
+
+      // 3. Add new emails (ones not in original contact)
+      const originalEmails = (contact.emails || []).map((e: any) => e.email);
+      const newEmails = emails.filter(e => !originalEmails.includes(e.email));
+      for (const email of newEmails) {
+        await addEmailMutation.mutateAsync({
+          contactId: contact.id,
+          email: email.email,
+          isPrimary: email.isPrimary || 0,
+        });
+      }
+    } catch (error) {
+      // Error already handled by individual mutation onError callbacks
+    }
   };
 
   const handleAddPhone = () => {
