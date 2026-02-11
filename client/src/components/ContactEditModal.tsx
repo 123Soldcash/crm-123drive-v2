@@ -168,7 +168,8 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     if (!contact?.id) return;
 
     try {
-      // 1. Update contact details
+      // Send all contact details + phones + emails in a single mutation
+      // The backend will delete existing phones/emails and recreate them
       await updateContactMutation.mutateAsync({
         contactId: contact.id,
         name: name || undefined,
@@ -184,33 +185,19 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
         contacted: contacted ? 1 : 0,
         onBoard: onBoard ? 1 : 0,
         notOnBoard: notOnBoard ? 1 : 0,
+        phones: phones.map(p => ({
+          phoneNumber: p.phoneNumber,
+          phoneType: p.phoneType || "Mobile",
+          isPrimary: p.isPrimary || 0,
+          dnc: p.dnc || 0,
+        })),
+        emails: emails.map(e => ({
+          email: e.email,
+          isPrimary: e.isPrimary || 0,
+        })),
       });
-
-      // 2. Add new phones (ones not in original contact)
-      const originalPhones = (contact.phones || []).map((p: any) => p.phoneNumber);
-      const newPhones = phones.filter(p => !originalPhones.includes(p.phoneNumber));
-      for (const phone of newPhones) {
-        await addPhoneMutation.mutateAsync({
-          contactId: contact.id,
-          phoneNumber: phone.phoneNumber,
-          phoneType: phone.phoneType as any || "Mobile",
-          isPrimary: phone.isPrimary || 0,
-          dnc: phone.dnc || 0,
-        });
-      }
-
-      // 3. Add new emails (ones not in original contact)
-      const originalEmails = (contact.emails || []).map((e: any) => e.email);
-      const newEmails = emails.filter(e => !originalEmails.includes(e.email));
-      for (const email of newEmails) {
-        await addEmailMutation.mutateAsync({
-          contactId: contact.id,
-          email: email.email,
-          isPrimary: email.isPrimary || 0,
-        });
-      }
     } catch (error) {
-      // Error already handled by individual mutation onError callbacks
+      // Error already handled by mutation onError callback
     }
   };
 

@@ -1168,3 +1168,11 @@
 - [x] Ensured checkboxes, text, badges, and buttons are vertically centered in each row
 - [x] Applied to both contacts-with-phones and contacts-without-phones sections
 - [x] Validated in browser - all content properly centered vertically
+
+## CONTACT EDIT MODAL - Remove Phone/Email Quantity Limits
+- [x] Confirmed no phone/email quantity limit exists in frontend code
+- [x] Updated communication.updateContact backend to accept phones[] and emails[] arrays
+- [x] Refactored handleSave to send all phones/emails in single mutation (enables both add AND remove)
+- [x] Phone/email removal now persisted to database (delete-and-recreate sync)
+- [x] Created 47 comprehensive Vitest tests (all passing)
+- [x] Validated in browser - added 5th phone, removed it, both operations saved correctly

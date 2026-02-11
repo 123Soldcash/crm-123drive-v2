@@ -1684,6 +1684,16 @@ export const appRouter = router({
           contacted: z.number().optional(),
           onBoard: z.number().optional(),
           notOnBoard: z.number().optional(),
+          phones: z.array(z.object({
+            phoneNumber: z.string(),
+            phoneType: z.string().optional(),
+            isPrimary: z.number().optional(),
+            dnc: z.number().optional(),
+          })).optional(),
+          emails: z.array(z.object({
+            email: z.string(),
+            isPrimary: z.number().optional(),
+          })).optional(),
         })
       )
       .mutation(async ({ input }) => {
