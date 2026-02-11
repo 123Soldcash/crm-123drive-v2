@@ -1663,7 +1663,25 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input }) => {
-        const contactId = await communication.createContact(input);
+        const { phone1, phone1Type, phone2, phone2Type, phone3, phone3Type, email1, email2, email3, ...contactBase } = input;
+        
+        // Build phones array from flat fields
+        const phones: Array<{ phoneNumber: string; phoneType?: string }> = [];
+        if (phone1) phones.push({ phoneNumber: phone1, phoneType: phone1Type || "Mobile" });
+        if (phone2) phones.push({ phoneNumber: phone2, phoneType: phone2Type || "Mobile" });
+        if (phone3) phones.push({ phoneNumber: phone3, phoneType: phone3Type || "Mobile" });
+        
+        // Build emails array from flat fields
+        const emails: Array<{ email: string }> = [];
+        if (email1) emails.push({ email: email1 });
+        if (email2) emails.push({ email: email2 });
+        if (email3) emails.push({ email: email3 });
+        
+        const contactId = await communication.createContact({
+          ...contactBase,
+          phones: phones.length > 0 ? phones : undefined,
+          emails: emails.length > 0 ? emails : undefined,
+        });
         return { success: true, contactId };
       }),
 

@@ -37,7 +37,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
 import { ContactEditModal } from "./ContactEditModal";
@@ -141,6 +142,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [phoneTypeFilter, setPhoneTypeFilter] = useState<string>("all"); // all, Mobile, Landline, Other
   const [editingContact, setEditingContact] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddContactForm, setShowAddContactForm] = useState(false);
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactRelationship, setNewContactRelationship] = useState("");
+  const [newContactPhone, setNewContactPhone] = useState("");
+  const [newContactPhoneType, setNewContactPhoneType] = useState("Mobile");
+  const [newContactEmail, setNewContactEmail] = useState("");
 
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
@@ -203,6 +210,39 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       toast.error(`Failed to log call: ${error.message}`);
     },
   });
+
+  const createContactMutation = trpc.communication.createContact.useMutation({
+    onSuccess: () => {
+      toast.success("Contact added successfully");
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      utils.contacts.byProperty.invalidate();
+      utils.properties.getById.invalidate();
+      setShowAddContactForm(false);
+      setNewContactName("");
+      setNewContactRelationship("");
+      setNewContactPhone("");
+      setNewContactPhoneType("Mobile");
+      setNewContactEmail("");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to add contact: ${error.message}`);
+    },
+  });
+
+  const handleAddContact = () => {
+    if (!newContactName.trim()) {
+      toast.error("Contact name is required");
+      return;
+    }
+    createContactMutation.mutate({
+      propertyId,
+      name: newContactName.trim(),
+      relationship: newContactRelationship || undefined,
+      phone1: newContactPhone.trim() || undefined,
+      phone1Type: newContactPhone.trim() ? newContactPhoneType : undefined,
+      email1: newContactEmail.trim() || undefined,
+    });
+  };
 
   const updateNotesMutation = trpc.communication.updateCommunicationLog.useMutation({
     onSuccess: () => {
@@ -1001,6 +1041,133 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Add Contact Section */}
+          <div className="mt-4 border-t pt-4">
+            {!showAddContactForm ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddContactForm(true)}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Contact
+              </Button>
+            ) : (
+              <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    New Contact
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      setShowAddContactForm(false);
+                      setNewContactName("");
+                      setNewContactRelationship("");
+                      setNewContactPhone("");
+                      setNewContactPhoneType("Mobile");
+                      setNewContactEmail("");
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Name *</Label>
+                    <Input
+                      placeholder="Contact name"
+                      value={newContactName}
+                      onChange={(e) => setNewContactName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Relationship</Label>
+                    <Select value={newContactRelationship} onValueChange={setNewContactRelationship}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Owner">Owner</SelectItem>
+                        <SelectItem value="Spouse">Spouse</SelectItem>
+                        <SelectItem value="Relative">Relative</SelectItem>
+                        <SelectItem value="Tenant">Tenant</SelectItem>
+                        <SelectItem value="Neighbor">Neighbor</SelectItem>
+                        <SelectItem value="Attorney">Attorney</SelectItem>
+                        <SelectItem value="Personal Representative">Personal Representative</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone Number</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Phone number"
+                        value={newContactPhone}
+                        onChange={(e) => setNewContactPhone(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                        className="flex-1"
+                      />
+                      <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
+                        <SelectTrigger className="w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Mobile">Mobile</SelectItem>
+                          <SelectItem value="Landline">Landline</SelectItem>
+                          <SelectItem value="Work">Work</SelectItem>
+                          <SelectItem value="Home">Home</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email</Label>
+                    <Input
+                      type="email"
+                      placeholder="Email address"
+                      value={newContactEmail}
+                      onChange={(e) => setNewContactEmail(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    onClick={handleAddContact}
+                    disabled={!newContactName.trim() || createContactMutation.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {createContactMutation.isPending ? "Adding..." : "Add Contact"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddContactForm(false);
+                      setNewContactName("");
+                      setNewContactRelationship("");
+                      setNewContactPhone("");
+                      setNewContactPhoneType("Mobile");
+                      setNewContactEmail("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

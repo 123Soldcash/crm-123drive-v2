@@ -1176,3 +1176,12 @@
 - [x] Phone/email removal now persisted to database (delete-and-recreate sync)
 - [x] Created 47 comprehensive Vitest tests (all passing)
 - [x] Validated in browser - added 5th phone, removed it, both operations saved correctly
+
+## CALL TRACKING SHEET - Add Contact Button Inside Table
+- [x] Add "Add Contact" button inside the Call Tracking Sheet table
+- [x] Create inline form with Name, Relationship, Phone Number (with type), and Email fields
+- [x] Connect to existing communication.createContact backend mutation
+- [x] Fixed backend createContact to properly transform flat phone/email fields into arrays
+- [x] Auto-refresh table after adding new contact (invalidates contacts query)
+- [x] Write Vitest tests for the feature (all passing)
+- [x] Validated in browser - contact created with phone and email saved correctly
