@@ -1154,3 +1154,11 @@
 - [x] Ensured page refreshes after save (invalidates all relevant queries)
 - [x] Created comprehensive Vitest tests (32 tests passed)
 - [x] Validated fix in browser - phone 5559876543 saved and appeared in table
+
+## CALL TRACKING SHEET - Read-Only Checkboxes for Contact Attributes
+- [x] Replace "0" values with unchecked checkbox icons for missing attributes
+- [x] Replace "1" values with checked checkbox icons for present attributes
+- [x] Make checkboxes read-only (not editable, disabled + pointer-events-none)
+- [x] Apply to all attribute columns (DNC, Litigator, Deceased, Decision Maker, Mobile, Landline, Other)
+- [x] Color-coded: DNC=red, Litigator=orange, Deceased=gray, Decision Maker=yellow, Mobile=blue, Landline=green, Other=gray
+- [x] Validated in browser - checkboxes display correctly for both contacts with and without phones

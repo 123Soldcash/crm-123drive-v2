@@ -768,29 +768,64 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 </Badge>
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
-                                {contact.dnc && <span className="text-pink-600 font-bold text-sm">🚫</span>}
+                                <Checkbox
+                                  checked={!!contact.dnc}
+                                  disabled
+                                  className="pointer-events-none data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
+                                  aria-label="DNC"
+                                />
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
-                                {contact.isLitigator && <span className="text-red-600 font-bold text-sm">⚖️</span>}
+                                <Checkbox
+                                  checked={!!contact.isLitigator}
+                                  disabled
+                                  className="pointer-events-none data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                  aria-label="Litigator"
+                                />
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
-                                {contact.deceased && <Skull className="h-3 w-3 text-purple-600 mx-auto" />}
+                                <Checkbox
+                                  checked={!!contact.deceased}
+                                  disabled
+                                  className="pointer-events-none data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                                  aria-label="Deceased"
+                                />
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
-                                {contact.isDecisionMaker && <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 mx-auto" />}
+                                <Checkbox
+                                  checked={!!contact.isDecisionMaker}
+                                  disabled
+                                  className="pointer-events-none data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                                  aria-label="Decision Maker"
+                                />
                               </TableCell>
                             </>
                           )}
                           
-                          {/* Phone Type Icons */}
+                          {/* Phone Type Checkboxes */}
                           <TableCell className="text-center px-0">
-                            {phone.phoneType === "Mobile" && <Smartphone className="h-3 w-3 text-blue-600 mx-auto" />}
+                            <Checkbox
+                              checked={phone.phoneType === "Mobile"}
+                              disabled
+                              className="pointer-events-none data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                              aria-label="Mobile"
+                            />
                           </TableCell>
                           <TableCell className="text-center px-0">
-                            {phone.phoneType === "Landline" && <PhoneCall className="h-3 w-3 text-green-600 mx-auto" />}
+                            <Checkbox
+                              checked={phone.phoneType === "Landline"}
+                              disabled
+                              className="pointer-events-none data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                              aria-label="Landline"
+                            />
                           </TableCell>
                           <TableCell className="text-center px-0">
-                            {!["Mobile", "Landline"].includes(phone.phoneType) && <span className="text-gray-600 text-xs">📞</span>}
+                            <Checkbox
+                              checked={!["Mobile", "Landline"].includes(phone.phoneType) && !!phone.phoneType}
+                              disabled
+                              className="pointer-events-none data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600"
+                              aria-label="Other"
+                            />
                           </TableCell>
                           
                           {/* Phone Number */}
@@ -927,16 +962,36 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center px-0">
-                        {contact.dnc ? <span className="text-pink-600 font-bold text-sm">🚫</span> : null}
+                        <Checkbox
+                          checked={!!contact.dnc}
+                          disabled
+                          className="pointer-events-none data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
+                          aria-label="DNC"
+                        />
                       </TableCell>
                       <TableCell className="text-center px-0">
-                        {contact.isLitigator ? <span className="text-red-600 font-bold text-sm">⚖️</span> : null}
+                        <Checkbox
+                          checked={!!contact.isLitigator}
+                          disabled
+                          className="pointer-events-none data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                          aria-label="Litigator"
+                        />
                       </TableCell>
                       <TableCell className="text-center px-0">
-                        {contact.deceased ? <Skull className="h-3 w-3 text-purple-600 mx-auto" /> : null}
+                        <Checkbox
+                          checked={!!contact.deceased}
+                          disabled
+                          className="pointer-events-none data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                          aria-label="Deceased"
+                        />
                       </TableCell>
                       <TableCell className="text-center px-0">
-                        {contact.isDecisionMaker ? <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 mx-auto" /> : null}
+                        <Checkbox
+                          checked={!!contact.isDecisionMaker}
+                          disabled
+                          className="pointer-events-none data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          aria-label="Decision Maker"
+                        />
                       </TableCell>
                       <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
                         No phone numbers
