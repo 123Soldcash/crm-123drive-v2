@@ -746,14 +746,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         <TableRow key={`${contact.id}-${phoneIdx}`} className={`border-b ${rowBgClass} ${phoneIdx === 0 ? 'border-t-2 border-t-muted' : ''}`}>
                           {phoneIdx === 0 && (
                             <>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-top">
+                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle">
                                 <Checkbox
                                   checked={selectedContacts.has(contact.id)}
                                   onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
                                   aria-label={`Select ${contact.name}`}
                                 />
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="font-medium align-top">
+                              <TableCell rowSpan={contact.phones.length} className="font-medium align-middle">
                                 <button
                                   onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
                                   className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium text-left"
@@ -762,12 +762,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   {contact.name || <span className="text-muted-foreground italic">No Name</span>}
                                 </button>
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="align-top">
+                              <TableCell rowSpan={contact.phones.length} className="align-middle">
                                 <Badge variant="outline" className="text-xs">
                                   {contact.relationship || "N/A"}
                                 </Badge>
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
+                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
                                 <Checkbox
                                   checked={!!contact.dnc}
                                   disabled
@@ -775,7 +775,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   aria-label="DNC"
                                 />
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
+                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
                                 <Checkbox
                                   checked={!!contact.isLitigator}
                                   disabled
@@ -783,7 +783,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   aria-label="Litigator"
                                 />
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
+                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
                                 <Checkbox
                                   checked={!!contact.deceased}
                                   disabled
@@ -791,7 +791,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   aria-label="Deceased"
                                 />
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-top px-0">
+                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
                                 <Checkbox
                                   checked={!!contact.isDecisionMaker}
                                   disabled
@@ -803,7 +803,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           )}
                           
                           {/* Phone Type Checkboxes */}
-                          <TableCell className="text-center px-0">
+                          <TableCell className="text-center align-middle px-0">
                             <Checkbox
                               checked={phone.phoneType === "Mobile"}
                               disabled
@@ -811,7 +811,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               aria-label="Mobile"
                             />
                           </TableCell>
-                          <TableCell className="text-center px-0">
+                          <TableCell className="text-center align-middle px-0">
                             <Checkbox
                               checked={phone.phoneType === "Landline"}
                               disabled
@@ -819,7 +819,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               aria-label="Landline"
                             />
                           </TableCell>
-                          <TableCell className="text-center px-0">
+                          <TableCell className="text-center align-middle px-0">
                             <Checkbox
                               checked={!["Mobile", "Landline"].includes(phone.phoneType) && !!phone.phoneType}
                               disabled
@@ -829,7 +829,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           </TableCell>
                           
                           {/* Phone Number */}
-                          <TableCell>
+                          <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
                               <TwilioBrowserCallButton
                                 phoneNumber={phone.phoneNumber}
@@ -875,14 +875,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           </TableCell>
                           
                           {/* Attempts Counter */}
-                          <TableCell className="text-center">
+                          <TableCell className="text-center align-middle">
                             <span className="text-sm font-medium">
                               {attempts > 0 ? `${attempts}x` : "-"}
                             </span>
                           </TableCell>
                           
                           {/* Quick Disposition Buttons */}
-                          <TableCell>
+                          <TableCell className="align-middle">
                             {lastDisposition ? (
                               <Badge 
                                 variant="outline" 
@@ -906,7 +906,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           </TableCell>
                           
                           {/* Notes */}
-                          <TableCell className="text-sm text-muted-foreground">
+                          <TableCell className="text-sm text-muted-foreground align-middle">
                             {editingNote?.contactId === contact.id && editingNote?.phoneNumber === phone.phoneNumber ? (
                               <input
                                 type="text"
@@ -940,14 +940,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     })
                   ) : (
                     <TableRow key={contact.id} className="hover:bg-muted/50 border-t-2 border-t-muted">
-                      <TableCell className="text-center">
+                      <TableCell className="text-center align-middle">
                         <Checkbox
                           checked={selectedContacts.has(contact.id)}
                           onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
                           aria-label={`Select ${contact.name || 'Unknown'}`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium align-middle">
                         <button
                           onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
                           className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium text-left"
@@ -956,12 +956,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           {contact.name || <span className="text-muted-foreground italic">No Name</span>}
                         </button>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-middle">
                         <Badge variant="outline" className="text-xs">
                           {contact.relationship || "N/A"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center px-0">
+                      <TableCell className="text-center align-middle px-0">
                         <Checkbox
                           checked={!!contact.dnc}
                           disabled
@@ -969,7 +969,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="DNC"
                         />
                       </TableCell>
-                      <TableCell className="text-center px-0">
+                      <TableCell className="text-center align-middle px-0">
                         <Checkbox
                           checked={!!contact.isLitigator}
                           disabled
@@ -977,7 +977,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="Litigator"
                         />
                       </TableCell>
-                      <TableCell className="text-center px-0">
+                      <TableCell className="text-center align-middle px-0">
                         <Checkbox
                           checked={!!contact.deceased}
                           disabled
@@ -985,7 +985,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="Deceased"
                         />
                       </TableCell>
-                      <TableCell className="text-center px-0">
+                      <TableCell className="text-center align-middle px-0">
                         <Checkbox
                           checked={!!contact.isDecisionMaker}
                           disabled
@@ -993,7 +993,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="Decision Maker"
                         />
                       </TableCell>
-                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center align-middle text-sm text-muted-foreground">
                         No phone numbers
                       </TableCell>
                     </TableRow>

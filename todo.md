@@ -1162,3 +1162,9 @@
 - [x] Apply to all attribute columns (DNC, Litigator, Deceased, Decision Maker, Mobile, Landline, Other)
 - [x] Color-coded: DNC=red, Litigator=orange, Deceased=gray, Decision Maker=yellow, Mobile=blue, Landline=green, Other=gray
 - [x] Validated in browser - checkboxes display correctly for both contacts with and without phones
+
+## CALL TRACKING SHEET - Vertical Centering Fix
+- [x] Applied align-middle to all TableCell elements (rowSpan cells and regular cells)
+- [x] Ensured checkboxes, text, badges, and buttons are vertically centered in each row
+- [x] Applied to both contacts-with-phones and contacts-without-phones sections
+- [x] Validated in browser - all content properly centered vertically
