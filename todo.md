@@ -1121,3 +1121,12 @@
 - [ ] Remove old CallTrackingTable section from PropertyDetail
 - [ ] Create comprehensive tests for ContactsSection
 - [ ] Validate all contact workflows (create, edit, view history)
+
+
+## REVISÃO V16 - CALL TRACKING SHEET TABLE REDESIGN (NEW)
+- [x] Fix contact selection field to properly display contact names
+- [x] Fix relationship field to show contact relationship instead of name
+- [x] Verify all table columns are correctly mapped to database fields
+- [x] Create comprehensive Vitest tests for Call Tracking Sheet (50+ test cases)
+- [x] Test data integrity for all fields
+- [x] Validate table rendering and field display

@@ -707,8 +707,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       aria-label="Select all contacts"
                     />
                   </TableHead>
-                  <TableHead className="w-[150px]">Name</TableHead>
-                  <TableHead className="w-[120px]">Relationship</TableHead>
+                  <TableHead className="w-[150px]">Contact Name</TableHead>
+                  <TableHead className="w-[120px]">Contact Relationship</TableHead>
                   <TableHead className="w-[24px] text-center px-0">📵</TableHead>
                   <TableHead className="w-[24px] text-center px-0">🗣</TableHead>
                   <TableHead className="w-[24px] text-center px-0">🕊</TableHead>
