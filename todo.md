@@ -1137,3 +1137,12 @@
 - [x] Handle contacts with no name gracefully (shows 'No Name' placeholder)
 - [x] Added missing checkbox column to no-phones row
 - [x] Validate fix in browser
+
+## CONTACT EDIT MODAL - Click to Edit in Call Tracking Sheet
+- [x] Create ContactEditModal component with all contact fields (3 tabs: Details, Phones & Emails, Call History)
+- [x] Make contact name clickable in Call Tracking Sheet table (blue link with hover underline)
+- [x] Display all contact data in modal (name, relationship, age, address, flags, phones, emails)
+- [x] Implement save functionality with communication.updateContact backend mutation
+- [x] Auto-refresh Call Tracking table after save (invalidates contacts.byProperty, communication.getContactsByProperty, properties.getById)
+- [x] Create comprehensive Vitest tests for ContactEditModal (18 tests passed)
+- [x] Validate in browser - click, edit, save, refresh cycle working

@@ -40,6 +40,7 @@ import {
 import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
+import { ContactEditModal } from "./ContactEditModal";
 
 interface CallTrackingTableProps {
   propertyId: number;
@@ -138,6 +139,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [dateFilter, setDateFilter] = useState<string>("all"); // all, 7days, 30days
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [phoneTypeFilter, setPhoneTypeFilter] = useState<string>("all"); // all, Mobile, Landline, Other
+  const [editingContact, setEditingContact] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
@@ -751,7 +754,13 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 />
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="font-medium align-top">
-                                {contact.name || <span className="text-muted-foreground italic">No Name</span>}
+                                <button
+                                  onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium text-left"
+                                  title="Click to edit contact"
+                                >
+                                  {contact.name || <span className="text-muted-foreground italic">No Name</span>}
+                                </button>
                               </TableCell>
                               <TableCell rowSpan={contact.phones.length} className="align-top">
                                 <Badge variant="outline" className="text-xs">
@@ -903,7 +912,15 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label={`Select ${contact.name || 'Unknown'}`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{contact.name || <span className="text-muted-foreground italic">No Name</span>}</TableCell>
+                      <TableCell className="font-medium">
+                        <button
+                          onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
+                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium text-left"
+                          title="Click to edit contact"
+                        >
+                          {contact.name || <span className="text-muted-foreground italic">No Name</span>}
+                        </button>
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
                           {contact.relationship || "N/A"}
@@ -1240,6 +1257,17 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Contact Edit Modal */}
+      <ContactEditModal
+        open={showEditModal}
+        onOpenChange={(open) => {
+          setShowEditModal(open);
+          if (!open) setEditingContact(null);
+        }}
+        contact={editingContact}
+        propertyId={propertyId}
+      />
     </>
   );
 }

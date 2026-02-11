@@ -1132,18 +1132,24 @@ export const appRouter = router({
       .input(
         z.object({
           id: z.number(),
+          name: z.string().optional(),
+          relationship: z.string().optional(),
+          age: z.number().nullable().optional(),
+          deceased: z.number().optional(),
+          currentAddress: z.string().optional(),
           isDecisionMaker: z.number().optional(),
+          dnc: z.number().optional(),
+          isLitigator: z.number().optional(),
+          flags: z.string().optional(),
+          currentResident: z.number().optional(),
+          contacted: z.number().optional(),
+          onBoard: z.number().optional(),
+          notOnBoard: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
-        const dbInstance = await getDb();
-        if (!dbInstance) throw new Error("Database not available");
-        const { contacts } = await import("../drizzle/schema.js");
-        const { eq } = await import("drizzle-orm");
-        await dbInstance
-          .update(contacts)
-          .set({ isDecisionMaker: input.isDecisionMaker })
-          .where(eq(contacts.id, input.id));
+        const { id, ...updates } = input;
+        await communication.updateContact(id, updates);
         return { success: true };
       }),
 
