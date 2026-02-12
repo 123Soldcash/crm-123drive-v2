@@ -30,8 +30,7 @@ import { PropertyCheckIn } from "@/components/PropertyCheckIn";
 import { VisitHistory } from "@/components/VisitHistory";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
-import { ContactManagement } from "@/components/ContactManagement";
-import { DeskChrisNotes } from "@/components/DeskChrisNotes";
+
 import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -42,7 +41,7 @@ import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
-import { DealCalculator } from "@/components/DealCalculator";
+
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -374,8 +373,7 @@ export default function PropertyDetail() {
         </div>
       </div>
 
-      {/* Top Sections: Contacts and Call Tracking */}
-      <ContactManagement propertyId={propertyId} />
+      {/* Call Tracking */}
       <CallTrackingTable propertyId={propertyId} />
       
       {/* Middle Sections: Tasks and Follow-ups */}
@@ -399,28 +397,8 @@ export default function PropertyDetail() {
       </CollapsibleSection>
 
       <PhotoGallery propertyId={propertyId} />
-      <DeskChrisNotes propertyId={propertyId} />
       <NotesSection propertyId={propertyId} />
       <ActivityTimeline propertyId={propertyId} />
-      
-      <CollapsibleSection title="Transfer History" icon={History} accentColor="gray">
-        <div className="space-y-4">
-          {transferHistory?.map((history: any) => (
-            <div key={history.id} className="flex items-start gap-4 p-3 border rounded-md bg-gray-50">
-              <div className="mt-1"><ArrowRightLeft className="h-4 w-4 text-gray-400" /></div>
-              <div>
-                <p className="text-sm font-medium">{history.fromAgentName || 'Unknown'} → {history.toAgentName || 'Unknown'}</p>
-                <p className="text-xs text-muted-foreground">{new Date(history.createdAt).toLocaleString()}</p>
-                {history.status && <span className={`text-xs px-2 py-0.5 rounded-full ${history.status === 'accepted' ? 'bg-green-100 text-green-700' : history.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{history.status}</span>}
-                {history.reason && <p className="text-sm mt-1 text-gray-600 italic">"{history.reason}"</p>}
-              </div>
-            </div>
-          ))}
-          {(!transferHistory || transferHistory.length === 0) && <p className="text-sm text-muted-foreground text-center py-4">No transfer history available.</p>}
-        </div>
-      </CollapsibleSection>
-
-      <DealCalculator propertyId={propertyId} />
       <BuyerMatching propertyId={propertyId} />
     </div>
   );
