@@ -45,6 +45,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -92,12 +93,16 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
   const { data: allPhotos } = trpc.photos.byProperty.useQuery({ propertyId });
   
+  const noteUsers = Array.from(new Set(notes.map(note => note.userName).filter(Boolean))) as string[];
+
   const filteredNotes = notes.filter((note) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = (
       note.content.toLowerCase().includes(query) ||
       (note.userName && note.userName.toLowerCase().includes(query))
     );
+    const matchesUser = !selectedUser || note.userName === selectedUser;
+    return matchesSearch && matchesUser;
   });
 
   const createNoteMutation = trpc.notes.create.useMutation({
@@ -284,8 +289,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search notes..."
@@ -294,6 +299,23 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               className="pl-10 bg-white border-slate-200"
             />
           </div>
+          {noteUsers.length > 0 && (
+            <select
+              value={selectedUser || ""}
+              onChange={(e) => setSelectedUser(e.target.value || null)}
+              className="px-3 py-1.5 text-sm border border-slate-200 rounded-md bg-white hover:bg-slate-50 cursor-pointer"
+            >
+              <option value="">All Users ({notes.length})</option>
+              {noteUsers.map((user) => {
+                const userNoteCount = notes.filter(note => note.userName === user).length;
+                return (
+                  <option key={user} value={user}>
+                    {user} ({userNoteCount})
+                  </option>
+                );
+              })}
+            </select>
+          )}
           <Button variant="outline" size="sm" onClick={handleExportCSV} className="border-slate-200">
             <Download className="h-4 w-4 mr-2" />
             Export

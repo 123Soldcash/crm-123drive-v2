@@ -589,7 +589,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Phone className="h-5 w-5" />
-              Call Tracking Sheet
+              Contacts
             </CardTitle>
           </div>
           

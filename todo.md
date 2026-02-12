@@ -1212,3 +1212,10 @@
 - [x] Removed unused imports: ContactManagement, DeskChrisNotes, DealCalculator, History icon
 - [x] Verified no backend dependencies broken - all APIs still functional
 - [x] Tested property page loads without errors - UI clean and responsive
+
+## UI UPDATES - Rename and Add Filters
+- [x] Renamed "Call Tracking Sheet" to "Contacts" in CallTrackingTable.tsx
+- [x] Added user filter dropdown to General Notes section in NotesSection.tsx
+- [x] Display note count per user in filter dropdown (e.g., "Rosangela Russo (1)")
+- [x] Filter logic working - shows "All Users (1)" and individual user counts
+- [x] Validated in browser - both features working correctly
