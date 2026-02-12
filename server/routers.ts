@@ -2523,6 +2523,37 @@ export const appRouter = router({
       const { validateTwilioConfig } = await import("./twilio");
       return validateTwilioConfig();
     }),
+
+    /**
+     * Initiate an outbound call via the Twilio REST API.
+     * This is the primary calling method — it works reliably regardless of
+     * browser WebSocket connectivity.
+     *
+     * Flow:
+     * 1. Server tells Twilio to call the user's browser client
+     * 2. When the browser answers, Twilio bridges to the destination number
+     * 3. Both parties are connected
+     */
+    makeCall: protectedProcedure
+      .input(z.object({
+        to: z.string().min(1, "Phone number is required"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { makeOutboundCall, validateTwilioConfig } = await import("./twilio");
+
+        const config = validateTwilioConfig();
+        if (!config.valid) {
+          throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
+        }
+
+        const userIdentity = `user_${ctx.user.id}`;
+        const result = await makeOutboundCall({
+          to: input.to,
+          userIdentity,
+        });
+
+        return result;
+      }),
   }),
 
   // Agents Management

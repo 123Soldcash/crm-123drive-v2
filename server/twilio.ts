@@ -4,6 +4,7 @@
  * Handles:
  * - Access token generation for browser-based calling (Voice SDK)
  * - TwiML response generation for voice webhooks
+ * - Server-side outbound call initiation (REST API)
  * - Phone number formatting to E.164
  * - Twilio client initialization
  */
@@ -126,13 +127,68 @@ export function buildTwimlResponse(to: string | undefined): string {
   return response.toString();
 }
 
-// ─── REST API Call (server-side fallback) ───────────────────────────────────
+// ─── Build TwiML for connecting a REST-initiated call to a destination ──────
 
 /**
- * Initiate a phone call via the Twilio REST API (server-to-server).
- * This is a fallback for cases where browser-based calling isn't available.
+ * Build TwiML that connects the answered call to the destination number.
+ * Used as the URL for REST API-initiated calls.
  */
-export async function makeRestCall(params: {
+export function buildConnectTwiml(to: string): string {
+  const VoiceResponse = twilio.twiml.VoiceResponse;
+  const response = new VoiceResponse();
+
+  const callerId = ENV.twilioPhoneNumber;
+  response.say({ voice: "Polly.Amy" }, "Connecting your call now.");
+  const dial = response.dial({ callerId });
+  dial.number(formatPhoneNumber(to));
+
+  return response.toString();
+}
+
+// ─── Server-Side Outbound Call (REST API) ──────────────────────────────────
+
+/**
+ * Initiate a phone call via the Twilio REST API.
+ * 
+ * This calls the Twilio number first, then when answered, connects to the
+ * destination number. This is the most reliable method and works regardless
+ * of browser WebSocket connectivity.
+ *
+ * @param to - Destination phone number
+ * @param userIdentity - The Twilio client identity to connect (e.g., "user_1")
+ */
+export async function makeOutboundCall(params: {
+  to: string;
+  userIdentity: string;
+}) {
+  const client = getClient();
+  const { to, userIdentity } = params;
+  const formattedTo = formatPhoneNumber(to);
+  const baseUrl = getBaseUrl();
+
+  // Create a call that first connects to the browser client, then dials out
+  const call = await client.calls.create({
+    to: `client:${userIdentity}`,
+    from: ENV.twilioPhoneNumber,
+    url: `${baseUrl}/api/twilio/connect?to=${encodeURIComponent(formattedTo)}`,
+    statusCallback: `${baseUrl}/api/twilio/voice/status`,
+    statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+    statusCallbackMethod: "POST" as const,
+  });
+
+  return {
+    callSid: call.sid,
+    status: call.status,
+    to: formattedTo,
+    from: ENV.twilioPhoneNumber,
+  };
+}
+
+/**
+ * Initiate a direct outbound call via REST API (no browser connection needed).
+ * Twilio calls the destination directly from your Twilio number.
+ */
+export async function makeDirectCall(params: {
   to: string;
   from?: string;
   statusCallbackUrl?: string;

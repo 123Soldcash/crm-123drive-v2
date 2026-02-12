@@ -200,6 +200,26 @@ async function startServer() {
     }
   });
 
+  // Twilio connect endpoint — used by REST API calls to bridge to destination
+  app.all("/api/twilio/connect", async (req, res) => {
+    try {
+      const to = req.query.to as string || req.body?.To;
+      const { buildConnectTwiml } = await import("../twilio");
+      const twiml = buildConnectTwiml(to);
+      console.log("[Twilio Connect] Bridging call to:", to);
+      res.type("text/xml");
+      res.send(twiml);
+    } catch (error) {
+      console.error("[Twilio Connect] Error:", error);
+      const twilio = await import("twilio");
+      const VoiceResponse = twilio.default.twiml.VoiceResponse;
+      const fallback = new VoiceResponse();
+      fallback.say("An error occurred connecting your call.");
+      res.type("text/xml");
+      res.send(fallback.toString());
+    }
+  });
+
   // Twilio call status callback — logs status changes for debugging
   app.post("/api/twilio/voice/status", async (req, res) => {
     console.log("[Twilio Status]", req.body?.CallStatus, req.body?.CallSid);

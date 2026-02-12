@@ -5,8 +5,9 @@
  * 1. Environment variable validation
  * 2. Phone number formatting (E.164)
  * 3. Access token generation
- * 4. TwiML response building
- * 5. tRPC procedure integration (getAccessToken, checkConfig)
+ * 4. TwiML response building (voice + connect)
+ * 5. Config validation
+ * 6. tRPC procedure integration (getAccessToken, checkConfig, makeCall)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -80,7 +81,6 @@ describe("buildTwimlResponse", () => {
 
   it("uses callerId from env", () => {
     const xml = buildTwimlResponse("+15551234567");
-    // The callerId should be set in the Dial element
     expect(xml).toContain("callerId");
   });
 
@@ -90,7 +90,46 @@ describe("buildTwimlResponse", () => {
   });
 });
 
-// ─── 3. Config Validation ───────────────────────────────────────────────────
+// ─── 3. Connect TwiML Building ─────────────────────────────────────────────
+
+describe("buildConnectTwiml", () => {
+  let buildConnectTwiml: typeof import("./twilio").buildConnectTwiml;
+
+  beforeEach(async () => {
+    const mod = await import("./twilio");
+    buildConnectTwiml = mod.buildConnectTwiml;
+  });
+
+  it("returns valid TwiML XML", () => {
+    const xml = buildConnectTwiml("+15551234567");
+    expect(xml).toContain("<?xml version");
+    expect(xml).toContain("<Response>");
+  });
+
+  it("includes a Say element for the connection message", () => {
+    const xml = buildConnectTwiml("+15551234567");
+    expect(xml).toContain("<Say");
+    expect(xml).toContain("Connecting your call");
+  });
+
+  it("includes a Dial element with the destination number", () => {
+    const xml = buildConnectTwiml("+15551234567");
+    expect(xml).toContain("<Dial");
+    expect(xml).toContain("<Number>+15551234567</Number>");
+  });
+
+  it("formats the phone number to E.164", () => {
+    const xml = buildConnectTwiml("5551234567");
+    expect(xml).toContain("<Number>+15551234567</Number>");
+  });
+
+  it("includes callerId in the Dial element", () => {
+    const xml = buildConnectTwiml("+15551234567");
+    expect(xml).toContain("callerId");
+  });
+});
+
+// ─── 4. Config Validation ───────────────────────────────────────────────────
 
 describe("validateTwilioConfig", () => {
   let validateTwilioConfig: typeof import("./twilio").validateTwilioConfig;
@@ -101,10 +140,7 @@ describe("validateTwilioConfig", () => {
   });
 
   it("returns valid:true when all env vars are set", () => {
-    // These should be set in the test environment via .env
     const result = validateTwilioConfig();
-
-    // If running in CI without env vars, check structure at minimum
     expect(result).toHaveProperty("valid");
     expect(result).toHaveProperty("missing");
     expect(Array.isArray(result.missing)).toBe(true);
@@ -117,7 +153,7 @@ describe("validateTwilioConfig", () => {
   });
 });
 
-// ─── 4. Access Token Generation ─────────────────────────────────────────────
+// ─── 5. Access Token Generation ─────────────────────────────────────────────
 
 describe("generateAccessToken", () => {
   let generateAccessToken: typeof import("./twilio").generateAccessToken;
@@ -131,9 +167,7 @@ describe("generateAccessToken", () => {
 
   it("generates a JWT string when credentials are configured", () => {
     const config = validateTwilioConfig();
-
     if (!config.valid) {
-      // Skip if env vars not set — this is expected in some CI environments
       console.warn("Skipping token test: Twilio env vars not configured");
       return;
     }
@@ -168,32 +202,64 @@ describe("generateAccessToken", () => {
     const ttl = payload.exp - payload.iat;
     expect(ttl).toBe(60);
   });
+
+  it("token contains voice grant with outgoing application SID", () => {
+    const config = validateTwilioConfig();
+    if (!config.valid) return;
+
+    const token = generateAccessToken("test_user_grant");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+
+    expect(payload.grants).toBeDefined();
+    expect(payload.grants.voice).toBeDefined();
+    expect(payload.grants.voice.outgoing).toBeDefined();
+    expect(payload.grants.voice.outgoing.application_sid).toBeTruthy();
+  });
+
+  it("token contains incoming allow grant", () => {
+    const config = validateTwilioConfig();
+    if (!config.valid) return;
+
+    const token = generateAccessToken("test_user_incoming");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+
+    expect(payload.grants.voice.incoming).toBeDefined();
+    expect(payload.grants.voice.incoming.allow).toBe(true);
+  });
+
+  it("token identity matches the provided identity", () => {
+    const config = validateTwilioConfig();
+    if (!config.valid) return;
+
+    const token = generateAccessToken("crm_user_99");
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+
+    expect(payload.grants.identity).toBe("crm_user_99");
+  });
 });
 
-// ─── 5. tRPC Procedure Integration ─────────────────────────────────────────
+// ─── 6. tRPC Procedure Integration ─────────────────────────────────────────
 
 describe("tRPC twilio procedures", () => {
+  const mockCtx = {
+    user: {
+      id: 1,
+      openId: "test-user",
+      email: "test@example.com",
+      name: "Test User",
+      loginMethod: "manus",
+      role: "user" as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
+    },
+    req: { protocol: "https", headers: {} } as any,
+    res: { clearCookie: () => {} } as any,
+  };
+
   it("twilio.checkConfig returns valid structure via tRPC", async () => {
     const { appRouter } = await import("./routers");
-    const { TrpcContext } = await import("./_core/context").catch(() => ({ TrpcContext: null }));
-
-    const ctx = {
-      user: {
-        id: 1,
-        openId: "test-user",
-        email: "test@example.com",
-        name: "Test User",
-        loginMethod: "manus",
-        role: "user" as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastSignedIn: new Date(),
-      },
-      req: { protocol: "https", headers: {} } as any,
-      res: { clearCookie: () => {} } as any,
-    };
-
-    const caller = appRouter.createCaller(ctx);
+    const caller = appRouter.createCaller(mockCtx);
     const result = await caller.twilio.checkConfig();
 
     expect(result).toHaveProperty("valid");
@@ -212,22 +278,7 @@ describe("tRPC twilio procedures", () => {
       return;
     }
 
-    const ctx = {
-      user: {
-        id: 42,
-        openId: "test-user-42",
-        email: "test42@example.com",
-        name: "Test User 42",
-        loginMethod: "manus",
-        role: "user" as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastSignedIn: new Date(),
-      },
-      req: { protocol: "https", headers: {} } as any,
-      res: { clearCookie: () => {} } as any,
-    };
-
+    const ctx = { ...mockCtx, user: { ...mockCtx.user, id: 42 } };
     const caller = appRouter.createCaller(ctx);
     const result = await caller.twilio.getAccessToken();
 
@@ -235,11 +286,43 @@ describe("tRPC twilio procedures", () => {
     expect(result).toHaveProperty("identity");
     expect(typeof result.token).toBe("string");
     expect(result.identity).toBe("user_42");
-    expect(result.token.split(".")).toHaveLength(3); // Valid JWT
+    expect(result.token.split(".")).toHaveLength(3);
+  });
+
+  it("twilio.makeCall requires a phone number", async () => {
+    const { appRouter } = await import("./routers");
+    const caller = appRouter.createCaller(mockCtx);
+
+    // Should throw validation error for empty phone number
+    await expect(caller.twilio.makeCall({ to: "" })).rejects.toThrow();
+  });
+
+  it("twilio.makeCall accepts a valid phone number input", async () => {
+    const { appRouter } = await import("./routers");
+    const { validateTwilioConfig } = await import("./twilio");
+
+    const config = validateTwilioConfig();
+    if (!config.valid) {
+      console.warn("Skipping makeCall test: Twilio env vars not configured");
+      return;
+    }
+
+    // Note: This test validates the procedure accepts the input correctly.
+    // The actual Twilio API call will fail in test environment (no real phone),
+    // but we verify the procedure structure and input validation work.
+    const caller = appRouter.createCaller(mockCtx);
+
+    try {
+      await caller.twilio.makeCall({ to: "+15551234567" });
+    } catch (err: any) {
+      // Expected to fail because we can't make real calls in tests,
+      // but it should NOT be a validation error
+      expect(err.message).not.toContain("Phone number is required");
+    }
   });
 });
 
-// ─── 6. Environment Variables Present ───────────────────────────────────────
+// ─── 7. Environment Variables Present ───────────────────────────────────────
 
 describe("Twilio environment variables", () => {
   it("TWILIO_ACCOUNT_SID starts with AC", () => {
@@ -285,5 +368,14 @@ describe("Twilio environment variables", () => {
       return;
     }
     expect(secret.length).toBeGreaterThan(10);
+  });
+
+  it("TWILIO_TWIML_APP_SID starts with AP", () => {
+    const sid = process.env.TWILIO_TWIML_APP_SID;
+    if (!sid) {
+      console.warn("TWILIO_TWIML_APP_SID not set");
+      return;
+    }
+    expect(sid).toMatch(/^AP/);
   });
 });

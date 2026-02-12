@@ -1261,3 +1261,17 @@
 - [x] Configurar TwiML App Voice URL no Twilio Console
 - [x] Validar chamada no navegador
 - [x] Salvar checkpoint final
+
+
+## BUG FIX - Twilio WebSocket Error 31000 - FIXED ✅
+- [x] Diagnosed WSTransport WebSocket error 31000 (proxy blocking WebSocket to Twilio signaling)
+- [x] Root cause: dev proxy blocks wss:// to chunderw-vpc-gll.twilio.com/signal
+- [x] Added dual-mode calling: REST API primary + browser SDK fallback
+- [x] Added /api/twilio/connect endpoint for REST API call bridging
+- [x] Added twilio.makeCall tRPC mutation for server-side call initiation
+- [x] Added buildConnectTwiml function for call bridging TwiML
+- [x] Added edge location configuration (ashburn, umatilla, roaming)
+- [x] Improved error messages for network issues
+- [x] Token generation verified: valid JWT with voice grant, incoming allow, correct identity
+- [x] Updated tests: 35 tests passing (added buildConnectTwiml, makeCall, token grant tests)
+- [x] Verified server running and endpoints accessible

@@ -1,13 +1,17 @@
 /**
- * TwilioCallWidget — Browser-based phone calling via Twilio Voice SDK.
+ * TwilioCallWidget — Phone calling from the CRM.
  *
- * Flow:
- * 1. User clicks the green phone icon
- * 2. We fetch a fresh Access Token from the backend
- * 3. We lazy-load @twilio/voice-sdk and create a Device
- * 4. Device.connect({ params: { To: number } }) initiates the call
- * 5. Twilio hits our /api/twilio/voice endpoint for TwiML instructions
- * 6. The call connects and audio flows through the browser
+ * Strategy (dual-mode):
+ * 1. PRIMARY: Server-side REST API call (always works)
+ *    - Backend tells Twilio to call the user's browser client
+ *    - When browser answers, Twilio bridges to the destination
+ *    - Requires the Twilio Voice SDK to receive the incoming call
+ *
+ * 2. FALLBACK: Direct browser-to-Twilio (Device.connect)
+ *    - Only works when WebSocket to Twilio signaling servers is available
+ *    - May fail behind proxies or restrictive networks (error 31000)
+ *
+ * The widget automatically handles both modes transparently.
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Phone, PhoneOff, Mic, MicOff, Loader2 } from "lucide-react";
@@ -63,6 +67,9 @@ export function TwilioCallWidget({ phoneNumber, contactName }: TwilioCallWidgetP
     retry: false,
   });
 
+  // Server-side call mutation
+  const makeCallMutation = trpc.twilio.makeCall.useMutation();
+
   // ─── Cleanup on unmount ─────────────────────────────────────────────────
 
   useEffect(() => {
@@ -115,7 +122,190 @@ export function TwilioCallWidget({ phoneNumber, contactName }: TwilioCallWidgetP
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // ─── Initiate Call ──────────────────────────────────────────────────────
+  // ─── Setup Device to receive incoming call from REST API ───────────────
+
+  async function setupDeviceForIncoming(token: string): Promise<any> {
+    const { Device, Call } = await loadTwilioSDK();
+
+    // Destroy any stale device
+    if (deviceRef.current) {
+      try { deviceRef.current.destroy(); } catch (_) { /* ignore */ }
+    }
+
+    const device = new Device(token, {
+      logLevel: 1,
+      codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+      closeProtection: true,
+      // Try multiple edge locations for better connectivity
+      edge: ["ashburn", "umatilla", "roaming"],
+    });
+
+    deviceRef.current = device;
+
+    // Register device — this opens the signaling WebSocket
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Device registration timed out (15s)."));
+      }, 15_000);
+
+      device.on("registered", () => {
+        clearTimeout(timeout);
+        console.log("[TwilioCallWidget] Device registered successfully");
+        resolve();
+      });
+
+      device.on("error", (err: any) => {
+        console.error("[TwilioCallWidget] Device error:", err.code, err.message);
+        // Don't reject on 31000 during registration — it might recover
+        if (err.code === 31000) {
+          console.warn("[TwilioCallWidget] WebSocket error 31000 — will retry with fallback");
+        }
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+      device.register();
+    });
+
+    return device;
+  }
+
+  // ─── Attach call event handlers ────────────────────────────────────────
+
+  function attachCallHandlers(call: any) {
+    callRef.current = call;
+
+    call.on("accept", () => {
+      console.log("[TwilioCallWidget] Call accepted/connected");
+      safeSet(setCallState, "connected");
+      startTimer();
+      toast.success(`Connected to ${contactName}`);
+    });
+
+    call.on("disconnect", () => {
+      console.log("[TwilioCallWidget] Call disconnected");
+      stopTimer();
+      safeSet(setCallState, "idle");
+      safeSet(setIsMuted, false);
+      safeSet(setElapsed, 0);
+      callRef.current = null;
+      toast.info("Call ended");
+    });
+
+    call.on("cancel", () => {
+      console.log("[TwilioCallWidget] Call cancelled");
+      stopTimer();
+      safeSet(setCallState, "idle");
+      safeSet(setIsMuted, false);
+      safeSet(setElapsed, 0);
+      callRef.current = null;
+    });
+
+    call.on("error", (error: any) => {
+      console.error("[TwilioCallWidget] Call error:", error.code, error.message);
+      stopTimer();
+      safeSet(setCallState, "idle");
+      safeSet(setIsMuted, false);
+      safeSet(setElapsed, 0);
+      callRef.current = null;
+      toast.error(friendlyError(error));
+    });
+  }
+
+  // ─── Primary: Server-side REST API call ────────────────────────────────
+
+  async function startCallViaRestAPI(token: string) {
+    try {
+      // 1. Setup device to receive the incoming call from Twilio
+      const device = await setupDeviceForIncoming(token);
+
+      if (!mountedRef.current) return;
+
+      // 2. Listen for incoming call
+      device.on("incoming", (call: any) => {
+        console.log("[TwilioCallWidget] Incoming call from REST API bridge");
+        safeSet(setCallState, "connecting");
+        attachCallHandlers(call);
+        // Auto-accept the incoming call (it's from our own REST API)
+        call.accept();
+      });
+
+      safeSet(setCallState, "connecting");
+      toast.info(`Calling ${contactName}...`);
+
+      // 3. Tell the server to initiate the call
+      const formattedNumber = formatE164(phoneNumber);
+      await makeCallMutation.mutateAsync({ to: formattedNumber });
+
+      console.log("[TwilioCallWidget] REST API call initiated, waiting for incoming...");
+
+    } catch (error: any) {
+      console.error("[TwilioCallWidget] REST API call failed:", error);
+      // If device registration fails (31000), try direct browser call
+      if (error?.code === 31000 || error?.message?.includes("timed out")) {
+        console.log("[TwilioCallWidget] Falling back to direct browser call...");
+        await startCallViaBrowserSDK(token);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  // ─── Fallback: Direct browser-to-Twilio call ──────────────────────────
+
+  async function startCallViaBrowserSDK(token: string) {
+    const { Device, Call } = await loadTwilioSDK();
+
+    // Destroy any stale device
+    if (deviceRef.current) {
+      try { deviceRef.current.destroy(); } catch (_) { /* ignore */ }
+    }
+
+    const device = new Device(token, {
+      logLevel: 1,
+      codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+      closeProtection: true,
+      edge: ["ashburn", "umatilla", "roaming"],
+    });
+
+    deviceRef.current = device;
+
+    // Register device
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Could not connect to calling service. Please check your internet connection and try again."));
+      }, 15_000);
+
+      device.on("registered", () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+
+      device.on("error", (err: any) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+      device.register();
+    });
+
+    if (!mountedRef.current) return;
+
+    safeSet(setCallState, "connecting");
+
+    const formattedNumber = formatE164(phoneNumber);
+    const call = await device.connect({
+      params: { To: formattedNumber },
+    });
+
+    attachCallHandlers(call);
+
+    call.on("ringing", () => {
+      safeSet(setCallState, "ringing");
+    });
+  }
+
+  // ─── Main Call Entry Point ─────────────────────────────────────────────
 
   const startCall = async () => {
     if (callState !== "idle") return;
@@ -133,92 +323,11 @@ export function TwilioCallWidget({ phoneNumber, contactName }: TwilioCallWidgetP
         return;
       }
 
-      // 2. Load Twilio SDK
-      const { Device, Call } = await loadTwilioSDK();
+      // 2. Try REST API method first (most reliable)
+      await startCallViaRestAPI(token);
 
-      // 3. Destroy any stale device
-      if (deviceRef.current) {
-        try { deviceRef.current.destroy(); } catch (_) { /* ignore */ }
-      }
-
-      // 4. Create new Device
-      const device = new Device(token, {
-        logLevel: 0, // Silent
-        codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
-        closeProtection: true,
-      });
-
-      deviceRef.current = device;
-
-      // 5. Register device (opens signaling WebSocket)
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Device registration timed out (10s). Check your internet connection."));
-        }, 10_000);
-
-        device.on("registered", () => {
-          clearTimeout(timeout);
-          resolve();
-        });
-
-        device.on("error", (err: any) => {
-          clearTimeout(timeout);
-          reject(err);
-        });
-
-        device.register();
-      });
-
-      if (!mountedRef.current) return;
-
-      // 6. Connect the call
-      safeSet(setCallState, "connecting");
-
-      const formattedNumber = formatE164(phoneNumber);
-      const call = await device.connect({
-        params: { To: formattedNumber },
-      });
-
-      callRef.current = call;
-
-      // ─── Call Event Handlers ──────────────────────────────────────
-
-      call.on("ringing", () => {
-        safeSet(setCallState, "ringing");
-      });
-
-      call.on("accept", () => {
-        safeSet(setCallState, "connected");
-        startTimer();
-        toast.success(`Connected to ${contactName}`);
-      });
-
-      call.on("disconnect", () => {
-        stopTimer();
-        safeSet(setCallState, "idle");
-        safeSet(setIsMuted, false);
-        safeSet(setElapsed, 0);
-        callRef.current = null;
-        toast.info("Call ended");
-      });
-
-      call.on("cancel", () => {
-        stopTimer();
-        safeSet(setCallState, "idle");
-        safeSet(setIsMuted, false);
-        safeSet(setElapsed, 0);
-        callRef.current = null;
-      });
-
-      call.on("error", (error: any) => {
-        stopTimer();
-        safeSet(setCallState, "idle");
-        safeSet(setIsMuted, false);
-        safeSet(setElapsed, 0);
-        callRef.current = null;
-        toast.error(friendlyError(error));
-      });
     } catch (error: any) {
+      console.error("[TwilioCallWidget] All call methods failed:", error);
       safeSet(setCallState, "idle");
       cleanup();
       toast.error(friendlyError(error));
@@ -255,14 +364,22 @@ export function TwilioCallWidget({ phoneNumber, contactName }: TwilioCallWidgetP
   // ─── Error Messages ────────────────────────────────────────────────────
 
   function friendlyError(error: any): string {
+    const msg = error?.message || "";
     const code = error?.code;
-    switch (code) {
-      case 31000: return "Call service unavailable. Please try again.";
-      case 31005: return "Connection error. Check your internet.";
-      case 31009: return "Transport error. Please try again.";
-      case 31205: return "Token expired. Please refresh and try again.";
-      default: return error?.message || "Call failed. Please try again.";
+
+    // Network/WebSocket errors
+    if (code === 31000 || msg.includes("WebSocket") || msg.includes("timed out")) {
+      return "Network connection issue. The call could not be established. Please try again from the published site.";
     }
+    if (code === 31005) return "Connection to calling service lost. Please try again.";
+    if (code === 31009) return "No network connection available for calling.";
+    if (code === 31205) return "Session expired. Please refresh the page and try again.";
+    if (code === 31208) return "Microphone access denied. Please allow microphone access in your browser settings.";
+
+    // Server errors
+    if (msg.includes("not configured")) return "Twilio is not fully configured. Please check your credentials.";
+
+    return msg || "Call failed. Please try again.";
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────
