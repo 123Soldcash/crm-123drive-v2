@@ -1,12 +1,21 @@
 /**
- * Twilio Voice Integration Module
+ * Twilio Voice Integration Module — Pure REST API Approach
+ *
+ * This module uses ONLY the Twilio REST API to make calls.
+ * NO browser Voice SDK is required.
+ *
+ * Call flow:
+ * 1. User clicks "Call" button in the CRM
+ * 2. Server calls Twilio REST API to create a call
+ * 3. Twilio calls the DESTINATION number directly from our Twilio number
+ * 4. User can track call status via polling
  *
  * Handles:
- * - Access token generation for browser-based calling (Voice SDK)
- * - TwiML response generation for voice webhooks
- * - Server-side outbound call initiation (REST API)
+ * - Direct outbound calls via REST API
+ * - Call status tracking
  * - Phone number formatting to E.164
- * - Twilio client initialization
+ * - TwiML response generation for voice webhooks
+ * - Twilio configuration validation
  */
 import twilio from "twilio";
 import { ENV } from "./_core/env";
@@ -54,45 +63,6 @@ export function formatPhoneNumber(phone: string): string {
   return `+1${digits}`;
 }
 
-// ─── Access Token Generation ────────────────────────────────────────────────
-
-/**
- * Generate a Twilio Access Token with a VoiceGrant for browser-based calling.
- *
- * The token allows the browser's Twilio Device to:
- * - Make outbound calls via the configured TwiML App
- * - Receive inbound calls addressed to the given identity
- *
- * @param identity - Unique user identifier (e.g., "user_42")
- * @param ttl - Token time-to-live in seconds (default: 3600 = 1 hour)
- */
-export function generateAccessToken(identity: string, ttl = 3600): string {
-  const { twilioAccountSid, twilioApiKey, twilioApiSecret, twilioTwimlAppSid } = ENV;
-
-  if (!twilioAccountSid || !twilioApiKey || !twilioApiSecret) {
-    throw new Error("Twilio API Key credentials not configured");
-  }
-  if (!twilioTwimlAppSid) {
-    throw new Error("TWILIO_TWIML_APP_SID not configured — create a TwiML App in the Twilio Console");
-  }
-
-  const AccessToken = twilio.jwt.AccessToken;
-  const VoiceGrant = AccessToken.VoiceGrant;
-
-  const token = new AccessToken(twilioAccountSid, twilioApiKey, twilioApiSecret, {
-    identity,
-    ttl,
-  });
-
-  const voiceGrant = new VoiceGrant({
-    outgoingApplicationSid: twilioTwimlAppSid,
-    incomingAllow: true,
-  });
-
-  token.addGrant(voiceGrant);
-  return token.toJwt();
-}
-
 // ─── TwiML Response Builder ─────────────────────────────────────────────────
 
 /**
@@ -127,7 +97,7 @@ export function buildTwimlResponse(to: string | undefined): string {
   return response.toString();
 }
 
-// ─── Build TwiML for connecting a REST-initiated call to a destination ──────
+// ─── Build TwiML for outbound call ──────────────────────────────────────────
 
 /**
  * Build TwiML that connects the answered call to the destination number.
@@ -138,42 +108,48 @@ export function buildConnectTwiml(to: string): string {
   const response = new VoiceResponse();
 
   const callerId = ENV.twilioPhoneNumber;
-  response.say({ voice: "Polly.Amy" }, "Connecting your call now.");
-  const dial = response.dial({ callerId });
+  const dial = response.dial({ callerId, timeout: 30 });
   dial.number(formatPhoneNumber(to));
 
   return response.toString();
 }
 
-// ─── Server-Side Outbound Call (REST API) ──────────────────────────────────
+// ─── Server-Side Outbound Call (Pure REST API) ──────────────────────────────
 
 /**
- * Initiate a phone call via the Twilio REST API.
+ * Make an outbound call using ONLY the Twilio REST API.
  * 
- * This calls the Twilio number first, then when answered, connects to the
- * destination number. This is the most reliable method and works regardless
- * of browser WebSocket connectivity.
+ * This calls the destination number directly from the Twilio number.
+ * No browser Voice SDK or WebSocket connection is needed.
  *
  * @param to - Destination phone number
- * @param userIdentity - The Twilio client identity to connect (e.g., "user_1")
+ * @returns Call details (SID, status, etc.)
  */
 export async function makeOutboundCall(params: {
   to: string;
-  userIdentity: string;
+  statusCallbackUrl?: string;
 }) {
   const client = getClient();
-  const { to, userIdentity } = params;
+  const { to, statusCallbackUrl } = params;
   const formattedTo = formatPhoneNumber(to);
   const baseUrl = getBaseUrl();
 
-  // Create a call that first connects to the browser client, then dials out
+  // Create a call from our Twilio number to the destination
   const call = await client.calls.create({
-    to: `client:${userIdentity}`,
+    to: formattedTo,
     from: ENV.twilioPhoneNumber,
-    url: `${baseUrl}/api/twilio/connect?to=${encodeURIComponent(formattedTo)}`,
-    statusCallback: `${baseUrl}/api/twilio/voice/status`,
-    statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
-    statusCallbackMethod: "POST" as const,
+    url: `${baseUrl}/api/twilio/voice?To=${encodeURIComponent(formattedTo)}`,
+    ...(statusCallbackUrl
+      ? {
+          statusCallback: statusCallbackUrl,
+          statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+          statusCallbackMethod: "POST" as const,
+        }
+      : {
+          statusCallback: `${baseUrl}/api/twilio/voice/status`,
+          statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+          statusCallbackMethod: "POST" as const,
+        }),
   });
 
   return {
@@ -185,52 +161,39 @@ export async function makeOutboundCall(params: {
 }
 
 /**
- * Initiate a direct outbound call via REST API (no browser connection needed).
- * Twilio calls the destination directly from your Twilio number.
+ * Get the current status of a call by its SID.
  */
-export async function makeDirectCall(params: {
-  to: string;
-  from?: string;
-  statusCallbackUrl?: string;
-}) {
+export async function getCallStatus(callSid: string) {
   const client = getClient();
-  const { to, from = ENV.twilioPhoneNumber, statusCallbackUrl } = params;
-
-  const call = await client.calls.create({
-    to: formatPhoneNumber(to),
-    from,
-    url: `${getBaseUrl()}/api/twilio/voice`,
-    ...(statusCallbackUrl
-      ? {
-          statusCallback: statusCallbackUrl,
-          statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
-          statusCallbackMethod: "POST" as const,
-        }
-      : {}),
-  });
-  return call;
+  const call = await client.calls(callSid).fetch();
+  return {
+    callSid: call.sid,
+    status: call.status,
+    duration: call.duration,
+    startTime: call.startTime,
+    endTime: call.endTime,
+    to: call.to,
+    from: call.from,
+    direction: call.direction,
+  };
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
  * Derive the public base URL for webhook callbacks.
- * In production this is the deployed domain; in dev it falls back to a
- * placeholder (TwiML App Voice URL must be set manually for dev).
  */
 function getBaseUrl(): string {
-  // In production, use the app's public URL
   if (ENV.isProduction) {
     return `https://${process.env.VITE_APP_ID}.manus.space`;
   }
-  // In development, this URL won't be reachable from Twilio's servers,
-  // but the TwiML App's Voice URL should be set to the deployed URL anyway
-  return `http://localhost:${process.env.PORT || 3000}`;
+  // In development, use the published URL since Twilio can't reach localhost
+  // The TwiML App Voice URL should already be set to the production URL
+  return `https://${process.env.VITE_APP_ID}.manus.space`;
 }
 
 /**
  * Validate that all required Twilio environment variables are present.
- * Returns an object with the validation result and any missing keys.
  */
 export function validateTwilioConfig(): {
   valid: boolean;
@@ -240,9 +203,6 @@ export function validateTwilioConfig(): {
     TWILIO_ACCOUNT_SID: ENV.twilioAccountSid,
     TWILIO_AUTH_TOKEN: ENV.twilioAuthToken,
     TWILIO_PHONE_NUMBER: ENV.twilioPhoneNumber,
-    TWILIO_API_KEY: ENV.twilioApiKey,
-    TWILIO_API_SECRET: ENV.twilioApiSecret,
-    TWILIO_TWIML_APP_SID: ENV.twilioTwimlAppSid,
   };
 
   const missing = Object.entries(required)

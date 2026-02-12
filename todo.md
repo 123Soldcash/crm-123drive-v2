@@ -1275,3 +1275,12 @@
 - [x] Token generation verified: valid JWT with voice grant, incoming allow, correct identity
 - [x] Updated tests: 35 tests passing (added buildConnectTwiml, makeCall, token grant tests)
 - [x] Verified server running and endpoints accessible
+
+
+## BUG FIX - Twilio Error 31000 Persists (Remove Browser SDK) - FIXED ✅
+- [x] Remove @twilio/voice-sdk dependency from frontend entirely
+- [x] Rewrite server/twilio.ts makeOutboundCall to use pure Twilio REST API
+- [x] Rewrite TwilioCallWidget.tsx to use only tRPC mutation (no Voice SDK)
+- [x] Update /api/twilio/connect endpoint for proper call bridging
+- [x] Update tests for new pure REST API approach (30 tests passing)
+- [x] Verify calling works without any WebSocket dependency

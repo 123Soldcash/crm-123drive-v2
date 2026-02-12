@@ -2495,26 +2495,8 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Twilio Voice Calling ────────────────────────────────────────────────
+  // ─── Twilio Voice Calling (Pure REST API — No Browser SDK) ──────────────
   twilio: router({
-    /**
-     * Get a fresh Twilio Access Token for the browser Voice SDK.
-     * The token is scoped to the current user's identity.
-     */
-    getAccessToken: protectedProcedure.query(async ({ ctx }) => {
-      const { generateAccessToken, validateTwilioConfig } = await import("./twilio");
-
-      // Validate config before attempting token generation
-      const config = validateTwilioConfig();
-      if (!config.valid) {
-        throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
-      }
-
-      const identity = `user_${ctx.user.id}`;
-      const token = generateAccessToken(identity);
-      return { token, identity };
-    }),
-
     /**
      * Validate that Twilio credentials are properly configured.
      * Returns { valid, missing } so the UI can show helpful messages.
@@ -2526,19 +2508,18 @@ export const appRouter = router({
 
     /**
      * Initiate an outbound call via the Twilio REST API.
-     * This is the primary calling method — it works reliably regardless of
-     * browser WebSocket connectivity.
+     * NO browser Voice SDK or WebSocket needed.
      *
      * Flow:
-     * 1. Server tells Twilio to call the user's browser client
-     * 2. When the browser answers, Twilio bridges to the destination number
-     * 3. Both parties are connected
+     * 1. Server tells Twilio to call the destination number directly
+     * 2. Twilio calls from our Twilio number to the destination
+     * 3. Call status is tracked via callSid
      */
     makeCall: protectedProcedure
       .input(z.object({
         to: z.string().min(1, "Phone number is required"),
       }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         const { makeOutboundCall, validateTwilioConfig } = await import("./twilio");
 
         const config = validateTwilioConfig();
@@ -2546,13 +2527,24 @@ export const appRouter = router({
           throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
         }
 
-        const userIdentity = `user_${ctx.user.id}`;
         const result = await makeOutboundCall({
           to: input.to,
-          userIdentity,
         });
 
         return result;
+      }),
+
+    /**
+     * Get the current status of a call by its SID.
+     * Used for polling call status from the frontend.
+     */
+    getCallStatus: protectedProcedure
+      .input(z.object({
+        callSid: z.string().min(1, "Call SID is required"),
+      }))
+      .query(async ({ input }) => {
+        const { getCallStatus } = await import("./twilio");
+        return getCallStatus(input.callSid);
       }),
   }),
 
