@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+
 
 interface EditPropertyDialogProps {
   propertyId: number;
@@ -110,12 +110,6 @@ export function EditPropertyDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Pencil className="h-4 w-4" />
-          Edit Lead
-        </Button>
-      </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Property/Lead</DialogTitle>

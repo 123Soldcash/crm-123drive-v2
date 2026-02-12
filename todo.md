@@ -1219,3 +1219,10 @@
 - [x] Display note count per user in filter dropdown (e.g., "Rosangela Russo (1)")
 - [x] Filter logic working - shows "All Users (1)" and individual user counts
 - [x] Validated in browser - both features working correctly
+
+## CLEANUP - Remove Duplicate Edit Lead Button
+- [x] Identified second "Edit Lead" button in EditPropertyDialog DialogTrigger
+- [x] Removed DialogTrigger from EditPropertyDialog component
+- [x] Removed unused Pencil icon import from EditPropertyDialog
+- [x] Kept only the "Edit Lead" button in StickyPropertyHeader (next to "Add to Pipeline")
+- [x] Validated in browser - only one Edit Lead button remains
