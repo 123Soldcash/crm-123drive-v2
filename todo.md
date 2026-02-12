@@ -1185,3 +1185,14 @@
 - [x] Auto-refresh table after adding new contact (invalidates contacts query)
 - [x] Write Vitest tests for the feature (all passing)
 - [x] Validated in browser - contact created with phone and email saved correctly
+
+## BUG FIX - Twilio Connection Errors & getDealCalculation API Error
+- [x] Fix getDealCalculation - added null/undefined APN guard, try/catch, explicit column selection
+- [x] Fix getLeadTransfers (properties.getTransferHistory) - wrong column names: oldAgentId/newAgentId → fromAgentId/toAgentId, transferredAt → createdAt
+- [x] Created dealCalculations table in database (was missing)
+- [x] Added TwiML voice webhook endpoint (/api/twilio/voice) for Twilio Voice SDK
+- [x] Improved TwilioBrowserCallButton error handling, reconnection, and cleanup
+- [x] Updated Transfer History frontend display to use correct field names (fromAgentName → toAgentName)
+- [x] Fixed getAllDealCalculations to join via APN instead of non-existent propertyId column
+- [x] All 8 Vitest tests passing
+- [x] Validated in browser - zero console errors on property page load

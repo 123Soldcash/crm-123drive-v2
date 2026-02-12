@@ -790,15 +790,19 @@ export async function getLeadTransfers(propertyId: number) {
 
   const results = await db
     .select({
-      oldAgentId: leadTransfers.oldAgentId,
-      newAgentId: leadTransfers.newAgentId,
-      transferredAt: leadTransfers.transferredAt,
-      oldAgentName: sql<string>`(SELECT name FROM users WHERE id = ${leadTransfers.oldAgentId})`,
-      newAgentName: sql<string>`(SELECT name FROM users WHERE id = ${leadTransfers.newAgentId})`,
+      id: leadTransfers.id,
+      fromAgentId: leadTransfers.fromAgentId,
+      toAgentId: leadTransfers.toAgentId,
+      reason: leadTransfers.reason,
+      status: leadTransfers.status,
+      createdAt: leadTransfers.createdAt,
+      respondedAt: leadTransfers.respondedAt,
+      fromAgentName: sql<string>`(SELECT name FROM users WHERE id = ${leadTransfers.fromAgentId})`,
+      toAgentName: sql<string>`(SELECT name FROM users WHERE id = ${leadTransfers.toAgentId})`,
     })
     .from(leadTransfers)
     .where(eq(leadTransfers.propertyId, propertyId))
-    .orderBy(desc(leadTransfers.transferredAt));
+    .orderBy(desc(leadTransfers.createdAt));
 
   return results;
 }

@@ -79,7 +79,7 @@ export async function saveDealCalculation(
 
     // Check if calculation already exists
     const existing = await db
-      .select()
+      .select({ id: dealCalculations.id })
       .from(dealCalculations)
       .where(eq(dealCalculations.apn, apn))
       .limit(1);
@@ -161,8 +161,25 @@ export async function getDealCalculation(propertyId: number | null | undefined) 
 
     const apn = propertyResult[0].apn;
 
+    // If the property has no APN, we can't look up a deal calculation
+    if (!apn) {
+      return null;
+    }
+
     const result = await db
-      .select()
+      .select({
+        id: dealCalculations.id,
+        apn: dealCalculations.apn,
+        arv: dealCalculations.arv,
+        repairCost: dealCalculations.repairCost,
+        closingCost: dealCalculations.closingCost,
+        assignmentFee: dealCalculations.assignmentFee,
+        desiredProfit: dealCalculations.desiredProfit,
+        maxOffer: dealCalculations.maxOffer,
+        maoFormula: dealCalculations.maoFormula,
+        createdAt: dealCalculations.createdAt,
+        updatedAt: dealCalculations.updatedAt,
+      })
       .from(dealCalculations)
       .where(eq(dealCalculations.apn, apn))
       .limit(1);
@@ -233,42 +250,52 @@ export async function deleteDealCalculation(propertyId: number | null | undefine
 export async function getAllDealCalculations() {
   const db = await getDb();
 
-  const results = await db
-    .select({
-      id: dealCalculations.id,
-      propertyId: dealCalculations.propertyId,
-      arv: dealCalculations.arv,
-      repairCost: dealCalculations.repairCost,
-      closingCost: dealCalculations.closingCost,
-      assignmentFee: dealCalculations.assignmentFee,
-      desiredProfit: dealCalculations.desiredProfit,
-      maxOffer: dealCalculations.maxOffer,
-      maoFormula: dealCalculations.maoFormula,
-      propertyAddress: properties.addressLine1,
-      propertyCity: properties.city,
-      propertyState: properties.state,
-      createdAt: dealCalculations.createdAt,
-      updatedAt: dealCalculations.updatedAt,
-    })
-    .from(dealCalculations)
-    .leftJoin(properties, eq(dealCalculations.propertyId, properties.id));
+  if (!db) {
+    return [];
+  }
 
-  return results.map((r) => ({
-    id: r.id,
-    propertyId: r.propertyId,
-    arv: parseFloat(r.arv || "0"),
-    repairCost: parseFloat(r.repairCost || "0"),
-    closingCost: parseFloat(r.closingCost || "0"),
-    assignmentFee: parseFloat(r.assignmentFee || "0"),
-    desiredProfit: parseFloat(r.desiredProfit || "0"),
-    maxOffer: parseFloat(r.maxOffer || "0"),
-    maoFormula: r.maoFormula,
-    propertyAddress: r.propertyAddress,
-    propertyCity: r.propertyCity,
-    propertyState: r.propertyState,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
-  }));
+  try {
+    const results = await db
+      .select({
+        id: dealCalculations.id,
+        apn: dealCalculations.apn,
+        arv: dealCalculations.arv,
+        repairCost: dealCalculations.repairCost,
+        closingCost: dealCalculations.closingCost,
+        assignmentFee: dealCalculations.assignmentFee,
+        desiredProfit: dealCalculations.desiredProfit,
+        maxOffer: dealCalculations.maxOffer,
+        maoFormula: dealCalculations.maoFormula,
+        propertyId: properties.id,
+        propertyAddress: properties.addressLine1,
+        propertyCity: properties.city,
+        propertyState: properties.state,
+        createdAt: dealCalculations.createdAt,
+        updatedAt: dealCalculations.updatedAt,
+      })
+      .from(dealCalculations)
+      .leftJoin(properties, eq(dealCalculations.apn, properties.apn));
+
+    return results.map((r) => ({
+      id: r.id,
+      propertyId: r.propertyId,
+      arv: parseFloat(r.arv || "0"),
+      repairCost: parseFloat(r.repairCost || "0"),
+      closingCost: parseFloat(r.closingCost || "0"),
+      assignmentFee: parseFloat(r.assignmentFee || "0"),
+      desiredProfit: parseFloat(r.desiredProfit || "0"),
+      maxOffer: parseFloat(r.maxOffer || "0"),
+      maoFormula: r.maoFormula,
+      propertyAddress: r.propertyAddress,
+      propertyCity: r.propertyCity,
+      propertyState: r.propertyState,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+  } catch (error) {
+    console.error("[getAllDealCalculations] Error:", error);
+    return [];
+  }
 }
 
 /**

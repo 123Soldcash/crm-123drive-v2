@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `dealCalculations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `apn` varchar(50) NOT NULL,\n  `arv` decimal(10, 2),\n  `repairCost` decimal(10, 2),\n  `closingCost` decimal(10, 2),\n  `assignmentFee` decimal(10, 2),\n  `desiredProfit` decimal(10, 2),\n  `maxOffer` decimal(10, 2),\n  `maoFormula` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `dealCalculations_id` PRIMARY KEY(`id`),\n  CONSTRAINT `dealCalculations_apn_unique` UNIQUE(`apn`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute CREATE TABLE IF NOT EXISTS `dealCalculations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `apn` varchar(50) NOT NULL,\n  `arv` decimal(10, 2),\n  `repairCost` decimal(10, 2),\n  `closingCost` decimal(10, 2),\n  `assignmentFee` decimal(10, 2),\n  `desiredProfit` decimal(10, 2),\n  `maxOffer` decimal(10, 2),\n  `maoFormula` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `dealCalculations_id` PRIMARY KEY(`id`),\n  CONSTRAINT `dealCalculations_apn_unique` UNIQUE(`apn`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1682
+}

@@ -179,6 +179,48 @@ async function startServer() {
       });
     }
   });
+  // Twilio Voice TwiML webhook endpoint
+  app.post("/api/twilio/voice", async (req, res) => {
+    try {
+      const twilio = await import("twilio");
+      const VoiceResponse = twilio.default.twiml.VoiceResponse;
+      const response = new VoiceResponse();
+
+      const to = req.body.To;
+      const callerId = process.env.TWILIO_PHONE_NUMBER;
+
+      if (to) {
+        const dial = response.dial({ callerId });
+        // If the number starts with +, it's a phone number
+        if (to.startsWith("+") || /^\d+$/.test(to)) {
+          dial.number(to);
+        } else {
+          // Otherwise it's a client identity
+          dial.client(to);
+        }
+      } else {
+        response.say("No destination specified.");
+      }
+
+      res.type("text/xml");
+      res.send(response.toString());
+    } catch (error) {
+      console.error("[Twilio Voice Webhook] Error:", error);
+      const twilio = await import("twilio");
+      const VoiceResponse = twilio.default.twiml.VoiceResponse;
+      const response = new VoiceResponse();
+      response.say("An error occurred. Please try again later.");
+      res.type("text/xml");
+      res.send(response.toString());
+    }
+  });
+
+  // Twilio Voice status callback endpoint
+  app.post("/api/twilio/voice/status", async (req, res) => {
+    console.log("[Twilio Status Callback]", req.body);
+    res.sendStatus(200);
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

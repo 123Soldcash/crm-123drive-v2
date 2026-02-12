@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -24,11 +24,33 @@ export function TwilioBrowserCallButton({
   const [isInitializing, setIsInitializing] = useState(false);
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
+  const isMountedRef = useRef(true);
 
   // Get Twilio access token - only fetch when needed
-  const { data: tokenData, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(undefined, {
+  const { refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(undefined, {
     enabled: false, // Don't fetch automatically
   });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (callRef.current) {
+        try { callRef.current.disconnect(); } catch (_) {}
+        callRef.current = null;
+      }
+      if (deviceRef.current) {
+        try { deviceRef.current.destroy(); } catch (_) {}
+        deviceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Helper to safely update state only when mounted
+  const safeSetCallState = useCallback((state: typeof callState) => {
+    if (isMountedRef.current) setCallState(state);
+  }, []);
 
   // Initialize Twilio Device on demand (when user clicks call button)
   const initializeDevice = async () => {
@@ -37,53 +59,91 @@ export function TwilioBrowserCallButton({
     try {
       setIsInitializing(true);
 
-      // Fetch token if not already available
-      let token = tokenData?.token;
-      if (!token) {
-        const result = await refetchToken();
-        token = result.data?.token;
-      }
+      // Always fetch a fresh token
+      const result = await refetchToken();
+      const token = result.data?.token;
 
       if (!token) {
-        toast.error("Failed to get calling credentials");
+        toast.error("Failed to get calling credentials. Please try again.");
         setIsInitializing(false);
         return;
       }
 
-      // Only initialize if not already initialized
+      // Destroy old device if it exists (stale connection)
       if (deviceRef.current) {
-        await makeCall();
-        setIsInitializing(false);
-        return;
+        try { deviceRef.current.destroy(); } catch (_) {}
+        deviceRef.current = null;
       }
 
       const device = new Device(token, {
         logLevel: 1,
         codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+        // Close protection prevents accidental page close during calls
+        closeProtection: true,
       });
 
-      device.on("registered", () => {
-        console.log("[Twilio] Device registered");
-      });
+      // Wait for device to register before making a call
+      const registrationPromise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Device registration timed out. Please check your internet connection."));
+        }, 10000); // 10 second timeout
 
-      device.on("error", (error) => {
-        console.error("[Twilio] Device error:", error);
-        toast.error(error.message || "Failed to initialize calling device");
-        setCallState("idle");
-        setIsInitializing(false);
+        device.on("registered", () => {
+          clearTimeout(timeout);
+          console.log("[Twilio] Device registered successfully");
+          resolve();
+        });
+
+        device.on("error", (error) => {
+          clearTimeout(timeout);
+          console.error("[Twilio] Device error:", error);
+          
+          // Map error codes to user-friendly messages
+          let userMessage = "Call connection failed.";
+          const code = (error as any)?.code;
+          if (code === 31005) {
+            userMessage = "Connection error. Please check your internet and try again.";
+          } else if (code === 31000) {
+            userMessage = "Call service temporarily unavailable. Please try again in a moment.";
+          } else if (error.message) {
+            userMessage = error.message;
+          }
+
+          if (isMountedRef.current) {
+            toast.error(userMessage);
+            setCallState("idle");
+            setIsInitializing(false);
+          }
+          reject(error);
+        });
       });
 
       device.register();
       deviceRef.current = device;
+
+      // Wait for registration to complete
+      await registrationPromise;
+
+      if (!isMountedRef.current) return;
       setIsInitializing(false);
 
-      // Make the call after device is ready
+      // Make the call after device is registered
       await makeCall();
     } catch (error: any) {
       console.error("[Twilio] Initialization error:", error);
-      toast.error(error.message || "Failed to initialize calling device");
-      setCallState("idle");
-      setIsInitializing(false);
+      if (isMountedRef.current) {
+        // Don't show duplicate toast if error handler already showed one
+        if (!(error instanceof Error && (error as any)?.code)) {
+          toast.error(error.message || "Failed to initialize calling device. Please try again.");
+        }
+        setCallState("idle");
+        setIsInitializing(false);
+      }
+      // Clean up failed device
+      if (deviceRef.current) {
+        try { deviceRef.current.destroy(); } catch (_) {}
+        deviceRef.current = null;
+      }
     }
   };
 
@@ -94,7 +154,7 @@ export function TwilioBrowserCallButton({
     }
 
     try {
-      setCallState("connecting");
+      safeSetCallState("connecting");
 
       // Format phone number (remove non-digits, add +1 if needed)
       const digits = phoneNumber.replace(/\D/g, "");
@@ -110,62 +170,65 @@ export function TwilioBrowserCallButton({
 
       call.on("accept", () => {
         console.log("[Twilio] Call accepted");
-        setCallState("in-call");
+        safeSetCallState("in-call");
         toast.success(`Connected to ${contactName}`);
       });
 
       call.on("disconnect", () => {
         console.log("[Twilio] Call disconnected");
-        setCallState("idle");
-        setIsMuted(false);
+        safeSetCallState("idle");
+        if (isMountedRef.current) setIsMuted(false);
         callRef.current = null;
         toast.info("The call has been disconnected");
       });
 
       call.on("error", (error) => {
         console.error("[Twilio] Call error:", error);
-        setCallState("idle");
-        setIsMuted(false);
+        safeSetCallState("idle");
+        if (isMountedRef.current) setIsMuted(false);
         callRef.current = null;
-        toast.error(error.message || "Failed to connect the call");
+        
+        const code = (error as any)?.code;
+        let userMessage = "Failed to connect the call.";
+        if (code === 31005) {
+          userMessage = "Connection lost during call. Please check your internet.";
+        } else if (code === 31000) {
+          userMessage = "Call failed due to a service error. Please try again.";
+        } else if (error.message) {
+          userMessage = error.message;
+        }
+        toast.error(userMessage);
       });
 
       call.on("ringing", () => {
         console.log("[Twilio] Call ringing");
-        setCallState("ringing");
+        safeSetCallState("ringing");
       });
     } catch (error: any) {
       console.error("[Twilio] Failed to make call:", error);
-      setCallState("idle");
-      toast.error(error.message || "Failed to initiate the call");
+      safeSetCallState("idle");
+      toast.error(error.message || "Failed to initiate the call. Please try again.");
     }
   };
 
   const hangUp = () => {
     if (callRef.current) {
-      callRef.current.disconnect();
+      try { callRef.current.disconnect(); } catch (_) {}
       callRef.current = null;
     }
     setCallState("idle");
     setIsMuted(false);
+    // Destroy device to clean up WebSocket connection
+    if (deviceRef.current) {
+      try { deviceRef.current.destroy(); } catch (_) {}
+      deviceRef.current = null;
+    }
   };
 
   const toggleMute = () => {
     if (callRef.current) {
       callRef.current.mute(!isMuted);
       setIsMuted(!isMuted);
-    }
-  };
-
-  // Cleanup on unmount
-  const cleanup = () => {
-    if (deviceRef.current) {
-      deviceRef.current.destroy();
-      deviceRef.current = null;
-    }
-    if (callRef.current) {
-      callRef.current.disconnect();
-      callRef.current = null;
     }
   };
 

@@ -1,0 +1,106 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "rows": [
+    {
+      "TABLE_NAME": "__drizzle_migrations"
+    },
+    {
+      "TABLE_NAME": "agentPermissions"
+    },
+    {
+      "TABLE_NAME": "agents"
+    },
+    {
+      "TABLE_NAME": "automatedFollowUps"
+    },
+    {
+      "TABLE_NAME": "buyerPreferences"
+    },
+    {
+      "TABLE_NAME": "buyers"
+    },
+    {
+      "TABLE_NAME": "communicationLog"
+    },
+    {
+      "TABLE_NAME": "contactAddresses"
+    },
+    {
+      "TABLE_NAME": "contactEmails"
+    },
+    {
+      "TABLE_NAME": "contactPhones"
+    },
+    {
+      "TABLE_NAME": "contactSocialMedia"
+    },
+    {
+      "TABLE_NAME": "contacts"
+    },
+    {
+      "TABLE_NAME": "dealCalculations"
+    },
+    {
+      "TABLE_NAME": "familyMembers"
+    },
+    {
+      "TABLE_NAME": "leadAssignments"
+    },
+    {
+      "TABLE_NAME": "leadTransferHistory"
+    },
+    {
+      "TABLE_NAME": "leadTransfers"
+    },
+    {
+      "TABLE_NAME": "noteTemplates"
+    },
+    {
+      "TABLE_NAME": "notes"
+    },
+    {
+      "TABLE_NAME": "outreachLogs"
+    },
+    {
+      "TABLE_NAME": "photos"
+    },
+    {
+      "TABLE_NAME": "properties"
+    },
+    {
+      "TABLE_NAME": "propertyAgents"
+    },
+    {
+      "TABLE_NAME": "propertyDeepSearch"
+    },
+    {
+      "TABLE_NAME": "propertyTags"
+    },
+    {
+      "TABLE_NAME": "savedSearches"
+    },
+    {
+      "TABLE_NAME": "skiptracingLogs"
+    },
+    {
+      "TABLE_NAME": "stageHistory"
+    },
+    {
+      "TABLE_NAME": "taskComments"
+    },
+    {
+      "TABLE_NAME": "tasks"
+    },
+    {
+      "TABLE_NAME": "users"
+    },
+    {
+      "TABLE_NAME": "visits"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\n__drizzle_migrations\nagentPermissions\nagents\nautomatedFollowUps\nbuyerPreferences\nbuyers\ncommunicationLog\ncontactAddresses\ncontactEmails\ncontactPhones\ncontactSocialMedia\ncontacts\ndealCalculations\nfamilyMembers\nleadAssignments\nleadTransferHistory\nleadTransfers\nnoteTemplates\nnotes\noutreachLogs\nphotos\nproperties\npropertyAgents\npropertyDeepSearch\npropertyTags\nsavedSearches\nskiptracingLogs\nstageHistory\ntaskComments\ntasks\nusers\nvisits\n",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

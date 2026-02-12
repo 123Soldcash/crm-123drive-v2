@@ -409,8 +409,9 @@ export default function PropertyDetail() {
             <div key={history.id} className="flex items-start gap-4 p-3 border rounded-md bg-gray-50">
               <div className="mt-1"><ArrowRightLeft className="h-4 w-4 text-gray-400" /></div>
               <div>
-                <p className="text-sm font-medium">Assigned to {history.agent?.name}</p>
+                <p className="text-sm font-medium">{history.fromAgentName || 'Unknown'} → {history.toAgentName || 'Unknown'}</p>
                 <p className="text-xs text-muted-foreground">{new Date(history.createdAt).toLocaleString()}</p>
+                {history.status && <span className={`text-xs px-2 py-0.5 rounded-full ${history.status === 'accepted' ? 'bg-green-100 text-green-700' : history.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{history.status}</span>}
                 {history.reason && <p className="text-sm mt-1 text-gray-600 italic">"{history.reason}"</p>}
               </div>
             </div>

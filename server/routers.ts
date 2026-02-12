@@ -2747,8 +2747,16 @@ export const appRouter = router({
     get: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        const { getDealCalculation } = await import("./db-deal-calculator");
-        return await getDealCalculation(input.propertyId);
+        try {
+          console.log("[dealCalculator.get] Called with propertyId:", input.propertyId);
+          const { getDealCalculation } = await import("./db-deal-calculator");
+          const result = await getDealCalculation(input.propertyId);
+          console.log("[dealCalculator.get] Success, result:", result ? "found" : "null");
+          return result;
+        } catch (error) {
+          console.error("[dealCalculator.get] ERROR in procedure:", error);
+          return null;
+        }
       }),
 
     delete: protectedProcedure
