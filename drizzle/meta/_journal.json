@@ -8,6 +8,13 @@
       "when": 1770671896047,
       "tag": "0000_nifty_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1770932014856,
+      "tag": "0001_windy_giant_girl",
+      "breakpoints": true
     }
   ]
 }

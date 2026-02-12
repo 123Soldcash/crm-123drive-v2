@@ -2503,6 +2503,29 @@ export const appRouter = router({
       const token = generateAccessToken(identity);
       return { token, identity };
     }),
+
+    makeCall: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number().int().positive(),
+          contactId: z.number().int().positive(),
+          toPhoneNumber: z.string().min(10).max(20),
+          contactName: z.string().min(1).max(255),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { makeTwilioCall } = await import("./twilio-make-call");
+        const result = await makeTwilioCall({
+          propertyId: input.propertyId,
+          contactId: input.contactId,
+          userId: ctx.user.id,
+          toPhoneNumber: input.toPhoneNumber,
+          contactName: input.contactName,
+          notes: input.notes,
+        });
+        return result;
+      }),
   }),
 
   // Agents Management

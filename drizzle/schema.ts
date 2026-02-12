@@ -1007,3 +1007,31 @@ export const stageHistory = mysqlTable("stageHistory", {
 
 export type StageHistory = typeof stageHistory.$inferSelect;
 export type InsertStageHistory = typeof stageHistory.$inferInsert;
+
+
+/**
+ * Call Logs table - tracks all phone calls made through Twilio integration
+ * Used for call history, follow-up tracking, and agent performance analytics
+ */
+export const callLogs = mysqlTable("callLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  contactId: int("contactId").notNull(),
+  userId: int("userId").notNull(), // User who made the call
+  toPhoneNumber: varchar("toPhoneNumber", { length: 20 }).notNull(),
+  fromPhoneNumber: varchar("fromPhoneNumber", { length: 20 }).notNull(),
+  callType: mysqlEnum("callType", ["outbound", "inbound", "missed"]).default("outbound").notNull(),
+  status: mysqlEnum("status", ["ringing", "in-progress", "completed", "failed", "no-answer"]).notNull(),
+  duration: int("duration"), // Duration in seconds (null if not completed)
+  twilioCallSid: varchar("twilioCallSid", { length: 64 }), // Twilio call SID for reference
+  notes: text("notes"), // Optional notes about the call
+  recordingUrl: varchar("recordingUrl", { length: 500 }), // URL to call recording if available
+  errorMessage: text("errorMessage"), // Error message if call failed
+  startedAt: timestamp("startedAt").notNull(),
+  endedAt: timestamp("endedAt"), // Null if still in progress
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CallLog = typeof callLogs.$inferSelect;
+export type InsertCallLog = typeof callLogs.$inferInsert;

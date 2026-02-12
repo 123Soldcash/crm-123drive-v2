@@ -1,0 +1,20 @@
+CREATE TABLE `callLogs` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`propertyId` int NOT NULL,
+	`contactId` int NOT NULL,
+	`userId` int NOT NULL,
+	`toPhoneNumber` varchar(20) NOT NULL,
+	`fromPhoneNumber` varchar(20) NOT NULL,
+	`callType` enum('outbound','inbound','missed') NOT NULL DEFAULT 'outbound',
+	`status` enum('ringing','in-progress','completed','failed','no-answer') NOT NULL,
+	`duration` int,
+	`twilioCallSid` varchar(64),
+	`notes` text,
+	`recordingUrl` varchar(500),
+	`errorMessage` text,
+	`startedAt` timestamp NOT NULL,
+	`endedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `callLogs_id` PRIMARY KEY(`id`)
+);
