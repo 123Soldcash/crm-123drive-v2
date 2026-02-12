@@ -1,10 +1,15 @@
+/**
+ * Call Logs Database Helpers
+ *
+ * CRUD operations for the callLogs table. Every phone call made through
+ * the platform is recorded here for audit trail and analytics.
+ */
 import { getDb } from "./db";
 import { callLogs } from "../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
-/**
- * Create a new call log entry
- */
+// ─── Create ─────────────────────────────────────────────────────────────────
+
 export async function createCallLog(data: {
   propertyId: number;
   contactId: number;
@@ -16,22 +21,32 @@ export async function createCallLog(data: {
   twilioCallSid?: string;
   notes?: string;
   errorMessage?: string;
-  endedAt?: Date;
   startedAt: Date;
+  endedAt?: Date;
 }) {
   const db = await getDb();
-  if (!db) throw new Error("Database not initialized");
-  const result = await db.insert(callLogs).values({
-    ...data,
-    callType: data.callType || "outbound",
+  if (!db) throw new Error("Database not available");
+
+  const [result] = await db.insert(callLogs).values({
+    propertyId: data.propertyId,
+    contactId: data.contactId,
+    userId: data.userId,
+    toPhoneNumber: data.toPhoneNumber,
+    fromPhoneNumber: data.fromPhoneNumber,
+    callType: data.callType ?? "outbound",
+    status: data.status,
+    twilioCallSid: data.twilioCallSid,
+    notes: data.notes,
+    errorMessage: data.errorMessage,
+    startedAt: data.startedAt,
+    endedAt: data.endedAt,
   });
 
   return result;
 }
 
-/**
- * Update call log with end time and duration
- */
+// ─── Update ─────────────────────────────────────────────────────────────────
+
 export async function updateCallLog(
   callLogId: number,
   data: Partial<{
@@ -45,81 +60,36 @@ export async function updateCallLog(
   }>
 ) {
   const db = await getDb();
-  if (!db) throw new Error("Database not initialized");
-  const result = await db
-    .update(callLogs)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(eq(callLogs.id, callLogId));
+  if (!db) throw new Error("Database not available");
 
-  return result;
+  await db
+    .update(callLogs)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(callLogs.id, callLogId));
 }
 
-/**
- * Get call logs for a property
- */
-export async function getPropertyCallLogs(propertyId: number, limit = 50) {
+// ─── Read ───────────────────────────────────────────────────────────────────
+
+export async function getCallLogsByProperty(propertyId: number, limit = 50) {
   const db = await getDb();
-  if (!db) throw new Error("Database not initialized");
-  const logs = await db
+  if (!db) throw new Error("Database not available");
+
+  return db
     .select()
     .from(callLogs)
     .where(eq(callLogs.propertyId, propertyId))
     .orderBy(desc(callLogs.createdAt))
     .limit(limit);
-
-  return logs;
 }
 
-/**
- * Get call logs for a contact
- */
-export async function getContactCallLogs(contactId: number, limit = 50) {
+export async function getCallLogsByContact(contactId: number, limit = 50) {
   const db = await getDb();
-  if (!db) throw new Error("Database not initialized");
-  const logs = await db
+  if (!db) throw new Error("Database not available");
+
+  return db
     .select()
     .from(callLogs)
     .where(eq(callLogs.contactId, contactId))
     .orderBy(desc(callLogs.createdAt))
     .limit(limit);
-
-  return logs;
-}
-
-/**
- * Get call logs for a user
- */
-export async function getUserCallLogs(userId: number, limit = 50) {
-  const logs = await db
-    .select()
-    .from(callLogs)
-    .where(eq(callLogs.userId, userId))
-    .orderBy(desc(callLogs.createdAt))
-    .limit(limit);
-
-  return logs;
-}
-
-/**
- * Get recent calls for a contact (last 24 hours)
- */
-export async function getRecentContactCalls(contactId: number) {
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-  const logs = await db
-    .select()
-    .from(callLogs)
-    .where(
-      and(
-        eq(callLogs.contactId, contactId),
-        // @ts-ignore - Drizzle doesn't have a gte operator in the type definitions
-        callLogs.createdAt >= twentyFourHoursAgo
-      )
-    )
-    .orderBy(desc(callLogs.createdAt));
-
-  return logs;
 }

@@ -7,4 +7,11 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // Twilio Voice Integration
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ?? "",
+  twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER ?? "",
+  twilioApiKey: process.env.TWILIO_API_KEY ?? "",
+  twilioApiSecret: process.env.TWILIO_API_SECRET ?? "",
+  twilioTwimlAppSid: process.env.TWILIO_TWIML_APP_SID ?? "",
 };

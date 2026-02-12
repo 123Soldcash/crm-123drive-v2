@@ -2495,37 +2495,34 @@ export const appRouter = router({
       }),
   }),
 
-  // Twilio Browser Calling
+  // ─── Twilio Voice Calling ────────────────────────────────────────────────
   twilio: router({
+    /**
+     * Get a fresh Twilio Access Token for the browser Voice SDK.
+     * The token is scoped to the current user's identity.
+     */
     getAccessToken: protectedProcedure.query(async ({ ctx }) => {
-      const { generateAccessToken } = await import("./twilio");
+      const { generateAccessToken, validateTwilioConfig } = await import("./twilio");
+
+      // Validate config before attempting token generation
+      const config = validateTwilioConfig();
+      if (!config.valid) {
+        throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
+      }
+
       const identity = `user_${ctx.user.id}`;
       const token = generateAccessToken(identity);
       return { token, identity };
     }),
 
-    makeCall: protectedProcedure
-      .input(
-        z.object({
-          propertyId: z.number().int().positive(),
-          contactId: z.number().int().positive(),
-          toPhoneNumber: z.string().min(10).max(20),
-          contactName: z.string().min(1).max(255),
-          notes: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const { makeTwilioCall } = await import("./twilio-make-call");
-        const result = await makeTwilioCall({
-          propertyId: input.propertyId,
-          contactId: input.contactId,
-          userId: ctx.user.id,
-          toPhoneNumber: input.toPhoneNumber,
-          contactName: input.contactName,
-          notes: input.notes,
-        });
-        return result;
-      }),
+    /**
+     * Validate that Twilio credentials are properly configured.
+     * Returns { valid, missing } so the UI can show helpful messages.
+     */
+    checkConfig: protectedProcedure.query(async () => {
+      const { validateTwilioConfig } = await import("./twilio");
+      return validateTwilioConfig();
+    }),
   }),
 
   // Agents Management

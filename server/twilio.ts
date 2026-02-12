@@ -1,100 +1,197 @@
+/**
+ * Twilio Voice Integration Module
+ *
+ * Handles:
+ * - Access token generation for browser-based calling (Voice SDK)
+ * - TwiML response generation for voice webhooks
+ * - Phone number formatting to E.164
+ * - Twilio client initialization
+ */
 import twilio from "twilio";
+import { ENV } from "./_core/env";
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-const authToken = process.env.TWILIO_AUTH_TOKEN!;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
-const twimlAppSid = process.env.TWILIO_TWIML_APP_SID!;
-const apiKey = process.env.TWILIO_API_KEY!;
-const apiSecret = process.env.TWILIO_API_SECRET!;
+// ─── Twilio Client ──────────────────────────────────────────────────────────
 
-const client = twilio(accountSid, authToken);
+let _client: ReturnType<typeof twilio> | null = null;
+
+function getClient() {
+  if (!_client) {
+    if (!ENV.twilioAccountSid || !ENV.twilioAuthToken) {
+      throw new Error("Twilio credentials not configured (ACCOUNT_SID / AUTH_TOKEN)");
+    }
+    _client = twilio(ENV.twilioAccountSid, ENV.twilioAuthToken);
+  }
+  return _client;
+}
+
+// ─── Phone Number Formatting ────────────────────────────────────────────────
 
 /**
- * Format phone number to E.164 format (+1XXXXXXXXXX)
+ * Format a phone number to E.164 format (+1XXXXXXXXXX for US numbers).
+ * Handles various input formats: (555) 123-4567, 555-123-4567, +15551234567, etc.
  */
 export function formatPhoneNumber(phone: string): string {
-  // Remove all non-digit characters
+  // Strip all non-digit characters
   const digits = phone.replace(/\D/g, "");
 
-  // If it starts with 1 and has 11 digits, add +
+  // Already has country code (11 digits starting with 1)
   if (digits.length === 11 && digits.startsWith("1")) {
     return `+${digits}`;
   }
 
-  // If it has 10 digits, add +1
+  // US 10-digit number → prepend +1
   if (digits.length === 10) {
     return `+1${digits}`;
   }
 
-  // If it already starts with +, return as is
+  // If original started with +, trust it
   if (phone.startsWith("+")) {
-    return phone;
+    return phone.replace(/[^\d+]/g, "");
   }
 
-  // Default: assume US number
+  // Fallback: assume US
   return `+1${digits}`;
 }
 
+// ─── Access Token Generation ────────────────────────────────────────────────
+
 /**
- * Generate Twilio Access Token for browser-based calling
- * @param identity - Unique identifier for the user (e.g., user ID or email)
- * @returns JWT access token for Twilio Voice SDK
+ * Generate a Twilio Access Token with a VoiceGrant for browser-based calling.
+ *
+ * The token allows the browser's Twilio Device to:
+ * - Make outbound calls via the configured TwiML App
+ * - Receive inbound calls addressed to the given identity
+ *
+ * @param identity - Unique user identifier (e.g., "user_42")
+ * @param ttl - Token time-to-live in seconds (default: 3600 = 1 hour)
  */
-export function generateAccessToken(identity: string): string {
+export function generateAccessToken(identity: string, ttl = 3600): string {
+  const { twilioAccountSid, twilioApiKey, twilioApiSecret, twilioTwimlAppSid } = ENV;
+
+  if (!twilioAccountSid || !twilioApiKey || !twilioApiSecret) {
+    throw new Error("Twilio API Key credentials not configured");
+  }
+  if (!twilioTwimlAppSid) {
+    throw new Error("TWILIO_TWIML_APP_SID not configured — create a TwiML App in the Twilio Console");
+  }
+
   const AccessToken = twilio.jwt.AccessToken;
   const VoiceGrant = AccessToken.VoiceGrant;
 
-  // Create an access token using API Key credentials
-  const accessToken = new AccessToken(
-    accountSid,
-    apiKey,
-    apiSecret,
-    { identity, ttl: 3600 }
-  );
+  const token = new AccessToken(twilioAccountSid, twilioApiKey, twilioApiSecret, {
+    identity,
+    ttl,
+  });
 
-  // Create a Voice grant
   const voiceGrant = new VoiceGrant({
-    outgoingApplicationSid: twimlAppSid,
+    outgoingApplicationSid: twilioTwimlAppSid,
     incomingAllow: true,
   });
 
-  // Add the grant to the token
-  accessToken.addGrant(voiceGrant);
-
-  // Serialize the token to a JWT string
-  return accessToken.toJwt();
+  token.addGrant(voiceGrant);
+  return token.toJwt();
 }
 
+// ─── TwiML Response Builder ─────────────────────────────────────────────────
+
 /**
- * Make a phone call using Twilio (for phone-to-phone fallback)
+ * Build a TwiML VoiceResponse that dials the requested destination.
+ *
+ * Called by the /api/twilio/voice webhook when Twilio asks "what should I do
+ * with this outbound call?".
+ *
+ * @param to - Destination phone number or client identity
+ * @returns TwiML XML string
  */
-export async function makeCall(params: {
+export function buildTwimlResponse(to: string | undefined): string {
+  const VoiceResponse = twilio.twiml.VoiceResponse;
+  const response = new VoiceResponse();
+
+  if (!to) {
+    response.say("No destination was specified for this call.");
+    return response.toString();
+  }
+
+  const callerId = ENV.twilioPhoneNumber;
+  const dial = response.dial({ callerId });
+
+  // Phone numbers start with + or are all digits
+  if (to.startsWith("+") || /^\d+$/.test(to)) {
+    dial.number(to);
+  } else {
+    // Otherwise it's a Twilio client identity
+    dial.client(to);
+  }
+
+  return response.toString();
+}
+
+// ─── REST API Call (server-side fallback) ───────────────────────────────────
+
+/**
+ * Initiate a phone call via the Twilio REST API (server-to-server).
+ * This is a fallback for cases where browser-based calling isn't available.
+ */
+export async function makeRestCall(params: {
   to: string;
   from?: string;
-  url?: string;
+  statusCallbackUrl?: string;
 }) {
-  const { to, from = twilioPhoneNumber, url } = params;
+  const client = getClient();
+  const { to, from = ENV.twilioPhoneNumber, statusCallbackUrl } = params;
 
   const call = await client.calls.create({
     to: formatPhoneNumber(to),
     from,
-    url: url || `${process.env.VITE_FRONTEND_FORGE_API_URL}/api/twilio/voice`,
+    url: `${getBaseUrl()}/api/twilio/voice`,
+    ...(statusCallbackUrl
+      ? {
+          statusCallback: statusCallbackUrl,
+          statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+          statusCallbackMethod: "POST" as const,
+        }
+      : {}),
   });
-
   return call;
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 /**
- * Send SMS using Twilio
+ * Derive the public base URL for webhook callbacks.
+ * In production this is the deployed domain; in dev it falls back to a
+ * placeholder (TwiML App Voice URL must be set manually for dev).
  */
-export async function sendSMS(params: { to: string; body: string; from?: string }) {
-  const { to, body, from = twilioPhoneNumber } = params;
+function getBaseUrl(): string {
+  // In production, use the app's public URL
+  if (ENV.isProduction) {
+    return `https://${process.env.VITE_APP_ID}.manus.space`;
+  }
+  // In development, this URL won't be reachable from Twilio's servers,
+  // but the TwiML App's Voice URL should be set to the deployed URL anyway
+  return `http://localhost:${process.env.PORT || 3000}`;
+}
 
-  const message = await client.messages.create({
-    to: formatPhoneNumber(to),
-    from,
-    body,
-  });
+/**
+ * Validate that all required Twilio environment variables are present.
+ * Returns an object with the validation result and any missing keys.
+ */
+export function validateTwilioConfig(): {
+  valid: boolean;
+  missing: string[];
+} {
+  const required: Record<string, string> = {
+    TWILIO_ACCOUNT_SID: ENV.twilioAccountSid,
+    TWILIO_AUTH_TOKEN: ENV.twilioAuthToken,
+    TWILIO_PHONE_NUMBER: ENV.twilioPhoneNumber,
+    TWILIO_API_KEY: ENV.twilioApiKey,
+    TWILIO_API_SECRET: ENV.twilioApiSecret,
+    TWILIO_TWIML_APP_SID: ENV.twilioTwimlAppSid,
+  };
 
-  return message;
+  const missing = Object.entries(required)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  return { valid: missing.length === 0, missing };
 }

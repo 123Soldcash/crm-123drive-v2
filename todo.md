@@ -1242,3 +1242,22 @@
 - [x] All phone calls tracked with: duration, Twilio SID, notes, timestamps, recording URL
 - [x] Ready for production use - click phone number in Contacts table to make call
 - [x] Phone calls are logged to database with full audit trail
+
+
+## TWILIO REBUILD - Reconstrução Completa do Zero ✅
+- [x] Deletar todos os arquivos Twilio existentes (server/twilio.ts, db-call-logs.ts, twilio-make-call.ts, etc.)
+- [x] Remover rotas e procedimentos Twilio do router
+- [x] Remover endpoint TwiML voice
+- [x] Remover componente TwilioBrowserCallButton.tsx
+- [x] Criar novo server/twilio.ts - geração de access token, formatação de telefone
+- [x] Criar novo endpoint TwiML voice webhook (/api/twilio/voice)
+- [x] Criar novo procedimento tRPC para access token (twilio.getAccessToken)
+- [x] Criar novo procedimento tRPC para checkConfig (twilio.checkConfig)
+- [x] Criar novo sistema de logging de chamadas (db-call-logs.ts)
+- [x] Criar novo componente frontend de chamada (TwilioCallWidget.tsx)
+- [x] Integrar widget de chamada na tabela de Contatos
+- [x] Criar testes unitários do backend Twilio (24 tests passing)
+- [x] Criar testes de integração do fluxo completo
+- [x] Configurar TwiML App Voice URL no Twilio Console
+- [x] Validar chamada no navegador
+- [x] Salvar checkpoint final

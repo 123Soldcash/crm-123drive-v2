@@ -179,45 +179,30 @@ async function startServer() {
       });
     }
   });
-  // Twilio Voice TwiML webhook endpoint
+  // ─── Twilio Voice TwiML Webhook ──────────────────────────────────────────
+  // When a browser-based call is initiated via Device.connect(), Twilio sends
+  // a POST to the TwiML App's Voice URL. This endpoint returns TwiML XML
+  // instructing Twilio to dial the requested phone number.
   app.post("/api/twilio/voice", async (req, res) => {
     try {
-      const twilio = await import("twilio");
-      const VoiceResponse = twilio.default.twiml.VoiceResponse;
-      const response = new VoiceResponse();
-
-      const to = req.body.To;
-      const callerId = process.env.TWILIO_PHONE_NUMBER;
-
-      if (to) {
-        const dial = response.dial({ callerId });
-        // If the number starts with +, it's a phone number
-        if (to.startsWith("+") || /^\d+$/.test(to)) {
-          dial.number(to);
-        } else {
-          // Otherwise it's a client identity
-          dial.client(to);
-        }
-      } else {
-        response.say("No destination specified.");
-      }
-
+      const { buildTwimlResponse } = await import("../twilio");
+      const twiml = buildTwimlResponse(req.body.To);
       res.type("text/xml");
-      res.send(response.toString());
+      res.send(twiml);
     } catch (error) {
       console.error("[Twilio Voice Webhook] Error:", error);
       const twilio = await import("twilio");
       const VoiceResponse = twilio.default.twiml.VoiceResponse;
-      const response = new VoiceResponse();
-      response.say("An error occurred. Please try again later.");
+      const fallback = new VoiceResponse();
+      fallback.say("An error occurred. Please try again later.");
       res.type("text/xml");
-      res.send(response.toString());
+      res.send(fallback.toString());
     }
   });
 
-  // Twilio Voice status callback endpoint
+  // Twilio call status callback — logs status changes for debugging
   app.post("/api/twilio/voice/status", async (req, res) => {
-    console.log("[Twilio Status Callback]", req.body);
+    console.log("[Twilio Status]", req.body?.CallStatus, req.body?.CallSid);
     res.sendStatus(200);
   });
 

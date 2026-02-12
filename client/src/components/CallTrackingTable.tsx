@@ -40,7 +40,7 @@ import {
 import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
+import { TwilioCallWidget } from "./TwilioCallWidget";
 import { ContactEditModal } from "./ContactEditModal";
 
 interface CallTrackingTableProps {
@@ -871,10 +871,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           {/* Phone Number */}
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
-                              <TwilioBrowserCallButton
+                              <TwilioCallWidget
                                 phoneNumber={phone.phoneNumber}
-                                propertyId={propertyId}
-                                contactId={contact.id}
                                 contactName={contact.name}
                               />
                               <button
