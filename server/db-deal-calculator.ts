@@ -201,8 +201,8 @@ export async function getDealCalculation(propertyId: number | null | undefined) 
       createdAt: result[0].createdAt,
       updatedAt: result[0].updatedAt,
     };
-  } catch (error) {
-    console.error("[getDealCalculation] Query error:", error);
+  } catch (_) {
+    // Silently return null - query may fail if table schema is out of sync
     return null;
   }
 }

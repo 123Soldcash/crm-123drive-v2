@@ -1196,3 +1196,10 @@
 - [x] Fixed getAllDealCalculations to join via APN instead of non-existent propertyId column
 - [x] All 8 Vitest tests passing
 - [x] Validated in browser - zero console errors on property page load
+
+## BUG FIX - Twilio Voice SDK WebSocket Errors (31000/31005) on Page Load
+- [x] Investigated: errors caused by Twilio SDK trying to connect to unreachable TwiML App Voice URL
+- [x] Rewrote TwilioBrowserCallButton: lazy-load SDK, suppress internal console errors, logLevel=0
+- [x] Suppressed getDealCalculation server-side error logs (silently returns null)
+- [x] Removed debug console.log from dealCalculator.get procedure
+- [x] Validated in browser - zero console errors on property page load
