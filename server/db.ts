@@ -1,4 +1,4 @@
-import { eq, and, like, desc, sql, gte, lte, or, isNotNull, ne } from "drizzle-orm";
+import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -686,15 +686,24 @@ export async function getPhotosByPropertyId(propertyId: number) {
       propertyId: photos.propertyId,
       visitId: photos.visitId,
       noteId: photos.noteId,
+      userId: photos.userId,
       fileKey: photos.fileKey,
       fileUrl: photos.fileUrl,
       caption: photos.caption,
       latitude: photos.latitude,
       longitude: photos.longitude,
       createdAt: photos.createdAt,
+      userName: users.name,
     })
     .from(photos)
-    .where(eq(photos.propertyId, propertyId))
+    .leftJoin(users, eq(photos.userId, users.id))
+    .where(
+      and(
+        eq(photos.propertyId, propertyId),
+        isNull(photos.noteId),
+        isNull(photos.visitId)
+      )
+    )
     .orderBy(desc(photos.createdAt));
 
   return results;

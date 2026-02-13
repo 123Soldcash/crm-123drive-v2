@@ -1333,3 +1333,14 @@
   - Multiple different agents allowed
   - Non-admin blocked from removing
   - Cleanup
+
+
+## FIX - Property Photos Section - DONE ✅
+- [x] Property Photos only shows photos uploaded in that field (WHERE noteId IS NULL AND visitId IS NULL)
+- [x] Add Photo button in section header
+- [x] Upload Photos button in empty state
+- [x] Delete button on each photo (with confirmation dialog)
+- [x] Clicking a photo opens it in a new browser tab at full size (window.open)
+- [x] Open in new tab icon button on hover overlay
+- [x] Photos are stored separately from general notes images
+- [x] Verified in browser: empty state correct, notes images excluded
