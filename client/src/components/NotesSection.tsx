@@ -29,7 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -409,6 +410,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     {/* Photo Lightbox */}
     <Dialog open={!!lightboxPhoto} onOpenChange={() => setLightboxPhoto(null)}>
       <DialogContent className="max-w-4xl p-0">
+        <VisuallyHidden><DialogTitle>Photo Preview</DialogTitle></VisuallyHidden>
         {lightboxPhoto && (
           <div className="relative">
             <img 

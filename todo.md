@@ -1367,3 +1367,9 @@
 - [x] Updated TwiML App Status Callback to https://123smartdrive.manus.space/api/twilio/voice/status
 - [x] Verified all 3 endpoints return 200 on production domain
 - [x] Added 3 CUSTOM_DOMAIN tests (33 total tests passing)
+
+
+## BUG FIX - Missing DialogTitle accessibility error on PropertyDetail - FIXED ✅
+- [x] Found 2 lightbox dialogs missing DialogTitle: DeskChrisNotes.tsx and NotesSection.tsx
+- [x] Added VisuallyHidden DialogTitle to both photo lightbox dialogs
+- [x] Installed @radix-ui/react-visually-hidden package

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface DeskChrisNotesProps {
   propertyId: number;
@@ -456,6 +457,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
     {/* Photo Lightbox */}
     <Dialog open={!!lightboxPhoto} onOpenChange={() => setLightboxPhoto(null)}>
       <DialogContent className="max-w-4xl p-0">
+        <VisuallyHidden><DialogTitle>Photo Preview</DialogTitle></VisuallyHidden>
         {lightboxPhoto && (
           <div className="relative">
             <img 
