@@ -1357,3 +1357,13 @@
 - [x] Property Photos (noteId IS NULL) stays separate from Notes images (noteId != NULL)
 - [x] Activity Timeline now distinguishes: 🏠 Property Photo vs 📋 From General Notes
 - [x] Both actions visible in timeline with clear source labels
+
+
+## BUG FIX - Twilio Error 15003 (HTTP 404 on status callback) - FIXED ✅
+- [x] Root cause: getBaseUrl() used VITE_APP_ID (RDbAfwHQBDqo37pina3pDu.manus.space) which returns 404
+- [x] Fix: getBaseUrl() now uses CUSTOM_DOMAIN (123smartdrive.manus.space) which returns 200
+- [x] Set CUSTOM_DOMAIN env var to 123smartdrive.manus.space
+- [x] Updated TwiML App Voice URL to https://123smartdrive.manus.space/api/twilio/voice
+- [x] Updated TwiML App Status Callback to https://123smartdrive.manus.space/api/twilio/voice/status
+- [x] Verified all 3 endpoints return 200 on production domain
+- [x] Added 3 CUSTOM_DOMAIN tests (33 total tests passing)

@@ -182,13 +182,14 @@ export async function getCallStatus(callSid: string) {
 
 /**
  * Derive the public base URL for webhook callbacks.
+ * Uses the custom domain if available, otherwise falls back to VITE_APP_ID.
  */
 function getBaseUrl(): string {
-  if (ENV.isProduction) {
-    return `https://${process.env.VITE_APP_ID}.manus.space`;
+  // Custom domain takes priority (e.g., 123smartdrive.manus.space)
+  if (process.env.CUSTOM_DOMAIN) {
+    return `https://${process.env.CUSTOM_DOMAIN}`;
   }
-  // In development, use the published URL since Twilio can't reach localhost
-  // The TwiML App Voice URL should already be set to the production URL
+  // Fallback to the app ID domain
   return `https://${process.env.VITE_APP_ID}.manus.space`;
 }
 

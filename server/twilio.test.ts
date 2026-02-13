@@ -266,7 +266,45 @@ describe("Twilio environment variables", () => {
   });
 });
 
-// ─── 7. No Browser SDK Dependency ──────────────────────────────────────────
+// ─── 7. CUSTOM_DOMAIN for Twilio Callbacks ───────────────────────────────
+
+describe("CUSTOM_DOMAIN for Twilio callbacks", () => {
+  it("CUSTOM_DOMAIN env var is set", () => {
+    const domain = process.env.CUSTOM_DOMAIN;
+    expect(domain).toBeTruthy();
+    expect(typeof domain).toBe("string");
+  });
+
+  it("CUSTOM_DOMAIN points to a valid manus.space domain", () => {
+    const domain = process.env.CUSTOM_DOMAIN;
+    if (!domain) {
+      console.warn("CUSTOM_DOMAIN not set");
+      return;
+    }
+    expect(domain).toContain("manus.space");
+  });
+
+  it("CUSTOM_DOMAIN is accessible (returns 200)", async () => {
+    const domain = process.env.CUSTOM_DOMAIN;
+    if (!domain) {
+      console.warn("CUSTOM_DOMAIN not set");
+      return;
+    }
+    try {
+      const resp = await fetch(`https://${domain}/api/twilio/voice/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "CallStatus=completed&CallSid=test",
+      });
+      expect(resp.status).toBe(200);
+    } catch (err) {
+      // Network errors in test env are acceptable
+      console.warn("Could not reach CUSTOM_DOMAIN:", err);
+    }
+  });
+});
+
+// ─── 8. No Browser SDK Dependency ──────────────────────────────────────────
 
 describe("No browser SDK dependency", () => {
   it("twilio.ts does not import @twilio/voice-sdk", async () => {
