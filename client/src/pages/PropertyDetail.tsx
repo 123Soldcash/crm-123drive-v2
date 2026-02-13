@@ -168,21 +168,47 @@ export default function PropertyDetail() {
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
       utils.properties.getAssignedAgents.invalidate({ propertyId });
-      setTransferDialogOpen(false);
-      setTransferReason("");
-      setSelectedAgents([]);
       toast.success("Agent assigned successfully!");
     },
   });
 
-  const handleTransferLead = () => {
-    if (selectedAgents.length === 0) {
-      toast.error("Please select at least one agent to assign");
-      return;
-    }
-    selectedAgents.forEach((agentId) => {
+  const removeAgentMutation = trpc.properties.removeAgent.useMutation({
+    onSuccess: () => {
+      utils.properties.getById.invalidate({ id: propertyId });
+      utils.properties.getAssignedAgents.invalidate({ propertyId });
+      toast.success("Agent removed successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to remove agent: ${error.message}`);
+    },
+  });
+
+  // Pre-select already assigned agents when dialog opens
+  const handleOpenAssignDialog = () => {
+    const currentlyAssigned = assignedAgents?.map((a: any) => a.agent?.id).filter(Boolean) || [];
+    setSelectedAgents(currentlyAssigned);
+    setTransferDialogOpen(true);
+  };
+
+  const handleSaveAgentAssignments = () => {
+    const currentlyAssigned = assignedAgents?.map((a: any) => a.agent?.id).filter(Boolean) || [];
+    
+    // Find agents to add (selected but not currently assigned)
+    const toAdd = selectedAgents.filter((id) => !currentlyAssigned.includes(id));
+    // Find agents to remove (currently assigned but not selected)
+    const toRemove = currentlyAssigned.filter((id: number) => !selectedAgents.includes(id));
+
+    toAdd.forEach((agentId) => {
       assignAgent.mutate({ propertyId, agentId });
     });
+    toRemove.forEach((agentId: number) => {
+      removeAgentMutation.mutate({ propertyId, agentId });
+    });
+
+    if (toAdd.length === 0 && toRemove.length === 0) {
+      toast.info("No changes to save");
+    }
+    setTransferDialogOpen(false);
   };
 
   const toggleAgentSelection = (agentId: number) => {
@@ -250,7 +276,7 @@ export default function PropertyDetail() {
         tags={tags || []}
         onEdit={() => setEditDialogOpen(true)} 
         onAddToPipeline={() => setPipelineDialogOpen(true)}
-        onAssignAgent={() => setTransferDialogOpen(true)}
+        onAssignAgent={handleOpenAssignDialog}
         onUpdateLeadTemperature={(temp) => 
           updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
         }
@@ -293,38 +319,43 @@ export default function PropertyDetail() {
       </Dialog>
 
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign Agent</DialogTitle>
-            <DialogDescription>Select agents to assign to this property.</DialogDescription>
+            <DialogTitle>Manage Agents</DialogTitle>
+            <DialogDescription>Select or deselect agents for this property. Changes are saved when you click Save.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
-              {agentsList?.map((agent: any) => (
-                <div
-                  key={agent.id}
-                  onClick={() => toggleAgentSelection(agent.id)}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                    selectedAgents.includes(agent.id)
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 hover:border-slate-300"
-                  )}
-                >
-                  <Checkbox checked={selectedAgents.includes(agent.id)} />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold">{agent.name}</span>
-                    <span className="text-[10px] text-slate-500 uppercase">{agent.role}</span>
+          <div className="py-4">
+            <div className="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto p-1">
+              {agentsList?.map((agent: any) => {
+                const isSelected = selectedAgents.includes(agent.id);
+                return (
+                  <div
+                    key={agent.id}
+                    onClick={() => toggleAgentSelection(agent.id)}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                      isSelected
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    )}
+                  >
+                    <Checkbox checked={isSelected} />
+                    <div className="flex flex-col flex-1">
+                      <span className="text-sm font-bold">{agent.name}</span>
+                      <span className="text-[10px] text-slate-500 uppercase">{agent.agentType || agent.role}</span>
+                    </div>
+                    {isSelected && (
+                      <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700">Selected</Badge>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <Textarea placeholder="Notes (optional)" value={transferReason} onChange={(e) => setTransferReason(e.target.value)} rows={3} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleTransferLead} disabled={assignAgent.isPending || selectedAgents.length === 0}>
-              {assignAgent.isPending ? "Assigning..." : `Assign ${selectedAgents.length} Agent(s)`}
+            <Button onClick={handleSaveAgentAssignments} disabled={assignAgent.isPending || removeAgentMutation.isPending}>
+              {(assignAgent.isPending || removeAgentMutation.isPending) ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -341,8 +372,15 @@ export default function PropertyDetail() {
           <h3 className="text-sm font-medium text-blue-900 mb-2">Assigned Agents ({assignedAgents.length})</h3>
           <div className="flex flex-wrap gap-2">
             {assignedAgents.map((assignment: any) => (
-              <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2">
+              <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2 pr-1">
                 <Users className="h-3 w-3" /> {assignment.agent?.name} ({assignment.agent?.agentType})
+                <button
+                  onClick={() => removeAgentMutation.mutate({ propertyId, agentId: assignment.agent?.id })}
+                  className="ml-1 hover:bg-red-100 rounded-full p-0.5 transition-colors"
+                  title="Remove agent"
+                >
+                  <X className="h-3 w-3 text-red-500" />
+                </button>
               </Badge>
             ))}
           </div>

@@ -1301,3 +1301,12 @@
 - [x] Add "Add Contact" button in empty state (same as when contacts exist)
 - [x] Match the pattern of the contacts section with data
 - [x] Add inline contact form in empty state (name, relationship, phone, email)
+
+
+## REDESIGN - Assign Agent Modal - DONE ✅
+- [x] Add checkbox selection for agents (select/deselect)
+- [x] Add ability to remove assigned agents (X button on badges + deselect in modal)
+- [x] Remove Notes field from the modal
+- [x] Simplify the modal UI for quick agent management
+- [x] Pre-select already assigned agents when modal opens
+- [x] Save button computes diff (adds new, removes deselected)
