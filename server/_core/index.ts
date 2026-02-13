@@ -220,6 +220,27 @@ async function startServer() {
     }
   });
 
+  // Twilio answered endpoint — returns simple TwiML when call is answered
+  // CRITICAL: This must NOT contain <Dial> to avoid duplicate calls.
+  // The REST API already established the call; this just keeps the line open.
+  app.all("/api/twilio/voice/answered", async (req, res) => {
+    try {
+      const { buildAnsweredTwiml } = await import("../twilio");
+      const twiml = buildAnsweredTwiml();
+      console.log("[Twilio Answered] Call answered, keeping line open");
+      res.type("text/xml");
+      res.send(twiml);
+    } catch (error) {
+      console.error("[Twilio Answered] Error:", error);
+      const twilio = await import("twilio");
+      const VoiceResponse = twilio.default.twiml.VoiceResponse;
+      const fallback = new VoiceResponse();
+      fallback.pause({ length: 3600 });
+      res.type("text/xml");
+      res.send(fallback.toString());
+    }
+  });
+
   // Twilio call status callback — logs status changes for debugging
   app.post("/api/twilio/voice/status", async (req, res) => {
     console.log("[Twilio Status]", req.body?.CallStatus, req.body?.CallSid);

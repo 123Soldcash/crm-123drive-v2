@@ -114,6 +114,27 @@ export function buildConnectTwiml(to: string): string {
   return response.toString();
 }
 
+// ─── Build TwiML for answered call (no dial) ───────────────────────────────
+
+/**
+ * Build TwiML that plays when the destination answers the call.
+ * This is a simple greeting/pause — it does NOT dial another number.
+ * 
+ * CRITICAL: This must NOT contain <Dial> because the REST API already
+ * established the call to the destination. Adding <Dial> here would
+ * create a duplicate call.
+ */
+export function buildAnsweredTwiml(): string {
+  const VoiceResponse = twilio.twiml.VoiceResponse;
+  const response = new VoiceResponse();
+
+  // Just keep the line open — the call is already connected
+  // A long pause keeps the call alive without playing anything
+  response.pause({ length: 3600 }); // 1 hour max
+
+  return response.toString();
+}
+
 // ─── Server-Side Outbound Call (Pure REST API) ──────────────────────────────
 
 /**
@@ -121,6 +142,11 @@ export function buildConnectTwiml(to: string): string {
  * 
  * This calls the destination number directly from the Twilio number.
  * No browser Voice SDK or WebSocket connection is needed.
+ *
+ * IMPORTANT: The `url` parameter tells Twilio what TwiML to execute when
+ * the call is answered. We use `/api/twilio/voice/answered` which returns
+ * a simple greeting. We do NOT use `/api/twilio/voice` (which contains
+ * <Dial>) because that would create a SECOND call to the same number.
  *
  * @param to - Destination phone number
  * @returns Call details (SID, status, etc.)
@@ -134,11 +160,13 @@ export async function makeOutboundCall(params: {
   const formattedTo = formatPhoneNumber(to);
   const baseUrl = getBaseUrl();
 
-  // Create a call from our Twilio number to the destination
+  // Create a call from our Twilio number to the destination.
+  // The `url` points to a simple TwiML that plays a greeting when answered.
+  // Do NOT point to /api/twilio/voice which has <Dial> — that would duplicate the call.
   const call = await client.calls.create({
     to: formattedTo,
     from: ENV.twilioPhoneNumber,
-    url: `${baseUrl}/api/twilio/voice?To=${encodeURIComponent(formattedTo)}`,
+    url: `${baseUrl}/api/twilio/voice/answered`,
     ...(statusCallbackUrl
       ? {
           statusCallback: statusCallbackUrl,

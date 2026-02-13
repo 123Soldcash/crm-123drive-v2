@@ -1373,3 +1373,14 @@
 - [x] Found 2 lightbox dialogs missing DialogTitle: DeskChrisNotes.tsx and NotesSection.tsx
 - [x] Added VisuallyHidden DialogTitle to both photo lightbox dialogs
 - [x] Installed @radix-ui/react-visually-hidden package
+
+
+## BUG FIX - Twilio Duplicate Call Issue - FIXED ✅
+- [x] Investigate why two calls are initiated when clicking the call button
+- [x] Find the duplication point: webhook at /api/twilio/voice returns <Dial><Number> which creates a SECOND call
+- [x] Fix: Created /api/twilio/voice/answered endpoint that returns <Pause> (no <Dial>)
+- [x] Fix: Updated makeOutboundCall() URL from /api/twilio/voice to /api/twilio/voice/answered
+- [x] Fix: Created buildAnsweredTwiml() function that keeps line open without dialing
+- [x] Added 8 new tests for duplicate call prevention (41 total Twilio tests passing)
+- [x] Fixed getTasks() null filter crash (optional chaining)
+- [x] Installed missing @radix-ui/react-visually-hidden dependency

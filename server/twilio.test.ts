@@ -304,7 +304,70 @@ describe("CUSTOM_DOMAIN for Twilio callbacks", () => {
   });
 });
 
-// ─── 8. No Browser SDK Dependency ──────────────────────────────────────────
+// ─── 8. Answered TwiML (No Duplicate Call) ───────────────────────────────
+
+describe("buildAnsweredTwiml (duplicate call prevention)", () => {
+  let buildAnsweredTwiml: typeof import("./twilio").buildAnsweredTwiml;
+
+  beforeEach(async () => {
+    const mod = await import("./twilio");
+    buildAnsweredTwiml = mod.buildAnsweredTwiml;
+  });
+
+  it("returns valid TwiML XML", () => {
+    const xml = buildAnsweredTwiml();
+    expect(xml).toContain("<?xml version");
+    expect(xml).toContain("<Response>");
+  });
+
+  it("does NOT contain <Dial> element (prevents duplicate calls)", () => {
+    const xml = buildAnsweredTwiml();
+    expect(xml).not.toContain("<Dial");
+    expect(xml).not.toContain("</Dial>");
+  });
+
+  it("does NOT contain <Number> element (prevents duplicate calls)", () => {
+    const xml = buildAnsweredTwiml();
+    expect(xml).not.toContain("<Number>");
+  });
+
+  it("contains a <Pause> to keep the line open", () => {
+    const xml = buildAnsweredTwiml();
+    expect(xml).toContain("<Pause");
+  });
+
+  it("has a long pause duration (at least 60 seconds)", () => {
+    const xml = buildAnsweredTwiml();
+    const match = xml.match(/length="(\d+)"/);
+    expect(match).toBeTruthy();
+    const duration = parseInt(match![1], 10);
+    expect(duration).toBeGreaterThanOrEqual(60);
+  });
+});
+
+describe("makeOutboundCall uses /answered endpoint (not /voice)", () => {
+  it("server/twilio.ts makeOutboundCall points to /api/twilio/voice/answered", async () => {
+    const fs = await import("fs");
+    const content = fs.readFileSync("server/twilio.ts", "utf-8");
+    // The url parameter in calls.create should point to /answered
+    expect(content).toContain("/api/twilio/voice/answered");
+  });
+
+  it("server/twilio.ts makeOutboundCall does NOT point url to /api/twilio/voice?To=", async () => {
+    const fs = await import("fs");
+    const content = fs.readFileSync("server/twilio.ts", "utf-8");
+    // The old duplicate-causing pattern was: url: `${baseUrl}/api/twilio/voice?To=...`
+    expect(content).not.toContain("url: `${baseUrl}/api/twilio/voice?To=");
+  });
+
+  it("_core/index.ts has /api/twilio/voice/answered endpoint registered", async () => {
+    const fs = await import("fs");
+    const content = fs.readFileSync("server/_core/index.ts", "utf-8");
+    expect(content).toContain("/api/twilio/voice/answered");
+  });
+});
+
+// ─── 10. No Browser SDK Dependency ──────────────────────────────────────────
 
 describe("No browser SDK dependency", () => {
   it("twilio.ts does not import @twilio/voice-sdk", async () => {

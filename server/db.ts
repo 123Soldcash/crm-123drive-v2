@@ -2053,7 +2053,7 @@ export async function createTask(taskData: any): Promise<any> {
   return created[0];
 }
 
-export async function getTasks(filters: { 
+export async function getTasks(filters?: { 
   status?: string; 
   priority?: string; 
   assignedToId?: number;
@@ -2065,19 +2065,19 @@ export async function getTasks(filters: {
   
   const conditions: any[] = [];
   
-  if (filters.status) {
+  if (filters?.status) {
     conditions.push(eq(tasks.status, filters.status as any));
   }
-  if (filters.priority) {
+  if (filters?.priority) {
     conditions.push(eq(tasks.priority, filters.priority as any));
   }
-  if (filters.assignedToId) {
+  if (filters?.assignedToId) {
     conditions.push(eq(tasks.assignedToId, filters.assignedToId));
   }
-  if (filters.propertyId) {
+  if (filters?.propertyId) {
     conditions.push(eq(tasks.propertyId, filters.propertyId));
   }
-  if (filters.hidden !== undefined) {
+  if (filters?.hidden !== undefined) {
     conditions.push(eq(tasks.hidden, filters.hidden));
   }
   
