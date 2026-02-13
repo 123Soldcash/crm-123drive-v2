@@ -742,10 +742,27 @@ export async function assignAgentToProperty(assignment: InsertPropertyAgent) {
   if (!db) throw new Error("Database not available");
 
   try {
+    // Check if this agent is already assigned to this property
+    const existing = await db
+      .select({ id: propertyAgents.id })
+      .from(propertyAgents)
+      .where(
+        and(
+          eq(propertyAgents.propertyId, assignment.propertyId),
+          eq(propertyAgents.agentId, assignment.agentId)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Already assigned, skip duplicate insertion
+      return { alreadyAssigned: true };
+    }
+
     // Update the assignedAgentId in the properties table
     await db.update(properties).set({ assignedAgentId: assignment.agentId }).where(eq(properties.id, assignment.propertyId));
 
-    // Log the assignment in the propertyAgents table
+    // Insert the assignment in the propertyAgents table
     const result = await db.insert(propertyAgents).values(assignment);
     return result;
   } catch (error) {

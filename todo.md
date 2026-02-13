@@ -1317,3 +1317,19 @@
 - [x] Fixed getAssignedAgents to read from propertyAgents table
 - [x] Fixed removeAgent to delete from propertyAgents table
 - [x] Added propertyAgents import to routers.ts
+
+
+## BUG FIX - Duplicate Agent Assignments - FIXED ✅
+- [x] Prevent assigning the same agent multiple times to a property
+- [x] Add duplicate check in assignAgentToProperty db function (checks before insert)
+- [x] Verified no existing duplicates in database (0 found)
+- [x] Write tests for duplicate prevention (9 tests, all passing)
+  - Assign agent successfully
+  - No duplicate on re-assign
+  - No duplicate on rapid multiple assigns
+  - Remove agent works
+  - Agent gone after removal
+  - Re-assign after removal works (toggle)
+  - Multiple different agents allowed
+  - Non-admin blocked from removing
+  - Cleanup
