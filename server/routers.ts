@@ -13,7 +13,7 @@ import { searchLeadsByPhone } from "./db-phoneSearch";
 import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, getStageStats, bulkUpdateStages } from "./db-stageManagement";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments, propertyAgents } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -590,7 +590,17 @@ export const appRouter = router({
         if (ctx.user?.role !== 'admin') {
           throw new Error('Only admins can remove agents from properties');
         }
-        return await db.removePropertyAgent(input.propertyId, input.agentId);
+        const database = await getDb();
+        if (!database) throw new Error('Database not available');
+        await database
+          .delete(propertyAgents)
+          .where(
+            and(
+              eq(propertyAgents.propertyId, input.propertyId),
+              eq(propertyAgents.agentId, input.agentId)
+            )
+          );
+        return { success: true };
       }),
 
     bulkAddAgent: protectedProcedure
@@ -874,12 +884,12 @@ export const appRouter = router({
         if (!database) throw new Error('Database not available');
         const assignments = await database
           .select({
-            id: leadAssignments.id,
-            agentId: leadAssignments.agentId,
-            assignedAt: leadAssignments.assignedAt,
+            id: propertyAgents.id,
+            agentId: propertyAgents.agentId,
+            assignedAt: propertyAgents.assignedAt,
           })
-          .from(leadAssignments)
-          .where(eq(leadAssignments.propertyId, input.propertyId));
+          .from(propertyAgents)
+          .where(eq(propertyAgents.propertyId, input.propertyId));
 
         const agentsWithDetails = await Promise.all(
           assignments.map(async (assignment) => {

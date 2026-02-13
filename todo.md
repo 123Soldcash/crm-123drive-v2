@@ -1310,3 +1310,10 @@
 - [x] Simplify the modal UI for quick agent management
 - [x] Pre-select already assigned agents when modal opens
 - [x] Save button computes diff (adds new, removes deselected)
+
+
+## BUG FIX - Assign Agent Resets on Page Reload - FIXED ✅
+- [x] Root cause: getAssignedAgents read from leadAssignments table, but assignAgent wrote to propertyAgents table
+- [x] Fixed getAssignedAgents to read from propertyAgents table
+- [x] Fixed removeAgent to delete from propertyAgents table
+- [x] Added propertyAgents import to routers.ts
