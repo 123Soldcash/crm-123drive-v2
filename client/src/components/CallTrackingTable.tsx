@@ -571,12 +571,115 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Call Tracking</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5" />
+              Contacts
+            </CardTitle>
+            {!showAddContactForm && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddContactForm(true)}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Contact
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            No contacts available. Add a contact to start tracking calls.
-          </p>
+          {!showAddContactForm ? (
+            <p className="text-muted-foreground">
+              No contacts available. Click "Add Contact" to add one.
+            </p>
+          ) : (
+            <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  New Contact
+                </h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAddContactForm(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="empty-new-name" className="text-xs">Name *</Label>
+                  <Input
+                    id="empty-new-name"
+                    placeholder="Contact name"
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="empty-new-relationship" className="text-xs">Relationship</Label>
+                  <Input
+                    id="empty-new-relationship"
+                    placeholder="e.g. Owner, Spouse, Child"
+                    value={newContactRelationship}
+                    onChange={(e) => setNewContactRelationship(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="empty-new-phone" className="text-xs">Phone</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="empty-new-phone"
+                      placeholder="(555) 123-4567"
+                      value={newContactPhone}
+                      onChange={(e) => setNewContactPhone(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
+                      <SelectTrigger className="w-[110px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Mobile">Mobile</SelectItem>
+                        <SelectItem value="Landline">Landline</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="empty-new-email" className="text-xs">Email</Label>
+                  <Input
+                    id="empty-new-email"
+                    placeholder="email@example.com"
+                    value={newContactEmail}
+                    onChange={(e) => setNewContactEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleAddContact}
+                  disabled={createContactMutation.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {createContactMutation.isPending ? "Adding..." : "Add Contact"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAddContactForm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
