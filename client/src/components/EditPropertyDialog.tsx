@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,11 +8,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,7 +22,6 @@ import { toast } from "sonner";
 
 
 interface EditPropertyDialogProps {
-  propertyId: number;
   property: {
     id: number;
     addressLine1: string;
@@ -45,15 +42,17 @@ interface EditPropertyDialogProps {
     listName?: string;
     entryDate?: Date;
   };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
 export function EditPropertyDialog({
-  propertyId,
   property,
+  open,
+  onOpenChange,
   onSuccess,
 }: EditPropertyDialogProps) {
-  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: property.addressLine1 || "",
     city: property.city || "",
@@ -73,10 +72,39 @@ export function EditPropertyDialog({
     entryDate: property.entryDate ? new Date(property.entryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
+  // Sync form data when property changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        addressLine1: property.addressLine1 || "",
+        city: property.city || "",
+        state: property.state || "",
+        zipcode: property.zipcode || "",
+        leadTemperature: property.leadTemperature || "COLD",
+        estimatedValue: property.estimatedValue?.toString() || "",
+        equityPercent: property.equityPercent?.toString() || "",
+        owner1Name: property.owner1Name || "",
+        owner2Name: property.owner2Name || "",
+        totalBedrooms: property.totalBedrooms?.toString() || "",
+        totalBaths: property.totalBaths?.toString() || "",
+        buildingSquareFeet: property.buildingSquareFeet?.toString() || "",
+        yearBuilt: property.yearBuilt?.toString() || "",
+        source: property.source || "Manual",
+        listName: property.listName || "",
+        entryDate: property.entryDate ? new Date(property.entryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      });
+    }
+  }, [open, property]);
+
+  const utils = trpc.useUtils();
+
   const updatePropertyMutation = trpc.properties.update.useMutation({
     onSuccess: () => {
       toast.success("Property updated successfully!");
-      setOpen(false);
+      onOpenChange(false);
+      // Invalidate the property query to refresh data
+      utils.properties.getById.invalidate({ id: property.id });
+      utils.properties.list.invalidate();
       onSuccess?.();
     },
     onError: (error) => {
@@ -88,7 +116,7 @@ export function EditPropertyDialog({
     e.preventDefault();
 
     updatePropertyMutation.mutate({
-      id: propertyId,
+      id: property.id,
       addressLine1: formData.addressLine1,
       city: formData.city,
       state: formData.state,
@@ -109,7 +137,7 @@ export function EditPropertyDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Property/Lead</DialogTitle>
@@ -124,9 +152,9 @@ export function EditPropertyDialog({
             <h3 className="font-semibold text-sm">Address</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="address">Street Address</Label>
+                <Label htmlFor="edit-address">Street Address</Label>
                 <Input
-                  id="address"
+                  id="edit-address"
                   value={formData.addressLine1}
                   onChange={(e) =>
                     setFormData({ ...formData, addressLine1: e.target.value })
@@ -135,9 +163,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="edit-city">City</Label>
                 <Input
-                  id="city"
+                  id="edit-city"
                   value={formData.city}
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
@@ -146,9 +174,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="state">State</Label>
+                <Label htmlFor="edit-state">State</Label>
                 <Input
-                  id="state"
+                  id="edit-state"
                   value={formData.state}
                   onChange={(e) =>
                     setFormData({ ...formData, state: e.target.value })
@@ -158,9 +186,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="zipcode">Zip Code</Label>
+                <Label htmlFor="edit-zipcode">Zip Code</Label>
                 <Input
-                  id="zipcode"
+                  id="edit-zipcode"
                   value={formData.zipcode}
                   onChange={(e) =>
                     setFormData({ ...formData, zipcode: e.target.value })
@@ -176,9 +204,9 @@ export function EditPropertyDialog({
             <h3 className="font-semibold text-sm">Owner Information</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="owner1">Owner 1 Name</Label>
+                <Label htmlFor="edit-owner1">Owner 1 Name</Label>
                 <Input
-                  id="owner1"
+                  id="edit-owner1"
                   value={formData.owner1Name}
                   onChange={(e) =>
                     setFormData({ ...formData, owner1Name: e.target.value })
@@ -187,9 +215,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="owner2">Owner 2 Name</Label>
+                <Label htmlFor="edit-owner2">Owner 2 Name</Label>
                 <Input
-                  id="owner2"
+                  id="edit-owner2"
                   value={formData.owner2Name}
                   onChange={(e) =>
                     setFormData({ ...formData, owner2Name: e.target.value })
@@ -205,9 +233,9 @@ export function EditPropertyDialog({
             <h3 className="font-semibold text-sm">Property Details</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="bedrooms">Bedrooms</Label>
+                <Label htmlFor="edit-bedrooms">Bedrooms</Label>
                 <Input
-                  id="bedrooms"
+                  id="edit-bedrooms"
                   type="number"
                   value={formData.totalBedrooms}
                   onChange={(e) =>
@@ -217,9 +245,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="bathrooms">Bathrooms</Label>
+                <Label htmlFor="edit-bathrooms">Bathrooms</Label>
                 <Input
-                  id="bathrooms"
+                  id="edit-bathrooms"
                   type="number"
                   value={formData.totalBaths}
                   onChange={(e) =>
@@ -229,9 +257,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="sqft">Square Feet</Label>
+                <Label htmlFor="edit-sqft">Square Feet</Label>
                 <Input
-                  id="sqft"
+                  id="edit-sqft"
                   type="number"
                   value={formData.buildingSquareFeet}
                   onChange={(e) =>
@@ -244,9 +272,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="yearBuilt">Year Built</Label>
+                <Label htmlFor="edit-yearBuilt">Year Built</Label>
                 <Input
-                  id="yearBuilt"
+                  id="edit-yearBuilt"
                   type="number"
                   value={formData.yearBuilt}
                   onChange={(e) =>
@@ -263,9 +291,9 @@ export function EditPropertyDialog({
             <h3 className="font-semibold text-sm">Financial Information</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="value">Estimated Value ($)</Label>
+                <Label htmlFor="edit-value">Estimated Value ($)</Label>
                 <Input
-                  id="value"
+                  id="edit-value"
                   type="number"
                   value={formData.estimatedValue}
                   onChange={(e) =>
@@ -275,9 +303,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="equity">Equity (%)</Label>
+                <Label htmlFor="edit-equity">Equity (%)</Label>
                 <Input
-                  id="equity"
+                  id="edit-equity"
                   type="number"
                   value={formData.equityPercent}
                   onChange={(e) =>
@@ -295,7 +323,7 @@ export function EditPropertyDialog({
           <div className="space-y-2">
             <h3 className="font-semibold text-sm">Lead Status</h3>
             <div>
-              <Label htmlFor="temperature">Lead Temperature</Label>
+              <Label htmlFor="edit-temperature">Lead Temperature</Label>
               <Select
                 value={formData.leadTemperature}
                 onValueChange={(value) =>
@@ -306,13 +334,12 @@ export function EditPropertyDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SUPER HOT">🔥 Super Hot</SelectItem>
-                  <SelectItem value="HOT">🔥 Hot</SelectItem>
-                  <SelectItem value="DEEP SEARCH">🔍 Deep Search</SelectItem>
-                  <SelectItem value="WARM">🌡️ Warm</SelectItem>
-                  <SelectItem value="COLD">❄️ Cold</SelectItem>
-                  <SelectItem value="DEAD">💀 Dead</SelectItem>
-                  <SelectItem value="TBD">❓ TBD</SelectItem>
+                  <SelectItem value="SUPER HOT">Super Hot</SelectItem>
+                  <SelectItem value="HOT">Hot</SelectItem>
+                  <SelectItem value="DEEP SEARCH">Deep Search</SelectItem>
+                  <SelectItem value="WARM">Warm</SelectItem>
+                  <SelectItem value="COLD">Cold</SelectItem>
+                  <SelectItem value="DEAD">Dead</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -323,7 +350,7 @@ export function EditPropertyDialog({
             <h3 className="font-semibold text-sm">Lead Source</h3>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <Label htmlFor="source">Source</Label>
+                <Label htmlFor="edit-source">Source</Label>
                 <Select
                   value={formData.source}
                   onValueChange={(value) =>
@@ -344,9 +371,9 @@ export function EditPropertyDialog({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="listName">List Name</Label>
+                <Label htmlFor="edit-listName">List Name</Label>
                 <Input
-                  id="listName"
+                  id="edit-listName"
                   value={formData.listName}
                   onChange={(e) =>
                     setFormData({ ...formData, listName: e.target.value })
@@ -355,9 +382,9 @@ export function EditPropertyDialog({
                 />
               </div>
               <div>
-                <Label htmlFor="entryDate">Entry Date</Label>
+                <Label htmlFor="edit-entryDate">Entry Date</Label>
                 <Input
-                  id="entryDate"
+                  id="edit-entryDate"
                   type="date"
                   value={formData.entryDate}
                   onChange={(e) =>
@@ -372,7 +399,7 @@ export function EditPropertyDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>

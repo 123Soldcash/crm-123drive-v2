@@ -343,7 +343,7 @@
 - [x] Entry Date/Time tracking - VERIFIED WORKING (displays in property list)
 - [x] Hide/Show Deep Search toggle - VERIFIED WORKING (button hides/shows Deep Search section)
 - [x] DealMachine CSV Import - COMPLETED (page at /import-dealmachine with preview and import)
-- [ ] Edit Lead functionality - PENDING
+- [x] Edit Lead functionality - FIXED (modal now opens with correct data)
 - [ ] Address Autocomplete - PENDING (requires Google Places API key)
 - [x] API Integration prep (DealMachine) - COMPLETED (CSV parser, duplicate detection, data transformation)
 
@@ -446,7 +446,7 @@
 
 ## REVISÃO V15B - NEW FEATURES
 - [ ] Address Autocomplete - Google Places API integration for address suggestions
-- [ ] Edit Lead functionality - Allow editing existing property/lead information
+- [x] Edit Lead functionality - Allow editing existing property/lead information - FIXED
 - [ ] Entry Date/Time tracking - Add timestamp when lead enters the system
 - [ ] Entry Date/Time in Properties Report - Display entry date in properties list
 - [ ] Hide/Show Deep Search - Collapsible Deep Search section like Family Tree
@@ -1284,3 +1284,13 @@
 - [x] Update /api/twilio/connect endpoint for proper call bridging
 - [x] Update tests for new pure REST API approach (30 tests passing)
 - [x] Verify calling works without any WebSocket dependency
+
+
+## BUG FIX - Edit Lead Modal Not Opening - FIXED ✅
+- [x] Investigated EditPropertyDialog - found it used internal open state, ignoring parent props
+- [x] Root cause: component managed own useState(false), never received parent's editDialogOpen
+- [x] Fixed: component now accepts open/onOpenChange props from parent
+- [x] Added useEffect to sync form data when dialog opens
+- [x] Added cache invalidation after successful update
+- [x] Wrote 11 tests for properties.update procedure (all passing)
+- [x] Verified fix in browser - modal opens with correct pre-filled data
