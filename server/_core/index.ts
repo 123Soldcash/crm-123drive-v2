@@ -183,20 +183,19 @@ async function startServer() {
   // When a browser-based call is initiated via Device.connect(), Twilio sends
   // a POST to the TwiML App's Voice URL. This endpoint returns TwiML XML
   // instructing Twilio to dial the requested phone number.
-  app.post("/api/twilio/voice", async (req, res) => {
+  // Using app.all() because Twilio may send GET or POST depending on config.
+  app.all("/api/twilio/voice", async (req, res) => {
     try {
+      const to = req.body?.To || req.query?.To;
       const { buildTwimlResponse } = await import("../twilio");
-      const twiml = buildTwimlResponse(req.body.To);
-      res.type("text/xml");
+      const twiml = buildTwimlResponse(to as string);
+      res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {
       console.error("[Twilio Voice Webhook] Error:", error);
-      const twilio = await import("twilio");
-      const VoiceResponse = twilio.default.twiml.VoiceResponse;
-      const fallback = new VoiceResponse();
-      fallback.say("An error occurred. Please try again later.");
-      res.type("text/xml");
-      res.send(fallback.toString());
+      // Return minimal valid TwiML on error — MUST be under 64KB
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred.</Say></Response>');
     }
   });
 
@@ -207,16 +206,13 @@ async function startServer() {
       const { buildConnectTwiml } = await import("../twilio");
       const twiml = buildConnectTwiml(to);
       console.log("[Twilio Connect] Bridging call to:", to);
-      res.type("text/xml");
+      res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {
       console.error("[Twilio Connect] Error:", error);
-      const twilio = await import("twilio");
-      const VoiceResponse = twilio.default.twiml.VoiceResponse;
-      const fallback = new VoiceResponse();
-      fallback.say("An error occurred connecting your call.");
-      res.type("text/xml");
-      res.send(fallback.toString());
+      // Return minimal valid TwiML on error — MUST be under 64KB
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred.</Say></Response>');
     }
   });
 
@@ -228,23 +224,28 @@ async function startServer() {
       const { buildAnsweredTwiml } = await import("../twilio");
       const twiml = buildAnsweredTwiml();
       console.log("[Twilio Answered] Call answered, keeping line open");
-      res.type("text/xml");
+      res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {
       console.error("[Twilio Answered] Error:", error);
-      const twilio = await import("twilio");
-      const VoiceResponse = twilio.default.twiml.VoiceResponse;
-      const fallback = new VoiceResponse();
-      fallback.pause({ length: 3600 });
-      res.type("text/xml");
-      res.send(fallback.toString());
+      // Return minimal valid TwiML on error — MUST be under 64KB
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="3600"/></Response>');
     }
   });
 
   // Twilio call status callback — logs status changes for debugging
-  app.post("/api/twilio/voice/status", async (req, res) => {
-    console.log("[Twilio Status]", req.body?.CallStatus, req.body?.CallSid);
-    res.sendStatus(200);
+  // CRITICAL: Must use app.all() because Twilio sends both GET and POST requests.
+  // If only app.post() is used, GET requests fall through to Vite's catch-all
+  // which serves the full SPA HTML (>64KB), causing Twilio Error 11750.
+  app.all("/api/twilio/voice/status", async (req, res) => {
+    const callStatus = req.body?.CallStatus || req.query?.CallStatus || "unknown";
+    const callSid = req.body?.CallSid || req.query?.CallSid || "unknown";
+    console.log("[Twilio Status]", callStatus, callSid);
+    // Return empty TwiML response — Twilio expects this for status callbacks
+    // MUST be under 64KB and valid XML/empty response
+    res.set("Content-Type", "text/xml");
+    res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
   });
 
   // tRPC API

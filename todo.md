@@ -1384,3 +1384,20 @@
 - [x] Added 8 new tests for duplicate call prevention (41 total Twilio tests passing)
 - [x] Fixed getTasks() null filter crash (optional chaining)
 - [x] Installed missing @radix-ui/react-visually-hidden dependency
+
+
+## BUG FIX - Twilio Error 11750 (Response >64KB on status callback) - FIXED ✅
+- [x] Root cause: /api/twilio/voice/status was registered as app.post() only. Twilio sends GET requests too, which fell through to Vite's SPA catch-all returning 367KB HTML page.
+- [x] Fix: Changed ALL Twilio endpoints from app.post() to app.all() to handle both GET and POST
+- [x] Fix: All endpoints now use res.set("Content-Type", "text/xml") explicitly
+- [x] Fix: Status callback returns empty TwiML `<Response/>` (49 bytes) instead of 367KB HTML
+- [x] Fix: Error fallbacks return inline minimal TwiML strings (no dynamic imports that could fail)
+- [x] Fix: /api/twilio/voice now reads To from both req.body and req.query
+- [x] Wrote 63 comprehensive integration tests (twilio-endpoints.test.ts) covering:
+  - All 4 endpoints (/voice, /voice/status, /voice/answered, /connect)
+  - Both GET and POST methods for each endpoint
+  - Content-Type verification (text/xml, NOT text/html)
+  - Response size under 64KB limit
+  - No HTML in response body (no <!DOCTYPE, <html>, <script>)
+  - Production domain warnings when stale deployment detected
+- [x] All 104 Twilio tests passing (41 unit + 63 integration)
