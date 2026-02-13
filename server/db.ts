@@ -676,6 +676,7 @@ export async function createPhoto(photo: InsertPhoto) {
   return result[0];
 }
 
+// Returns ONLY standalone property photos (no noteId, no visitId) - used by PhotoGallery
 export async function getPhotosByPropertyId(propertyId: number) {
   const db = await getDb();
   if (!db) return [];
@@ -704,6 +705,34 @@ export async function getPhotosByPropertyId(propertyId: number) {
         isNull(photos.visitId)
       )
     )
+    .orderBy(desc(photos.createdAt));
+
+  return results;
+}
+
+// Returns ALL photos for a property (including those linked to notes/visits) - used by NotesSection
+export async function getAllPhotosByPropertyId(propertyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const results = await db
+    .select({
+      id: photos.id,
+      propertyId: photos.propertyId,
+      visitId: photos.visitId,
+      noteId: photos.noteId,
+      userId: photos.userId,
+      fileKey: photos.fileKey,
+      fileUrl: photos.fileUrl,
+      caption: photos.caption,
+      latitude: photos.latitude,
+      longitude: photos.longitude,
+      createdAt: photos.createdAt,
+      userName: users.name,
+    })
+    .from(photos)
+    .leftJoin(users, eq(photos.userId, users.id))
+    .where(eq(photos.propertyId, propertyId))
     .orderBy(desc(photos.createdAt));
 
   return results;

@@ -1344,3 +1344,16 @@
 - [x] Open in new tab icon button on hover overlay
 - [x] Photos are stored separately from general notes images
 - [x] Verified in browser: empty state correct, notes images excluded
+
+
+## FIX - General Notes Screenshots & Activity Timeline - DONE ✅
+- [x] Root cause: getPhotosByPropertyId was filtering WHERE noteId IS NULL, so NotesSection couldn't see note-linked photos
+- [x] Created getAllPhotosByPropertyId (returns ALL photos) for NotesSection
+- [x] Kept getPhotosByPropertyId (returns ONLY standalone) for PhotoGallery
+- [x] Added photos.allByProperty tRPC procedure for NotesSection
+- [x] Updated NotesSection to use photos.allByProperty (sees note-linked screenshots)
+- [x] Updated DeskChrisNotes to use photos.allByProperty
+- [x] Screenshots pasted in notes are uploaded with noteId set (already working)
+- [x] Property Photos (noteId IS NULL) stays separate from Notes images (noteId != NULL)
+- [x] Activity Timeline now distinguishes: 🏠 Property Photo vs 📋 From General Notes
+- [x] Both actions visible in timeline with clear source labels

@@ -91,7 +91,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const utils = trpc.useUtils();
   const { data: allNotes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
   const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
-  const { data: allPhotos } = trpc.photos.byProperty.useQuery({ propertyId });
+  const { data: allPhotos } = trpc.photos.allByProperty.useQuery({ propertyId });
   
   const noteUsers = Array.from(new Set(notes.map(note => note.userName).filter(Boolean))) as string[];
 
@@ -137,6 +137,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
 
   const uploadPhotosMutation = trpc.photos.uploadBulk.useMutation({
     onSuccess: () => {
+      utils.photos.allByProperty.invalidate({ propertyId });
       utils.photos.byProperty.invalidate({ propertyId });
       utils.notes.byProperty.invalidate({ propertyId });
     },
@@ -158,6 +159,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
 
   const deletePhotoMutation = trpc.photos.delete.useMutation({
     onSuccess: () => {
+      utils.photos.allByProperty.invalidate({ propertyId });
       utils.photos.byProperty.invalidate({ propertyId });
       toast.success("Photo deleted");
     },

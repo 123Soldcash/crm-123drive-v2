@@ -70,7 +70,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
     propertyId,
   });
 
-  const { data: allPhotos } = trpc.photos.byProperty.useQuery({ propertyId });
+  const { data: allPhotos } = trpc.photos.allByProperty.useQuery({ propertyId });
 
   const deskChrisNotes = allNotes?.filter((note) => note.noteType === "desk-chris") || [];
   
@@ -116,6 +116,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
 
   const uploadPhotosMutation = trpc.photos.uploadBulk.useMutation({
     onSuccess: () => {
+      utils.photos.allByProperty.invalidate({ propertyId });
       utils.photos.byProperty.invalidate({ propertyId });
       utils.notes.byProperty.invalidate({ propertyId });
     },
@@ -138,6 +139,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
 
   const deletePhotoMutation = trpc.photos.delete.useMutation({
     onSuccess: () => {
+      utils.photos.allByProperty.invalidate({ propertyId });
       utils.photos.byProperty.invalidate({ propertyId });
       toast.success("Photo deleted");
     },

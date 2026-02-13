@@ -114,13 +114,19 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
                 
                 {activity.type === "photo" && activity.metadata?.url && (
                   <div className="mt-2">
+                    {activity.metadata?.source === 'note' && (
+                      <div className="text-[10px] text-amber-600 font-medium mb-1">📋 From General Notes</div>
+                    )}
+                    {activity.metadata?.source === 'property' && (
+                      <div className="text-[10px] text-blue-600 font-medium mb-1">🏠 Property Photo</div>
+                    )}
                     <img 
                       src={activity.metadata.url} 
                       alt="Activity photo" 
                       className="rounded-lg border border-slate-200 max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={() => window.open(activity.metadata.url, "_blank")}
                     />
-                    {activity.details && activity.details !== "Uploaded photo" && (
+                    {activity.details && activity.details !== "Property photo uploaded" && activity.details !== "Screenshot added to note" && (
                       <div className="mt-1 text-[10px] text-slate-400 italic">{activity.details}</div>
                     )}
                   </div>

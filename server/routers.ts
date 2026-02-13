@@ -242,13 +242,19 @@ export const appRouter = router({
           });
         }
 
-        // Get photos
-        const propertyPhotos = await dbInstance
+        // Get standalone property photos (not linked to notes)
+        const standalonePhotos = await dbInstance
           .select()
           .from(photos)
-          .where(eq(photos.propertyId, input.propertyId));
+          .where(
+            and(
+              eq(photos.propertyId, input.propertyId),
+              isNull(photos.noteId),
+              isNull(photos.visitId)
+            )
+          );
         
-        for (const photo of propertyPhotos) {
+        for (const photo of standalonePhotos) {
           const user = await dbInstance
             .select()
             .from(users)
@@ -260,9 +266,42 @@ export const appRouter = router({
             type: 'photo',
             timestamp: photo.createdAt,
             user: user[0]?.name || 'Unknown User',
-            details: photo.caption || 'Uploaded photo',
+            details: photo.caption || 'Property photo uploaded',
             metadata: {
               url: photo.fileUrl,
+              source: 'property',
+            },
+          });
+        }
+
+        // Get note-linked photos (screenshots/prints in General Notes)
+        const notePhotos = await dbInstance
+          .select()
+          .from(photos)
+          .where(
+            and(
+              eq(photos.propertyId, input.propertyId),
+              sql`${photos.noteId} IS NOT NULL`
+            )
+          );
+        
+        for (const photo of notePhotos) {
+          const user = await dbInstance
+            .select()
+            .from(users)
+            .where(eq(users.id, photo.userId))
+            .limit(1);
+          
+          activities.push({
+            id: `note-photo-${photo.id}`,
+            type: 'photo',
+            timestamp: photo.createdAt,
+            user: user[0]?.name || 'Unknown User',
+            details: photo.caption || 'Screenshot added to note',
+            metadata: {
+              url: photo.fileUrl,
+              source: 'note',
+              noteId: photo.noteId,
             },
           });
         }
@@ -1304,10 +1343,18 @@ export const appRouter = router({
   }),
 
   photos: router({
+    // Returns ONLY standalone property photos (no noteId, no visitId) - used by PhotoGallery
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         return await db.getPhotosByPropertyId(input.propertyId);
+      }),
+
+    // Returns ALL photos for a property (including notes/visits) - used by NotesSection
+    allByProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAllPhotosByPropertyId(input.propertyId);
       }),
 
     uploadBulk: protectedProcedure
