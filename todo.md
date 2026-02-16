@@ -1401,3 +1401,21 @@
   - No HTML in response body (no <!DOCTYPE, <html>, <script>)
   - Production domain warnings when stale deployment detected
 - [x] All 104 Twilio tests passing (41 unit + 63 integration)
+
+## BUG FIX - Twilio Error 11750 STILL persisting in production — DEFINITIVELY FIXED ✅
+- [x] Root cause: Manus deployment platform only forwards /api/trpc/* and /api/oauth/* to Express
+- [x] All other /api/* paths (including /api/twilio/*) intercepted by platform static layer → 367KB HTML
+- [x] DEFINITIVE FIX: Moved ALL Twilio webhooks from /api/twilio/* to /api/trpc/twilio-webhook/*
+  - /api/trpc/twilio-webhook/voice (was /api/twilio/voice)
+  - /api/trpc/twilio-webhook/connect (was /api/twilio/connect)
+  - /api/trpc/twilio-webhook/answered (was /api/twilio/voice/answered)
+  - /api/trpc/twilio-webhook/status (was /api/twilio/voice/status)
+- [x] Updated makeOutboundCall() to use new /api/trpc/twilio-webhook/ paths
+- [x] Also moved Zapier webhook to /api/trpc/webhook/zapier
+- [x] 109 tests passing (41 unit + 68 integration) verifying:
+  - All endpoints return text/xml, NOT text/html
+  - All responses under 64KB (49-113 bytes)
+  - Both GET and POST methods work
+  - No HTML leakage in response body
+  - Source code uses new paths, old paths NOT registered
+- [x] Verified local production build works correctly (49B XML responses)

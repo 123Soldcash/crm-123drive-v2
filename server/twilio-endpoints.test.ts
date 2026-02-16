@@ -9,35 +9,28 @@
  * 5. Return correct HTTP status codes
  * 6. Do NOT return HTML (which would be the SPA catch-all)
  *
+ * CRITICAL: Webhook endpoints use /api/trpc/twilio-webhook/* prefix because
+ * the Manus deployment platform only forwards /api/trpc/* and /api/oauth/*
+ * to Express. All other /api/* paths are intercepted by the platform's static
+ * file layer and return the SPA index.html (>64KB), causing Twilio Error 11750.
+ *
  * These tests hit the actual running dev server on localhost:3000.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 
 const BASE_URL = "http://localhost:3000";
 const MAX_RESPONSE_SIZE = 65536; // 64KB = Twilio's limit
 
-// Helper to check if server is running
-async function isServerRunning(): Promise<boolean> {
-  try {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    return resp.ok;
-  } catch {
-    return false;
-  }
-}
+// ─── /api/trpc/twilio-webhook/status ─────────────────────────────────────
 
-// ─── /api/twilio/voice/status ─────────────────────────────────────────────
-
-describe("/api/twilio/voice/status endpoint", () => {
-  it("responds to GET requests (not just POST)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`);
+describe("/api/trpc/twilio-webhook/status endpoint", () => {
+  it("responds to GET requests", async () => {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`);
     expect(resp.status).toBe(200);
   });
 
   it("responds to POST requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`, {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "CallStatus=completed&CallSid=CA123456",
@@ -46,14 +39,14 @@ describe("/api/twilio/voice/status endpoint", () => {
   });
 
   it("returns Content-Type text/xml (not text/html)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`);
     const contentType = resp.headers.get("content-type") || "";
     expect(contentType).toContain("text/xml");
     expect(contentType).not.toContain("text/html");
   });
 
   it("response body is under 64KB", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`);
     const body = await resp.text();
     expect(body.length).toBeLessThan(MAX_RESPONSE_SIZE);
     // Should be tiny — under 200 bytes
@@ -61,7 +54,7 @@ describe("/api/twilio/voice/status endpoint", () => {
   });
 
   it("returns valid XML (not HTML)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`);
     const body = await resp.text();
     expect(body).toContain("<?xml version");
     expect(body).toContain("<Response");
@@ -71,14 +64,14 @@ describe("/api/twilio/voice/status endpoint", () => {
   });
 
   it("returns empty TwiML Response", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/status`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/status`);
     const body = await resp.text();
     expect(body).toContain("<Response/>");
   });
 
   it("GET with query params works", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/voice/status?CallStatus=ringing&CallSid=CA789`
+      `${BASE_URL}/api/trpc/twilio-webhook/status?CallStatus=ringing&CallSid=CA789`
     );
     expect(resp.status).toBe(200);
     const body = await resp.text();
@@ -87,37 +80,37 @@ describe("/api/twilio/voice/status endpoint", () => {
   });
 });
 
-// ─── /api/twilio/voice/answered ───────────────────────────────────────────
+// ─── /api/trpc/twilio-webhook/answered ───────────────────────────────────
 
-describe("/api/twilio/voice/answered endpoint", () => {
+describe("/api/trpc/twilio-webhook/answered endpoint", () => {
   it("responds to GET requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     expect(resp.status).toBe(200);
   });
 
   it("responds to POST requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`, {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`, {
       method: "POST",
     });
     expect(resp.status).toBe(200);
   });
 
   it("returns Content-Type text/xml (not text/html)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     const contentType = resp.headers.get("content-type") || "";
     expect(contentType).toContain("text/xml");
     expect(contentType).not.toContain("text/html");
   });
 
   it("response body is under 64KB", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     const body = await resp.text();
     expect(body.length).toBeLessThan(MAX_RESPONSE_SIZE);
     expect(body.length).toBeLessThan(200);
   });
 
   it("returns valid TwiML XML (not HTML)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     const body = await resp.text();
     expect(body).toContain("<?xml version");
     expect(body).toContain("<Response>");
@@ -127,29 +120,29 @@ describe("/api/twilio/voice/answered endpoint", () => {
   });
 
   it("does NOT contain <Dial> (prevents duplicate calls)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     const body = await resp.text();
     expect(body).not.toContain("<Dial");
     expect(body).not.toContain("<Number>");
   });
 
   it("contains <Pause> to keep line open", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice/answered`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
     const body = await resp.text();
     expect(body).toContain("<Pause");
   });
 });
 
-// ─── /api/twilio/voice ────────────────────────────────────────────────────
+// ─── /api/trpc/twilio-webhook/voice ──────────────────────────────────────
 
-describe("/api/twilio/voice endpoint", () => {
+describe("/api/trpc/twilio-webhook/voice endpoint", () => {
   it("responds to GET requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`);
     expect(resp.status).toBe(200);
   });
 
   it("responds to POST requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`, {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "To=+15551234567",
@@ -158,21 +151,21 @@ describe("/api/twilio/voice endpoint", () => {
   });
 
   it("returns Content-Type text/xml (not text/html)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`);
     const contentType = resp.headers.get("content-type") || "";
     expect(contentType).toContain("text/xml");
     expect(contentType).not.toContain("text/html");
   });
 
   it("response body is under 64KB", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`);
     const body = await resp.text();
     expect(body.length).toBeLessThan(MAX_RESPONSE_SIZE);
     expect(body.length).toBeLessThan(500);
   });
 
   it("returns valid TwiML XML (not HTML)", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`);
     const body = await resp.text();
     expect(body).toContain("<?xml version");
     expect(body).toContain("<Response>");
@@ -182,44 +175,42 @@ describe("/api/twilio/voice endpoint", () => {
   });
 
   it("handles To parameter via POST body", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`, {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "To=+15551234567",
     });
     const body = await resp.text();
-    // The number appears in the TwiML (may be in <Number> or <Client> element)
     expect(body).toContain("15551234567");
   });
 
   it("handles To parameter via query string", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/voice?To=+15559876543`
+      `${BASE_URL}/api/trpc/twilio-webhook/voice?To=+15559876543`
     );
     const body = await resp.text();
-    // The number appears in the TwiML (may be in <Number> or <Client> element)
     expect(body).toContain("15559876543");
   });
 
   it("returns <Say> when no destination specified", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/voice`);
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/voice`);
     const body = await resp.text();
     expect(body).toContain("<Say>");
   });
 });
 
-// ─── /api/twilio/connect ──────────────────────────────────────────────────
+// ─── /api/trpc/twilio-webhook/connect ────────────────────────────────────
 
-describe("/api/twilio/connect endpoint", () => {
+describe("/api/trpc/twilio-webhook/connect endpoint", () => {
   it("responds to GET requests", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/connect?to=+15551234567`
+      `${BASE_URL}/api/trpc/twilio-webhook/connect?to=+15551234567`
     );
     expect(resp.status).toBe(200);
   });
 
   it("responds to POST requests", async () => {
-    const resp = await fetch(`${BASE_URL}/api/twilio/connect`, {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/connect`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "To=+15551234567",
@@ -229,7 +220,7 @@ describe("/api/twilio/connect endpoint", () => {
 
   it("returns Content-Type text/xml (not text/html)", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/connect?to=+15551234567`
+      `${BASE_URL}/api/trpc/twilio-webhook/connect?to=+15551234567`
     );
     const contentType = resp.headers.get("content-type") || "";
     expect(contentType).toContain("text/xml");
@@ -238,7 +229,7 @@ describe("/api/twilio/connect endpoint", () => {
 
   it("response body is under 64KB", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/connect?to=+15551234567`
+      `${BASE_URL}/api/trpc/twilio-webhook/connect?to=+15551234567`
     );
     const body = await resp.text();
     expect(body.length).toBeLessThan(MAX_RESPONSE_SIZE);
@@ -247,7 +238,7 @@ describe("/api/twilio/connect endpoint", () => {
 
   it("returns valid TwiML XML (not HTML)", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/connect?to=+15551234567`
+      `${BASE_URL}/api/trpc/twilio-webhook/connect?to=+15551234567`
     );
     const body = await resp.text();
     expect(body).toContain("<?xml version");
@@ -259,7 +250,7 @@ describe("/api/twilio/connect endpoint", () => {
 
   it("includes <Dial> with destination number", async () => {
     const resp = await fetch(
-      `${BASE_URL}/api/twilio/connect?to=+15551234567`
+      `${BASE_URL}/api/trpc/twilio-webhook/connect?to=+15551234567`
     );
     const body = await resp.text();
     expect(body).toContain("<Dial");
@@ -267,18 +258,18 @@ describe("/api/twilio/connect endpoint", () => {
   });
 });
 
-// ─── Cross-Endpoint Validation ────────────────────────────────────────────
+// ─── Cross-Endpoint Validation ──────────────────────────────────────────
 
 describe("All Twilio endpoints: cross-validation", () => {
   const endpoints = [
-    { path: "/api/twilio/voice", method: "GET" },
-    { path: "/api/twilio/voice", method: "POST" },
-    { path: "/api/twilio/voice/status", method: "GET" },
-    { path: "/api/twilio/voice/status", method: "POST" },
-    { path: "/api/twilio/voice/answered", method: "GET" },
-    { path: "/api/twilio/voice/answered", method: "POST" },
-    { path: "/api/twilio/connect?to=+15551234567", method: "GET" },
-    { path: "/api/twilio/connect", method: "POST" },
+    { path: "/api/trpc/twilio-webhook/voice", method: "GET" },
+    { path: "/api/trpc/twilio-webhook/voice", method: "POST" },
+    { path: "/api/trpc/twilio-webhook/status", method: "GET" },
+    { path: "/api/trpc/twilio-webhook/status", method: "POST" },
+    { path: "/api/trpc/twilio-webhook/answered", method: "GET" },
+    { path: "/api/trpc/twilio-webhook/answered", method: "POST" },
+    { path: "/api/trpc/twilio-webhook/connect?to=+15551234567", method: "GET" },
+    { path: "/api/trpc/twilio-webhook/connect", method: "POST" },
   ];
 
   for (const { path, method } of endpoints) {
@@ -349,7 +340,69 @@ describe("All Twilio endpoints: cross-validation", () => {
   }
 });
 
-// ─── Production Domain Tests ──────────────────────────────────────────────
+// ─── makeOutboundCall URL Verification ──────────────────────────────────
+
+describe("makeOutboundCall webhook URL configuration", () => {
+  it("uses /api/trpc/twilio-webhook/answered as the call URL (not /api/twilio/)", async () => {
+    // Read the twilio.ts source to verify the URL
+    const fs = await import("fs");
+    const source = fs.readFileSync("server/twilio.ts", "utf-8");
+
+    // The URL should use the new /api/trpc/twilio-webhook/ prefix
+    expect(source).toContain("/api/trpc/twilio-webhook/answered");
+    // Should NOT use the old /api/twilio/ prefix
+    expect(source).not.toMatch(/url:.*\/api\/twilio\/voice\/answered/);
+  });
+
+  it("uses /api/trpc/twilio-webhook/status as the status callback URL", async () => {
+    const fs = await import("fs");
+    const source = fs.readFileSync("server/twilio.ts", "utf-8");
+
+    expect(source).toContain("/api/trpc/twilio-webhook/status");
+    // Should NOT use the old path
+    expect(source).not.toMatch(/statusCallback:.*\/api\/twilio\/voice\/status/);
+  });
+
+  it("answered endpoint does NOT contain <Dial> (prevents duplicate calls)", async () => {
+    const resp = await fetch(`${BASE_URL}/api/trpc/twilio-webhook/answered`);
+    const body = await resp.text();
+    // CRITICAL: If this contains <Dial>, Twilio will make a SECOND call
+    expect(body).not.toContain("<Dial");
+    expect(body).not.toContain("<Number>");
+    // Should only contain <Pause> to keep line open
+    expect(body).toContain("<Pause");
+  });
+});
+
+// ─── Old Path Regression Tests ──────────────────────────────────────────
+
+describe("Old /api/twilio/* paths should NOT be used", () => {
+  it("server code does NOT register routes at /api/twilio/ (only /api/trpc/twilio-webhook/)", async () => {
+    const fs = await import("fs");
+    const source = fs.readFileSync("server/_core/index.ts", "utf-8");
+
+    // Should NOT have any routes at the old /api/twilio/ path
+    expect(source).not.toMatch(/app\.(all|get|post)\("\/api\/twilio\//);
+    // Should have routes at the new /api/trpc/twilio-webhook/ path
+    expect(source).toContain('/api/trpc/twilio-webhook/voice');
+    expect(source).toContain('/api/trpc/twilio-webhook/connect');
+    expect(source).toContain('/api/trpc/twilio-webhook/answered');
+    expect(source).toContain('/api/trpc/twilio-webhook/status');
+  });
+
+  it("twilio.ts uses new webhook paths (not old /api/twilio/ paths)", async () => {
+    const fs = await import("fs");
+    const source = fs.readFileSync("server/twilio.ts", "utf-8");
+
+    // Should use new paths
+    expect(source).toContain("/api/trpc/twilio-webhook/answered");
+    expect(source).toContain("/api/trpc/twilio-webhook/status");
+    // Should NOT reference old paths in URL construction
+    expect(source).not.toMatch(/baseUrl.*\/api\/twilio\/voice/);
+  });
+});
+
+// ─── Production Domain Tests ────────────────────────────────────────────
 
 describe("Production domain endpoint validation", () => {
   const PROD_DOMAIN = process.env.CUSTOM_DOMAIN;
@@ -358,39 +411,32 @@ describe("Production domain endpoint validation", () => {
     expect(PROD_DOMAIN).toBeTruthy();
   });
 
-  // These tests verify the PRODUCTION domain returns correct responses.
-  // If the production deployment is stale, these will fail — which is
-  // exactly what we want, because Twilio hits the production URL.
-
-  it("GET /api/twilio/voice/status on production returns XML (not HTML)", async () => {
+  it("GET /api/trpc/twilio-webhook/status on production returns XML (not HTML)", async () => {
     if (!PROD_DOMAIN) return;
     try {
       const resp = await fetch(
-        `https://${PROD_DOMAIN}/api/twilio/voice/status`,
+        `https://${PROD_DOMAIN}/api/trpc/twilio-webhook/status`,
         { signal: AbortSignal.timeout(5000) }
       );
       const contentType = resp.headers.get("content-type") || "";
       const body = await resp.text();
 
-      // These assertions will FAIL if production hasn't been redeployed
-      // That's intentional — it tells us we need to publish
       if (contentType.includes("text/html") || body.includes("<!DOCTYPE html")) {
         console.warn(
-          "⚠️ PRODUCTION NOT UPDATED: /api/twilio/voice/status returns HTML. " +
+          "⚠️ PRODUCTION NOT UPDATED: /api/trpc/twilio-webhook/status returns HTML. " +
             "You must PUBLISH the latest checkpoint for Twilio to work correctly."
         );
       }
-      // We log the warning but don't fail the test — production deploy is manual
     } catch (err) {
       console.warn("Could not reach production domain:", err);
     }
   });
 
-  it("POST /api/twilio/voice/status on production returns under 64KB", async () => {
+  it("POST /api/trpc/twilio-webhook/status on production returns under 64KB", async () => {
     if (!PROD_DOMAIN) return;
     try {
       const resp = await fetch(
-        `https://${PROD_DOMAIN}/api/twilio/voice/status`,
+        `https://${PROD_DOMAIN}/api/trpc/twilio-webhook/status`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },

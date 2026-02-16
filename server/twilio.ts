@@ -162,11 +162,15 @@ export async function makeOutboundCall(params: {
 
   // Create a call from our Twilio number to the destination.
   // The `url` points to a simple TwiML that plays a greeting when answered.
-  // Do NOT point to /api/twilio/voice which has <Dial> — that would duplicate the call.
+  // Do NOT point to /api/trpc/twilio-webhook/voice which has <Dial> — that would duplicate the call.
+  //
+  // CRITICAL: Webhook URLs use /api/trpc/twilio-webhook/* prefix because the Manus
+  // deployment platform only forwards /api/trpc/* and /api/oauth/* to Express.
+  // Using /api/twilio/* would be intercepted by the static layer and return HTML.
   const call = await client.calls.create({
     to: formattedTo,
     from: ENV.twilioPhoneNumber,
-    url: `${baseUrl}/api/twilio/voice/answered`,
+    url: `${baseUrl}/api/trpc/twilio-webhook/answered`,
     ...(statusCallbackUrl
       ? {
           statusCallback: statusCallbackUrl,
@@ -174,7 +178,7 @@ export async function makeOutboundCall(params: {
           statusCallbackMethod: "POST" as const,
         }
       : {
-          statusCallback: `${baseUrl}/api/twilio/voice/status`,
+          statusCallback: `${baseUrl}/api/trpc/twilio-webhook/status`,
           statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
           statusCallbackMethod: "POST" as const,
         }),

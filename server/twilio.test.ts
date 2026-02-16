@@ -291,7 +291,7 @@ describe("CUSTOM_DOMAIN for Twilio callbacks", () => {
       return;
     }
     try {
-      const resp = await fetch(`https://${domain}/api/twilio/voice/status`, {
+      const resp = await fetch(`https://${domain}/api/trpc/twilio-webhook/status`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "CallStatus=completed&CallSid=test",
@@ -345,25 +345,30 @@ describe("buildAnsweredTwiml (duplicate call prevention)", () => {
   });
 });
 
-describe("makeOutboundCall uses /answered endpoint (not /voice)", () => {
-  it("server/twilio.ts makeOutboundCall points to /api/twilio/voice/answered", async () => {
+describe("makeOutboundCall uses /api/trpc/twilio-webhook/ paths (not old /api/twilio/)", () => {
+  it("server/twilio.ts makeOutboundCall points to /api/trpc/twilio-webhook/answered", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/twilio.ts", "utf-8");
-    // The url parameter in calls.create should point to /answered
-    expect(content).toContain("/api/twilio/voice/answered");
+    // The url parameter in calls.create should point to the new path
+    expect(content).toContain("/api/trpc/twilio-webhook/answered");
+    // Should NOT use old path
+    expect(content).not.toMatch(/url:.*\/api\/twilio\/voice\/answered/);
   });
 
-  it("server/twilio.ts makeOutboundCall does NOT point url to /api/twilio/voice?To=", async () => {
+  it("server/twilio.ts uses /api/trpc/twilio-webhook/status for status callback", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/twilio.ts", "utf-8");
-    // The old duplicate-causing pattern was: url: `${baseUrl}/api/twilio/voice?To=...`
-    expect(content).not.toContain("url: `${baseUrl}/api/twilio/voice?To=");
+    expect(content).toContain("/api/trpc/twilio-webhook/status");
+    // Should NOT use old path
+    expect(content).not.toMatch(/statusCallback:.*\/api\/twilio\/voice\/status/);
   });
 
-  it("_core/index.ts has /api/twilio/voice/answered endpoint registered", async () => {
+  it("_core/index.ts has /api/trpc/twilio-webhook/answered endpoint registered", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/_core/index.ts", "utf-8");
-    expect(content).toContain("/api/twilio/voice/answered");
+    expect(content).toContain("/api/trpc/twilio-webhook/answered");
+    // Should NOT have old paths
+    expect(content).not.toMatch(/app\.(all|get|post)\("\/(api\/twilio\/)/);
   });
 });
 
