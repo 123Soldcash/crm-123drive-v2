@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2243,4 +2243,62 @@ export async function deleteFamilyMember(id: number) {
   
   await db.delete(familyMembers).where(eq(familyMembers.id, id));
   return { success: true };
+}
+
+
+// ============================================================================
+// PROPERTY DOCUMENTS
+// ============================================================================
+
+export async function getPropertyDocuments(propertyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const results = await db
+    .select({
+      id: propertyDocuments.id,
+      propertyId: propertyDocuments.propertyId,
+      noteId: propertyDocuments.noteId,
+      userId: propertyDocuments.userId,
+      fileName: propertyDocuments.fileName,
+      fileKey: propertyDocuments.fileKey,
+      fileUrl: propertyDocuments.fileUrl,
+      fileSize: propertyDocuments.fileSize,
+      mimeType: propertyDocuments.mimeType,
+      description: propertyDocuments.description,
+      createdAt: propertyDocuments.createdAt,
+      uploaderName: users.name,
+    })
+    .from(propertyDocuments)
+    .leftJoin(users, eq(propertyDocuments.userId, users.id))
+    .where(eq(propertyDocuments.propertyId, propertyId))
+    .orderBy(desc(propertyDocuments.createdAt));
+
+  return results;
+}
+
+export async function createPropertyDocument(doc: InsertPropertyDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(propertyDocuments).values(doc);
+  return { id: Number(result[0].insertId), ...doc };
+}
+
+export async function deletePropertyDocument(docId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const doc = await db
+    .select()
+    .from(propertyDocuments)
+    .where(eq(propertyDocuments.id, docId))
+    .limit(1);
+
+  if (doc.length === 0) {
+    throw new Error("Document not found");
+  }
+
+  await db.delete(propertyDocuments).where(eq(propertyDocuments.id, docId));
+  return { success: true, fileKey: doc[0].fileKey };
 }

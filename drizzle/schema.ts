@@ -1035,3 +1035,29 @@ export const callLogs = mysqlTable("callLogs", {
 
 export type CallLog = typeof callLogs.$inferSelect;
 export type InsertCallLog = typeof callLogs.$inferInsert;
+
+
+/**
+ * Property Documents table - stores uploaded documents (PDF, DOC, images, etc.)
+ * attached to properties via the General Notes section
+ */
+export const propertyDocuments = mysqlTable("propertyDocuments", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  noteId: int("noteId"), // Optional: link to a specific note
+  userId: int("userId").notNull(), // Who uploaded the document
+  
+  // File info
+  fileName: varchar("fileName", { length: 255 }).notNull(), // Original file name
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(), // Public URL
+  fileSize: int("fileSize").notNull(), // Size in bytes
+  mimeType: varchar("mimeType", { length: 100 }).notNull(), // MIME type (application/pdf, etc.)
+  
+  // Metadata
+  description: text("description"), // Optional description
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PropertyDocument = typeof propertyDocuments.$inferSelect;
+export type InsertPropertyDocument = typeof propertyDocuments.$inferInsert;

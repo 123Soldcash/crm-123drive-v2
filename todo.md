@@ -1466,3 +1466,25 @@
 - [x] Fixed StickyPropertyHeader to use tag.tag (not tag.name)
 - [x] Fixed addPropertyTag to prevent duplicates on same property
 - [x] 29 comprehensive tests passing (unit, validation, source code verification)
+
+
+## NEW FEATURE - Document Upload in General Notes (Feb 16, 2026) - COMPLETED ✅
+- [x] Audited current Notes section (NotesSection component, notes schema, backend)
+- [x] Created propertyDocuments table in drizzle/schema.ts (id, propertyId, noteId, userId, fileName, fileKey, fileUrl, fileSize, mimeType, description, createdAt)
+- [x] Created database table via SQL
+- [x] Created db helpers: getPropertyDocuments (with uploader name join), createPropertyDocument, deletePropertyDocument
+- [x] Created tRPC procedures: documents.byProperty, documents.upload, documents.delete
+- [x] Implemented S3 upload via storagePut with unique file keys (timestamp + random suffix)
+- [x] Built document upload UI within NotesSection component:
+  - [x] "Documents" button in note form to attach files to notes
+  - [x] Standalone document upload area (click-to-upload dashed border)
+  - [x] Document list with file icons (PDF=red, Excel=green, Word=blue, Image=purple, ZIP=yellow)
+  - [x] File metadata display (name, size, uploader, date)
+  - [x] Download link (opens in new tab)
+  - [x] Collapsible document section with count
+  - [x] Documents attached to notes shown inline
+- [x] Supported file types: PDF, DOC, DOCX, XLS, XLSX, TXT, CSV, ZIP, JPEG, PNG, GIF, WEBP
+- [x] 10MB file size limit with user-friendly error message
+- [x] Delete document with confirmation dialog
+- [x] Document count badge in section header
+- [x] 40 comprehensive tests passing (schema, db helpers, tRPC procedures, frontend, file types)

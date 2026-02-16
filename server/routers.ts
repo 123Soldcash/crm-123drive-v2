@@ -2989,6 +2989,64 @@ export const appRouter = router({
         return await getMatchingBuyers(input.propertyId);
       }),
   }),
-});
 
-export type AppRouter = typeof appRouter;
+  documents: router({
+    byProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPropertyDocuments(input.propertyId);
+      }),
+
+    upload: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          noteId: z.number().optional(),
+          fileName: z.string().min(1),
+          fileData: z.string(), // base64 encoded file
+          fileSize: z.number(),
+          mimeType: z.string(),
+          description: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import("./storage");
+
+        // Decode base64 file
+        const base64Data = input.fileData.replace(/^data:[^;]+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+
+        // Generate unique file key with original extension
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const ext = input.fileName.split(".").pop() || "bin";
+        const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const fileKey = `properties/${input.propertyId}/documents/${timestamp}-${randomSuffix}-${safeFileName}`;
+
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        // Save to database
+        const result = await db.createPropertyDocument({
+          propertyId: input.propertyId,
+          noteId: input.noteId,
+          userId: ctx.user.id,
+          fileName: input.fileName,
+          fileKey,
+          fileUrl: url,
+          fileSize: input.fileSize,
+          mimeType: input.mimeType,
+          description: input.description,
+        });
+
+        return { ...result, fileUrl: url, uploaderName: ctx.user.name };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.deletePropertyDocument(input.id);
+      }),
+  }),
+});
+export type AppRouter = typeof appRouter;;
