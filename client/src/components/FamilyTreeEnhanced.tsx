@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react";
+import { Trash2, Edit2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -64,7 +64,6 @@ interface FamilyTreeProps {
 }
 
 export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<FamilyMember>>({});
   const [treeNotes, setTreeNotes] = useState<string>("");
@@ -168,30 +167,6 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Family Tree</h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="gap-2"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="w-4 h-4" />
-                Hide
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4" />
-                Show
-              </>
-            )}
-          </Button>
-        </div>
-
-        {isExpanded && (
-          <>
             <Card className="p-4 mb-4 bg-blue-50 border-2 border-blue-200">
               <div className="mb-2">
                 <p className="text-xs font-semibold text-blue-900">➕ Add New Family Member</p>
@@ -499,8 +474,6 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                 </Card>
               )}
             </div>
-          </>
-        )}
       </div>
     </div>
   );

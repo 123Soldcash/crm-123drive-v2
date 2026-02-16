@@ -329,3 +329,160 @@ describe("Family Tree Feature", () => {
     }
   });
 });
+
+
+// ============================================================================
+// UI COMPONENT TESTS - Redundant Toggle Removal
+// ============================================================================
+
+import * as fs from "fs";
+import * as path from "path";
+
+const COMPONENT_PATH = path.join(__dirname, "../client/src/components/FamilyTreeEnhanced.tsx");
+const PROPERTY_DETAIL_PATH = path.join(__dirname, "../client/src/pages/PropertyDetail.tsx");
+
+function readFamilyTreeComponent(): string {
+  return fs.readFileSync(COMPONENT_PATH, "utf-8");
+}
+
+function readPropertyDetailPage(): string {
+  return fs.readFileSync(PROPERTY_DETAIL_PATH, "utf-8");
+}
+
+describe("Family Tree - Redundant Internal Toggle Removed", () => {
+  it("should NOT have isExpanded state variable", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).not.toContain("isExpanded");
+    expect(content).not.toContain("setIsExpanded");
+  });
+
+  it("should NOT import ChevronDown or ChevronUp icons", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).not.toContain("ChevronDown");
+    expect(content).not.toContain("ChevronUp");
+  });
+
+  it("should NOT have conditional rendering with isExpanded", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).not.toContain("{isExpanded &&");
+  });
+
+  it("should NOT have a redundant Family Tree h3 heading", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).not.toContain('<h3 className="text-lg font-semibold">Family Tree</h3>');
+  });
+});
+
+describe("Family Tree - Section-Level Collapse Preserved in PropertyDetail", () => {
+  it("should have showFamilyTree state in PropertyDetail", () => {
+    const content = readPropertyDetailPage();
+    expect(content).toContain("showFamilyTree");
+    expect(content).toContain("setShowFamilyTree");
+  });
+
+  it("should use CollapsibleSection for Family Tree", () => {
+    const content = readPropertyDetailPage();
+    expect(content).toContain('CollapsibleSection title="Family Tree"');
+  });
+
+  it("should pass showFamilyTree to CollapsibleSection isOpen", () => {
+    const content = readPropertyDetailPage();
+    expect(content).toMatch(/CollapsibleSection.*title="Family Tree".*isOpen=\{showFamilyTree\}/);
+  });
+
+  it("should persist showFamilyTree in localStorage", () => {
+    const content = readPropertyDetailPage();
+    expect(content).toContain("localStorage.setItem('showFamilyTree'");
+    expect(content).toContain("localStorage.getItem('showFamilyTree')");
+  });
+
+  it("should render FamilyTreeEnhanced inside CollapsibleSection", () => {
+    const content = readPropertyDetailPage();
+    expect(content).toContain("<FamilyTreeEnhanced propertyId={propertyId} />");
+  });
+});
+
+describe("Family Tree - Core Functionality Still Present", () => {
+  it("should have the Add New Family Member form", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("Add New Family Member");
+    expect(content).toContain("handleSaveNewMember");
+  });
+
+  it("should have name input with placeholder", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain('placeholder="Enter name..."');
+  });
+
+  it("should have relationship select with all options", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("RELATIONSHIPS");
+    expect(content).toContain("SelectItem");
+    expect(content).toContain('"Owner"');
+    expect(content).toContain('"Spouse"');
+    expect(content).toContain('"Son"');
+    expect(content).toContain('"Daughter"');
+  });
+
+  it("should have inheritance percentage input", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("Inheritance %");
+    expect(content).toContain("relationshipPercentage");
+  });
+
+  it("should have all checkbox options", () => {
+    const content = readFamilyTreeComponent();
+    const checkboxes = ["Current Resident", "Representative", "Deceased", "Contacted", "On Board", "NOT ON BOARD"];
+    for (const cb of checkboxes) {
+      expect(content).toContain(cb);
+    }
+  });
+
+  it("should have family members table with headers", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("<table");
+    expect(content).toContain("<thead");
+    expect(content).toContain("familyMembers.map");
+  });
+
+  it("should have edit and delete actions", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("editingId");
+    expect(content).toContain("handleEditSave");
+    expect(content).toContain("deleteMutation");
+    expect(content).toContain("Edit2");
+    expect(content).toContain("Trash2");
+  });
+
+  it("should have Family Tree Notes section", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("Family Tree Notes");
+    expect(content).toContain("treeNotes");
+    expect(content).toContain("notesEditing");
+  });
+
+  it("should have empty state message", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("No family members added yet");
+  });
+
+  it("should use tRPC hooks for CRUD operations", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("trpc.properties.getFamilyMembers.useQuery");
+    expect(content).toContain("trpc.properties.createFamilyMember.useMutation");
+    expect(content).toContain("trpc.properties.updateFamilyMember.useMutation");
+    expect(content).toContain("trpc.properties.deleteFamilyMember.useMutation");
+  });
+
+  it("should have Enter key handler for quick add", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("handleKeyDown");
+    expect(content).toContain('e.key === "Enter"');
+  });
+
+  it("should have toast notifications for success and error", () => {
+    const content = readFamilyTreeComponent();
+    expect(content).toContain("toast.success");
+    expect(content).toContain("toast.error");
+  });
+});

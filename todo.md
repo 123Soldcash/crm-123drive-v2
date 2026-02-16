@@ -1488,3 +1488,11 @@
 - [x] Delete document with confirmation dialog
 - [x] Document count badge in section header
 - [x] 40 comprehensive tests passing (schema, db helpers, tRPC procedures, frontend, file types)
+
+
+## FIX - Remove Redundant Show/Hide Button in Family Tree (Feb 16, 2026) - COMPLETED ✅
+- [x] Identified internal Show/Hide toggle: isExpanded state + ChevronDown/ChevronUp button (lines 67, 173-190)
+- [x] Removed isExpanded state, setIsExpanded, Show/Hide button, ChevronDown/ChevronUp imports
+- [x] Removed conditional {isExpanded && (<>...</>)} wrapper — content now always visible when section is open
+- [x] Section-level CollapsibleSection in PropertyDetail.tsx preserved with localStorage persistence
+- [x] 29 tests passing (8 DB + 21 UI: toggle removed, section collapse preserved, core functionality intact)
