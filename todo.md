@@ -1446,3 +1446,23 @@
   - No HTML leakage
   - Error fallback TwiML responses
   - Production build file verification
+
+
+## REBUILD - Property Tags Component (Feb 16, 2026) - COMPLETED ✅
+- [x] Audited current tags schema, backend procedures, and frontend component
+- [x] Rebuilt backend tRPC procedures for full tag CRUD:
+  - [x] getTags: list tags for a specific property
+  - [x] getAllTags: list all unique tags with property counts
+  - [x] addTag: add tag to property (with duplicate prevention)
+  - [x] removeTag: remove tag from property
+  - [x] deleteTagGlobally: delete tag from ALL properties
+  - [x] renameTag: rename tag across all properties
+- [x] Created PropertyTagsManager component with:
+  - [x] Removable badges for current property tags (X button)
+  - [x] Popover with search to add existing tags
+  - [x] Create new tags inline (type + Enter or click "Create")
+  - [x] Manage Tags dialog to view/delete tags globally (with confirmation)
+  - [x] Property count shown next to each tag
+- [x] Fixed StickyPropertyHeader to use tag.tag (not tag.name)
+- [x] Fixed addPropertyTag to prevent duplicates on same property
+- [x] 29 comprehensive tests passing (unit, validation, source code verification)

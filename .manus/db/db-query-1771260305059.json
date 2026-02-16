@@ -1,0 +1,50 @@
+{
+  "query": "SELECT DISTINCT tag, COUNT(*) as cnt FROM propertyTags GROUP BY tag ORDER BY cnt DESC LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT DISTINCT tag, COUNT(*) as cnt FROM propertyTags GROUP BY tag ORDER BY cnt DESC LIMIT 10",
+  "rows": [
+    {
+      "tag": "High Equity",
+      "cnt": "110"
+    },
+    {
+      "tag": "Off Market",
+      "cnt": "109"
+    },
+    {
+      "tag": "Senior Owner",
+      "cnt": "38"
+    },
+    {
+      "tag": "Absentee Owner",
+      "cnt": "27"
+    },
+    {
+      "tag": "Corporate Owner",
+      "cnt": "20"
+    },
+    {
+      "tag": "Tired Landlord",
+      "cnt": "17"
+    },
+    {
+      "tag": "Tax Delinquent",
+      "cnt": "15"
+    },
+    {
+      "tag": "Free And Clear",
+      "cnt": "11"
+    },
+    {
+      "tag": "Out Of State Owner",
+      "cnt": "10"
+    },
+    {
+      "tag": "Cash Buyer",
+      "cnt": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "tag\tcnt\nHigh Equity\t110\nOff Market\t109\nSenior Owner\t38\nAbsentee Owner\t27\nCorporate Owner\t20\nTired Landlord\t17\nTax Delinquent\t15\nFree And Clear\t11\nOut Of State Owner\t10\nCash Buyer\t10\n",
+  "stderr": "",
+  "execution_time_ms": 1502
+}

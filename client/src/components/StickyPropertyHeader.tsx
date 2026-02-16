@@ -247,7 +247,7 @@ export function StickyPropertyHeader({
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (
               <Badge key={tag.id} variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] py-0 h-6">
-                {tag.name}
+                {tag.tag}
               </Badge>
             ))}
           </div>

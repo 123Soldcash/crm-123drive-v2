@@ -170,12 +170,19 @@ export const appRouter = router({
       }),
     getAllTags: protectedProcedure
       .query(async () => {
-        const db_instance = await db.getDb();
-        if (!db_instance) return [];
-        const { propertyTags } = await import('../drizzle/schema.js');
-        const { sql } = await import('drizzle-orm');
-        const result = await db_instance.select({ tag: propertyTags.tag }).from(propertyTags).groupBy(propertyTags.tag);
-        return result.map(r => r.tag);
+        return await db.getAllUniqueTags();
+      }),
+    deleteTagGlobally: protectedProcedure
+      .input(z.object({ tagName: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTagGlobally(input.tagName);
+        return { success: true };
+      }),
+    renameTag: protectedProcedure
+      .input(z.object({ oldName: z.string(), newName: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        await db.renameTag(input.oldName, input.newName);
+        return { success: true };
       }),
 
     getActivities: protectedProcedure
@@ -362,9 +369,9 @@ export const appRouter = router({
       };
     }),
     addTag: protectedProcedure
-      .input(z.object({ propertyId: z.number(), tag: z.string() }))
+      .input(z.object({ propertyId: z.number(), tag: z.string().min(1) }))
       .mutation(async ({ input, ctx }) => {
-        await db.addPropertyTag(input.propertyId, input.tag, ctx.user.id);
+        await db.addPropertyTag(input.propertyId, input.tag.trim(), ctx.user.id);
         return { success: true };
       }),
     removeTag: protectedProcedure

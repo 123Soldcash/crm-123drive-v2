@@ -41,6 +41,7 @@ import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
+import { PropertyTagsManager } from "@/components/PropertyTagsManager";
 
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -51,8 +52,7 @@ export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
   const propertyId = Number(params?.id);
   const [noteContent, setNoteContent] = useState("");
-  const [newTag, setNewTag] = useState("");
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<number[]>([]);
   const [transferReason, setTransferReason] = useState("");
@@ -120,7 +120,6 @@ export default function PropertyDetail() {
   const { data: property, isLoading, error } = trpc.properties.getById.useQuery({ id: propertyId });
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
-  const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
   const { data: agentsList } = trpc.agents.listAll.useQuery();
   const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId });
   const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
@@ -217,20 +216,7 @@ export default function PropertyDetail() {
     );
   };
 
-  const addTag = trpc.properties.addTag.useMutation({
-    onSuccess: () => {
-      utils.properties.getTags.invalidate({ propertyId });
-      setNewTag("");
-      toast.success("Tag added");
-    },
-  });
 
-  const removeTag = trpc.properties.removeTag.useMutation({
-    onSuccess: () => {
-      utils.properties.getTags.invalidate({ propertyId });
-      toast.success("Tag removed");
-    },
-  });
 
   const handleAddToPipeline = () => {
     if (!selectedPipelineStage) return;
@@ -387,29 +373,8 @@ export default function PropertyDetail() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2">
-        <div className="relative flex items-center gap-1">
-          <Input
-            placeholder="Add tag..."
-            value={newTag}
-            onChange={(e) => { setNewTag(e.target.value); setShowTagSuggestions(true); }}
-            onFocus={() => setShowTagSuggestions(true)}
-            className="h-8 w-32 text-xs"
-          />
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => newTag.trim() && addTag.mutate({ propertyId, tagName: newTag.trim() })}>
-            <Plus className="h-4 w-4" />
-          </Button>
-          {showTagSuggestions && newTag && (
-            <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-              {allTags.filter(t => t.name.toLowerCase().includes(newTag.toLowerCase()) && !tags?.some(existing => existing.id === t.id)).map(tag => (
-                <button key={tag.id} className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100" onClick={() => { addTag.mutate({ propertyId, tagName: tag.name }); setShowTagSuggestions(false); }}>
-                  {tag.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Tags Manager */}
+      <PropertyTagsManager propertyId={propertyId} />
 
       {/* Call Tracking */}
       <CallTrackingTable propertyId={propertyId} />

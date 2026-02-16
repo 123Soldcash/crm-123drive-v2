@@ -759,11 +759,18 @@ export async function deletePhoto(photoId: number, userId: number) {
   return { success: true };
 }
 
-export async function addPropertyTag(tag: InsertPropertyTag) {
+export async function addPropertyTag(propertyId: number, tag: string, createdBy: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(propertyTags).values(tag);
+  // Check if tag already exists on this property
+  const existing = await db
+    .select()
+    .from(propertyTags)
+    .where(and(eq(propertyTags.propertyId, propertyId), eq(propertyTags.tag, tag)));
+  if (existing.length > 0) return existing[0];
+
+  const result = await db.insert(propertyTags).values({ propertyId, tag, createdBy });
   return result;
 }
 
@@ -772,6 +779,38 @@ export async function removePropertyTag(tagId: number) {
   if (!db) throw new Error("Database not available");
 
   const result = await db.delete(propertyTags).where(eq(propertyTags.id, tagId));
+  return result;
+}
+
+export async function getAllUniqueTags() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const results = await db
+    .select({
+      tag: propertyTags.tag,
+      count: sql<number>`count(*)`,
+    })
+    .from(propertyTags)
+    .groupBy(propertyTags.tag)
+    .orderBy(propertyTags.tag);
+
+  return results;
+}
+
+export async function deleteTagGlobally(tagName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.delete(propertyTags).where(eq(propertyTags.tag, tagName));
+  return result;
+}
+
+export async function renameTag(oldName: string, newName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.update(propertyTags).set({ tag: newName }).where(eq(propertyTags.tag, oldName));
   return result;
 }
 
