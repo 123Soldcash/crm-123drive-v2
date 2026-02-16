@@ -4,6 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { registerTwilioWebhooks } from "../twilio-webhooks";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { sql } from "drizzle-orm";
@@ -90,10 +91,16 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
+  // Twilio voice webhooks under /api/oauth/twilio/*
+  // CRITICAL: Must use /api/oauth/ prefix because the Manus deployment platform
+  // only forwards /api/oauth/* and /api/trpc/* to Express. tRPC rejects
+  // form-urlencoded content (HTTP 415), so Twilio webhooks MUST use /api/oauth/.
+  registerTwilioWebhooks(app);
+
   // REST webhook endpoint for Zapier
-  // CRITICAL: Uses /api/trpc/ prefix because the Manus deployment platform only
-  // forwards /api/trpc/* and /api/oauth/* to Express. Other /api/* paths return HTML.
-  app.post("/api/trpc/webhook/zapier", async (req, res) => {
+  // Uses /api/oauth/ prefix because the Manus deployment platform only
+  // forwards /api/oauth/* and /api/trpc/* to Express.
+  app.post("/api/oauth/webhook/zapier", async (req, res) => {
     try {
       const { getDb } = await import("../db");
       const { properties, contacts, contactPhones, contactEmails } = await import("../../drizzle/schema");
@@ -181,79 +188,6 @@ async function startServer() {
       });
     }
   });
-  // ─── Twilio Voice TwiML Webhooks ─────────────────────────────────────────
-  // CRITICAL: These endpoints MUST use the /api/trpc/ prefix because the Manus
-  // deployment platform only forwards /api/trpc/* and /api/oauth/* to Express.
-  // All other /api/* paths are intercepted by the platform's static file layer
-  // and return the SPA index.html (>64KB), causing Twilio Error 11750.
-  //
-  // These raw Express routes are registered BEFORE the tRPC middleware below,
-  // so they will be matched first and won't conflict with tRPC procedures.
-  // Using app.all() because Twilio may send GET or POST depending on config.
-  app.all("/api/trpc/twilio-webhook/voice", async (req, res) => {
-    try {
-      const to = req.body?.To || req.query?.To;
-      const { buildTwimlResponse } = await import("../twilio");
-      const twiml = buildTwimlResponse(to as string);
-      res.set("Content-Type", "text/xml");
-      res.send(twiml);
-    } catch (error) {
-      console.error("[Twilio Voice Webhook] Error:", error);
-      // Return minimal valid TwiML on error — MUST be under 64KB
-      res.set("Content-Type", "text/xml");
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred.</Say></Response>');
-    }
-  });
-
-  // Twilio connect endpoint — used by REST API calls to bridge to destination
-  app.all("/api/trpc/twilio-webhook/connect", async (req, res) => {
-    try {
-      const to = req.query.to as string || req.body?.To;
-      const { buildConnectTwiml } = await import("../twilio");
-      const twiml = buildConnectTwiml(to);
-      console.log("[Twilio Connect] Bridging call to:", to);
-      res.set("Content-Type", "text/xml");
-      res.send(twiml);
-    } catch (error) {
-      console.error("[Twilio Connect] Error:", error);
-      // Return minimal valid TwiML on error — MUST be under 64KB
-      res.set("Content-Type", "text/xml");
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred.</Say></Response>');
-    }
-  });
-
-  // Twilio answered endpoint — returns simple TwiML when call is answered
-  // CRITICAL: This must NOT contain <Dial> to avoid duplicate calls.
-  // The REST API already established the call; this just keeps the line open.
-  app.all("/api/trpc/twilio-webhook/answered", async (req, res) => {
-    try {
-      const { buildAnsweredTwiml } = await import("../twilio");
-      const twiml = buildAnsweredTwiml();
-      console.log("[Twilio Answered] Call answered, keeping line open");
-      res.set("Content-Type", "text/xml");
-      res.send(twiml);
-    } catch (error) {
-      console.error("[Twilio Answered] Error:", error);
-      // Return minimal valid TwiML on error — MUST be under 64KB
-      res.set("Content-Type", "text/xml");
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="3600"/></Response>');
-    }
-  });
-
-  // Twilio call status callback — logs status changes for debugging
-  // CRITICAL: Must use app.all() because Twilio sends both GET and POST requests.
-  // If only app.post() is used, GET requests fall through to the platform's
-  // static layer which serves the full SPA HTML (>64KB), causing Twilio Error 11750.
-  app.all("/api/trpc/twilio-webhook/status", async (req, res) => {
-    const callStatus = req.body?.CallStatus || req.query?.CallStatus || "unknown";
-    const callSid = req.body?.CallSid || req.query?.CallSid || "unknown";
-    console.log("[Twilio Status]", callStatus, callSid);
-    // Return empty TwiML response — Twilio expects this for status callbacks
-    // MUST be under 64KB and valid XML/empty response
-    res.set("Content-Type", "text/xml");
-    res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
-  });
-
   // tRPC API
   app.use(
     "/api/trpc",

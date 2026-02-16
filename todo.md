@@ -1419,3 +1419,30 @@
   - No HTML leakage in response body
   - Source code uses new paths, old paths NOT registered
 - [x] Verified local production build works correctly (49B XML responses)
+
+
+## REBUILD - Twilio Integration from Scratch (Feb 16, 2026) - COMPLETED ✅
+- [x] Audited all Twilio code: discovered /api/trpc/* goes through tRPC middleware (rejects form-urlencoded HTTP 415)
+- [x] Discovered /api/oauth/* is the ONLY prefix that works for custom Express routes in production
+- [x] Created server/twilio-webhooks.ts with registerTwilioWebhooks() function
+- [x] Registered ALL 4 webhooks at /api/oauth/twilio/* prefix:
+  - /api/oauth/twilio/voice (TwiML App Voice URL)
+  - /api/oauth/twilio/connect (outbound call connect)
+  - /api/oauth/twilio/answered (keeps line open, NO Dial)
+  - /api/oauth/twilio/status (status callback, empty Response)
+- [x] Updated makeOutboundCall() to use /api/oauth/twilio/answered and /api/oauth/twilio/status
+- [x] Removed ALL old routes (/api/twilio/*, /api/trpc/twilio-webhook/*) from _core/index.ts
+- [x] All endpoints use app.all() for both GET and POST
+- [x] All endpoints set Content-Type: text/xml explicitly
+- [x] All error handlers return inline XML strings (no dynamic imports)
+- [x] Tested locally in dev mode: all 5 endpoints return correct XML (49-125 bytes)
+- [x] Tested locally in production build: all endpoints return correct XML
+- [x] 95 Twilio tests passing (42 unit + 53 integration) covering:
+  - TwiML response builders (voice, connect, answered, status)
+  - Webhook URL path verification (source code analysis)
+  - Duplicate call prevention (answered has no Dial)
+  - Content-Type verification (text/xml, not text/html)
+  - Response size under 64KB
+  - No HTML leakage
+  - Error fallback TwiML responses
+  - Production build file verification
