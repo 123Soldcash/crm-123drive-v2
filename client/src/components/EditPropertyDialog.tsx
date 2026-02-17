@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Upload, FileText, Users, ChevronDown, ChevronUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 
 interface EditPropertyDialogProps {
@@ -72,6 +74,14 @@ export function EditPropertyDialog({
     entryDate: property.entryDate ? new Date(property.entryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
+  // DealMachine CSV import states
+  const [showPropertyCSV, setShowPropertyCSV] = useState(false);
+  const [showContactCSV, setShowContactCSV] = useState(false);
+  const [propertyCSVData, setPropertyCSVData] = useState("");
+  const [contactCSVData, setContactCSVData] = useState("");
+  const propertyFileRef = useRef<HTMLInputElement>(null);
+  const contactFileRef = useRef<HTMLInputElement>(null);
+
   // Sync form data when property changes or dialog opens
   useEffect(() => {
     if (open) {
@@ -93,6 +103,10 @@ export function EditPropertyDialog({
         listName: property.listName || "",
         entryDate: property.entryDate ? new Date(property.entryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       });
+      setPropertyCSVData("");
+      setContactCSVData("");
+      setShowPropertyCSV(false);
+      setShowContactCSV(false);
     }
   }, [open, property]);
 
@@ -102,13 +116,40 @@ export function EditPropertyDialog({
     onSuccess: () => {
       toast.success("Property updated successfully!");
       onOpenChange(false);
-      // Invalidate the property query to refresh data
       utils.properties.getById.invalidate({ id: property.id });
       utils.properties.list.invalidate();
       onSuccess?.();
     },
     onError: (error) => {
       toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  const updateFromCSVMutation = trpc.properties.updateFromDealMachineCSV.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message);
+      setPropertyCSVData("");
+      setShowPropertyCSV(false);
+      utils.properties.getById.invalidate({ id: property.id });
+      utils.properties.list.invalidate();
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(`CSV Import Error: ${error.message}`);
+    },
+  });
+
+  const importContactsCSVMutation = trpc.properties.importContactsFromDealMachineCSV.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message);
+      setContactCSVData("");
+      setShowContactCSV(false);
+      utils.properties.getById.invalidate({ id: property.id });
+      utils.contacts.byProperty.invalidate({ propertyId: property.id });
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(`Contact Import Error: ${error.message}`);
     },
   });
 
@@ -136,16 +177,219 @@ export function EditPropertyDialog({
     });
   };
 
+  const handlePropertyCSVImport = () => {
+    if (!propertyCSVData.trim()) {
+      toast.error("Please paste or upload DealMachine CSV data first.");
+      return;
+    }
+    updateFromCSVMutation.mutate({
+      id: property.id,
+      csvData: propertyCSVData.trim(),
+    });
+  };
+
+  const handleContactCSVImport = () => {
+    if (!contactCSVData.trim()) {
+      toast.error("Please paste or upload DealMachine CSV data first.");
+      return;
+    }
+    importContactsCSVMutation.mutate({
+      propertyId: property.id,
+      csvData: contactCSVData.trim(),
+    });
+  };
+
+  const handleFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".csv")) {
+      toast.error("Please upload a .csv file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setter(text);
+        toast.success(`File "${file.name}" loaded successfully`);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Property/Lead</DialogTitle>
           <DialogDescription>
-            Update property information and lead details
+            Update property information, lead details, or import data from DealMachine CSV
           </DialogDescription>
         </DialogHeader>
 
+        {/* ─── DealMachine CSV Import Sections ─── */}
+        <div className="space-y-3 border-b pb-4 mb-2">
+          <h3 className="font-semibold text-sm flex items-center gap-2 text-emerald-700">
+            <Upload className="h-4 w-4" />
+            DealMachine CSV Import
+          </h3>
+
+          {/* Property Data CSV */}
+          <div className="border rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowPropertyCSV(!showPropertyCSV)}
+              className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium">Property Data (CSV)</span>
+                {propertyCSVData && (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                )}
+              </div>
+              {showPropertyCSV ? (
+                <ChevronUp className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              )}
+            </button>
+
+            {showPropertyCSV && (
+              <div className="p-3 space-y-2 bg-white">
+                <p className="text-xs text-slate-500">
+                  Paste the CSV data from DealMachine (header row + data row) or upload a .csv file.
+                  This will update the property fields (address, owner, bedrooms, value, etc.).
+                </p>
+                <Textarea
+                  value={propertyCSVData}
+                  onChange={(e) => setPropertyCSVData(e.target.value)}
+                  placeholder={"property_id,lead_id,property_address_line_1,property_address_city,...\n227965595,2513086631,\"2892 Nw 7th Ct\",\"Fort Lauderdale\",..."}
+                  rows={4}
+                  className="text-xs font-mono"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={propertyFileRef}
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, setPropertyCSVData)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => propertyFileRef.current?.click()}
+                    className="text-xs"
+                  >
+                    <Upload className="h-3 w-3 mr-1" /> Upload CSV
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handlePropertyCSVImport}
+                    disabled={!propertyCSVData.trim() || updateFromCSVMutation.isPending}
+                    className="text-xs bg-blue-600 hover:bg-blue-700"
+                  >
+                    {updateFromCSVMutation.isPending ? "Importing..." : "Import Property Data"}
+                  </Button>
+                </div>
+                {updateFromCSVMutation.isSuccess && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {updateFromCSVMutation.data?.message}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Contact Data CSV */}
+          <div className="border rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowContactCSV(!showContactCSV)}
+              className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+            >
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium">Contact Data (CSV)</span>
+                {contactCSVData && (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                )}
+              </div>
+              {showContactCSV ? (
+                <ChevronUp className="h-4 w-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              )}
+            </button>
+
+            {showContactCSV && (
+              <div className="p-3 space-y-2 bg-white">
+                <p className="text-xs text-slate-500">
+                  Paste the CSV data from DealMachine (header row + data row) with contact columns
+                  (contact_1_name, contact_1_phone1, contact_1_email1, etc.).
+                  New contacts will be added to this property.
+                </p>
+                <Textarea
+                  value={contactCSVData}
+                  onChange={(e) => setContactCSVData(e.target.value)}
+                  placeholder={"...contact_1_name,contact_1_flags,contact_1_phone1,contact_1_email1,...\n...\"Danielle Dixon\",\"Likely Owner\",+17543660623,dixon@gmail.com,..."}
+                  rows={4}
+                  className="text-xs font-mono"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={contactFileRef}
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, setContactCSVData)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => contactFileRef.current?.click()}
+                    className="text-xs"
+                  >
+                    <Upload className="h-3 w-3 mr-1" /> Upload CSV
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleContactCSVImport}
+                    disabled={!contactCSVData.trim() || importContactsCSVMutation.isPending}
+                    className="text-xs bg-purple-600 hover:bg-purple-700"
+                  >
+                    {importContactsCSVMutation.isPending ? "Importing..." : "Import Contacts"}
+                  </Button>
+                </div>
+                {importContactsCSVMutation.isSuccess && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {importContactsCSVMutation.data?.message}
+                  </div>
+                )}
+                {importContactsCSVMutation.isError && (
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3" />
+                    {importContactsCSVMutation.error?.message}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ─── Manual Edit Form ─── */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Address Section */}
           <div className="space-y-2">

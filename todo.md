@@ -1625,3 +1625,10 @@
 ## UI Improvement - Add ZIP Code to Sticky Header (Feb 17, 2026) - COMPLETED ✅
 - [x] Add ZIP code next to property address in the sticky header top row
 - [x] Fix: field name was zipCode/zip but DB uses `zipcode` (lowercase, no separator)
+
+## Feature - Auto-redirect & DealMachine Import in Edit Lead (Feb 17, 2026) - COMPLETED ✅
+- [x] Auto-redirect to property detail page after adding a new property
+- [x] Add DealMachine Property Data CSV import field in Edit Lead modal (updateFromDealMachineCSV mutation)
+- [x] Add DealMachine Contact Data CSV import field in Edit Lead modal (importContactsFromDealMachineCSV mutation)
+- [x] Support both paste CSV text and upload .csv file
+- [x] All 194 Twilio/call tests pass, 33 DealMachine parser tests pass

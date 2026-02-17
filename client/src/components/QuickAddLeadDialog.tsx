@@ -53,11 +53,15 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
 
   // Create property mutation
   const createPropertyMutation = trpc.properties.create.useMutation({
-    onSuccess: () => {
-      toast.success("Lead created successfully!");
+    onSuccess: (newProperty) => {
+      toast.success("Lead created successfully! Redirecting...");
       utils.properties.getPropertiesByStage.invalidate();
       onOpenChange(false);
       resetDialog();
+      // Auto-redirect to the new property's detail page
+      if (newProperty?.id) {
+        setLocation(`/properties/${newProperty.id}`);
+      }
     },
     onError: (error) => {
       toast.error(`Failed to create lead: ${error.message}`);

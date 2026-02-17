@@ -13,7 +13,7 @@ import { searchLeadsByPhone } from "./db-phoneSearch";
 import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, getStageStats, bulkUpdateStages } from "./db-stageManagement";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, leadAssignments, propertyAgents } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -600,6 +600,132 @@ export const appRouter = router({
           .set(updateData)
           .where(eq(properties.id, input.id));
         return { success: true };
+      }),
+
+    /** Update property from DealMachine CSV row (paste a single row with headers) */
+    updateFromDealMachineCSV: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        csvData: z.string().min(1, "CSV data is required"),
+      }))
+      .mutation(async ({ input }) => {
+        const { parseCSV, transformProperty } = await import("./dealmachine-import");
+        const rows = parseCSV(input.csvData);
+        if (rows.length === 0) throw new Error("No valid CSV data found. Make sure to include the header row.");
+
+        const parsed = transformProperty(rows[0]);
+        if (!parsed) throw new Error("Could not parse property data from CSV. Check required fields: address, city, state, zipcode.");
+
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new Error("Database not available");
+
+        // Build update object from parsed data
+        const updateData: any = {};
+        if (parsed.addressLine1) updateData.addressLine1 = parsed.addressLine1;
+        if (parsed.addressLine2) updateData.addressLine2 = parsed.addressLine2;
+        if (parsed.city) updateData.city = parsed.city;
+        if (parsed.state) updateData.state = parsed.state;
+        if (parsed.zipcode) updateData.zipcode = parsed.zipcode;
+        if (parsed.owner1Name) updateData.owner1Name = parsed.owner1Name;
+        if (parsed.propertyType) updateData.propertyType = parsed.propertyType;
+        if (parsed.yearBuilt) updateData.yearBuilt = parsed.yearBuilt;
+        if (parsed.totalBedrooms) updateData.totalBedrooms = parsed.totalBedrooms;
+        if (parsed.totalBaths) updateData.totalBaths = parsed.totalBaths;
+        if (parsed.buildingSquareFeet) updateData.buildingSquareFeet = parsed.buildingSquareFeet;
+        if (parsed.estimatedValue) updateData.estimatedValue = parsed.estimatedValue;
+        if (parsed.equityPercent) updateData.equityPercent = parsed.equityPercent;
+        if (parsed.dealMachinePropertyId) updateData.dealMachinePropertyId = parsed.dealMachinePropertyId;
+        if (parsed.dealMachineLeadId) updateData.dealMachineLeadId = parsed.dealMachineLeadId;
+        if (parsed.dealMachineRawData) updateData.dealMachineRawData = parsed.dealMachineRawData;
+        if (parsed.marketStatus) updateData.marketStatus = parsed.marketStatus;
+        updateData.updatedAt = new Date();
+
+        await dbInstance
+          .update(properties)
+          .set(updateData)
+          .where(eq(properties.id, input.id));
+
+        const fieldsUpdated = Object.keys(updateData).filter(k => k !== 'updatedAt').length;
+        return { success: true, fieldsUpdated, message: `${fieldsUpdated} fields updated from DealMachine CSV` };
+      }),
+
+    /** Import contacts from DealMachine CSV for an existing property */
+    importContactsFromDealMachineCSV: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        csvData: z.string().min(1, "CSV data is required"),
+      }))
+      .mutation(async ({ input }) => {
+        const { parseCSV, extractContactsFromProperty } = await import("./dealmachine-import");
+        const rows = parseCSV(input.csvData);
+        if (rows.length === 0) throw new Error("No valid CSV data found. Make sure to include the header row.");
+
+        const parsedContacts = extractContactsFromProperty(rows[0]);
+        if (parsedContacts.length === 0) throw new Error("No contacts found in CSV data. Check that contact columns (contact_1_name, etc.) are present.");
+
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new Error("Database not available");
+
+        let contactsCreated = 0;
+        let phonesCreated = 0;
+        let emailsCreated = 0;
+
+        for (const contact of parsedContacts) {
+          // Insert contact
+          const contactResult = await dbInstance.insert(contacts).values({
+            propertyId: input.propertyId,
+            name: contact.name,
+            relationship: contact.relationship as any,
+            dnc: contact.dnc ? 1 : 0,
+            flags: contact.flags || null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+
+          const contactId = (contactResult as any)[0]?.insertId || (contactResult as any).insertId || 0;
+          contactsCreated++;
+
+          if (contactId) {
+            // Add phones
+            for (let i = 0; i < contact.phones.length; i++) {
+              const phone = contact.phones[i];
+              if (phone.phoneNumber?.trim()) {
+                const validTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
+                let phoneType: any = phone.phoneType || "Mobile";
+                if (!validTypes.includes(phoneType)) phoneType = "Mobile";
+                await dbInstance.insert(contactPhones).values({
+                  contactId,
+                  phoneNumber: phone.phoneNumber.trim(),
+                  phoneType,
+                  isPrimary: i === 0 ? 1 : 0,
+                } as any);
+                phonesCreated++;
+              }
+            }
+
+            // Add emails
+            for (let i = 0; i < contact.emails.length; i++) {
+              const email = contact.emails[i];
+              if (email.email?.trim()) {
+                await dbInstance.insert(contactEmails).values({
+                  contactId,
+                  email: email.email.trim(),
+                  emailType: email.emailType || "Personal",
+                  isPrimary: i === 0 ? 1 : 0,
+                } as any);
+                emailsCreated++;
+              }
+            }
+          }
+        }
+
+        return {
+          success: true,
+          contactsCreated,
+          phonesCreated,
+          emailsCreated,
+          message: `Imported ${contactsCreated} contacts, ${phonesCreated} phones, ${emailsCreated} emails`,
+        };
       }),
 
     forMap: protectedProcedure.query(async ({ ctx }) => {
