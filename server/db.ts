@@ -305,6 +305,8 @@ export async function getPropertyById(id: number) {
     ownerLocation: properties.ownerLocation,
     deskName: properties.deskName,
     deskStatus: properties.deskStatus,
+    dealStage: properties.dealStage,
+    stageChangedAt: properties.stageChangedAt,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.leadId, id)).limit(1);
   
@@ -342,6 +344,8 @@ export async function getPropertyById(id: number) {
     ownerLocation: properties.ownerLocation,
     deskName: properties.deskName,
     deskStatus: properties.deskStatus,
+    dealStage: properties.dealStage,
+    stageChangedAt: properties.stageChangedAt,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.id, id)).limit(1);
   }

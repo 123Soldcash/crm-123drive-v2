@@ -18,6 +18,7 @@ import {
   Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
 
 // Desk options with colors
 const DESK_OPTIONS = [
@@ -37,6 +38,7 @@ interface StickyPropertyHeaderProps {
   tags: any[];
   onEdit: () => void;
   onAddToPipeline: () => void;
+  currentDealStage?: string | null;
   onAssignAgent: () => void;
   onUpdateLeadTemperature: (temp: string) => void;
   onToggleOwnerVerified: () => void;
@@ -53,6 +55,7 @@ export function StickyPropertyHeader({
   tags,
   onEdit,
   onAddToPipeline,
+  currentDealStage,
   onAssignAgent,
   onUpdateLeadTemperature,
   onToggleOwnerVerified,
@@ -157,8 +160,22 @@ export function StickyPropertyHeader({
             <Button variant="outline" size="sm" onClick={onEdit} className="h-8 text-xs border-slate-200">
               <Edit className="h-3.5 w-3.5 mr-1.5" /> Edit Lead
             </Button>
-            <Button onClick={onAddToPipeline} size="sm" className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
-              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" /> Add to Pipeline
+            <Button 
+              onClick={onAddToPipeline} 
+              size="sm" 
+              className={cn(
+                "h-8 text-xs text-white",
+                currentDealStage && currentDealStage !== "NEW_LEAD" && currentDealStage !== "LEAD_IMPORTED" && currentDealStage !== "SKIP_TRACED" && currentDealStage !== "FIRST_CONTACT_MADE"
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+              {(() => {
+                const stageConfig = currentDealStage ? getStageConfig(currentDealStage as DealStage) : null;
+                const isInPipeline = stageConfig?.isPipeline;
+                return isInPipeline ? `Pipeline: ${stageConfig!.shortLabel}` : "Add to Pipeline";
+              })()}
             </Button>
             <Button variant="outline" size="sm" onClick={onAssignAgent} className="h-8 text-xs border-slate-200">
               <Users className="h-3.5 w-3.5 mr-1.5" /> Assign Agent

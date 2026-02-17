@@ -182,12 +182,13 @@ describe("Pipeline - PropertyDetail pipeline stage assignment", () => {
     expect(propertyDetailContent).toContain("STAGE_CONFIGS.filter(s => s.isPipeline)");
   });
 
-  it("should disable Add to Pipeline button when no stage is selected", () => {
+  it("should disable button when no stage is selected or same stage is selected", () => {
     const propertyDetailContent = fs.readFileSync(
       path.join(CLIENT_DIR, "pages/PropertyDetail.tsx"), "utf-8"
     );
     
-    expect(propertyDetailContent).toContain("disabled={!selectedPipelineStage}");
+    expect(propertyDetailContent).toContain("!selectedPipelineStage");
+    expect(propertyDetailContent).toContain("selectedPipelineStage === property?.dealStage");
   });
 
   it("should invalidate property data and close dialog on success", () => {
@@ -209,7 +210,9 @@ describe("Pipeline - PropertyDetail pipeline stage assignment", () => {
     );
     
     expect(propertyDetailContent).toContain("toast.success");
-    expect(propertyDetailContent).toMatch(/Pipeline.*success/i);
+    // Dynamic toast: "Pipeline stage updated!" or "Property added to Pipeline!"
+    expect(propertyDetailContent).toContain("Pipeline stage updated!");
+    expect(propertyDetailContent).toContain("Property added to Pipeline!");
   });
 });
 

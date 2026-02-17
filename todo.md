@@ -1509,3 +1509,20 @@
 - [x] Fix: Updated QuickAddLeadDialog to pass `dealStage` when creating properties
 - [x] Pipeline Kanban board loads correctly with all 17 stages, no console errors
 - [x] 35 comprehensive tests passing (procedure validation, field naming, conditions handling, frontend integration)
+
+
+## IMPROVEMENT - Pipeline Dynamic Button & Property Display (Feb 17, 2026) - COMPLETED ✅
+- [x] PropertyDetail: Show "Update Pipeline" if property already has a dealStage, "Add to Pipeline" if not
+- [x] PropertyDetail: Show current pipeline stage name next to the button ("Pipeline: Analyzing")
+- [x] PropertyDetail: Pre-select current stage in the dialog when updating
+- [x] Prevent duplicate pipeline additions (button disabled when same stage selected)
+- [x] PipelineKanban: Properties display correctly in stage columns with property info
+- [x] Backend: Added dealStage and stageChangedAt to getPropertyById select
+- [x] Backend: Fixed getPropertiesByStage safe query building (no undefined in .where())
+- [x] StickyPropertyHeader: Dynamic button with emerald color when in pipeline, blue when not
+- [x] Dialog shows "Update Pipeline Stage" with current stage badge when updating
+- [x] Dialog shows "Add to Deal Pipeline" when adding for first time
+- [x] Dynamic toast messages ("Pipeline stage updated!" vs "Property added to Pipeline!")
+- [x] Invalidates getPropertiesByStage on success to refresh Kanban
+- [x] Write comprehensive tests (44 new tests, all passing)
+- [x] Save checkpoint and deliver

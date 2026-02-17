@@ -154,12 +154,15 @@ export default function PropertyDetail() {
     },
   });
 
+  const isInPipeline = property?.dealStage ? STAGE_CONFIGS.some(s => s.id === property.dealStage && s.isPipeline) : false;
+
   const updateDealStage = trpc.properties.updateDealStage.useMutation({
     onSuccess: () => {
       utils.properties.getById.invalidate({ id: propertyId });
+      utils.properties.getPropertiesByStage.invalidate();
       setPipelineDialogOpen(false);
       setSelectedPipelineStage("");
-      toast.success("Property added to Pipeline successfully!");
+      toast.success(isInPipeline ? "Pipeline stage updated!" : "Property added to Pipeline!");
     },
   });
 
@@ -261,7 +264,17 @@ export default function PropertyDetail() {
         property={property}
         tags={tags || []}
         onEdit={() => setEditDialogOpen(true)} 
-        onAddToPipeline={() => setPipelineDialogOpen(true)}
+        onAddToPipeline={() => {
+          // Pre-select current stage when opening dialog for update
+          if (property.dealStage) {
+            const stageConfig = STAGE_CONFIGS.find(s => s.id === property.dealStage && s.isPipeline);
+            if (stageConfig) {
+              setSelectedPipelineStage(property.dealStage);
+            }
+          }
+          setPipelineDialogOpen(true);
+        }}
+        currentDealStage={property.dealStage}
         onAssignAgent={handleOpenAssignDialog}
         onUpdateLeadTemperature={(temp) => 
           updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
@@ -278,20 +291,39 @@ export default function PropertyDetail() {
         zillowUrl={zillowUrl}
       />
 
-      {/* Dialogs */}
+      {/* Pipeline Dialog */}
       <Dialog open={pipelineDialogOpen} onOpenChange={setPipelineDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add to Deal Pipeline</DialogTitle>
-            <DialogDescription>Select the Pipeline stage to add this property to.</DialogDescription>
+            <DialogTitle>{isInPipeline ? "Update Pipeline Stage" : "Add to Deal Pipeline"}</DialogTitle>
+            <DialogDescription>
+              {isInPipeline 
+                ? `Currently in: ${STAGE_CONFIGS.find(s => s.id === property?.dealStage)?.label || property?.dealStage}. Select a new stage below.`
+                : "Select the Pipeline stage to add this property to."
+              }
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {isInPipeline && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
+                <span className="font-medium text-emerald-700">Current Stage:</span>
+                <span className="text-emerald-900 font-bold">
+                  {STAGE_CONFIGS.find(s => s.id === property?.dealStage)?.icon} {STAGE_CONFIGS.find(s => s.id === property?.dealStage)?.label}
+                </span>
+              </div>
+            )}
             <Select value={selectedPipelineStage} onValueChange={setSelectedPipelineStage}>
               <SelectTrigger><SelectValue placeholder="Choose a stage..." /></SelectTrigger>
               <SelectContent>
                 {STAGE_CONFIGS.filter(s => s.isPipeline).map((stage) => (
                   <SelectItem key={stage.id} value={stage.id}>
-                    <div className="flex items-center gap-2"><span>{stage.icon}</span><span>{stage.label}</span></div>
+                    <div className="flex items-center gap-2">
+                      <span>{stage.icon}</span>
+                      <span>{stage.label}</span>
+                      {stage.id === property?.dealStage && (
+                        <span className="text-xs text-emerald-600 font-bold ml-1">(current)</span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -299,7 +331,12 @@ export default function PropertyDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPipelineDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddToPipeline} disabled={!selectedPipelineStage}>Add to Pipeline</Button>
+            <Button 
+              onClick={handleAddToPipeline} 
+              disabled={!selectedPipelineStage || selectedPipelineStage === property?.dealStage}
+            >
+              {isInPipeline ? "Update Stage" : "Add to Pipeline"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
