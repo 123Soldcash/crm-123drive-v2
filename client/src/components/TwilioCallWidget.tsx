@@ -100,7 +100,10 @@ export function TwilioCallWidget({ phoneNumber, contactName }: TwilioCallWidgetP
       if (!mountedRef.current) return;
 
       try {
-        const response = await fetch(`/api/trpc/twilio.getCallStatus?input=${encodeURIComponent(JSON.stringify({ callSid: sid }))}`);
+        const response = await fetch(
+          `/api/trpc/twilio.getCallStatus?input=${encodeURIComponent(JSON.stringify({ callSid: sid }))}`,
+          { credentials: "include" }
+        );
         const json = await response.json();
         const status = json?.result?.data?.status;
 

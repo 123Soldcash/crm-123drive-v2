@@ -1538,3 +1538,9 @@
 - [x] Updated index.ts comments to document the routing limitation
 - [x] All 54 twilio-endpoints tests passing, all 42 twilio tests passing
 - [x] Save checkpoint
+
+## BUG - twilio.getCallStatus returns 400 Bad Request (Feb 17, 2026) - COMPLETED ✅
+- [x] Diagnose: raw fetch() in TwilioCallWidget.tsx line 103 missing credentials: "include"
+- [x] Auth cookie not sent with polling request → protectedProcedure returned 401 (shown as 400)
+- [x] Fix: Added { credentials: "include" } to the fetch() call
+- [x] Save checkpoint
