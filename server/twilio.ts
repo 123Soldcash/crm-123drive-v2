@@ -216,23 +216,48 @@ export async function getCallStatus(callSid: string) {
 
 /**
  * Derive the public base URL for webhook callbacks.
- * Uses the custom domain if available, otherwise falls back to VITE_APP_ID.
+ * Uses CUSTOM_DOMAIN env var. This MUST be set to the active deployment domain.
+ *
+ * CRITICAL: If CUSTOM_DOMAIN is not set or points to an old/inactive domain,
+ * Twilio will get HTML instead of TwiML → Error 11750.
  */
-function getBaseUrl(): string {
-  // Custom domain takes priority (e.g., crmv3.manus.space)
-  if (process.env.CUSTOM_DOMAIN) {
-    return `https://${process.env.CUSTOM_DOMAIN}`;
+export function getBaseUrl(): string {
+  const domain = process.env.CUSTOM_DOMAIN;
+
+  if (!domain) {
+    console.error(
+      "[Twilio] CRITICAL: CUSTOM_DOMAIN is not set! " +
+      "Twilio callbacks will fail. Set CUSTOM_DOMAIN to your active deployment domain."
+    );
+    // Fallback — but this should never happen in production
+    return `https://${process.env.VITE_APP_ID}.manus.space`;
   }
-  // Fallback to the app ID domain
-  return `https://${process.env.VITE_APP_ID}.manus.space`;
+
+  // Safety check: warn if domain looks like a known deprecated domain
+  const DEPRECATED_DOMAINS = ["123smartdrive", "123soldcash", "sold2us"];
+  for (const deprecated of DEPRECATED_DOMAINS) {
+    if (domain.includes(deprecated)) {
+      console.error(
+        `[Twilio] WARNING: CUSTOM_DOMAIN contains deprecated domain "${deprecated}". ` +
+        `Current value: ${domain}. Update to the active deployment domain.`
+      );
+    }
+  }
+
+  const baseUrl = `https://${domain}`;
+  console.log(`[Twilio] Using base URL: ${baseUrl}`);
+  return baseUrl;
 }
 
 /**
- * Validate that all required Twilio environment variables are present.
+ * Validate that all required Twilio environment variables are present
+ * AND that the webhook domain is correctly configured.
  */
 export function validateTwilioConfig(): {
   valid: boolean;
   missing: string[];
+  warnings: string[];
+  webhookBaseUrl: string;
 } {
   const required: Record<string, string> = {
     TWILIO_ACCOUNT_SID: ENV.twilioAccountSid,
@@ -244,5 +269,30 @@ export function validateTwilioConfig(): {
     .filter(([, value]) => !value)
     .map(([key]) => key);
 
-  return { valid: missing.length === 0, missing };
+  const warnings: string[] = [];
+  const domain = process.env.CUSTOM_DOMAIN;
+
+  if (!domain) {
+    warnings.push("CUSTOM_DOMAIN is not set. Twilio callbacks may fail.");
+  } else {
+    // Check for deprecated domains
+    const DEPRECATED_DOMAINS = ["123smartdrive", "123soldcash", "sold2us"];
+    for (const deprecated of DEPRECATED_DOMAINS) {
+      if (domain.includes(deprecated)) {
+        warnings.push(
+          `CUSTOM_DOMAIN contains deprecated domain "${deprecated}". ` +
+          `Current: ${domain}. Please update to the active deployment domain.`
+        );
+      }
+    }
+  }
+
+  const webhookBaseUrl = getBaseUrl();
+
+  return {
+    valid: missing.length === 0 && warnings.length === 0,
+    missing,
+    warnings,
+    webhookBaseUrl,
+  };
 }

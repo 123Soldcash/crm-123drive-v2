@@ -1556,3 +1556,16 @@
 - [x] Write E2E tests: no HTML in any Twilio response (regression prevention)
 - [x] Run all tests — 90 E2E tests passing, 680 total passing
 - [x] Save checkpoint
+
+## CLEANUP - Remove ALL old domain references (Feb 17, 2026) - COMPLETED ✅
+- [x] Deep audit: found ZERO references to 123smartdrive in any .ts/.tsx/.js/.json/.html files
+- [x] Server code: already clean, no old domain references
+- [x] Client code: already clean, no old domain references
+- [x] Config: CUSTOM_DOMAIN updated to crmv3.manus.space via webdev_request_secrets
+- [x] Hardened getBaseUrl(): logs CRITICAL error if CUSTOM_DOMAIN missing, warns on deprecated domains
+- [x] Enhanced validateTwilioConfig(): now returns warnings[] and webhookBaseUrl for domain validation
+- [x] New test file: twilio-domain-cleanup.test.ts (24 tests) — codebase-wide scan for old domains
+- [x] Tests verify: no hardcoded domains, dynamic URL generation, deprecated domain detection
+- [x] Tests verify: production endpoints return TwiML (not HTML) on crmv3.manus.space
+- [x] All 210 Twilio tests passing (24 cleanup + 90 E2E + 54 endpoints + 42 unit)
+- [x] Save checkpoint

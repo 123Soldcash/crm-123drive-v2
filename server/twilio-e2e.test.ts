@@ -50,7 +50,8 @@ describe("E2E: Domain & Environment Configuration", () => {
   it("getBaseUrl() uses CUSTOM_DOMAIN when set", () => {
     const src = fs.readFileSync(path.resolve(__dirname, "twilio.ts"), "utf-8");
     expect(src).toContain("process.env.CUSTOM_DOMAIN");
-    expect(src).toContain("https://${process.env.CUSTOM_DOMAIN}");
+    // The function stores domain in a variable and builds the URL
+    expect(src).toContain("`https://${domain}`");
   });
 
   it("getBaseUrl() has a fallback when CUSTOM_DOMAIN is not set", () => {
