@@ -1611,3 +1611,9 @@
 - [x] Fix Error 8: Missing DialogTitle in CallModal — added sr-only DialogTitle for accessibility
 - [x] Added 26 new architecture tests validating Device SDK call flow
 - [x] Updated existing tests to match new createCallLogMutation pattern
+
+## BUG FIX - Twilio Device SDK ConnectionError 31005 (Feb 17, 2026) - COMPLETED ✅
+- [x] Diagnose Access Token generation — all credentials verified valid via REST API
+- [x] Fix WebSocket connection failure — added edge fallback (ashburn → umatilla → roaming), lazy device init, maxCallSignalingTimeoutMs
+- [x] Add better error handling — classifyError function, retry button (up to 3x), user-friendly messages for 31005/31000/20101/20104
+- [x] Add 12 new edge fallback & error handling tests (total 194 passing)

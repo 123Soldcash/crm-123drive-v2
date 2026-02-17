@@ -534,7 +534,7 @@ describe("E2E: Frontend Call Integration", () => {
   it("CallModal uses Twilio Voice SDK Device for browser audio", () => {
     expect(modalSrc).toContain("new Device(");
     expect(modalSrc).toContain("@twilio/voice-sdk");
-    expect(modalSrc).toContain("deviceRef.current.connect");
+    expect(modalSrc).toContain("device.connect");
   });
 
   it("CallModal has mute/unmute controls", () => {

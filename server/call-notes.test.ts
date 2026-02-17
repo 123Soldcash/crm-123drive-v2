@@ -271,7 +271,7 @@ describe("CallModal Component", () => {
   });
 
   it("should connect call via Twilio Device SDK", () => {
-    expect(modalContent).toContain("deviceRef.current.connect");
+    expect(modalContent).toContain("device.connect");
   });
 
   it("should have notes panel with create and delete", () => {

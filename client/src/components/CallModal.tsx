@@ -7,12 +7,17 @@
  * Uses browser microphone via Twilio Voice JavaScript SDK.
  * Call flow:
  *   1. Browser gets Access Token with VoiceGrant (outgoingApplicationSid)
- *   2. Browser calls device.connect({ params: { To: "+1..." } })
- *   3. Twilio sends POST to TwiML App Voice URL (/api/twilio/voice)
- *   4. Voice webhook returns <Dial><Number>+1...</Number></Dial>
- *   5. Twilio dials the destination — browser user hears ringing and can talk
+ *   2. User clicks "Call" → Device is created with edge fallback
+ *   3. Browser calls device.connect({ params: { To: "+1..." } })
+ *   4. Twilio sends POST to TwiML App Voice URL (/api/twilio/voice)
+ *   5. Voice webhook returns <Dial><Number>+1...</Number></Dial>
+ *   6. Twilio dials the destination — browser user hears ringing and can talk
  *
- * The REST API is NOT used to initiate calls — only to create call log entries.
+ * Key design decisions:
+ * - Device is created lazily on first call (not on modal open) to avoid
+ *   unnecessary WebSocket connections that may fail in restricted networks
+ * - Edge fallback: tries ashburn → umatilla → roaming for resilience
+ * - The REST API is NOT used to initiate calls — only to create call log entries
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
@@ -39,9 +44,12 @@ import {
   AlertCircle,
   CheckCircle2,
   Trash2,
+  RefreshCw,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
-type CallStatus = "idle" | "connecting" | "ringing" | "in-progress" | "completed" | "failed" | "no-answer";
+type CallStatus = "idle" | "initializing" | "connecting" | "ringing" | "in-progress" | "completed" | "failed" | "no-answer";
 
 interface CallModalProps {
   open: boolean;
@@ -54,6 +62,7 @@ interface CallModalProps {
 
 const STATUS_CONFIG: Record<CallStatus, { label: string; icon: React.ReactNode }> = {
   idle: { label: "Ready to call", icon: <Phone className="h-5 w-5" /> },
+  initializing: { label: "Initializing...", icon: <Loader2 className="h-5 w-5 animate-spin" /> },
   connecting: { label: "Connecting...", icon: <Loader2 className="h-5 w-5 animate-spin" /> },
   ringing: { label: "Ringing...", icon: <PhoneCall className="h-5 w-5 animate-pulse" /> },
   "in-progress": { label: "Call in progress", icon: <PhoneIncoming className="h-5 w-5" /> },
@@ -62,6 +71,59 @@ const STATUS_CONFIG: Record<CallStatus, { label: string; icon: React.ReactNode }
   "no-answer": { label: "No answer", icon: <PhoneMissed className="h-5 w-5" /> },
 };
 
+/** Twilio edge locations to try in order for US-based users */
+const TWILIO_EDGES = ["ashburn", "umatilla", "roaming"] as const;
+
+/**
+ * Classify a Twilio Device/Call error into a user-friendly message
+ */
+function classifyError(error: any): { message: string; isNetworkError: boolean; isRetryable: boolean } {
+  const code = error?.code ?? error?.twilioError?.code;
+  const msg = error?.message ?? "";
+
+  // ConnectionError 31005 — WebSocket connection dropped
+  if (code === 31005 || msg.includes("31005") || msg.includes("ConnectionError")) {
+    return {
+      message: "Network connection to Twilio failed. This may be caused by a firewall or unstable internet. Try again or check your network.",
+      isNetworkError: true,
+      isRetryable: true,
+    };
+  }
+
+  // UnknownError 31000 — generic signaling error
+  if (code === 31000 || msg.includes("31000") || msg.includes("UnknownError")) {
+    return {
+      message: "Connection error. Retrying with a different server...",
+      isNetworkError: true,
+      isRetryable: true,
+    };
+  }
+
+  // AccessTokenInvalid 20101
+  if (code === 20101 || msg.includes("20101") || msg.includes("AccessTokenInvalid")) {
+    return {
+      message: "Twilio access token is invalid. Please refresh the page and try again.",
+      isNetworkError: false,
+      isRetryable: false,
+    };
+  }
+
+  // AccessTokenExpired 20104
+  if (code === 20104 || msg.includes("20104") || msg.includes("expired")) {
+    return {
+      message: "Twilio token expired. Refreshing...",
+      isNetworkError: false,
+      isRetryable: true,
+    };
+  }
+
+  return {
+    message: msg || "An unexpected error occurred",
+    isNetworkError: false,
+    isRetryable: false,
+  };
+}
+
 export function CallModal({ open, onOpenChange, phoneNumber, contactName, contactId, propertyId }: CallModalProps) {
   const [callStatus, setCallStatus] = useState<CallStatus>("idle");
   const [isMuted, setIsMuted] = useState(false);
@@ -69,6 +131,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const [noteText, setNoteText] = useState("");
   const [callLogId, setCallLogId] = useState<number | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const [retryCount, setRetryCount] = useState(0);
+  const [deviceReady, setDeviceReady] = useState(false);
 
   const deviceRef = useRef<Device | null>(null);
   const activeCallRef = useRef<Call | null>(null);
@@ -81,10 +145,10 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     callLogIdRef.current = callLogId;
   }, [callLogId]);
 
-  // Fetch access token for Twilio Device SDK
-  const { data: tokenData, error: tokenError } = trpc.twilio.getAccessToken.useQuery(undefined, {
+  // Fetch access token for Twilio Device SDK (pre-fetch when modal opens)
+  const { data: tokenData, error: tokenError, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(undefined, {
     enabled: open,
-    staleTime: 1000 * 60 * 30, // 30 min
+    staleTime: 1000 * 60 * 25, // 25 min (tokens last 60 min, refresh early)
     retry: 2,
   });
 
@@ -100,41 +164,102 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const createNoteMutation = trpc.callNotes.create.useMutation();
   const deleteNoteMutation = trpc.callNotes.delete.useMutation();
 
-  // Initialize Twilio Device when token is available
-  useEffect(() => {
-    if (!tokenData?.token || !open) return;
-
-    try {
-      const device = new Device(tokenData.token, {
-        logLevel: 1,
-        codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
-      });
-
-      device.on("registered", () => {
-        console.log("[CallModal] Device registered successfully");
-      });
-
-      device.on("error", (error: any) => {
-        console.error("[CallModal] Device error:", error);
-        setErrorMessage(`Device error: ${error.message || "Unknown error"}`);
-        // Only set failed if we're not already in a call
-        if (callStatus === "idle" || callStatus === "connecting") {
-          setCallStatus("failed");
-        }
-      });
-
-      device.register();
-      deviceRef.current = device;
-
-      return () => {
-        device.destroy();
-        deviceRef.current = null;
-      };
-    } catch (err: any) {
-      console.error("[CallModal] Failed to create Device:", err);
-      setErrorMessage(`Failed to initialize: ${err.message}`);
+  /**
+   * Create and register a Twilio Device with edge fallback.
+   * Returns the device if successful, null if failed.
+   * This is called lazily — only when the user clicks "Call".
+   */
+  const initializeDevice = useCallback(async (token: string): Promise<Device | null> => {
+    // Destroy any existing device
+    if (deviceRef.current) {
+      try { deviceRef.current.destroy(); } catch {}
+      deviceRef.current = null;
+      setDeviceReady(false);
     }
-  }, [tokenData?.token, open]);
+
+    return new Promise((resolve) => {
+      try {
+        const device = new Device(token, {
+          logLevel: 1,
+          codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+          // Edge fallback: try multiple Twilio data centers
+          // This helps when the primary edge is unreachable due to network/firewall
+          edge: TWILIO_EDGES as unknown as string[],
+          // Max time to wait for signaling connection (15 seconds)
+          maxCallSignalingTimeoutMs: 15000,
+        });
+
+        let resolved = false;
+        const timeoutId = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            console.warn("[CallModal] Device registration timed out after 10s");
+            // Don't destroy — the device might still connect
+            // Just resolve with the device and let the call attempt proceed
+            deviceRef.current = device;
+            setDeviceReady(true);
+            resolve(device);
+          }
+        }, 10000);
+
+        device.on("registered", () => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeoutId);
+            console.log("[CallModal] Device registered successfully");
+            deviceRef.current = device;
+            setDeviceReady(true);
+            resolve(device);
+          }
+        });
+
+        device.on("error", (error: any) => {
+          const classified = classifyError(error);
+          console.error("[CallModal] Device error:", error.code, error.message, "| Classified:", classified.message);
+
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeoutId);
+
+            if (classified.isNetworkError) {
+              // For network errors during registration, still resolve with the device
+              // The device might recover via edge fallback
+              console.log("[CallModal] Network error during registration, device may recover via edge fallback");
+              deviceRef.current = device;
+              setDeviceReady(true);
+              resolve(device);
+            } else {
+              // For non-network errors (invalid token, etc.), fail
+              setErrorMessage(classified.message);
+              resolve(null);
+            }
+          } else {
+            // Error after registration — during a call or idle
+            if (classified.isNetworkError && !activeCallRef.current) {
+              // Network error while idle — don't show error, device will auto-reconnect
+              console.log("[CallModal] Network error while idle, device will attempt reconnection");
+            } else {
+              setErrorMessage(classified.message);
+              if (callStatus === "idle" || callStatus === "initializing" || callStatus === "connecting") {
+                setCallStatus("failed");
+              }
+            }
+          }
+        });
+
+        device.on("unregistered", () => {
+          console.log("[CallModal] Device unregistered");
+          setDeviceReady(false);
+        });
+
+        device.register();
+      } catch (err: any) {
+        console.error("[CallModal] Failed to create Device:", err);
+        setErrorMessage(`Failed to initialize: ${err.message}`);
+        resolve(null);
+      }
+    });
+  }, [callStatus]);
 
   // Duration timer
   useEffect(() => {
@@ -162,12 +287,16 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     };
   }, [callStatus]);
 
-  // Reset state when modal closes
+  // Cleanup when modal closes
   useEffect(() => {
     if (!open) {
       if (activeCallRef.current) {
         activeCallRef.current.disconnect();
         activeCallRef.current = null;
+      }
+      if (deviceRef.current) {
+        try { deviceRef.current.destroy(); } catch {}
+        deviceRef.current = null;
       }
       setCallStatus("idle");
       setIsMuted(false);
@@ -175,6 +304,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       setCallLogId(undefined);
       setErrorMessage(undefined);
       setNoteText("");
+      setRetryCount(0);
+      setDeviceReady(false);
       callLogIdRef.current = undefined;
     }
   }, [open]);
@@ -187,27 +318,44 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
   /**
    * Make a call using ONLY the Twilio Device SDK (browser audio).
-   * The Device SDK connects to Twilio, which calls our TwiML App Voice URL,
-   * which returns TwiML to dial the destination number.
-   * No REST API outbound call is made.
+   * 
+   * Flow:
+   * 1. Initialize Device (lazy — only on first call)
+   * 2. Create call log in DB
+   * 3. device.connect() → Twilio → TwiML App → Dial destination
    */
   const handleMakeCall = useCallback(async () => {
-    if (!deviceRef.current) {
+    if (!tokenData?.token) {
       if (tokenError) {
         toast.error("Failed to get Twilio token. Check Twilio configuration.");
       } else {
-        toast.error("Twilio device not ready. Please wait...");
+        toast.error("Loading Twilio token... Please wait a moment.");
       }
       return;
     }
 
     try {
-      setCallStatus("connecting");
+      setCallStatus("initializing");
       setErrorMessage(undefined);
       setCallDuration(0);
 
-      // Create a call log entry in the database BEFORE connecting
-      // This does NOT make a Twilio REST API call — just a DB insert
+      // Step 1: Initialize Device lazily (with edge fallback)
+      let device = deviceRef.current;
+      if (!device || !deviceReady) {
+        console.log("[CallModal] Initializing Twilio Device with edge fallback:", TWILIO_EDGES);
+        device = await initializeDevice(tokenData.token);
+        if (!device) {
+          setCallStatus("failed");
+          if (!errorMessage) {
+            setErrorMessage("Failed to initialize Twilio Device. Check your network connection.");
+          }
+          return;
+        }
+      }
+
+      setCallStatus("connecting");
+
+      // Step 2: Create a call log entry in the database BEFORE connecting
       try {
         const logResult = await createCallLogMutation.mutateAsync({
           to: phoneNumber,
@@ -221,13 +369,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         }
       } catch (logErr) {
         console.warn("[CallModal] Failed to create call log:", logErr);
-        // Non-critical — continue with the call even if logging fails
       }
 
-      // Connect via the Twilio Voice SDK for browser audio
-      // The Device SDK sends the params to Twilio, which POSTs them to the TwiML App Voice URL
-      // The Voice URL returns TwiML with <Dial><Number>{To}</Number></Dial>
-      const call = await deviceRef.current.connect({
+      // Step 3: Connect via the Twilio Voice SDK
+      console.log("[CallModal] Calling device.connect() to:", phoneNumber);
+      const call = await device.connect({
         params: {
           To: phoneNumber,
           ContactId: String(contactId),
@@ -240,6 +386,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       call.on("accept", () => {
         console.log("[CallModal] Call accepted (connected to Twilio)");
         setCallStatus("in-progress");
+        setRetryCount(0); // Reset retry count on successful call
         const logId = callLogIdRef.current;
         if (logId) {
           updateCallLogMutation.mutate({ callLogId: logId, status: "in-progress" });
@@ -279,27 +426,50 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       });
 
       call.on("error", (error: any) => {
-        console.error("[CallModal] Call error:", error);
+        const classified = classifyError(error);
+        console.error("[CallModal] Call error:", error.code, error.message);
         setCallStatus("failed");
-        setErrorMessage(error.message || "Call error");
+        setErrorMessage(classified.message);
         activeCallRef.current = null;
         const logId = callLogIdRef.current;
         if (logId) {
           updateCallLogMutation.mutate({
             callLogId: logId,
             status: "failed",
-            errorMessage: error.message,
+            errorMessage: classified.message,
           });
         }
       });
 
     } catch (error: any) {
+      const classified = classifyError(error);
       console.error("[CallModal] Failed to initiate call:", error);
       setCallStatus("failed");
-      setErrorMessage(error.message || "Failed to initiate call");
+      setErrorMessage(classified.message);
       toast.error("Failed to initiate call");
     }
-  }, [phoneNumber, contactId, propertyId, createCallLogMutation, updateCallLogMutation, tokenError]);
+  }, [phoneNumber, contactId, propertyId, tokenData?.token, tokenError, deviceReady, createCallLogMutation, updateCallLogMutation, initializeDevice, errorMessage]);
+
+  const handleRetry = useCallback(async () => {
+    setRetryCount((c) => c + 1);
+    setErrorMessage(undefined);
+    setCallStatus("idle");
+
+    // Destroy existing device to force fresh connection
+    if (deviceRef.current) {
+      try { deviceRef.current.destroy(); } catch {}
+      deviceRef.current = null;
+      setDeviceReady(false);
+    }
+
+    // Refresh token if needed
+    await refetchToken();
+
+    // Small delay then retry
+    setTimeout(() => {
+      handleMakeCall();
+    }, 500);
+  }, [handleMakeCall, refetchToken]);
 
   const handleHangUp = useCallback(() => {
     if (activeCallRef.current) {
@@ -346,7 +516,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     }
   }, [deleteNoteMutation, refetchNotes]);
 
-  const isCallActive = callStatus === "connecting" || callStatus === "ringing" || callStatus === "in-progress";
+  const isCallActive = callStatus === "initializing" || callStatus === "connecting" || callStatus === "ringing" || callStatus === "in-progress";
   const statusConfig = STATUS_CONFIG[callStatus];
 
   return (
@@ -376,6 +546,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Status Badge */}
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full mb-3 ${
                 callStatus === "idle" ? "bg-gray-100 text-gray-600" :
+                callStatus === "initializing" ? "bg-yellow-100 text-yellow-700" :
                 callStatus === "connecting" ? "bg-yellow-100 text-yellow-700" :
                 callStatus === "ringing" ? "bg-blue-100 text-blue-700" :
                 callStatus === "in-progress" ? "bg-green-100 text-green-700" :
@@ -397,7 +568,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               </div>
 
               {/* Ringing Animation */}
-              {(callStatus === "connecting" || callStatus === "ringing") && (
+              {(callStatus === "initializing" || callStatus === "connecting" || callStatus === "ringing") && (
                 <div className="flex items-center gap-1 mb-5">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0ms" }} />
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -407,7 +578,13 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
               {/* Error Message */}
               {errorMessage && (
-                <p className="text-red-500 text-xs text-center mb-4 max-w-[250px]">{errorMessage}</p>
+                <div className="text-center mb-4 max-w-[280px]">
+                  <div className="flex items-center gap-1.5 justify-center mb-1">
+                    <WifiOff className="h-3.5 w-3.5 text-red-500" />
+                    <span className="text-red-500 text-xs font-medium">Connection Error</span>
+                  </div>
+                  <p className="text-red-500/80 text-xs leading-relaxed">{errorMessage}</p>
+                </div>
               )}
 
               {/* Token Error Warning */}
@@ -417,11 +594,20 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 </p>
               )}
 
-              {/* Single Call/HangUp Button Area */}
+              {/* Call/HangUp/Retry Button Area */}
               <div className="flex items-center gap-4">
                 {/* Call Button — shown when idle OR after call ended */}
                 {!isCallActive && (
                   <div className="flex flex-col items-center gap-2">
+                    {/* Show retry button when failed with retryable error */}
+                    {callStatus === "failed" && retryCount < 3 && (
+                      <button
+                        onClick={handleRetry}
+                        className="w-16 h-16 rounded-full bg-amber-500 hover:bg-amber-600 flex items-center justify-center transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 active:scale-95 mb-2"
+                      >
+                        <RefreshCw className="h-7 w-7 text-white" />
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         if (callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer") {
@@ -436,7 +622,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       <Phone className="h-7 w-7 text-white" />
                     </button>
                     <span className="text-xs text-muted-foreground">
-                      {callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" ? "Call again" : "Start call"}
+                      {callStatus === "failed" && retryCount < 3 ? "Retry / Call" :
+                       callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" ? "Call again" : "Start call"}
                     </span>
                   </div>
                 )}
@@ -444,16 +631,18 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 {/* During active call: Mute + Hang Up */}
                 {isCallActive && (
                   <>
-                    <button
-                      onClick={handleToggleMute}
-                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
-                        isMuted
-                          ? "bg-red-100 text-red-500 hover:bg-red-200"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                    </button>
+                    {callStatus !== "initializing" && (
+                      <button
+                        onClick={handleToggleMute}
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
+                          isMuted
+                            ? "bg-red-100 text-red-500 hover:bg-red-200"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                      </button>
+                    )}
 
                     <button
                       onClick={handleHangUp}
@@ -464,6 +653,14 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   </>
                 )}
               </div>
+
+              {/* Network hint for failed calls */}
+              {callStatus === "failed" && retryCount >= 3 && (
+                <p className="text-muted-foreground text-[10px] text-center mt-3 max-w-[250px]">
+                  Multiple connection attempts failed. Please check your internet connection, 
+                  disable any VPN or firewall that may block WebSocket connections, and try again.
+                </p>
+              )}
             </div>
 
             {/* Mute indicator */}

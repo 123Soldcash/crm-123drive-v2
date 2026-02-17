@@ -35,7 +35,7 @@ describe("CallModal: Device SDK-only call flow", () => {
   });
 
   it("connects via device.connect() with params including To number", () => {
-    expect(callModalSrc).toContain("deviceRef.current.connect");
+    expect(callModalSrc).toContain("device.connect");
     expect(callModalSrc).toContain("To: phoneNumber");
   });
 
@@ -47,7 +47,7 @@ describe("CallModal: Device SDK-only call flow", () => {
 
   it("creates call log BEFORE connecting the Device SDK call", () => {
     const createLogIndex = callModalSrc.indexOf("createCallLogMutation.mutateAsync");
-    const connectIndex = callModalSrc.indexOf("deviceRef.current.connect");
+    const connectIndex = callModalSrc.indexOf("await device.connect({");
     expect(createLogIndex).toBeGreaterThan(-1);
     expect(connectIndex).toBeGreaterThan(-1);
     expect(createLogIndex).toBeLessThan(connectIndex);
@@ -197,5 +197,74 @@ describe("Access Token: proper Twilio Voice SDK configuration", () => {
 
   it("sets TTL on the token", () => {
     expect(routersSrc).toContain("ttl:");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. EDGE FALLBACK & ERROR HANDLING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe("CallModal: Edge Fallback and Error Handling", () => {
+  it("configures Device with edge fallback array for resilience", () => {
+    expect(callModalSrc).toContain("edge:");
+    expect(callModalSrc).toContain("ashburn");
+    expect(callModalSrc).toContain("umatilla");
+    expect(callModalSrc).toContain("roaming");
+  });
+
+  it("sets maxCallSignalingTimeoutMs for connection timeout control", () => {
+    expect(callModalSrc).toContain("maxCallSignalingTimeoutMs");
+  });
+
+  it("has a classifyError function for user-friendly error messages", () => {
+    expect(callModalSrc).toContain("classifyError");
+    expect(callModalSrc).toContain("isNetworkError");
+    expect(callModalSrc).toContain("isRetryable");
+  });
+
+  it("classifies error 31005 as a network/retryable error", () => {
+    expect(callModalSrc).toContain("31005");
+    expect(callModalSrc).toContain("ConnectionError");
+  });
+
+  it("classifies error 31000 as a network/retryable error", () => {
+    expect(callModalSrc).toContain("31000");
+    expect(callModalSrc).toContain("UnknownError");
+  });
+
+  it("has retry functionality with retry count tracking", () => {
+    expect(callModalSrc).toContain("retryCount");
+    expect(callModalSrc).toContain("handleRetry");
+    expect(callModalSrc).toContain("RefreshCw");
+  });
+
+  it("limits retries to 3 attempts", () => {
+    expect(callModalSrc).toContain("retryCount < 3");
+  });
+
+  it("shows network-specific error icon (WifiOff) for connection errors", () => {
+    expect(callModalSrc).toContain("WifiOff");
+    expect(callModalSrc).toContain("Connection Error");
+  });
+
+  it("initializes Device lazily (on first call, not on modal open)", () => {
+    expect(callModalSrc).toContain("initializeDevice");
+    // Device should NOT be created in a useEffect that runs on modal open
+    // Instead it should be called inside handleMakeCall
+    const handleMakeCallSection = callModalSrc.split("handleMakeCall")[1] || "";
+    expect(handleMakeCallSection).toContain("initializeDevice");
+  });
+
+  it("destroys device on modal close to clean up WebSocket connections", () => {
+    expect(callModalSrc).toContain("deviceRef.current.destroy()");
+  });
+
+  it("refreshes token on retry", () => {
+    expect(callModalSrc).toContain("refetchToken");
+  });
+
+  it("has initializing status for device setup phase", () => {
+    expect(callModalSrc).toContain('"initializing"');
+    expect(callModalSrc).toContain("Initializing...");
   });
 });
