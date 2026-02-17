@@ -461,6 +461,7 @@ export const appRouter = router({
           owner1Name: z.string().optional(),
           leadTemperature: z.enum(["SUPER HOT", "HOT", "WARM", "COLD", "DEAD", "TBD"]).optional(),
           status: z.string().optional(),
+          dealStage: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -490,6 +491,7 @@ export const appRouter = router({
             zipcode,
             owner1Name,
             leadTemperature,
+            dealStage,
             source,
             entryDate,
             stageChangedAt,
@@ -502,6 +504,7 @@ export const appRouter = router({
             ${escapeStr(input.zipcode || '00000')},
             ${escapeStr(input.owner1Name)},
             ${escapeStr(input.leadTemperature || 'TBD')},
+            ${escapeStr(input.dealStage || null)},
             'Manual',
             '${now}',
             '${now}',

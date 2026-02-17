@@ -95,6 +95,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
     createPropertyMutation.mutate({
       ...formData,
       leadTemperature: "TBD",
+      dealStage: dealStage,
     });
   };
 

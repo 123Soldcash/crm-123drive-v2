@@ -152,7 +152,7 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
         updatedAt: properties.updatedAt,
       })
       .from(properties)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : and(...conditions)) : undefined)
       .orderBy(desc(properties.stageChangedAt));
     
     return results;

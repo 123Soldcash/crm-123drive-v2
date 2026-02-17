@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, addressLine1, dealStage FROM properties LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, dealStage FROM properties LIMIT 5",
+  "rows": [
+    {
+      "id": "630002",
+      "addressLine1": "5226 Sw 24th St",
+      "dealStage": "NEW_LEAD"
+    },
+    {
+      "id": "630003",
+      "addressLine1": "1840 Nw 6th Ave",
+      "dealStage": "NEW_LEAD"
+    },
+    {
+      "id": "630004",
+      "addressLine1": "5771 Nw 24th Ct",
+      "dealStage": "NEW_LEAD"
+    },
+    {
+      "id": "630005",
+      "addressLine1": "5048 Ne 14th Ave",
+      "dealStage": "NEW_LEAD"
+    },
+    {
+      "id": "630006",
+      "addressLine1": "365 Nw 15th St",
+      "dealStage": "NEW_LEAD"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tdealStage\n630002\t5226 Sw 24th St\tNEW_LEAD\n630003\t1840 Nw 6th Ave\tNEW_LEAD\n630004\t5771 Nw 24th Ct\tNEW_LEAD\n630005\t5048 Ne 14th Ave\tNEW_LEAD\n630006\t365 Nw 15th St\tNEW_LEAD\n",
+  "stderr": "",
+  "execution_time_ms": 86
+}

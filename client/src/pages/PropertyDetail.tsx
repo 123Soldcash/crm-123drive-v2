@@ -220,7 +220,7 @@ export default function PropertyDetail() {
 
   const handleAddToPipeline = () => {
     if (!selectedPipelineStage) return;
-    updateDealStage.mutate({ propertyId, stageId: selectedPipelineStage });
+    updateDealStage.mutate({ propertyId, newStage: selectedPipelineStage });
   };
 
   if (isLoading) {

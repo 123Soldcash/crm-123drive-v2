@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, addressLine1 FROM properties ORDER BY id ASC LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1 FROM properties ORDER BY id ASC LIMIT 10",
+  "rows": [
+    {
+      "id": "630002",
+      "addressLine1": "5226 Sw 24th St"
+    },
+    {
+      "id": "630003",
+      "addressLine1": "1840 Nw 6th Ave"
+    },
+    {
+      "id": "630004",
+      "addressLine1": "5771 Nw 24th Ct"
+    },
+    {
+      "id": "630005",
+      "addressLine1": "5048 Ne 14th Ave"
+    },
+    {
+      "id": "630006",
+      "addressLine1": "365 Nw 15th St"
+    },
+    {
+      "id": "630007",
+      "addressLine1": "7255 Nw 54th Ct"
+    },
+    {
+      "id": "630008",
+      "addressLine1": "3750 Sw 8th St"
+    },
+    {
+      "id": "630009",
+      "addressLine1": "4700 Sw 18th St"
+    },
+    {
+      "id": "630010",
+      "addressLine1": "141 Nw 13th Ave"
+    },
+    {
+      "id": "630011",
+      "addressLine1": "6105 Sw 19th St"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\n630002\t5226 Sw 24th St\n630003\t1840 Nw 6th Ave\n630004\t5771 Nw 24th Ct\n630005\t5048 Ne 14th Ave\n630006\t365 Nw 15th St\n630007\t7255 Nw 54th Ct\n630008\t3750 Sw 8th St\n630009\t4700 Sw 18th St\n630010\t141 Nw 13th Ave\n630011\t6105 Sw 19th St\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

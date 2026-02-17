@@ -1496,3 +1496,16 @@
 - [x] Removed conditional {isExpanded && (<>...</>)} wrapper — content now always visible when section is open
 - [x] Section-level CollapsibleSection in PropertyDetail.tsx preserved with localStorage persistence
 - [x] 29 tests passing (8 DB + 21 UI: toggle removed, section collapse preserved, core functionality intact)
+
+
+## FIX - Pipeline Stage Assignment from Property Detail (Feb 17, 2026) - COMPLETED ✅
+- [x] Audited pipeline stage button on PropertyDetail page
+- [x] Root cause 1: PropertyDetail sent `stageId` but backend expected `newStage` (field name mismatch)
+- [x] Root cause 2: `getPropertiesByStage` crashed with `Cannot convert undefined or null to object` when conditions array was empty (calling `and()` with no args)
+- [x] Root cause 3: `properties.create` didn't include `dealStage` in SQL INSERT, so QuickAddLeadDialog couldn't assign stage
+- [x] Fix: Changed `stageId` to `newStage` in PropertyDetail.tsx mutation call
+- [x] Fix: Added `conditions.length > 0` check before calling `and(...conditions)` in db-stageManagement.ts
+- [x] Fix: Added `dealStage` to properties.create SQL INSERT and input schema
+- [x] Fix: Updated QuickAddLeadDialog to pass `dealStage` when creating properties
+- [x] Pipeline Kanban board loads correctly with all 17 stages, no console errors
+- [x] 35 comprehensive tests passing (procedure validation, field naming, conditions handling, frontend integration)
