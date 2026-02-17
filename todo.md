@@ -1617,3 +1617,7 @@
 - [x] Fix WebSocket connection failure — added edge fallback (ashburn → umatilla → roaming), lazy device init, maxCallSignalingTimeoutMs
 - [x] Add better error handling — classifyError function, retry button (up to 3x), user-friendly messages for 31005/31000/20101/20104
 - [x] Add 12 new edge fallback & error handling tests (total 194 passing)
+
+## UI Improvement - Property Detail Sticky Header (Feb 17, 2026) - COMPLETED ✅
+- [x] Increase font size of lead data in the sticky top block (labels: 9px→10px, values: 11px→13px, more spacing)
+- [x] Remove text truncation (ellipsis) — Owner name now uses break-words, Prop ID uses break-all, no more max-w truncation
