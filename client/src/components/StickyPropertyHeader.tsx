@@ -152,7 +152,7 @@ export function StickyPropertyHeader({
               isSticky ? "text-lg" : "text-3xl"
             )}>
               {property.addressLine1}
-              <span className="ml-2 text-slate-400 font-medium text-sm">{property.city}, {property.state}</span>
+              <span className="ml-2 text-slate-400 font-medium text-sm">{property.city}, {property.state} {property.zipCode || property.zip || ""}</span>
             </h1>
           </div>
 

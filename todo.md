@@ -1621,3 +1621,6 @@
 ## UI Improvement - Property Detail Sticky Header (Feb 17, 2026) - COMPLETED ✅
 - [x] Increase font size of lead data in the sticky top block (labels: 9px→10px, values: 11px→13px, more spacing)
 - [x] Remove text truncation (ellipsis) — Owner name now uses break-words, Prop ID uses break-all, no more max-w truncation
+
+## UI Improvement - Add ZIP Code to Sticky Header (Feb 17, 2026) - COMPLETED ✅
+- [x] Add ZIP code next to property address in the sticky header top row
