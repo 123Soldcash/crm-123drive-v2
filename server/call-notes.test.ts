@@ -298,8 +298,8 @@ describe("CallModal Component", () => {
     expect(modalContent).toContain("Call again");
   });
 
-  it("should create call log when call starts (via makeCall mutation)", () => {
-    expect(modalContent).toContain("makeCallMutation");
+  it("should create call log when call starts (via createCallLog mutation)", () => {
+    expect(modalContent).toContain("createCallLogMutation");
   });
 
   it("should update call log when call ends", () => {

@@ -2665,6 +2665,38 @@ export const appRouter = router({
       }),
 
     /**
+     * Create a call log entry (for browser SDK calls that don't use REST API).
+     * This just records the call in the database without initiating a Twilio REST call.
+     */
+    createCallLog: protectedProcedure
+      .input(z.object({
+        to: z.string().min(1, "Phone number is required"),
+        contactId: z.number().optional(),
+        propertyId: z.number().optional(),
+        status: z.enum(["ringing", "in-progress", "completed", "failed", "no-answer"]).default("ringing"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createCallLog } = await import("./db-callNotes");
+        const { formatPhoneNumber } = await import("./twilio");
+
+        let callLogId: number | undefined;
+        if (input.contactId && input.propertyId) {
+          const logResult = await createCallLog({
+            propertyId: input.propertyId,
+            contactId: input.contactId,
+            userId: ctx.user.id,
+            toPhoneNumber: formatPhoneNumber(input.to),
+            fromPhoneNumber: ENV.twilioPhoneNumber || "browser",
+            callType: "outbound",
+            status: input.status,
+          });
+          callLogId = logResult.id;
+        }
+
+        return { callLogId };
+      }),
+
+    /**
      * Get the current status of a call by its SID.
      */
     getCallStatus: protectedProcedure

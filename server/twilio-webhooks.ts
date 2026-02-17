@@ -35,10 +35,20 @@ export function registerTwilioWebhooks(app: Express) {
   // Returns <Dial><Number> to connect to the destination.
   app.all("/api/twilio/voice", async (req, res) => {
     try {
+      // When the Twilio Device SDK calls device.connect({ params: { To: "+1..." } }),
+      // Twilio sends a POST to this webhook with the 'To' parameter in the body.
+      // The body is application/x-www-form-urlencoded.
       const to = req.body?.To || req.query?.To;
-      const { buildTwimlResponse } = await import("./twilio");
-      const twiml = buildTwimlResponse(to as string);
-      console.log("[Twilio Voice] Generating TwiML for:", to);
+      console.log("[Twilio Voice] Incoming request. Method:", req.method, "Body keys:", Object.keys(req.body || {}));
+      console.log("[Twilio Voice] To:", to, "| From:", req.body?.From, "| CallSid:", req.body?.CallSid);
+
+      const { buildTwimlResponse, formatPhoneNumber } = await import("./twilio");
+      // Format the number to E.164 if it's a phone number
+      const formattedTo = to && (to.startsWith("+") || /^\d+$/.test(to))
+        ? formatPhoneNumber(to)
+        : to;
+      const twiml = buildTwimlResponse(formattedTo as string);
+      console.log("[Twilio Voice] Generated TwiML for:", formattedTo);
       res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {

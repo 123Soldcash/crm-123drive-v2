@@ -1604,3 +1604,10 @@
 - [x] Changed dialer theme from dark (slate-900) to light (bg-muted/30 with border-r)
 - [x] Updated status badges to use light-theme colors (gray-100, blue-100, green-100, etc.)
 - [x] Updated mute button to light theme (gray-100/red-100 instead of slate-700/red-500)
+
+## BUG FIXES - CallModal Errors (Feb 17, 2026) - COMPLETED ✅
+- [x] Fix Error 1: db.select is not a function — added null checks after getDb() in all db-callNotes functions
+- [x] Fix Errors 2-7: Twilio ConnectionError 31005/31000 — rewrote CallModal to use Device SDK-only flow (no dual REST API + SDK calls), added createCallLog mutation (DB only)
+- [x] Fix Error 8: Missing DialogTitle in CallModal — added sr-only DialogTitle for accessibility
+- [x] Added 26 new architecture tests validating Device SDK call flow
+- [x] Updated existing tests to match new createCallLogMutation pattern

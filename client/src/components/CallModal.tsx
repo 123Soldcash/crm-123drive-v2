@@ -4,12 +4,20 @@
  * Left side: Contact info, call controls, real-time status
  * Right side: Notes panel with history and live note-taking
  * 
- * Uses browser microphone via Twilio Voice JavaScript SDK
+ * Uses browser microphone via Twilio Voice JavaScript SDK.
+ * Call flow:
+ *   1. Browser gets Access Token with VoiceGrant (outgoingApplicationSid)
+ *   2. Browser calls device.connect({ params: { To: "+1..." } })
+ *   3. Twilio sends POST to TwiML App Voice URL (/api/twilio/voice)
+ *   4. Voice webhook returns <Dial><Number>+1...</Number></Dial>
+ *   5. Twilio dials the destination — browser user hears ringing and can talk
+ *
+ * The REST API is NOT used to initiate calls — only to create call log entries.
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
 import { trpc } from "@/lib/trpc";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -60,18 +68,24 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const [callDuration, setCallDuration] = useState(0);
   const [noteText, setNoteText] = useState("");
   const [callLogId, setCallLogId] = useState<number | undefined>();
-  const [callSid, setCallSid] = useState<string | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
   const deviceRef = useRef<Device | null>(null);
   const activeCallRef = useRef<Call | null>(null);
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
+  const callLogIdRef = useRef<number | undefined>(undefined);
 
-  // Fetch access token
-  const { data: tokenData } = trpc.twilio.getAccessToken.useQuery(undefined, {
+  // Keep ref in sync with state
+  useEffect(() => {
+    callLogIdRef.current = callLogId;
+  }, [callLogId]);
+
+  // Fetch access token for Twilio Device SDK
+  const { data: tokenData, error: tokenError } = trpc.twilio.getAccessToken.useQuery(undefined, {
     enabled: open,
     staleTime: 1000 * 60 * 30, // 30 min
+    retry: 2,
   });
 
   // Fetch notes for this contact
@@ -80,8 +94,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     { enabled: open && !!contactId }
   );
 
-  // Mutations
-  const makeCallMutation = trpc.twilio.makeCall.useMutation();
+  // Mutations — createCallLog only creates a DB entry, does NOT call Twilio REST API
+  const createCallLogMutation = trpc.twilio.createCallLog.useMutation();
   const updateCallLogMutation = trpc.twilio.updateCallLog.useMutation();
   const createNoteMutation = trpc.callNotes.create.useMutation();
   const deleteNoteMutation = trpc.callNotes.delete.useMutation();
@@ -90,28 +104,36 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   useEffect(() => {
     if (!tokenData?.token || !open) return;
 
-    const device = new Device(tokenData.token, {
-      logLevel: 1,
-      codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
-    });
+    try {
+      const device = new Device(tokenData.token, {
+        logLevel: 1,
+        codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+      });
 
-    device.on("registered", () => {
-      console.log("[CallModal] Device registered");
-    });
+      device.on("registered", () => {
+        console.log("[CallModal] Device registered successfully");
+      });
 
-    device.on("error", (error: any) => {
-      console.error("[CallModal] Device error:", error);
-      setErrorMessage(error.message || "Device error");
-      setCallStatus("failed");
-    });
+      device.on("error", (error: any) => {
+        console.error("[CallModal] Device error:", error);
+        setErrorMessage(`Device error: ${error.message || "Unknown error"}`);
+        // Only set failed if we're not already in a call
+        if (callStatus === "idle" || callStatus === "connecting") {
+          setCallStatus("failed");
+        }
+      });
 
-    device.register();
-    deviceRef.current = device;
+      device.register();
+      deviceRef.current = device;
 
-    return () => {
-      device.destroy();
-      deviceRef.current = null;
-    };
+      return () => {
+        device.destroy();
+        deviceRef.current = null;
+      };
+    } catch (err: any) {
+      console.error("[CallModal] Failed to create Device:", err);
+      setErrorMessage(`Failed to initialize: ${err.message}`);
+    }
   }, [tokenData?.token, open]);
 
   // Duration timer
@@ -143,7 +165,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   // Reset state when modal closes
   useEffect(() => {
     if (!open) {
-      // Hang up if call is active
       if (activeCallRef.current) {
         activeCallRef.current.disconnect();
         activeCallRef.current = null;
@@ -152,9 +173,9 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       setIsMuted(false);
       setCallDuration(0);
       setCallLogId(undefined);
-      setCallSid(undefined);
       setErrorMessage(undefined);
       setNoteText("");
+      callLogIdRef.current = undefined;
     }
   }, [open]);
 
@@ -164,9 +185,19 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  /**
+   * Make a call using ONLY the Twilio Device SDK (browser audio).
+   * The Device SDK connects to Twilio, which calls our TwiML App Voice URL,
+   * which returns TwiML to dial the destination number.
+   * No REST API outbound call is made.
+   */
   const handleMakeCall = useCallback(async () => {
     if (!deviceRef.current) {
-      toast.error("Twilio device not ready. Please wait...");
+      if (tokenError) {
+        toast.error("Failed to get Twilio token. Check Twilio configuration.");
+      } else {
+        toast.error("Twilio device not ready. Please wait...");
+      }
       return;
     }
 
@@ -175,35 +206,48 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       setErrorMessage(undefined);
       setCallDuration(0);
 
-      // First, create the call via REST API to get callSid and callLogId
-      const result = await makeCallMutation.mutateAsync({
-        to: phoneNumber,
-        contactId,
-        propertyId,
-      });
+      // Create a call log entry in the database BEFORE connecting
+      // This does NOT make a Twilio REST API call — just a DB insert
+      try {
+        const logResult = await createCallLogMutation.mutateAsync({
+          to: phoneNumber,
+          contactId,
+          propertyId,
+          status: "ringing",
+        });
+        if (logResult.callLogId) {
+          setCallLogId(logResult.callLogId);
+          callLogIdRef.current = logResult.callLogId;
+        }
+      } catch (logErr) {
+        console.warn("[CallModal] Failed to create call log:", logErr);
+        // Non-critical — continue with the call even if logging fails
+      }
 
-      setCallSid(result.callSid);
-      setCallLogId(result.callLogId);
-
-      // Now connect via the Twilio Voice SDK for browser audio
+      // Connect via the Twilio Voice SDK for browser audio
+      // The Device SDK sends the params to Twilio, which POSTs them to the TwiML App Voice URL
+      // The Voice URL returns TwiML with <Dial><Number>{To}</Number></Dial>
       const call = await deviceRef.current.connect({
         params: {
           To: phoneNumber,
+          ContactId: String(contactId),
+          PropertyId: String(propertyId),
         },
       });
 
       activeCallRef.current = call;
 
       call.on("accept", () => {
-        console.log("[CallModal] Call accepted");
+        console.log("[CallModal] Call accepted (connected to Twilio)");
         setCallStatus("in-progress");
-        if (result.callLogId) {
-          updateCallLogMutation.mutate({ callLogId: result.callLogId, status: "in-progress" });
+        const logId = callLogIdRef.current;
+        if (logId) {
+          updateCallLogMutation.mutate({ callLogId: logId, status: "in-progress" });
         }
       });
 
-      call.on("ringing", () => {
-        console.log("[CallModal] Call ringing");
+      call.on("ringing", (hasEarlyMedia: boolean) => {
+        console.log("[CallModal] Call ringing, earlyMedia:", hasEarlyMedia);
         setCallStatus("ringing");
       });
 
@@ -211,12 +255,13 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         console.log("[CallModal] Call disconnected");
         setCallStatus("completed");
         activeCallRef.current = null;
-        if (result.callLogId) {
+        const logId = callLogIdRef.current;
+        if (logId) {
           const duration = callStartTimeRef.current
             ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
             : 0;
           updateCallLogMutation.mutate({
-            callLogId: result.callLogId,
+            callLogId: logId,
             status: "completed",
             duration,
           });
@@ -227,8 +272,9 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         console.log("[CallModal] Call cancelled");
         setCallStatus("no-answer");
         activeCallRef.current = null;
-        if (result.callLogId) {
-          updateCallLogMutation.mutate({ callLogId: result.callLogId, status: "no-answer" });
+        const logId = callLogIdRef.current;
+        if (logId) {
+          updateCallLogMutation.mutate({ callLogId: logId, status: "no-answer" });
         }
       });
 
@@ -237,35 +283,15 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         setCallStatus("failed");
         setErrorMessage(error.message || "Call error");
         activeCallRef.current = null;
-        if (result.callLogId) {
+        const logId = callLogIdRef.current;
+        if (logId) {
           updateCallLogMutation.mutate({
-            callLogId: result.callLogId,
+            callLogId: logId,
             status: "failed",
             errorMessage: error.message,
           });
         }
       });
-
-      // Also poll status via REST API as a fallback
-      const pollInterval = setInterval(async () => {
-        if (!result.callSid) return;
-        try {
-          const status = await fetch(
-            `/api/trpc/twilio.getCallStatus?input=${encodeURIComponent(JSON.stringify({ callSid: result.callSid }))}`,
-            { credentials: "include" }
-          );
-          const data = await status.json();
-          const twilioStatus = data?.result?.data?.status;
-          if (twilioStatus === "completed" || twilioStatus === "failed" || twilioStatus === "canceled" || twilioStatus === "no-answer" || twilioStatus === "busy") {
-            clearInterval(pollInterval);
-          }
-        } catch {
-          // Ignore polling errors
-        }
-      }, 3000);
-
-      // Clean up polling after 10 minutes max
-      setTimeout(() => clearInterval(pollInterval), 600000);
 
     } catch (error: any) {
       console.error("[CallModal] Failed to initiate call:", error);
@@ -273,7 +299,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       setErrorMessage(error.message || "Failed to initiate call");
       toast.error("Failed to initiate call");
     }
-  }, [phoneNumber, contactId, propertyId, makeCallMutation, updateCallLogMutation]);
+  }, [phoneNumber, contactId, propertyId, createCallLogMutation, updateCallLogMutation, tokenError]);
 
   const handleHangUp = useCallback(() => {
     if (activeCallRef.current) {
@@ -331,7 +357,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       }
       onOpenChange(v);
     }}>
-      <DialogContent className="sm:max-w-6xl w-[90vw] h-[650px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-6xl w-[90vw] h-[650px] p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">Call {contactName}</DialogTitle>
         <div className="flex h-full">
           {/* LEFT SIDE — Call Controls (Light Theme) */}
           <div className="w-[340px] flex flex-col bg-muted/30 border-r p-6 shrink-0">
@@ -381,6 +408,13 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Error Message */}
               {errorMessage && (
                 <p className="text-red-500 text-xs text-center mb-4 max-w-[250px]">{errorMessage}</p>
+              )}
+
+              {/* Token Error Warning */}
+              {tokenError && callStatus === "idle" && (
+                <p className="text-amber-600 text-xs text-center mb-4 max-w-[250px]">
+                  Twilio not configured. Check API Key, Secret, and TwiML App SID.
+                </p>
               )}
 
               {/* Single Call/HangUp Button Area */}

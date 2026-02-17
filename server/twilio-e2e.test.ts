@@ -544,7 +544,7 @@ describe("E2E: Frontend Call Integration", () => {
   });
 
   it("CallModal creates and updates call logs via mutations", () => {
-    expect(modalSrc).toContain("makeCallMutation");
+    expect(modalSrc).toContain("createCallLogMutation");
     expect(modalSrc).toContain("updateCallLogMutation");
   });
 

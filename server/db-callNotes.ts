@@ -18,7 +18,8 @@ export async function createCallNote(params: {
   userId: number;
   content: string;
 }) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const [result] = await db.insert(callNotes).values({
     callLogId: params.callLogId ?? null,
     contactId: params.contactId,
@@ -33,7 +34,8 @@ export async function createCallNote(params: {
  * Get all call notes for a specific contact, ordered by newest first
  */
 export async function getCallNotesByContact(contactId: number) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const results = await db
     .select({
       id: callNotes.id,
@@ -54,7 +56,8 @@ export async function getCallNotesByContact(contactId: number) {
  * Get all call notes for a specific call log
  */
 export async function getCallNotesByCallLog(callLogId: number) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const results = await db
     .select({
       id: callNotes.id,
@@ -75,7 +78,8 @@ export async function getCallNotesByCallLog(callLogId: number) {
  * Get call notes for a contact with associated call log info (for history view)
  */
 export async function getCallNotesWithCallInfo(contactId: number) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const results = await db
     .select({
       id: callNotes.id,
@@ -102,7 +106,8 @@ export async function getCallNotesWithCallInfo(contactId: number) {
  * Delete a call note by ID
  */
 export async function deleteCallNote(noteId: number, userId: number) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   // Only allow deletion by the user who created the note
   await db
     .delete(callNotes)
@@ -123,7 +128,8 @@ export async function createCallLog(params: {
   status: "ringing" | "in-progress" | "completed" | "failed" | "no-answer";
   twilioCallSid?: string;
 }) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const [result] = await db.insert(callLogs).values({
     propertyId: params.propertyId,
     contactId: params.contactId,
@@ -148,7 +154,8 @@ export async function updateCallLog(callLogId: number, params: {
   notes?: string;
   errorMessage?: string;
 }) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const updateData: Record<string, any> = {};
   if (params.status !== undefined) updateData.status = params.status;
   if (params.duration !== undefined) updateData.duration = params.duration;
@@ -166,7 +173,8 @@ export async function updateCallLog(callLogId: number, params: {
  * Get call logs for a specific contact
  */
 export async function getCallLogsByContact(contactId: number) {
-  const db = getDb();
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
   const results = await db
     .select()
     .from(callLogs)
