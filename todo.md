@@ -1597,3 +1597,10 @@
 - [x] Reduced left panel from 360px to 340px to give more space to notes
 - [x] Increased textarea from 60px/120px to 80px/150px min/max height
 - [x] Added break-words to note content for long text wrapping
+
+## UI FIX - CallModal Improvements (Feb 17, 2026) - COMPLETED ✅
+- [x] Removed duplicate green call button — now single button that says "Start call" or "Call again"
+- [x] Added call duration timer (00:00) always visible, green during active call, muted when idle
+- [x] Changed dialer theme from dark (slate-900) to light (bg-muted/30 with border-r)
+- [x] Updated status badges to use light-theme colors (gray-100, blue-100, green-100, etc.)
+- [x] Updated mute button to light theme (gray-100/red-100 instead of slate-700/red-500)

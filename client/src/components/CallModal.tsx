@@ -44,14 +44,14 @@ interface CallModalProps {
   propertyId: number;
 }
 
-const STATUS_CONFIG: Record<CallStatus, { label: string; color: string; icon: React.ReactNode; pulse?: boolean }> = {
-  idle: { label: "Ready to call", color: "bg-gray-500", icon: <Phone className="h-5 w-5" /> },
-  connecting: { label: "Connecting...", color: "bg-yellow-500", icon: <Loader2 className="h-5 w-5 animate-spin" />, pulse: true },
-  ringing: { label: "Ringing...", color: "bg-blue-500", icon: <PhoneCall className="h-5 w-5 animate-pulse" />, pulse: true },
-  "in-progress": { label: "Call in progress", color: "bg-green-500", icon: <PhoneIncoming className="h-5 w-5" /> },
-  completed: { label: "Call ended", color: "bg-gray-500", icon: <CheckCircle2 className="h-5 w-5" /> },
-  failed: { label: "Call failed", color: "bg-red-500", icon: <AlertCircle className="h-5 w-5" /> },
-  "no-answer": { label: "No answer", color: "bg-orange-500", icon: <PhoneMissed className="h-5 w-5" /> },
+const STATUS_CONFIG: Record<CallStatus, { label: string; icon: React.ReactNode }> = {
+  idle: { label: "Ready to call", icon: <Phone className="h-5 w-5" /> },
+  connecting: { label: "Connecting...", icon: <Loader2 className="h-5 w-5 animate-spin" /> },
+  ringing: { label: "Ringing...", icon: <PhoneCall className="h-5 w-5 animate-pulse" /> },
+  "in-progress": { label: "Call in progress", icon: <PhoneIncoming className="h-5 w-5" /> },
+  completed: { label: "Call ended", icon: <CheckCircle2 className="h-5 w-5" /> },
+  failed: { label: "Call failed", icon: <AlertCircle className="h-5 w-5" /> },
+  "no-answer": { label: "No answer", icon: <PhoneMissed className="h-5 w-5" /> },
 };
 
 export function CallModal({ open, onOpenChange, phoneNumber, contactName, contactId, propertyId }: CallModalProps) {
@@ -333,95 +333,101 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     }}>
       <DialogContent className="sm:max-w-6xl w-[90vw] h-[650px] p-0 gap-0 overflow-hidden">
         <div className="flex h-full">
-          {/* LEFT SIDE — Call Controls */}
-          <div className="w-[340px] flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6 shrink-0">
+          {/* LEFT SIDE — Call Controls (Light Theme) */}
+          <div className="w-[340px] flex flex-col bg-muted/30 border-r p-6 shrink-0">
             {/* Contact Info */}
             <div className="text-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center mx-auto mb-3">
-                <User className="h-10 w-10 text-slate-300" />
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <User className="h-10 w-10 text-primary/60" />
               </div>
-              <h2 className="text-xl font-semibold truncate">{contactName}</h2>
-              <p className="text-slate-400 text-sm mt-1 font-mono">{phoneNumber}</p>
+              <h2 className="text-xl font-semibold truncate text-foreground">{contactName}</h2>
+              <p className="text-muted-foreground text-sm mt-1 font-mono">{phoneNumber}</p>
             </div>
 
             {/* Call Status */}
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Status Badge */}
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${statusConfig.color} bg-opacity-20 mb-4`}>
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full mb-3 ${
+                callStatus === "idle" ? "bg-gray-100 text-gray-600" :
+                callStatus === "connecting" ? "bg-yellow-100 text-yellow-700" :
+                callStatus === "ringing" ? "bg-blue-100 text-blue-700" :
+                callStatus === "in-progress" ? "bg-green-100 text-green-700" :
+                callStatus === "completed" ? "bg-gray-100 text-gray-600" :
+                callStatus === "failed" ? "bg-red-100 text-red-700" :
+                "bg-orange-100 text-orange-700"
+              }`}>
                 {statusConfig.icon}
                 <span className="text-sm font-medium">{statusConfig.label}</span>
               </div>
 
-              {/* Duration */}
-              {(callStatus === "in-progress" || callStatus === "completed") && (
-                <div className="text-4xl font-mono font-light mb-6 tabular-nums">
-                  {formatDuration(callDuration)}
-                </div>
-              )}
+              {/* Duration Timer — always visible during and after call */}
+              <div className={`text-4xl font-mono tabular-nums mb-5 ${
+                callStatus === "in-progress" ? "text-green-600 font-semibold" :
+                callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" ? "text-muted-foreground" :
+                "text-muted-foreground/40"
+              }`}>
+                {formatDuration(callDuration)}
+              </div>
 
               {/* Ringing Animation */}
               {(callStatus === "connecting" || callStatus === "ringing") && (
-                <div className="flex items-center gap-1 mb-6">
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="flex items-center gap-1 mb-5">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               )}
 
               {/* Error Message */}
               {errorMessage && (
-                <p className="text-red-400 text-xs text-center mb-4 max-w-[250px]">{errorMessage}</p>
+                <p className="text-red-500 text-xs text-center mb-4 max-w-[250px]">{errorMessage}</p>
               )}
 
-              {/* Call Buttons */}
+              {/* Single Call/HangUp Button Area */}
               <div className="flex items-center gap-4">
-                {!isCallActive && callStatus !== "completed" && (
-                  <button
-                    onClick={handleMakeCall}
-                    className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg shadow-green-500/30 hover:shadow-green-500/50 active:scale-95"
-                  >
-                    <Phone className="h-7 w-7 text-white" />
-                  </button>
+                {/* Call Button — shown when idle OR after call ended */}
+                {!isCallActive && (
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={() => {
+                        if (callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer") {
+                          setCallStatus("idle");
+                          setCallDuration(0);
+                          setErrorMessage(undefined);
+                        }
+                        handleMakeCall();
+                      }}
+                      className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 active:scale-95"
+                    >
+                      <Phone className="h-7 w-7 text-white" />
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      {callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" ? "Call again" : "Start call"}
+                    </span>
+                  </div>
                 )}
 
+                {/* During active call: Mute + Hang Up */}
                 {isCallActive && (
                   <>
-                    {/* Mute Button */}
                     <button
                       onClick={handleToggleMute}
                       className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
                         isMuted
-                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          ? "bg-red-100 text-red-500 hover:bg-red-200"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
                     </button>
 
-                    {/* Hang Up Button */}
                     <button
                       onClick={handleHangUp}
-                      className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all shadow-lg shadow-red-500/30 hover:shadow-red-500/50 active:scale-95"
+                      className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 active:scale-95"
                     >
                       <PhoneOff className="h-7 w-7 text-white" />
                     </button>
                   </>
-                )}
-
-                {(callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer") && (
-                  <div className="flex flex-col items-center gap-3">
-                    <button
-                      onClick={() => {
-                        setCallStatus("idle");
-                        setCallDuration(0);
-                        setErrorMessage(undefined);
-                      }}
-                      className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg shadow-green-500/30 active:scale-95"
-                    >
-                      <Phone className="h-7 w-7 text-white" />
-                    </button>
-                    <span className="text-xs text-slate-400">Call again</span>
-                  </div>
                 )}
               </div>
             </div>
