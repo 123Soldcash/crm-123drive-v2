@@ -1061,3 +1061,20 @@ export const propertyDocuments = mysqlTable("propertyDocuments", {
 
 export type PropertyDocument = typeof propertyDocuments.$inferSelect;
 export type InsertPropertyDocument = typeof propertyDocuments.$inferInsert;
+
+/**
+ * Call Notes table - stores notes taken during phone calls
+ * Linked to callLogs and contacts for full history tracking
+ */
+export const callNotes = mysqlTable("callNotes", {
+  id: int("id").autoincrement().primaryKey(),
+  callLogId: int("callLogId"), // Optional: linked to a specific call log
+  contactId: int("contactId").notNull(), // Which contact this note is about
+  propertyId: int("propertyId").notNull(), // Which property this relates to
+  userId: int("userId").notNull(), // Who wrote the note
+  content: text("content").notNull(), // The note text
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CallNote = typeof callNotes.$inferSelect;
+export type InsertCallNote = typeof callNotes.$inferInsert;

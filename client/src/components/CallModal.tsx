@@ -1,0 +1,540 @@
+/**
+ * CallModal — Professional call interface with Twilio Voice SDK
+ * 
+ * Left side: Contact info, call controls, real-time status
+ * Right side: Notes panel with history and live note-taking
+ * 
+ * Uses browser microphone via Twilio Voice JavaScript SDK
+ */
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Device, Call } from "@twilio/voice-sdk";
+import { trpc } from "@/lib/trpc";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import {
+  Phone,
+  PhoneOff,
+  Mic,
+  MicOff,
+  Send,
+  Clock,
+  User,
+  FileText,
+  Loader2,
+  PhoneCall,
+  PhoneIncoming,
+  PhoneMissed,
+  AlertCircle,
+  CheckCircle2,
+  Trash2,
+} from "lucide-react";
+
+type CallStatus = "idle" | "connecting" | "ringing" | "in-progress" | "completed" | "failed" | "no-answer";
+
+interface CallModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  phoneNumber: string;
+  contactName: string;
+  contactId: number;
+  propertyId: number;
+}
+
+const STATUS_CONFIG: Record<CallStatus, { label: string; color: string; icon: React.ReactNode; pulse?: boolean }> = {
+  idle: { label: "Ready to call", color: "bg-gray-500", icon: <Phone className="h-5 w-5" /> },
+  connecting: { label: "Connecting...", color: "bg-yellow-500", icon: <Loader2 className="h-5 w-5 animate-spin" />, pulse: true },
+  ringing: { label: "Ringing...", color: "bg-blue-500", icon: <PhoneCall className="h-5 w-5 animate-pulse" />, pulse: true },
+  "in-progress": { label: "Call in progress", color: "bg-green-500", icon: <PhoneIncoming className="h-5 w-5" /> },
+  completed: { label: "Call ended", color: "bg-gray-500", icon: <CheckCircle2 className="h-5 w-5" /> },
+  failed: { label: "Call failed", color: "bg-red-500", icon: <AlertCircle className="h-5 w-5" /> },
+  "no-answer": { label: "No answer", color: "bg-orange-500", icon: <PhoneMissed className="h-5 w-5" /> },
+};
+
+export function CallModal({ open, onOpenChange, phoneNumber, contactName, contactId, propertyId }: CallModalProps) {
+  const [callStatus, setCallStatus] = useState<CallStatus>("idle");
+  const [isMuted, setIsMuted] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [noteText, setNoteText] = useState("");
+  const [callLogId, setCallLogId] = useState<number | undefined>();
+  const [callSid, setCallSid] = useState<string | undefined>();
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+
+  const deviceRef = useRef<Device | null>(null);
+  const activeCallRef = useRef<Call | null>(null);
+  const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const callStartTimeRef = useRef<number | null>(null);
+
+  // Fetch access token
+  const { data: tokenData } = trpc.twilio.getAccessToken.useQuery(undefined, {
+    enabled: open,
+    staleTime: 1000 * 60 * 30, // 30 min
+  });
+
+  // Fetch notes for this contact
+  const { data: notesData, refetch: refetchNotes } = trpc.callNotes.getByContact.useQuery(
+    { contactId },
+    { enabled: open && !!contactId }
+  );
+
+  // Mutations
+  const makeCallMutation = trpc.twilio.makeCall.useMutation();
+  const updateCallLogMutation = trpc.twilio.updateCallLog.useMutation();
+  const createNoteMutation = trpc.callNotes.create.useMutation();
+  const deleteNoteMutation = trpc.callNotes.delete.useMutation();
+
+  // Initialize Twilio Device when token is available
+  useEffect(() => {
+    if (!tokenData?.token || !open) return;
+
+    const device = new Device(tokenData.token, {
+      logLevel: 1,
+      codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+    });
+
+    device.on("registered", () => {
+      console.log("[CallModal] Device registered");
+    });
+
+    device.on("error", (error: any) => {
+      console.error("[CallModal] Device error:", error);
+      setErrorMessage(error.message || "Device error");
+      setCallStatus("failed");
+    });
+
+    device.register();
+    deviceRef.current = device;
+
+    return () => {
+      device.destroy();
+      deviceRef.current = null;
+    };
+  }, [tokenData?.token, open]);
+
+  // Duration timer
+  useEffect(() => {
+    if (callStatus === "in-progress" && !durationIntervalRef.current) {
+      callStartTimeRef.current = Date.now();
+      durationIntervalRef.current = setInterval(() => {
+        if (callStartTimeRef.current) {
+          setCallDuration(Math.floor((Date.now() - callStartTimeRef.current) / 1000));
+        }
+      }, 1000);
+    }
+
+    if (callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" || callStatus === "idle") {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = null;
+      }
+    };
+  }, [callStatus]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      // Hang up if call is active
+      if (activeCallRef.current) {
+        activeCallRef.current.disconnect();
+        activeCallRef.current = null;
+      }
+      setCallStatus("idle");
+      setIsMuted(false);
+      setCallDuration(0);
+      setCallLogId(undefined);
+      setCallSid(undefined);
+      setErrorMessage(undefined);
+      setNoteText("");
+    }
+  }, [open]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleMakeCall = useCallback(async () => {
+    if (!deviceRef.current) {
+      toast.error("Twilio device not ready. Please wait...");
+      return;
+    }
+
+    try {
+      setCallStatus("connecting");
+      setErrorMessage(undefined);
+      setCallDuration(0);
+
+      // First, create the call via REST API to get callSid and callLogId
+      const result = await makeCallMutation.mutateAsync({
+        to: phoneNumber,
+        contactId,
+        propertyId,
+      });
+
+      setCallSid(result.callSid);
+      setCallLogId(result.callLogId);
+
+      // Now connect via the Twilio Voice SDK for browser audio
+      const call = await deviceRef.current.connect({
+        params: {
+          To: phoneNumber,
+        },
+      });
+
+      activeCallRef.current = call;
+
+      call.on("accept", () => {
+        console.log("[CallModal] Call accepted");
+        setCallStatus("in-progress");
+        if (result.callLogId) {
+          updateCallLogMutation.mutate({ callLogId: result.callLogId, status: "in-progress" });
+        }
+      });
+
+      call.on("ringing", () => {
+        console.log("[CallModal] Call ringing");
+        setCallStatus("ringing");
+      });
+
+      call.on("disconnect", () => {
+        console.log("[CallModal] Call disconnected");
+        setCallStatus("completed");
+        activeCallRef.current = null;
+        if (result.callLogId) {
+          const duration = callStartTimeRef.current
+            ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
+            : 0;
+          updateCallLogMutation.mutate({
+            callLogId: result.callLogId,
+            status: "completed",
+            duration,
+          });
+        }
+      });
+
+      call.on("cancel", () => {
+        console.log("[CallModal] Call cancelled");
+        setCallStatus("no-answer");
+        activeCallRef.current = null;
+        if (result.callLogId) {
+          updateCallLogMutation.mutate({ callLogId: result.callLogId, status: "no-answer" });
+        }
+      });
+
+      call.on("error", (error: any) => {
+        console.error("[CallModal] Call error:", error);
+        setCallStatus("failed");
+        setErrorMessage(error.message || "Call error");
+        activeCallRef.current = null;
+        if (result.callLogId) {
+          updateCallLogMutation.mutate({
+            callLogId: result.callLogId,
+            status: "failed",
+            errorMessage: error.message,
+          });
+        }
+      });
+
+      // Also poll status via REST API as a fallback
+      const pollInterval = setInterval(async () => {
+        if (!result.callSid) return;
+        try {
+          const status = await fetch(
+            `/api/trpc/twilio.getCallStatus?input=${encodeURIComponent(JSON.stringify({ callSid: result.callSid }))}`,
+            { credentials: "include" }
+          );
+          const data = await status.json();
+          const twilioStatus = data?.result?.data?.status;
+          if (twilioStatus === "completed" || twilioStatus === "failed" || twilioStatus === "canceled" || twilioStatus === "no-answer" || twilioStatus === "busy") {
+            clearInterval(pollInterval);
+          }
+        } catch {
+          // Ignore polling errors
+        }
+      }, 3000);
+
+      // Clean up polling after 10 minutes max
+      setTimeout(() => clearInterval(pollInterval), 600000);
+
+    } catch (error: any) {
+      console.error("[CallModal] Failed to initiate call:", error);
+      setCallStatus("failed");
+      setErrorMessage(error.message || "Failed to initiate call");
+      toast.error("Failed to initiate call");
+    }
+  }, [phoneNumber, contactId, propertyId, makeCallMutation, updateCallLogMutation]);
+
+  const handleHangUp = useCallback(() => {
+    if (activeCallRef.current) {
+      activeCallRef.current.disconnect();
+      activeCallRef.current = null;
+    }
+    setCallStatus("completed");
+  }, []);
+
+  const handleToggleMute = useCallback(() => {
+    if (activeCallRef.current) {
+      const newMuteState = !isMuted;
+      activeCallRef.current.mute(newMuteState);
+      setIsMuted(newMuteState);
+      toast.info(newMuteState ? "Microphone muted" : "Microphone unmuted");
+    }
+  }, [isMuted]);
+
+  const handleAddNote = useCallback(async () => {
+    if (!noteText.trim()) return;
+
+    try {
+      await createNoteMutation.mutateAsync({
+        callLogId: callLogId,
+        contactId,
+        propertyId,
+        content: noteText.trim(),
+      });
+      setNoteText("");
+      refetchNotes();
+      toast.success("Note added");
+    } catch (error: any) {
+      toast.error("Failed to add note");
+    }
+  }, [noteText, callLogId, contactId, propertyId, createNoteMutation, refetchNotes]);
+
+  const handleDeleteNote = useCallback(async (noteId: number) => {
+    try {
+      await deleteNoteMutation.mutateAsync({ noteId });
+      refetchNotes();
+      toast.success("Note deleted");
+    } catch {
+      toast.error("Failed to delete note");
+    }
+  }, [deleteNoteMutation, refetchNotes]);
+
+  const isCallActive = callStatus === "connecting" || callStatus === "ringing" || callStatus === "in-progress";
+  const statusConfig = STATUS_CONFIG[callStatus];
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => {
+      if (isCallActive && !v) {
+        toast.warning("Please hang up the call before closing");
+        return;
+      }
+      onOpenChange(v);
+    }}>
+      <DialogContent className="max-w-4xl h-[600px] p-0 gap-0 overflow-hidden">
+        <div className="flex h-full">
+          {/* LEFT SIDE — Call Controls */}
+          <div className="w-[360px] flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6 shrink-0">
+            {/* Contact Info */}
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center mx-auto mb-3">
+                <User className="h-10 w-10 text-slate-300" />
+              </div>
+              <h2 className="text-xl font-semibold truncate">{contactName}</h2>
+              <p className="text-slate-400 text-sm mt-1 font-mono">{phoneNumber}</p>
+            </div>
+
+            {/* Call Status */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              {/* Status Badge */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${statusConfig.color} bg-opacity-20 mb-4`}>
+                {statusConfig.icon}
+                <span className="text-sm font-medium">{statusConfig.label}</span>
+              </div>
+
+              {/* Duration */}
+              {(callStatus === "in-progress" || callStatus === "completed") && (
+                <div className="text-4xl font-mono font-light mb-6 tabular-nums">
+                  {formatDuration(callDuration)}
+                </div>
+              )}
+
+              {/* Ringing Animation */}
+              {(callStatus === "connecting" || callStatus === "ringing") && (
+                <div className="flex items-center gap-1 mb-6">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              )}
+
+              {/* Error Message */}
+              {errorMessage && (
+                <p className="text-red-400 text-xs text-center mb-4 max-w-[250px]">{errorMessage}</p>
+              )}
+
+              {/* Call Buttons */}
+              <div className="flex items-center gap-4">
+                {!isCallActive && callStatus !== "completed" && (
+                  <button
+                    onClick={handleMakeCall}
+                    className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg shadow-green-500/30 hover:shadow-green-500/50 active:scale-95"
+                  >
+                    <Phone className="h-7 w-7 text-white" />
+                  </button>
+                )}
+
+                {isCallActive && (
+                  <>
+                    {/* Mute Button */}
+                    <button
+                      onClick={handleToggleMute}
+                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 ${
+                        isMuted
+                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                    </button>
+
+                    {/* Hang Up Button */}
+                    <button
+                      onClick={handleHangUp}
+                      className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all shadow-lg shadow-red-500/30 hover:shadow-red-500/50 active:scale-95"
+                    >
+                      <PhoneOff className="h-7 w-7 text-white" />
+                    </button>
+                  </>
+                )}
+
+                {(callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer") && (
+                  <div className="flex flex-col items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setCallStatus("idle");
+                        setCallDuration(0);
+                        setErrorMessage(undefined);
+                      }}
+                      className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all shadow-lg shadow-green-500/30 active:scale-95"
+                    >
+                      <Phone className="h-7 w-7 text-white" />
+                    </button>
+                    <span className="text-xs text-slate-400">Call again</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mute indicator */}
+            {isMuted && isCallActive && (
+              <div className="text-center">
+                <Badge variant="destructive" className="text-xs">
+                  <MicOff className="h-3 w-3 mr-1" /> Muted
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT SIDE — Notes Panel */}
+          <div className="flex-1 flex flex-col bg-background">
+            {/* Notes Header */}
+            <div className="px-5 py-4 border-b flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Call Notes</h3>
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {notesData?.length ?? 0} notes
+              </Badge>
+            </div>
+
+            {/* Notes List */}
+            <ScrollArea className="flex-1 px-5 py-3">
+              {(!notesData || notesData.length === 0) ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                  <FileText className="h-10 w-10 mb-3 opacity-40" />
+                  <p className="text-sm">No notes yet</p>
+                  <p className="text-xs mt-1">Add a note below during or after the call</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notesData.map((note) => (
+                    <div
+                      key={note.id}
+                      className="group relative bg-muted/50 rounded-lg p-3 border border-transparent hover:border-border transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          {new Date(note.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}{" "}
+                          at{" "}
+                          {new Date(note.createdAt).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {note.callStatus && (
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">
+                            {note.callStatus}
+                          </Badge>
+                        )}
+                        {note.callDuration != null && note.callDuration > 0 && (
+                          <span className="text-[10px]">
+                            ({formatDuration(note.callDuration)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Note Input */}
+            <div className="px-5 py-3 border-t">
+              <div className="flex gap-2">
+                <Textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Type a note..."
+                  className="min-h-[60px] max-h-[120px] resize-none text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddNote();
+                    }
+                  }}
+                />
+                <Button
+                  size="icon"
+                  onClick={handleAddNote}
+                  disabled={!noteText.trim() || createNoteMutation.isPending}
+                  className="shrink-0 h-[60px] w-10"
+                >
+                  {createNoteMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">Press Enter to send, Shift+Enter for new line</p>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

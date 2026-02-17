@@ -37,11 +37,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TwilioCallWidget } from "./TwilioCallWidget";
 import { ContactEditModal } from "./ContactEditModal";
+import { ContactNotesDialog } from "./ContactNotesDialog";
 
 interface CallTrackingTableProps {
   propertyId: number;
@@ -142,6 +143,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [phoneTypeFilter, setPhoneTypeFilter] = useState<string>("all"); // all, Mobile, Landline, Other
   const [editingContact, setEditingContact] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [notesDialog, setNotesDialog] = useState<{ contactId: number; contactName: string } | null>(null);
   const [showAddContactForm, setShowAddContactForm] = useState(false);
   const [newContactName, setNewContactName] = useState("");
   const [newContactRelationship, setNewContactRelationship] = useState("");
@@ -866,6 +868,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <TableHead className="w-[60px] text-center">Attempts</TableHead>
                   <TableHead className="w-[180px]">Disposition</TableHead>
                   <TableHead className="min-w-[300px]">Notes</TableHead>
+                  <TableHead className="w-[80px] text-center">Call Notes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -977,6 +980,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               <TwilioCallWidget
                                 phoneNumber={phone.phoneNumber}
                                 contactName={contact.name}
+                                contactId={contact.id}
+                                propertyId={propertyId}
                               />
                               <button
                                 onClick={() => handlePhoneClick(contact, phone)}
@@ -1076,6 +1081,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               </div>
                             )}
                           </TableCell>
+
+                          {/* Call Notes Button */}
+                          <TableCell className="text-center align-middle">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setNotesDialog({ contactId: contact.id, contactName: contact.name || "Unknown" })}
+                              className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full"
+                              title={`View call notes for ${contact.name}`}
+                            >
+                              <FileText className="h-3.5 w-3.5 text-blue-600" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })
@@ -1134,8 +1152,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="Decision Maker"
                         />
                       </TableCell>
-                      <TableCell colSpan={7} className="text-center align-middle text-sm text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center align-middle text-sm text-muted-foreground">
                         No phone numbers
+                      </TableCell>
+                      <TableCell className="text-center align-middle">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setNotesDialog({ contactId: contact.id, contactName: contact.name || "Unknown" })}
+                          className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full"
+                          title={`View call notes for ${contact.name}`}
+                        >
+                          <FileText className="h-3.5 w-3.5 text-blue-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -1591,6 +1620,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         contact={editingContact}
         propertyId={propertyId}
       />
+
+      {/* Contact Notes Dialog */}
+      {notesDialog && (
+        <ContactNotesDialog
+          open={!!notesDialog}
+          onOpenChange={(open) => {
+            if (!open) setNotesDialog(null);
+          }}
+          contactId={notesDialog.contactId}
+          contactName={notesDialog.contactName}
+          propertyId={propertyId}
+        />
+      )}
     </>
   );
 }

@@ -491,61 +491,61 @@ describe("E2E: Error Handling — Webhook Error Fallbacks", () => {
 // 6. FRONTEND POLLING INTEGRATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe("E2E: Frontend Polling Integration", () => {
+describe("E2E: Frontend Call Integration", () => {
   let widgetSrc: string;
+  let modalSrc: string;
 
   beforeAll(() => {
     widgetSrc = fs.readFileSync(
       path.resolve(__dirname, "../client/src/components/TwilioCallWidget.tsx"),
       "utf-8"
     );
+    modalSrc = fs.readFileSync(
+      path.resolve(__dirname, "../client/src/components/CallModal.tsx"),
+      "utf-8"
+    );
   });
 
-  it("TwilioCallWidget uses credentials: include for polling", () => {
-    expect(widgetSrc).toContain('credentials: "include"');
+  it("TwilioCallWidget opens CallModal instead of inline calling", () => {
+    expect(widgetSrc).toContain("CallModal");
+    expect(widgetSrc).toContain("modalOpen");
+    expect(widgetSrc).toContain("setModalOpen");
   });
 
-  it("TwilioCallWidget polls via /api/trpc/twilio.getCallStatus", () => {
-    expect(widgetSrc).toContain("/api/trpc/twilio.getCallStatus");
+  it("TwilioCallWidget does NOT use raw fetch (delegated to CallModal)", () => {
+    expect(widgetSrc).not.toContain("fetch(");
   });
 
-  it("TwilioCallWidget does NOT use raw fetch without credentials", () => {
-    // Find all fetch calls
-    const fetchCalls = widgetSrc.match(/fetch\([^)]+\)/g) || [];
-    for (const call of fetchCalls) {
-      // If it's a tRPC call, it must have credentials
-      if (call.includes("trpc")) {
-        // The credentials should be in the options object nearby
-        const fetchIdx = widgetSrc.indexOf(call);
-        const surroundingCode = widgetSrc.substring(fetchIdx, fetchIdx + 300);
-        expect(surroundingCode).toContain("credentials");
-      }
-    }
-  });
-
-  it("TwilioCallWidget handles all Twilio call states", () => {
+  it("CallModal handles all Twilio call states", () => {
     const requiredStates = [
-      "queued",
+      "idle",
+      "connecting",
       "ringing",
       "in-progress",
       "completed",
       "failed",
-      "busy",
       "no-answer",
-      "canceled",
     ];
     for (const state of requiredStates) {
-      expect(widgetSrc).toContain(`"${state}"`);
+      expect(modalSrc).toContain(`"${state}"`);
     }
   });
 
-  it("TwilioCallWidget uses trpc.twilio.makeCall.useMutation for initiating calls", () => {
-    expect(widgetSrc).toContain("trpc.twilio.makeCall.useMutation");
+  it("CallModal uses Twilio Voice SDK Device for browser audio", () => {
+    expect(modalSrc).toContain("new Device(");
+    expect(modalSrc).toContain("@twilio/voice-sdk");
+    expect(modalSrc).toContain("deviceRef.current.connect");
   });
 
-  it("TwilioCallWidget cleans up polling on unmount", () => {
-    expect(widgetSrc).toContain("clearInterval");
-    expect(widgetSrc).toContain("mountedRef");
+  it("CallModal has mute/unmute controls", () => {
+    expect(modalSrc).toContain("handleToggleMute");
+    expect(modalSrc).toContain(".mute(");
+    expect(modalSrc).toContain("MicOff");
+  });
+
+  it("CallModal creates and updates call logs via mutations", () => {
+    expect(modalSrc).toContain("makeCallMutation");
+    expect(modalSrc).toContain("updateCallLogMutation");
   });
 
   it("TwilioCallWidget formats numbers to E.164 before calling", () => {

@@ -21,6 +21,7 @@ import { dealmachineRouter } from "./routers/dealmachine";
 import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
 import { importDealMachineRouter } from "./routers/import-dealmachine";
 import { findDuplicates } from "./utils/duplicateDetection";
+import { ENV } from "./_core/env";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2562,11 +2563,10 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Twilio Voice Calling (Pure REST API — No Browser SDK) ──────────────
+  // ─── Twilio Voice Calling (Browser SDK + REST API) ──────────────
   twilio: router({
     /**
      * Validate that Twilio credentials are properly configured.
-     * Returns { valid, missing } so the UI can show helpful messages.
      */
     checkConfig: protectedProcedure.query(async () => {
       const { validateTwilioConfig } = await import("./twilio");
@@ -2574,36 +2574,98 @@ export const appRouter = router({
     }),
 
     /**
+     * Generate an Access Token for the Twilio Voice JavaScript SDK.
+     * This token allows the browser to make calls using the microphone.
+     */
+    getAccessToken: protectedProcedure.query(async ({ ctx }) => {
+      const twilio = await import("twilio");
+      const AccessToken = twilio.default.jwt.AccessToken;
+      const VoiceGrant = AccessToken.VoiceGrant;
+
+      if (!ENV.twilioAccountSid || !ENV.twilioApiKey || !ENV.twilioApiSecret || !ENV.twilioTwimlAppSid) {
+        throw new Error("Twilio Voice SDK not configured. Missing API Key, API Secret, or TwiML App SID.");
+      }
+
+      const identity = `crm-user-${ctx.user.id}`;
+      const token = new AccessToken(
+        ENV.twilioAccountSid,
+        ENV.twilioApiKey,
+        ENV.twilioApiSecret,
+        { identity, ttl: 3600 }
+      );
+
+      const voiceGrant = new VoiceGrant({
+        outgoingApplicationSid: ENV.twilioTwimlAppSid,
+        incomingAllow: false,
+      });
+      token.addGrant(voiceGrant);
+
+      return { token: token.toJwt(), identity };
+    }),
+
+    /**
      * Initiate an outbound call via the Twilio REST API.
-     * NO browser Voice SDK or WebSocket needed.
-     *
-     * Flow:
-     * 1. Server tells Twilio to call the destination number directly
-     * 2. Twilio calls from our Twilio number to the destination
-     * 3. Call status is tracked via callSid
      */
     makeCall: protectedProcedure
       .input(z.object({
         to: z.string().min(1, "Phone number is required"),
+        contactId: z.number().optional(),
+        propertyId: z.number().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { makeOutboundCall, validateTwilioConfig } = await import("./twilio");
+        const { createCallLog } = await import("./db-callNotes");
 
         const config = validateTwilioConfig();
         if (!config.valid) {
           throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
         }
 
-        const result = await makeOutboundCall({
-          to: input.to,
-        });
+        const result = await makeOutboundCall({ to: input.to });
 
-        return result;
+        // Create a call log entry if contact and property IDs are provided
+        let callLogId: number | undefined;
+        if (input.contactId && input.propertyId) {
+          const logResult = await createCallLog({
+            propertyId: input.propertyId,
+            contactId: input.contactId,
+            userId: ctx.user.id,
+            toPhoneNumber: result.to,
+            fromPhoneNumber: result.from,
+            callType: "outbound",
+            status: "ringing",
+            twilioCallSid: result.callSid,
+          });
+          callLogId = logResult.id;
+        }
+
+        return { ...result, callLogId };
+      }),
+
+    /**
+     * Update a call log entry (status, duration, etc.)
+     */
+    updateCallLog: protectedProcedure
+      .input(z.object({
+        callLogId: z.number(),
+        status: z.enum(["ringing", "in-progress", "completed", "failed", "no-answer"]).optional(),
+        duration: z.number().optional(),
+        notes: z.string().optional(),
+        errorMessage: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateCallLog } = await import("./db-callNotes");
+        return updateCallLog(input.callLogId, {
+          status: input.status,
+          duration: input.duration,
+          endedAt: input.status === "completed" || input.status === "failed" || input.status === "no-answer" ? new Date() : undefined,
+          notes: input.notes,
+          errorMessage: input.errorMessage,
+        });
       }),
 
     /**
      * Get the current status of a call by its SID.
-     * Used for polling call status from the frontend.
      */
     getCallStatus: protectedProcedure
       .input(z.object({
@@ -2612,6 +2674,60 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getCallStatus } = await import("./twilio");
         return getCallStatus(input.callSid);
+      }),
+  }),
+
+  // ─── Call Notes ──────────────────────────────────────────────────────────
+  callNotes: router({
+    /** Create a new call note */
+    create: protectedProcedure
+      .input(z.object({
+        callLogId: z.number().optional(),
+        contactId: z.number(),
+        propertyId: z.number(),
+        content: z.string().min(1, "Note content is required"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createCallNote } = await import("./db-callNotes");
+        return createCallNote({
+          callLogId: input.callLogId,
+          contactId: input.contactId,
+          propertyId: input.propertyId,
+          userId: ctx.user.id,
+          content: input.content,
+        });
+      }),
+
+    /** Get all notes for a contact (with call info) */
+    getByContact: protectedProcedure
+      .input(z.object({ contactId: z.number() }))
+      .query(async ({ input }) => {
+        const { getCallNotesWithCallInfo } = await import("./db-callNotes");
+        return getCallNotesWithCallInfo(input.contactId);
+      }),
+
+    /** Get notes for a specific call log */
+    getByCallLog: protectedProcedure
+      .input(z.object({ callLogId: z.number() }))
+      .query(async ({ input }) => {
+        const { getCallNotesByCallLog } = await import("./db-callNotes");
+        return getCallNotesByCallLog(input.callLogId);
+      }),
+
+    /** Delete a call note (only by the creator) */
+    delete: protectedProcedure
+      .input(z.object({ noteId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { deleteCallNote } = await import("./db-callNotes");
+        return deleteCallNote(input.noteId, ctx.user.id);
+      }),
+
+    /** Get call logs for a contact */
+    getCallLogs: protectedProcedure
+      .input(z.object({ contactId: z.number() }))
+      .query(async ({ input }) => {
+        const { getCallLogsByContact } = await import("./db-callNotes");
+        return getCallLogsByContact(input.contactId);
       }),
   }),
 

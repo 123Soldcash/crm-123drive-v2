@@ -22,6 +22,13 @@
       "when": 1771260898273,
       "tag": "0002_fearless_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1771364354248,
+      "tag": "0003_flippant_marauders",
+      "breakpoints": true
     }
   ]
 }

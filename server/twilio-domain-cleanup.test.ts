@@ -296,27 +296,29 @@ describe("Domain Cleanup: Webhook Route Paths", () => {
 // 5. FRONTEND — CREDENTIALS INCLUDED IN POLLING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe("Domain Cleanup: Frontend Polling", () => {
-  it("TwilioCallWidget includes credentials in fetch calls", () => {
+describe("Domain Cleanup: Frontend Call Integration", () => {
+  it("TwilioCallWidget delegates calling to CallModal (no raw fetch)", () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../client/src/components/TwilioCallWidget.tsx"),
       "utf-8"
     );
 
-    // The fetch call for polling must include credentials
-    expect(src).toContain('credentials: "include"');
+    // Widget should open CallModal, not make raw fetch calls
+    expect(src).toContain("CallModal");
+    expect(src).not.toContain("fetch(");
+    expect(src).not.toContain("123smartdrive");
   });
 
-  it("TwilioCallWidget uses relative URL for API calls (not hardcoded domain)", () => {
+  it("CallModal uses tRPC hooks for all API calls (no hardcoded domain)", () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../client/src/components/TwilioCallWidget.tsx"),
+      path.resolve(__dirname, "../client/src/components/CallModal.tsx"),
       "utf-8"
     );
 
-    // Should use relative path /api/trpc/ not absolute https://...
-    expect(src).toContain("/api/trpc/");
+    // CallModal should use tRPC hooks, not hardcoded URLs
+    expect(src).toContain("trpc.");
     expect(src).not.toContain("123smartdrive");
-    expect(src).not.toContain("crmv3.manus.space/api/trpc");
+    expect(src).not.toContain("crmv3.manus.space");
   });
 });
 

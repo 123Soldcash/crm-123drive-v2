@@ -1569,3 +1569,24 @@
 - [x] Tests verify: production endpoints return TwiML (not HTML) on crmv3.manus.space
 - [x] All 210 Twilio tests passing (24 cleanup + 90 E2E + 54 endpoints + 42 unit)
 - [x] Save checkpoint
+
+## FEATURE - Professional Call Modal with Notes System (Feb 17, 2026) - COMPLETED ✅
+- [x] Database: callLogs table already existed; created callNotes table via SQL
+- [x] Database: callNotes table with callLogId, contactId, propertyId, userId, content, createdAt
+- [x] Server: Twilio Access Token generation (getAccessToken) with VoiceGrant for Client SDK
+- [x] Server: tRPC callNotes router (create, getByContact, getByCallLog, delete, getCallLogs)
+- [x] Server: tRPC twilio.updateCallLog and twilio.makeCall with auto call log creation
+- [x] Client: Installed @twilio/voice-sdk for browser-based calling
+- [x] Client: CallModal component - left: avatar, name, phone, call/hangup buttons, status display
+- [x] Client: CallModal component - right: notes panel with history, add note input (chat-style)
+- [x] Client: Real-time call status (Ready, Connecting, Ringing, In Progress, Completed, Failed, No Answer)
+- [x] Client: Browser microphone permission request via Twilio Device
+- [x] Client: Mute/unmute button with MicOff icon during active call
+- [x] Client: Hang up button (PhoneOff icon) + Call again button after call ends
+- [x] Client: Call Notes button (FileText icon) in each contact row in CallTrackingTable
+- [x] Client: ContactNotesDialog showing all notes with call date/time grouped by call
+- [x] Client: Notes auto-save with Enter key, Shift+Enter for new line
+- [x] Tests: 30+ call-notes tests (schema, db helpers, router, token, modal, notes dialog)
+- [x] Tests: All 770 tests passing (6 pre-existing failures unrelated)
+- [x] Browser verified: CallModal opens correctly, ContactNotesDialog works
+- [x] Save checkpoint and deliver
