@@ -1,37 +1,39 @@
 /**
- * Twilio Webhook Routes — Registered under /api/oauth/ prefix
+ * Twilio Webhook Routes — Registered as raw Express routes
  *
- * CRITICAL ARCHITECTURE NOTE:
- * The Manus deployment platform only forwards these path prefixes to Express:
- *   - /api/oauth/*  → Handled by registerOAuthRoutes() in oauth.ts
- *   - /api/trpc/*   → Handled by tRPC middleware (JSON only, rejects form-urlencoded)
+ * CRITICAL ARCHITECTURE NOTE (Feb 17, 2026):
+ * The Manus deployment platform routing works as follows:
+ *   - /api/oauth/callback (EXACT match only) → Express
+ *   - /api/trpc/*   → tRPC middleware (JSON only, rejects form-urlencoded)
+ *   - /api/*        → Express (if registered BEFORE static file serving)
  *
- * All other /api/* paths are intercepted by the platform's static file layer
- * and return the SPA index.html (367KB), causing Twilio Error 11750.
+ * Previous bug: Routes were under /api/oauth/twilio/* which the platform
+ * did NOT forward (only /api/oauth/callback exact match is forwarded).
+ * This caused Twilio to receive the SPA HTML (367KB) → Error 11750.
+ *
+ * Fix: Register routes at /api/twilio/* directly on Express BEFORE
+ * Vite/static middleware. Express route matching happens in registration
+ * order, so these routes are matched before the catch-all SPA handler.
  *
  * Twilio sends webhooks as application/x-www-form-urlencoded POST requests.
- * tRPC middleware rejects these with HTTP 415 (Unsupported Media Type).
- * Therefore, Twilio webhooks MUST be registered as raw Express routes under
- * the /api/oauth/ prefix — the only prefix that reaches Express AND supports
- * non-JSON content types.
  *
  * Webhook paths:
- *   /api/oauth/twilio/voice     — TwiML for incoming/outgoing voice calls
- *   /api/oauth/twilio/connect   — TwiML to bridge calls to destination
- *   /api/oauth/twilio/answered  — TwiML when call is answered (no <Dial>)
- *   /api/oauth/twilio/status    — Call status callback (returns empty TwiML)
+ *   /api/twilio/voice     — TwiML for incoming/outgoing voice calls
+ *   /api/twilio/connect   — TwiML to bridge calls to destination
+ *   /api/twilio/answered  — TwiML when call is answered (no <Dial>)
+ *   /api/twilio/status    — Call status callback (returns empty TwiML)
  */
 import type { Express } from "express";
 
 /**
  * Register all Twilio webhook endpoints.
- * Must be called BEFORE tRPC middleware and static file serving.
+ * Must be called BEFORE Vite middleware and static file serving.
  */
 export function registerTwilioWebhooks(app: Express) {
   // ─── Voice Webhook ──────────────────────────────────────────────────────
   // Called when Twilio needs TwiML instructions for a voice call.
   // Returns <Dial><Number> to connect to the destination.
-  app.all("/api/oauth/twilio/voice", async (req, res) => {
+  app.all("/api/twilio/voice", async (req, res) => {
     try {
       const to = req.body?.To || req.query?.To;
       const { buildTwimlResponse } = await import("./twilio");
@@ -48,7 +50,7 @@ export function registerTwilioWebhooks(app: Express) {
 
   // ─── Connect Webhook ────────────────────────────────────────────────────
   // Called by REST API-initiated calls to bridge to the destination number.
-  app.all("/api/oauth/twilio/connect", async (req, res) => {
+  app.all("/api/twilio/connect", async (req, res) => {
     try {
       const to = (req.query?.to as string) || req.body?.To;
       const { buildConnectTwiml } = await import("./twilio");
@@ -67,7 +69,7 @@ export function registerTwilioWebhooks(app: Express) {
   // Called when the destination answers a REST API-initiated call.
   // CRITICAL: Must NOT contain <Dial> — the REST API already connected the call.
   // Adding <Dial> here would create a DUPLICATE call.
-  app.all("/api/oauth/twilio/answered", async (req, res) => {
+  app.all("/api/twilio/answered", async (req, res) => {
     try {
       const { buildAnsweredTwiml } = await import("./twilio");
       const twiml = buildAnsweredTwiml();
@@ -84,7 +86,7 @@ export function registerTwilioWebhooks(app: Express) {
   // ─── Status Callback ───────────────────────────────────────────────────
   // Called by Twilio to report call status changes (initiated, ringing, answered, completed).
   // MUST return a small response (<64KB) or Twilio throws Error 11750.
-  app.all("/api/oauth/twilio/status", async (req, res) => {
+  app.all("/api/twilio/status", async (req, res) => {
     const callStatus = req.body?.CallStatus || req.query?.CallStatus || "unknown";
     const callSid = req.body?.CallSid || req.query?.CallSid || "unknown";
     console.log("[Twilio Status]", callStatus, "SID:", callSid);
@@ -92,5 +94,5 @@ export function registerTwilioWebhooks(app: Express) {
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
   });
 
-  console.log("[Twilio] Webhook routes registered at /api/oauth/twilio/*");
+  console.log("[Twilio] Webhook routes registered at /api/twilio/*");
 }

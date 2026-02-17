@@ -91,10 +91,11 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
-  // Twilio voice webhooks under /api/oauth/twilio/*
-  // CRITICAL: Must use /api/oauth/ prefix because the Manus deployment platform
-  // only forwards /api/oauth/* and /api/trpc/* to Express. tRPC rejects
-  // form-urlencoded content (HTTP 415), so Twilio webhooks MUST use /api/oauth/.
+  // Twilio voice webhooks under /api/twilio/*
+  // CRITICAL: Must be registered BEFORE Vite/static middleware so Express
+  // matches these routes before the catch-all SPA handler.
+  // Do NOT use /api/oauth/twilio/* — the platform only forwards the exact
+  // /api/oauth/callback path, not nested paths under /api/oauth/.
   registerTwilioWebhooks(app);
 
   // REST webhook endpoint for Zapier

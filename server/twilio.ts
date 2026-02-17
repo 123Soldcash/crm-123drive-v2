@@ -144,8 +144,8 @@ export function buildAnsweredTwiml(): string {
  * No browser Voice SDK or WebSocket connection is needed.
  *
  * IMPORTANT: The `url` parameter tells Twilio what TwiML to execute when
- * the call is answered. We use `/api/oauth/twilio/answered` which returns
- * a <Pause> to keep the line open. We do NOT use `/api/oauth/twilio/voice`
+ * the call is answered. We use `/api/twilio/answered` which returns
+ * a <Pause> to keep the line open. We do NOT use `/api/twilio/voice`
  * (which contains <Dial>) because that would create a SECOND call.
  *
  * @param to - Destination phone number
@@ -161,17 +161,18 @@ export async function makeOutboundCall(params: {
   const baseUrl = getBaseUrl();
 
   // Create a call from our Twilio number to the destination.
-  // The `url` points to /api/oauth/twilio/answered which returns <Pause> TwiML.
-  // Do NOT point to /api/oauth/twilio/voice which has <Dial> — that would duplicate the call.
+  // The `url` points to /api/twilio/answered which returns <Pause> TwiML.
+  // Do NOT point to /api/twilio/voice which has <Dial> — that would duplicate the call.
   //
-  // CRITICAL: Webhook URLs use /api/oauth/twilio/* prefix because:
-  //   - /api/oauth/* is forwarded to Express by the Manus deployment platform
-  //   - /api/trpc/* goes through tRPC middleware which rejects form-urlencoded (HTTP 415)
-  //   - All other /api/* paths return the SPA HTML (367KB) → Twilio Error 11750
+  // CRITICAL: Webhook URLs use /api/twilio/* prefix.
+  // Routes are registered on Express BEFORE Vite/static middleware,
+  // so they are matched before the catch-all SPA handler.
+  // Do NOT use /api/oauth/twilio/* — the platform only forwards
+  // the exact /api/oauth/callback path, not nested paths.
   const call = await client.calls.create({
     to: formattedTo,
     from: ENV.twilioPhoneNumber,
-    url: `${baseUrl}/api/oauth/twilio/answered`,
+    url: `${baseUrl}/api/twilio/answered`,
     ...(statusCallbackUrl
       ? {
           statusCallback: statusCallbackUrl,
@@ -179,7 +180,7 @@ export async function makeOutboundCall(params: {
           statusCallbackMethod: "POST" as const,
         }
       : {
-          statusCallback: `${baseUrl}/api/oauth/twilio/status`,
+          statusCallback: `${baseUrl}/api/twilio/status`,
           statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
           statusCallbackMethod: "POST" as const,
         }),

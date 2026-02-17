@@ -1526,3 +1526,15 @@
 - [x] Invalidates getPropertiesByStage on success to refresh Kanban
 - [x] Write comprehensive tests (44 new tests, all passing)
 - [x] Save checkpoint and deliver
+
+
+## FIX - Twilio Error 11750: Status Callback Response >64KB (Feb 17, 2026) - COMPLETED ✅
+- [x] Diagnose: /api/oauth/twilio/status returning >64KB response instead of TwiML
+- [x] Root cause: Manus platform only forwards /api/oauth/callback (exact match), NOT nested /api/oauth/* paths
+- [x] All /api/oauth/twilio/* endpoints returned SPA HTML (367KB) instead of TwiML on production
+- [x] Fix: Changed all webhook paths from /api/oauth/twilio/* to /api/twilio/*
+- [x] Updated twilio-webhooks.ts: Routes now at /api/twilio/voice, /api/twilio/connect, /api/twilio/answered, /api/twilio/status
+- [x] Updated twilio.ts: makeOutboundCall now uses /api/twilio/answered and /api/twilio/status URLs
+- [x] Updated index.ts comments to document the routing limitation
+- [x] All 54 twilio-endpoints tests passing, all 42 twilio tests passing
+- [x] Save checkpoint

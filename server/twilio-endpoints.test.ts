@@ -1,12 +1,12 @@
 /**
  * Comprehensive Twilio Integration Tests
  *
- * Tests the REBUILT Twilio integration using /api/oauth/twilio/* endpoints.
+ * Tests the Twilio integration using /api/twilio/* endpoints.
  *
- * Architecture:
- * - Manus platform forwards /api/oauth/* and /api/trpc/* to Express
- * - /api/trpc/* goes through tRPC middleware (rejects form-urlencoded → HTTP 415)
- * - Therefore Twilio webhooks MUST use /api/oauth/twilio/* prefix
+ * Architecture (Feb 17, 2026 fix):
+ * - Manus platform only forwards /api/oauth/callback (exact match) and /api/trpc/* to Express
+ * - Nested /api/oauth/* paths (like /api/oauth/twilio/*) are NOT forwarded — they return SPA HTML (367KB)
+ * - Therefore Twilio webhooks MUST use /api/twilio/* prefix, registered BEFORE Vite/static middleware
  * - All responses MUST be under 64KB or Twilio throws Error 11750
  */
 import { describe, it, expect } from "vitest";
@@ -135,8 +135,11 @@ describe("formatPhoneNumber", () => {
 });
 
 // ─── CRITICAL: Webhook URL Path Verification ────────────────────────────────────
+// Feb 17, 2026: Changed from /api/oauth/twilio/* to /api/twilio/*
+// because the Manus platform only forwards /api/oauth/callback (exact match),
+// NOT nested /api/oauth/* paths.
 
-describe("Webhook URLs use /api/oauth/twilio/ prefix (CRITICAL)", () => {
+describe("Webhook URLs use /api/twilio/ prefix (CRITICAL - Error 11750 fix)", () => {
   let twilioSrc: string;
   let webhookSrc: string;
   let indexSrc: string;
@@ -158,20 +161,21 @@ describe("Webhook URLs use /api/oauth/twilio/ prefix (CRITICAL)", () => {
 
   // ─── makeOutboundCall URL checks ───────────────────────────────────────
 
-  it("makeOutboundCall uses /api/oauth/twilio/answered", () => {
+  it("makeOutboundCall uses /api/twilio/answered", () => {
     twilioSrc = twilioSrc || fs.readFileSync(path.resolve(__dirname, "twilio.ts"), "utf-8");
-    expect(twilioSrc).toContain("/api/oauth/twilio/answered");
+    expect(twilioSrc).toContain("/api/twilio/answered");
   });
 
-  it("makeOutboundCall uses /api/oauth/twilio/status", () => {
+  it("makeOutboundCall uses /api/twilio/status", () => {
     twilioSrc = twilioSrc || fs.readFileSync(path.resolve(__dirname, "twilio.ts"), "utf-8");
-    expect(twilioSrc).toContain("/api/oauth/twilio/status");
+    expect(twilioSrc).toContain("/api/twilio/status");
   });
 
-  it("makeOutboundCall does NOT use old /api/twilio/ paths", () => {
+  it("makeOutboundCall does NOT use old /api/oauth/twilio/ paths", () => {
     twilioSrc = twilioSrc || fs.readFileSync(path.resolve(__dirname, "twilio.ts"), "utf-8");
-    const oldPaths = twilioSrc.match(/url:\s*`[^`]*\/api\/twilio\//g);
-    expect(oldPaths).toBeNull();
+    // Should not have /api/oauth/twilio/ in URL template literals
+    const oauthPaths = twilioSrc.match(/url:\s*`[^`]*\/api\/oauth\/twilio\//g);
+    expect(oauthPaths).toBeNull();
   });
 
   it("makeOutboundCall does NOT use /api/trpc/twilio-webhook/ paths", () => {
@@ -181,24 +185,29 @@ describe("Webhook URLs use /api/oauth/twilio/ prefix (CRITICAL)", () => {
 
   // ─── Webhook route registration checks ─────────────────────────────────
 
-  it("webhooks registered at /api/oauth/twilio/voice", () => {
+  it("webhooks registered at /api/twilio/voice", () => {
     webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    expect(webhookSrc).toContain('"/api/oauth/twilio/voice"');
+    expect(webhookSrc).toContain('"/api/twilio/voice"');
   });
 
-  it("webhooks registered at /api/oauth/twilio/connect", () => {
+  it("webhooks registered at /api/twilio/connect", () => {
     webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    expect(webhookSrc).toContain('"/api/oauth/twilio/connect"');
+    expect(webhookSrc).toContain('"/api/twilio/connect"');
   });
 
-  it("webhooks registered at /api/oauth/twilio/answered", () => {
+  it("webhooks registered at /api/twilio/answered", () => {
     webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    expect(webhookSrc).toContain('"/api/oauth/twilio/answered"');
+    expect(webhookSrc).toContain('"/api/twilio/answered"');
   });
 
-  it("webhooks registered at /api/oauth/twilio/status", () => {
+  it("webhooks registered at /api/twilio/status", () => {
     webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    expect(webhookSrc).toContain('"/api/oauth/twilio/status"');
+    expect(webhookSrc).toContain('"/api/twilio/status"');
+  });
+
+  it("webhooks do NOT use old /api/oauth/twilio/ paths", () => {
+    webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
+    expect(webhookSrc).not.toContain('"/api/oauth/twilio/');
   });
 
   it("webhooks use app.all() for both GET and POST", () => {
@@ -210,7 +219,7 @@ describe("Webhook URLs use /api/oauth/twilio/ prefix (CRITICAL)", () => {
 
   it("webhooks do NOT use app.post() only", () => {
     webhookSrc = webhookSrc || fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    const postOnly = webhookSrc.match(/app\.post\(\s*["']\/api\/oauth\/twilio/g);
+    const postOnly = webhookSrc.match(/app\.post\(\s*["']\/api\/twilio/g);
     expect(postOnly).toBeNull();
   });
 
@@ -219,12 +228,6 @@ describe("Webhook URLs use /api/oauth/twilio/ prefix (CRITICAL)", () => {
   it("index.ts imports registerTwilioWebhooks", () => {
     indexSrc = indexSrc || fs.readFileSync(path.resolve(__dirname, "_core/index.ts"), "utf-8");
     expect(indexSrc).toContain("registerTwilioWebhooks");
-  });
-
-  it("index.ts does NOT have old /api/twilio/ routes", () => {
-    indexSrc = indexSrc || fs.readFileSync(path.resolve(__dirname, "_core/index.ts"), "utf-8");
-    const old = indexSrc.match(/["']\/api\/twilio\//g);
-    expect(old).toBeNull();
   });
 
   it("index.ts does NOT have /api/trpc/twilio-webhook/ routes", () => {
@@ -344,12 +347,19 @@ describe("Production Build Verification", () => {
   it("twilio-webhooks.ts has architecture documentation", () => {
     const src = fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
     expect(src).toContain("CRITICAL ARCHITECTURE NOTE");
-    expect(src).toContain("/api/oauth/");
+  });
+
+  it("twilio-webhooks.ts documents the /api/oauth/ routing limitation", () => {
+    const src = fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
+    expect(src).toContain("/api/oauth/callback");
+    expect(src).toContain("exact match");
   });
 
   it("all error handlers return inline XML (no dynamic imports in catch)", () => {
     const src = fs.readFileSync(path.resolve(__dirname, "twilio-webhooks.ts"), "utf-8");
-    const catchBlocks = src.split("catch");
+    // Split on "catch (" to only match actual catch blocks, not "catch-all" in comments
+    const catchBlocks = src.split(/catch\s*\(/);
+    // First element is before any catch block, skip it
     for (let i = 1; i < catchBlocks.length; i++) {
       const block = catchBlocks[i].substring(0, 300);
       expect(block).toContain("text/xml");

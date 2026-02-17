@@ -291,7 +291,7 @@ describe("CUSTOM_DOMAIN for Twilio callbacks", () => {
       return;
     }
     try {
-      const resp = await fetch(`https://${domain}/api/oauth/twilio/status`, {
+      const resp = await fetch(`https://${domain}/api/twilio/status`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "CallStatus=completed&CallSid=test",
@@ -347,38 +347,39 @@ describe("buildAnsweredTwiml (duplicate call prevention)", () => {
   });
 });
 
-describe("makeOutboundCall uses /api/oauth/twilio/ paths (REBUILT)", () => {
-  it("server/twilio.ts makeOutboundCall points to /api/oauth/twilio/answered", async () => {
+describe("makeOutboundCall uses /api/twilio/ paths (Error 11750 fix)", () => {
+  it("server/twilio.ts makeOutboundCall points to /api/twilio/answered", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/twilio.ts", "utf-8");
-    expect(content).toContain("/api/oauth/twilio/answered");
-    // Should NOT use old paths
-    expect(content).not.toContain("/api/trpc/twilio-webhook/");
-    expect(content).not.toMatch(/url:.*\/api\/twilio\/voice\/answered/);
-  });
-
-  it("server/twilio.ts uses /api/oauth/twilio/status for status callback", async () => {
-    const fs = await import("fs");
-    const content = fs.readFileSync("server/twilio.ts", "utf-8");
-    expect(content).toContain("/api/oauth/twilio/status");
+    expect(content).toContain("/api/twilio/answered");
+    // Should NOT use old /api/oauth/twilio/ paths (platform doesn't forward them)
+    const oauthPaths = content.match(/url:\s*`[^`]*\/api\/oauth\/twilio\//g);
+    expect(oauthPaths).toBeNull();
     expect(content).not.toContain("/api/trpc/twilio-webhook/");
   });
 
-  it("twilio-webhooks.ts registers routes at /api/oauth/twilio/*", async () => {
+  it("server/twilio.ts uses /api/twilio/status for status callback", async () => {
+    const fs = await import("fs");
+    const content = fs.readFileSync("server/twilio.ts", "utf-8");
+    expect(content).toContain("/api/twilio/status");
+    expect(content).not.toContain("/api/trpc/twilio-webhook/");
+  });
+
+  it("twilio-webhooks.ts registers routes at /api/twilio/*", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/twilio-webhooks.ts", "utf-8");
-    expect(content).toContain("/api/oauth/twilio/voice");
-    expect(content).toContain("/api/oauth/twilio/connect");
-    expect(content).toContain("/api/oauth/twilio/answered");
-    expect(content).toContain("/api/oauth/twilio/status");
+    expect(content).toContain("/api/twilio/voice");
+    expect(content).toContain("/api/twilio/connect");
+    expect(content).toContain("/api/twilio/answered");
+    expect(content).toContain("/api/twilio/status");
+    // Should NOT use old /api/oauth/twilio/ paths
+    expect(content).not.toContain('"api/oauth/twilio/');
   });
 
   it("_core/index.ts imports and calls registerTwilioWebhooks", async () => {
     const fs = await import("fs");
     const content = fs.readFileSync("server/_core/index.ts", "utf-8");
     expect(content).toContain("registerTwilioWebhooks");
-    // Should NOT have old inline routes
-    expect(content).not.toMatch(/app\.(all|get|post)\("\/(api\/twilio\/)/);
     expect(content).not.toContain("/api/trpc/twilio-webhook/");
   });
 });
