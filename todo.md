@@ -1544,3 +1544,15 @@
 - [x] Auth cookie not sent with polling request → protectedProcedure returned 401 (shown as 400)
 - [x] Fix: Added { credentials: "include" } to the fetch() call
 - [x] Save checkpoint
+
+## FIX - Update CUSTOM_DOMAIN and E2E Twilio Tests (Feb 17, 2026) - COMPLETED ✅
+- [x] Update CUSTOM_DOMAIN from 123smartdrive.manus.space to crmv3.manus.space
+- [x] Audit all code references to domain/webhook URLs for consistency
+- [x] Write E2E tests: production webhook endpoint reachability (all 4 endpoints)
+- [x] Write E2E tests: TwiML response validation (valid XML, correct Content-Type, under 64KB)
+- [x] Write E2E tests: domain consistency (CUSTOM_DOMAIN matches Twilio Console URLs)
+- [x] Write E2E tests: call flow simulation (makeCall → webhook → status polling)
+- [x] Write E2E tests: error handling (all endpoints return TwiML even on error)
+- [x] Write E2E tests: no HTML in any Twilio response (regression prevention)
+- [x] Run all tests — 90 E2E tests passing, 680 total passing
+- [x] Save checkpoint

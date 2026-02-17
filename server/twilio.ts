@@ -219,7 +219,7 @@ export async function getCallStatus(callSid: string) {
  * Uses the custom domain if available, otherwise falls back to VITE_APP_ID.
  */
 function getBaseUrl(): string {
-  // Custom domain takes priority (e.g., 123smartdrive.manus.space)
+  // Custom domain takes priority (e.g., crmv3.manus.space)
   if (process.env.CUSTOM_DOMAIN) {
     return `https://${process.env.CUSTOM_DOMAIN}`;
   }
