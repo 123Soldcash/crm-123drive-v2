@@ -331,10 +331,10 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       }
       onOpenChange(v);
     }}>
-      <DialogContent className="max-w-4xl h-[600px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-6xl w-[90vw] h-[650px] p-0 gap-0 overflow-hidden">
         <div className="flex h-full">
           {/* LEFT SIDE — Call Controls */}
-          <div className="w-[360px] flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6 shrink-0">
+          <div className="w-[340px] flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6 shrink-0">
             {/* Contact Info */}
             <div className="text-center mb-6">
               <div className="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center mx-auto mb-3">
@@ -463,7 +463,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       className="group relative bg-muted/50 rounded-lg p-3 border border-transparent hover:border-border transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{note.content}</p>
                         <button
                           onClick={() => handleDeleteNote(note.id)}
                           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0"
@@ -509,7 +509,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Type a note..."
-                  className="min-h-[60px] max-h-[120px] resize-none text-sm"
+                  className="min-h-[80px] max-h-[150px] resize-none text-sm"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();

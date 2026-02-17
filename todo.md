@@ -1590,3 +1590,10 @@
 - [x] Tests: All 770 tests passing (6 pre-existing failures unrelated)
 - [x] Browser verified: CallModal opens correctly, ContactNotesDialog works
 - [x] Save checkpoint and deliver
+
+## UI FIX - CallModal Notes Panel Width (Feb 17, 2026) - COMPLETED ✅
+- [x] Increased modal from max-w-4xl to sm:max-w-6xl w-[90vw] (overrides shadcn sm:max-w-lg default)
+- [x] Increased modal height from 600px to 650px
+- [x] Reduced left panel from 360px to 340px to give more space to notes
+- [x] Increased textarea from 60px/120px to 80px/150px min/max height
+- [x] Added break-words to note content for long text wrapping
