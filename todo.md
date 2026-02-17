@@ -1624,3 +1624,4 @@
 
 ## UI Improvement - Add ZIP Code to Sticky Header (Feb 17, 2026) - COMPLETED ✅
 - [x] Add ZIP code next to property address in the sticky header top row
+- [x] Fix: field name was zipCode/zip but DB uses `zipcode` (lowercase, no separator)
