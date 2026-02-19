@@ -51,16 +51,16 @@ export function DeepSearchHeader({
   };
 
   return (
-    <div className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 rounded-t-xl p-6 text-white">
+    <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-t-xl p-6 text-white">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-            <Search className="h-8 w-8 text-blue-300" />
+          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+            <Search className="h-8 w-8 text-white" />
           </div>
           <div>
             <h2 className="text-2xl font-bold tracking-tight">DEEP SEARCH</h2>
             {propertyAddress && (
-              <p className="text-sm text-blue-200 mt-1">{propertyAddress}</p>
+              <p className="text-sm text-blue-100 mt-1">{propertyAddress}</p>
             )}
           </div>
         </div>
@@ -80,10 +80,10 @@ export function DeepSearchHeader({
       </div>
 
       {/* Progress Section */}
-      <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+      <div className="bg-white/15 rounded-xl p-4 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <StatusIcon className={cn("h-5 w-5", status.color.replace("text-", "text-"))} />
+            <StatusIcon className={cn("h-5 w-5 text-white")} />
             <span className="text-sm font-medium text-blue-100">{status.label}</span>
           </div>
           <span className="text-2xl font-bold text-white">{completionPercent}%</span>
@@ -92,7 +92,7 @@ export function DeepSearchHeader({
           value={completionPercent} 
           className="h-3 bg-white/20"
         />
-        <div className="flex justify-between mt-2 text-xs text-blue-200">
+        <div className="flex justify-between mt-2 text-xs text-blue-100">
           <span>Research Started</span>
           <span>Analysis Complete</span>
           <span>Ready for Outreach</span>

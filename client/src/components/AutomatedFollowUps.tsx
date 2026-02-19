@@ -220,7 +220,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
     >
       {followUps.length === 0 ? (
         <div className="py-6 text-center">
-          <Zap className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+          <Zap className="h-8 w-8 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-slate-500">No follow-ups configured for this lead.</p>
         </div>
       ) : (
@@ -247,15 +247,15 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
               </div>
               <div className="flex items-center gap-1">
                 {fu.status === "Active" ? (
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-amber-600" onClick={() => handlePause(fu.id)}>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-amber-600" onClick={() => handlePause(fu.id)}>
                     <Pause className="h-3.5 w-3.5" />
                   </Button>
                 ) : fu.status === "Paused" ? (
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600" onClick={() => handleResume(fu.id)}>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-emerald-600" onClick={() => handleResume(fu.id)}>
                     <Play className="h-3.5 w-3.5" />
                   </Button>
                 ) : null}
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600" onClick={() => handleDelete(fu.id)}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-rose-600" onClick={() => handleDelete(fu.id)}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>

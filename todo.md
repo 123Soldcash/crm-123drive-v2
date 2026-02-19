@@ -1642,3 +1642,19 @@
 - [x] Build Offer Generator at 60%, 70%, 90% of estimated value with net profit estimates
 - [x] Integrate into PropertyDetail page as collapsible section
 - [x] Test all calculations and CRUD operations
+
+## UI Fix - Consistent Light Theme Across All Components (Feb 19, 2026) - COMPLETED ✅
+- [x] Audit ThemeProvider — forced light theme, removed dark localStorage override
+- [x] Fix CreateTaskDialog — rewrote with bg-white, border-gray-200, text-gray-900
+- [x] Fix TasksKanban — full rewrite from bg-slate-900 to bg-gray-50/white
+- [x] Fix TasksList — full rewrite from bg-slate-900 to bg-gray-50/white
+- [x] Fix TasksCalendar — full rewrite from bg-slate-900 to bg-gray-50/white
+- [x] Fix TaskCard — bg-slate-700 to bg-white
+- [x] Fix DroppableColumn — bg-slate-800 to bg-gray-100
+- [x] Fix DeepSearchHeader — bg-slate-900 to bg-blue-600/700 gradient
+- [x] Fix LeadStageNavigation tooltip — bg-gray-800 to bg-white
+- [x] Fix mini-block InfoTooltip — bg-gray-800 to bg-white
+- [x] Batch replace text-slate-400 → text-gray-500 across 15+ components
+- [x] Batch replace text-slate-200/300 → text-gray-300/400 for secondary text
+- [x] Batch replace border-slate-* → border-gray-* for borders
+- [x] Only remaining dark elements: image overlays (bg-black/60, bg-slate-900/60) — intentional for contrast

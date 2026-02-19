@@ -192,7 +192,7 @@ export function PhotoGallery({ propertyId }: PhotoGalleryProps) {
         </div>
       ) : (
         <div className="py-8 text-center border-2 border-dashed border-slate-200 rounded-lg">
-          <ImageIcon className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+          <ImageIcon className="h-10 w-10 text-gray-400 mx-auto mb-3" />
           <p className="text-sm text-slate-500 mb-3">No property photos yet.</p>
           <Button
             variant="outline"

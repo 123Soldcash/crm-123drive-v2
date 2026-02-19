@@ -141,9 +141,9 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-100 max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-white text-xl">
+          <DialogTitle className="text-gray-900 text-xl">
             {editingTask ? "Edit Task" : "Create New Task"}
           </DialogTitle>
         </DialogHeader>
@@ -152,7 +152,7 @@ export function CreateTaskDialog({
           <div className="space-y-4 pr-4">
             {/* Title */}
             <div>
-              <Label htmlFor="title" className="text-slate-200">
+              <Label htmlFor="title" className="text-gray-700">
                 Task Title *
               </Label>
               <Input
@@ -161,14 +161,14 @@ export function CreateTaskDialog({
                 placeholder="Enter task title..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                className="bg-white border-gray-300 text-gray-900 placeholder-gray-400"
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <Label htmlFor="description" className="text-slate-200">
+              <Label htmlFor="description" className="text-gray-700">
                 Description
               </Label>
               <Textarea
@@ -176,23 +176,23 @@ export function CreateTaskDialog({
                 placeholder="Add task details..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none h-24"
+                className="bg-white border-gray-300 text-gray-900 placeholder-gray-400 resize-none h-24"
               />
             </div>
 
             {/* Task Type & Priority */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="taskType" className="text-slate-200">
+                <Label htmlFor="taskType" className="text-gray-700">
                   Task Type *
                 </Label>
                 <Select value={taskType} onValueChange={setTaskType}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectContent className="bg-white border-gray-200">
                     {taskTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value} className="text-white">
+                      <SelectItem key={type.value} value={type.value} className="text-gray-900">
                         {type.label}
                       </SelectItem>
                     ))}
@@ -201,21 +201,21 @@ export function CreateTaskDialog({
               </div>
 
               <div>
-                <Label htmlFor="priority" className="text-slate-200">
+                <Label htmlFor="priority" className="text-gray-700">
                   Priority *
                 </Label>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="High" className="text-white">
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="High" className="text-gray-900">
                       High Priority
                     </SelectItem>
-                    <SelectItem value="Medium" className="text-white">
+                    <SelectItem value="Medium" className="text-gray-900">
                       Medium Priority
                     </SelectItem>
-                    <SelectItem value="Low" className="text-white">
+                    <SelectItem value="Low" className="text-gray-900">
                       Low Priority
                     </SelectItem>
                   </SelectContent>
@@ -226,21 +226,21 @@ export function CreateTaskDialog({
             {/* Status & Due Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="status" className="text-slate-200">
+                <Label htmlFor="status" className="text-gray-700">
                   Status *
                 </Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="To Do" className="text-white">
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="To Do" className="text-gray-900">
                       To Do
                     </SelectItem>
-                    <SelectItem value="In Progress" className="text-white">
+                    <SelectItem value="In Progress" className="text-gray-900">
                       In Progress
                     </SelectItem>
-                    <SelectItem value="Done" className="text-white">
+                    <SelectItem value="Done" className="text-gray-900">
                       Done
                     </SelectItem>
                   </SelectContent>
@@ -248,7 +248,7 @@ export function CreateTaskDialog({
               </div>
 
               <div>
-                <Label htmlFor="dueDate" className="text-slate-200">
+                <Label htmlFor="dueDate" className="text-gray-700">
                   Due Date
                 </Label>
                 <Input
@@ -256,14 +256,14 @@ export function CreateTaskDialog({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
             </div>
 
             {/* Quick Date Presets */}
             <div>
-              <Label className="text-slate-200">Quick Date Presets</Label>
+              <Label className="text-gray-700">Quick Date Presets</Label>
               <div className="flex gap-2 flex-wrap">
                 {[
                   { label: "Tomorrow", days: 1 },
@@ -282,7 +282,7 @@ export function CreateTaskDialog({
                       date.setDate(date.getDate() + preset.days);
                       setDueDate(date.toISOString().split("T")[0]);
                     }}
-                    className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
+                    className="bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
                   >
                     {preset.label}
                   </Button>
@@ -293,7 +293,7 @@ export function CreateTaskDialog({
             {/* Time & Repeat */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="dueTime" className="text-slate-200">
+                <Label htmlFor="dueTime" className="text-gray-700">
                   Time (Optional)
                 </Label>
                 <Input
@@ -301,29 +301,29 @@ export function CreateTaskDialog({
                   type="time"
                   value={dueTime}
                   onChange={(e) => setDueTime(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
 
               <div>
-                <Label htmlFor="repeat" className="text-slate-200">
+                <Label htmlFor="repeat" className="text-gray-700">
                   Repeat
                 </Label>
                 <Select value={repeat} onValueChange={setRepeat}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="No repeat" className="text-white">
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="No repeat" className="text-gray-900">
                       No repeat
                     </SelectItem>
-                    <SelectItem value="Daily" className="text-white">
+                    <SelectItem value="Daily" className="text-gray-900">
                       Daily
                     </SelectItem>
-                    <SelectItem value="Weekly" className="text-white">
+                    <SelectItem value="Weekly" className="text-gray-900">
                       Weekly
                     </SelectItem>
-                    <SelectItem value="Monthly" className="text-white">
+                    <SelectItem value="Monthly" className="text-gray-900">
                       Monthly
                     </SelectItem>
                   </SelectContent>
@@ -333,21 +333,21 @@ export function CreateTaskDialog({
 
             {/* Assign To */}
             <div>
-              <Label htmlFor="assignedTo" className="text-slate-200">
+              <Label htmlFor="assignedTo" className="text-gray-700">
                 Assign To
               </Label>
               {agentsLoading ? (
-                <div className="text-slate-400 text-sm">Loading agents...</div>
+                <div className="text-gray-500 text-sm">Loading agents...</div>
               ) : agents.length === 0 ? (
-                <div className="text-slate-400 text-sm">No agents available</div>
+                <div className="text-gray-500 text-sm">No agents available</div>
               ) : (
                 <Select value={assignedTo} onValueChange={setAssignedTo}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="Select agent..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectContent className="bg-white border-gray-200">
                     {agents.map((agent: any) => (
-                      <SelectItem key={agent.id} value={agent.id.toString()} className="text-white">
+                      <SelectItem key={agent.id} value={agent.id.toString()} className="text-gray-900">
                         {agent.name}
                       </SelectItem>
                     ))}
@@ -359,12 +359,12 @@ export function CreateTaskDialog({
         </form>
 
         {/* Footer with buttons - Always visible */}
-        <div className="flex gap-2 justify-end pt-4 border-t border-slate-700 mt-4">
+        <div className="flex gap-2 justify-end pt-4 border-t border-gray-200 mt-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
+            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </Button>
@@ -372,7 +372,7 @@ export function CreateTaskDialog({
             type="submit"
             onClick={handleSubmit}
             disabled={isSubmitting || !title.trim()}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isSubmitting ? "Saving..." : editingTask ? "Update Task" : "Create Task"}
           </Button>

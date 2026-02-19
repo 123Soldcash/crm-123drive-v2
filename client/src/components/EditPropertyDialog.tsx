@@ -254,9 +254,9 @@ export function EditPropertyDialog({
                 )}
               </div>
               {showPropertyCSV ? (
-                <ChevronUp className="h-4 w-4 text-slate-400" />
+                <ChevronUp className="h-4 w-4 text-gray-500" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-400" />
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               )}
             </button>
 
@@ -325,9 +325,9 @@ export function EditPropertyDialog({
                 )}
               </div>
               {showContactCSV ? (
-                <ChevronUp className="h-4 w-4 text-slate-400" />
+                <ChevronUp className="h-4 w-4 text-gray-500" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-400" />
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               )}
             </button>
 

@@ -340,7 +340,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   };
 
   if (isLoading) {
-    return <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-slate-50 rounded-lg border border-dashed">Loading notes...</div>;
+    return <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-gray-50 rounded-lg border border-dashed">Loading notes...</div>;
   }
 
   return (
@@ -354,7 +354,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
       badge={
         <div className="flex gap-1">
           {notes.length > 0 && (
-            <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200 ml-1">
+            <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-gray-200 ml-1">
               {notes.length} notes
             </Badge>
           )}
@@ -368,14 +368,14 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     >
       <div className="space-y-4">
         {/* Note Input Form */}
-        <div className="space-y-3 p-4 border rounded-lg bg-slate-50/50">
+        <div className="space-y-3 p-4 border rounded-lg bg-gray-50/50">
           <Textarea
             ref={textareaRef}
             placeholder="Add a note... (Ctrl+V to paste screenshots)"
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             rows={3}
-            className="bg-white border-slate-200"
+            className="bg-white border-gray-200"
           />
 
           <div className="space-y-2">
@@ -401,7 +401,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               <div className="grid grid-cols-3 gap-2">
                 {selectedImages.map((img, idx) => (
                   <div key={idx} className="relative">
-                    <img src={img} className="w-full h-20 object-cover rounded-md border border-slate-200" />
+                    <img src={img} className="w-full h-20 object-cover rounded-md border border-gray-200" />
                     <Button
                       variant="destructive"
                       size="icon"
@@ -419,16 +419,16 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             {selectedDocs.length > 0 && (
               <div className="space-y-1">
                 {selectedDocs.map((doc, idx) => (
-                  <div key={idx} className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-md">
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-md">
                     {getFileIcon(doc.file.type)}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-slate-700 truncate">{doc.file.name}</p>
-                      <p className="text-[10px] text-slate-400">{formatFileSize(doc.file.size)}</p>
+                      <p className="text-[10px] text-gray-500">{formatFileSize(doc.file.size)}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-slate-400 hover:text-red-500"
+                      className="h-6 w-6 text-gray-500 hover:text-red-500"
                       onClick={() => removeDoc(idx)}
                     >
                       <X className="h-3 w-3" />
@@ -439,18 +439,18 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             )}
 
             <div className="flex gap-2">
-              <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" className="border-slate-200">
+              <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" className="border-gray-200">
                 <Camera className="mr-2 h-3 w-3" />
                 Photos
               </Button>
-              <Button onClick={() => docInputRef.current?.click()} variant="outline" size="sm" className="border-slate-200">
+              <Button onClick={() => docInputRef.current?.click()} variant="outline" size="sm" className="border-gray-200">
                 <Paperclip className="mr-2 h-3 w-3" />
                 Documents
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={createNoteMutation.isPending || uploadDocMutation.isPending}
-                className="ml-auto bg-slate-800 hover:bg-slate-900 text-white"
+                className="ml-auto bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {createNoteMutation.isPending || uploadDocMutation.isPending ? "Saving..." : "Save Note"}
               </Button>
@@ -468,12 +468,12 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               >
                 <Paperclip className="h-4 w-4" />
                 Documents ({documents.length})
-                <span className="text-xs text-slate-400">{showDocuments ? "▼" : "▶"}</span>
+                <span className="text-xs text-gray-500">{showDocuments ? "▼" : "▶"}</span>
               </button>
               <Button
                 variant="outline"
                 size="sm"
-                className="border-slate-200 h-7 text-xs"
+                className="border-gray-200 h-7 text-xs"
                 onClick={() => {
                   const input = document.createElement("input");
                   input.type = "file";
@@ -492,9 +492,9 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             </div>
             
             {showDocuments && (
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white divide-y divide-slate-100">
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white divide-y divide-slate-100">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center gap-3 p-3 hover:bg-slate-50/50 group">
+                  <div key={doc.id} className="flex items-center gap-3 p-3 hover:bg-gray-50/50 group">
                     {getFileIcon(doc.mimeType)}
                     <div className="flex-1 min-w-0">
                       <a
@@ -505,7 +505,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       >
                         {doc.fileName}
                       </a>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500">
                         <span>{formatFileSize(doc.fileSize)}</span>
                         <span>•</span>
                         <span>{doc.uploaderName || "Unknown"}</span>
@@ -518,14 +518,14 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                         href={doc.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 hover:text-blue-600"
+                        className="h-7 w-7 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 hover:text-blue-600"
                       >
                         <Download className="h-3.5 w-3.5" />
                       </a>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-slate-400 hover:text-red-500"
+                        className="h-7 w-7 text-gray-500 hover:text-red-500"
                         onClick={() => {
                           if (confirm(`Delete "${doc.fileName}"?`)) {
                             deleteDocMutation.mutate({ id: doc.id });
@@ -545,7 +545,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
         {/* Empty state for documents when no documents exist */}
         {(!documents || documents.length === 0) && (
           <div
-            className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center cursor-pointer hover:border-slate-300 hover:bg-slate-50/50 transition-colors"
+            className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-slate-300 hover:bg-gray-50/50 transition-colors"
             onClick={() => {
               const input = document.createElement("input");
               input.type = "file";
@@ -558,27 +558,27 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               input.click();
             }}
           >
-            <Paperclip className="h-5 w-5 text-slate-300 mx-auto mb-1" />
-            <p className="text-xs text-slate-400">Click to upload documents (PDF, DOC, XLS, etc.)</p>
+            <Paperclip className="h-5 w-5 text-gray-400 mx-auto mb-1" />
+            <p className="text-xs text-gray-500">Click to upload documents (PDF, DOC, XLS, etc.)</p>
           </div>
         )}
 
         {/* Search and Filter Bar */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white border-slate-200"
+              className="pl-10 bg-white border-gray-200"
             />
           </div>
           {noteUsers.length > 0 && (
             <select
               value={selectedUser || ""}
               onChange={(e) => setSelectedUser(e.target.value || null)}
-              className="px-3 py-1.5 text-sm border border-slate-200 rounded-md bg-white hover:bg-slate-50 cursor-pointer"
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white hover:bg-gray-50 cursor-pointer"
             >
               <option value="">All Users ({notes.length})</option>
               {noteUsers.map((user) => {
@@ -591,17 +591,17 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               })}
             </select>
           )}
-          <Button variant="outline" size="sm" onClick={handleExportCSV} className="border-slate-200">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="border-gray-200">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
 
         {/* Notes Table */}
-        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left p-3 text-xs font-semibold text-slate-700 w-32">Date</th>
                 <th className="text-left p-3 text-xs font-semibold text-slate-700 w-40">Agent</th>
                 <th className="text-left p-3 text-xs font-semibold text-slate-700">Notes</th>
@@ -612,11 +612,11 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               {filteredNotes.map((note) => {
                 const noteDocuments = documents?.filter(d => d.noteId === note.id) || [];
                 return (
-                  <tr key={note.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                  <tr key={note.id} className="border-b border-slate-100 hover:bg-gray-50/50">
                     <td className="p-3 text-xs text-slate-600 align-top">
                       {new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       <br />
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-gray-500">
                         {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                       </span>
                     </td>
@@ -634,7 +634,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                               <img 
                                 src={photo.fileUrl} 
                                 alt={photo.caption || "Note photo"}
-                                className="w-full h-24 object-cover rounded-md border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                className="w-full h-24 object-cover rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
                               />
                               <Button
@@ -670,7 +670,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       {noteDocuments.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {noteDocuments.map((doc) => (
-                            <div key={doc.id} className="flex items-center gap-2 p-1.5 bg-slate-50 rounded border border-slate-100 group/doc">
+                            <div key={doc.id} className="flex items-center gap-2 p-1.5 bg-gray-50 rounded border border-slate-100 group/doc">
                               {getFileIcon(doc.mimeType)}
                               <a
                                 href={doc.fileUrl}
@@ -680,11 +680,11 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                               >
                                 {doc.fileName}
                               </a>
-                              <span className="text-[10px] text-slate-400">{formatFileSize(doc.fileSize)}</span>
+                              <span className="text-[10px] text-gray-500">{formatFileSize(doc.fileSize)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-5 w-5 text-slate-300 hover:text-red-500 opacity-0 group-hover/doc:opacity-100 transition-opacity"
+                                className="h-5 w-5 text-gray-400 hover:text-red-500 opacity-0 group-hover/doc:opacity-100 transition-opacity"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (confirm(`Delete "${doc.fileName}"?`)) {
@@ -703,7 +703,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-slate-300 hover:text-red-500"
+                        className="h-6 w-6 text-gray-400 hover:text-red-500"
                         onClick={() => deleteNoteMutation.mutate({ id: note.id })}
                       >
                         <Trash2 className="h-3 w-3" />

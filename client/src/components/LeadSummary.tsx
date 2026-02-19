@@ -150,7 +150,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
               {leadTempIcon}
             </div>
             <div className="text-lg font-bold text-slate-900">{property.leadTemperature || "TBD"}</div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Lead Status</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Lead Status</div>
           </CardContent>
         </Card>
 
@@ -159,7 +159,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
           <CardContent className="pt-4 pb-3 text-center">
             <DollarSign className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-slate-900">{formatCurrency(ourEstimate)}</div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Our Estimate</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Our Estimate</div>
           </CardContent>
         </Card>
 
@@ -168,7 +168,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
           <CardContent className="pt-4 pb-3 text-center">
             <TrendingUp className="h-5 w-5 text-purple-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-slate-900">{equityPercent}%</div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Equity</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Equity</div>
           </CardContent>
         </Card>
 
@@ -177,7 +177,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
           <CardContent className="pt-4 pb-3 text-center">
             <Home className="h-5 w-5 text-blue-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-slate-900">{propertyData.mlsStatus || "Off Market"}</div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">MLS Status</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-gray-500">MLS Status</div>
           </CardContent>
         </Card>
 
@@ -187,12 +187,12 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
             {property.ownerVerified === 1 ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
             ) : (
-              <User className="h-5 w-5 text-slate-300 mx-auto mb-1" />
+              <User className="h-5 w-5 text-gray-400 mx-auto mb-1" />
             )}
-            <div className={`text-lg font-bold ${property.ownerVerified === 1 ? "text-slate-900" : "text-slate-400"}`}>
+            <div className={`text-lg font-bold ${property.ownerVerified === 1 ? "text-slate-900" : "text-gray-500"}`}>
               {property.ownerVerified === 1 ? "Verified" : "Pending"}
             </div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Owner</div>
+            <div className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Owner</div>
           </CardContent>
         </Card>
       </div>

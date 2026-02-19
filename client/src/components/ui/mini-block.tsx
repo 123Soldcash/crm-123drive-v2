@@ -122,7 +122,7 @@ export function MiniBlock({
         <div className="flex items-center gap-2">
           {headerAction}
           {collapsible && (
-            <div className="p-1 rounded-full hover:bg-white/50 transition-colors text-slate-400">
+            <div className="p-1 rounded-full hover:bg-white/50 transition-colors text-gray-500">
               {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </div>
           )}
@@ -268,10 +268,10 @@ interface InfoTooltipProps {
 export function InfoTooltip({ text }: InfoTooltipProps) {
   return (
     <div className="group relative inline-block ml-1">
-      <Info className="h-4 w-4 text-slate-400 cursor-help hover:text-slate-600 transition-colors" />
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+      <Info className="h-4 w-4 text-gray-500 cursor-help hover:text-gray-600 transition-colors" />
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-white text-gray-700 border border-gray-200 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
         {text}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white" />
       </div>
     </div>
   );
@@ -289,7 +289,7 @@ export function SectionDivider({ label }: SectionDividerProps) {
   return (
     <div className="flex items-center gap-4 my-6">
       <div className="flex-1 border-t border-slate-200" />
-      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
       <div className="flex-1 border-t border-slate-200" />
     </div>
   );

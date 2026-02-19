@@ -68,31 +68,31 @@ export function TaskCard({ task }: TaskCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-slate-700 border border-slate-600 rounded-lg p-4 cursor-grab active:cursor-grabbing hover:border-slate-500 transition-colors"
+      className="bg-white border border-gray-200 rounded-lg p-4 cursor-grab active:cursor-grabbing hover:border-gray-300 hover:shadow-sm transition-all"
     >
       {/* Priority Indicator */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${priorityColors[task.priority]}`} />
-          <Icon className="w-4 h-4 text-slate-400" />
+          <Icon className="w-4 h-4 text-gray-400" />
         </div>
-        <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">
+        <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
           {task.taskType}
         </Badge>
       </div>
 
       {/* Task Title */}
-      <h3 className="font-semibold text-white mb-2 line-clamp-2">{task.title}</h3>
+      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{task.title}</h3>
 
       {/* Task Description */}
       {task.description && (
-        <p className="text-sm text-slate-400 mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{task.description}</p>
       )}
 
       {/* Property Info */}
       {task.propertyAddress && task.propertyId && (
         <Link href={`/properties/${task.propertyId}`}>
-          <div className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 mb-3 cursor-pointer transition-colors">
+          <div className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-700 mb-3 cursor-pointer transition-colors">
             <MapPin className="w-3 h-3" />
             <span className="truncate">
               {task.propertyAddress}, {task.propertyCity}
@@ -102,7 +102,7 @@ export function TaskCard({ task }: TaskCardProps) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-slate-600">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
         {/* Due Date */}
         {task.dueDate && (
           <div className="flex items-center gap-1 text-xs">
@@ -110,10 +110,10 @@ export function TaskCard({ task }: TaskCardProps) {
             <span
               className={
                 isOverdue
-                  ? "text-red-400 font-semibold"
+                  ? "text-red-600 font-semibold"
                   : isDueToday
-                  ? "text-yellow-400 font-semibold"
-                  : "text-slate-400"
+                  ? "text-yellow-600 font-semibold"
+                  : "text-gray-500"
               }
             >
               {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
@@ -123,7 +123,7 @@ export function TaskCard({ task }: TaskCardProps) {
 
         {/* Assigned To */}
         {task.assignedToName && (
-          <div className="flex items-center gap-1 text-xs text-slate-400">
+          <div className="flex items-center gap-1 text-xs text-gray-500">
             <User className="w-3 h-3" />
             <span className="truncate max-w-[100px]">{task.assignedToName}</span>
           </div>

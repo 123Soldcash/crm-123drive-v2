@@ -111,7 +111,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
       >
         {filteredTasks.length === 0 ? (
           <div className="py-6 text-center">
-            <ClipboardList className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+            <ClipboardList className="h-8 w-8 text-gray-300 mx-auto mb-2" />
             <p className="text-sm text-slate-500">No tasks yet.</p>
           </div>
         ) : (
@@ -146,7 +146,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                     </p>
                   )}
                   
-                  <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                  <div className="flex items-center gap-3 text-[10px] text-gray-500">
                     <span className="flex items-center gap-1">
                       <Badge variant="secondary" className="text-[9px] h-3.5 px-1 bg-slate-100 text-slate-500 border-none">
                         {task.taskType}
@@ -168,10 +168,10 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                 </div>
                 
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600" onClick={() => { setEditingTask(task); setCreateDialogOpen(true); }}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-blue-600" onClick={() => { setEditingTask(task); setCreateDialogOpen(true); }}>
                     <Edit className="h-3 w-3" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600" onClick={() => { if (confirm('Delete this task?')) deleteTask.mutate({ taskId: task.id }); }}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-rose-600" onClick={() => { if (confirm('Delete this task?')) deleteTask.mutate({ taskId: task.id }); }}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>

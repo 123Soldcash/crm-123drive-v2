@@ -50,7 +50,7 @@ export function LeadStageNavigation({ currentStage, onStageClick, isDead = false
   }
 
   return (
-    <div className="w-full bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-6 shadow-sm border-2 border-slate-200">
+    <div className="w-full bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-6 shadow-sm border-2 border-gray-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider">
@@ -88,7 +88,7 @@ export function LeadStageNavigation({ currentStage, onStageClick, isDead = false
                   "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
                   isCompleted && "bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-200",
                   isCurrent && "bg-gradient-to-br from-blue-500 to-blue-700 text-white ring-4 ring-blue-200 scale-125 shadow-xl shadow-blue-300",
-                  isFuture && "bg-white text-slate-400 border-2 border-slate-300 hover:border-slate-400 hover:scale-105"
+                  isFuture && "bg-white text-gray-500 border-2 border-gray-300 hover:border-gray-400 hover:scale-105"
                 )}
               >
                 {isCompleted ? (
@@ -104,16 +104,16 @@ export function LeadStageNavigation({ currentStage, onStageClick, isDead = false
                   "mt-3 text-xs font-medium transition-colors text-center max-w-[60px]",
                   isCompleted && "text-green-600 font-semibold",
                   isCurrent && "text-blue-700 font-bold",
-                  isFuture && "text-slate-400"
+                  isFuture && "text-gray-500"
                 )}
               >
                 {stage.label}
               </span>
 
               {/* Tooltip on hover */}
-              <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-800 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-xl z-20">
+              <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-white text-gray-700 border border-gray-200 text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-xl z-20">
                 {stage.description}
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45" />
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45" />
               </div>
             </div>
           );

@@ -55,7 +55,7 @@ export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
     >
       {!matches || matches.length === 0 ? (
         <div className="py-8 text-center">
-          <Users className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+          <Users className="h-10 w-10 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-slate-500">No matching buyers found for this property's criteria.</p>
         </div>
       ) : (
@@ -76,11 +76,11 @@ export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
                   <TableCell className="py-2">
                     {buyer.company ? (
                       <div className="flex items-center text-xs text-slate-600">
-                        <Building className="mr-1.5 h-3 w-3 text-slate-400" />
+                        <Building className="mr-1.5 h-3 w-3 text-gray-500" />
                         {buyer.company}
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs italic">N/A</span>
+                      <span className="text-gray-500 text-xs italic">N/A</span>
                     )}
                   </TableCell>
                   <TableCell className="py-2">
@@ -99,7 +99,7 @@ export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-purple-600 hover:bg-purple-50"
+                      className="h-7 w-7 p-0 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
                       onClick={() => window.location.href = `/buyers/${buyer.id}`}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />

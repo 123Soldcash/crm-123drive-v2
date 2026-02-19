@@ -70,13 +70,13 @@ export function TasksKanban() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <div className="border-b border-slate-700 bg-slate-800">
+      <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-white">Task Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
               <div className="flex gap-2">
                 <Link href="/tasks/kanban">
                   <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
@@ -85,13 +85,13 @@ export function TasksKanban() {
                   </Button>
                 </Link>
                 <Link href="/tasks/list">
-                  <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-700">
+                  <Button variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                     <List className="w-4 h-4 mr-2" />
                     List
                   </Button>
                 </Link>
                 <Link href="/tasks/calendar">
-                  <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-700">
+                  <Button variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                     <Calendar className="w-4 h-4 mr-2" />
                     Calendar
                   </Button>

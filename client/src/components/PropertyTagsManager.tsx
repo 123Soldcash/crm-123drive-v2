@@ -118,9 +118,9 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Tag className="h-4 w-4 text-slate-500" />
+          <Tag className="h-4 w-4 text-gray-500" />
           <h3 className="text-sm font-semibold text-slate-700">Tags</h3>
-          <span className="text-xs text-slate-400">({propertyTags.length})</span>
+          <span className="text-xs text-gray-500">({propertyTags.length})</span>
         </div>
         <div className="flex items-center gap-1">
           <Popover open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -137,7 +137,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
             <PopoverContent className="w-72 p-3" align="end">
               <div className="space-y-3">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-500" />
                   <Input
                     ref={inputRef}
                     placeholder="Search or create tag..."
@@ -162,7 +162,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
                 {/* Available tags list */}
                 <div className="max-h-48 overflow-y-auto space-y-0.5">
                   {filteredTags.length === 0 && !isNewTag && (
-                    <p className="text-xs text-slate-400 text-center py-3">
+                    <p className="text-xs text-gray-500 text-center py-3">
                       {searchText ? "No matching tags" : "No tags available"}
                     </p>
                   )}
@@ -173,7 +173,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
                       className="w-full flex items-center justify-between px-3 py-1.5 text-sm rounded-md hover:bg-slate-100 transition-colors group"
                     >
                       <span className="text-slate-700">{t.tag}</span>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-500">
+                      <span className="text-xs text-gray-500 group-hover:text-gray-500">
                         {t.count} {t.count === 1 ? "property" : "properties"}
                       </span>
                     </button>
@@ -190,7 +190,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
             onClick={() => setManageOpen(true)}
             title="Manage all tags"
           >
-            <Settings className="h-3.5 w-3.5 text-slate-400" />
+            <Settings className="h-3.5 w-3.5 text-gray-500" />
           </Button>
         </div>
       </div>
@@ -198,7 +198,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
       {/* Tags display */}
       <div className="flex flex-wrap gap-1.5">
         {propertyTags.length === 0 && (
-          <p className="text-xs text-slate-400 italic">No tags yet. Click &quot;Add&quot; to get started.</p>
+          <p className="text-xs text-gray-500 italic">No tags yet. Click &quot;Add&quot; to get started.</p>
         )}
         {propertyTags.map((tag: any) => (
           <Badge
@@ -212,7 +212,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
               className="ml-0.5 hover:bg-red-100 rounded-full p-0.5 transition-colors"
               title="Remove from this property"
             >
-              <X className="h-3 w-3 text-slate-400 hover:text-red-500" />
+              <X className="h-3 w-3 text-gray-500 hover:text-red-500" />
             </button>
           </Badge>
         ))}
@@ -233,7 +233,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
 
           <div className="space-y-2 max-h-80 overflow-y-auto py-2">
             {allTags.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-6">
+              <p className="text-sm text-gray-500 text-center py-6">
                 No tags created yet.
               </p>
             )}
@@ -243,9 +243,9 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
                 className="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Tag className="h-3.5 w-3.5 text-slate-400" />
+                  <Tag className="h-3.5 w-3.5 text-gray-500" />
                   <span className="text-sm font-medium text-slate-700">{t.tag}</span>
-                  <span className="text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                  <span className="text-xs text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">
                     {t.count} {t.count === 1 ? "property" : "properties"}
                   </span>
                 </div>
@@ -273,7 +273,7 @@ export function PropertyTagsManager({ propertyId }: PropertyTagsManagerProps) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                    className="h-7 w-7 p-0 text-gray-500 hover:text-red-500 hover:bg-red-50"
                     onClick={() => setDeleteConfirm(t.tag)}
                     title="Delete from all properties"
                   >

@@ -152,12 +152,12 @@ export function StickyPropertyHeader({
               isSticky ? "text-lg" : "text-3xl"
             )}>
               {property.addressLine1}
-              <span className="ml-2 text-slate-400 font-medium text-sm">{property.city}, {property.state} {property.zipcode || ""}</span>
+              <span className="ml-2 text-gray-500 font-medium text-sm">{property.city}, {property.state} {property.zipcode || ""}</span>
             </h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onEdit} className="h-8 text-xs border-slate-200">
+            <Button variant="outline" size="sm" onClick={onEdit} className="h-8 text-xs border-gray-200">
               <Edit className="h-3.5 w-3.5 mr-1.5" /> Edit Lead
             </Button>
             <Button 
@@ -177,10 +177,10 @@ export function StickyPropertyHeader({
                 return isInPipeline ? `Pipeline: ${stageConfig!.shortLabel}` : "Add to Pipeline";
               })()}
             </Button>
-            <Button variant="outline" size="sm" onClick={onAssignAgent} className="h-8 text-xs border-slate-200">
+            <Button variant="outline" size="sm" onClick={onAssignAgent} className="h-8 text-xs border-gray-200">
               <Users className="h-3.5 w-3.5 mr-1.5" /> Assign Agent
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.open(zillowUrl, "_blank")} className="h-8 text-xs border-slate-200">
+            <Button variant="outline" size="sm" onClick={() => window.open(zillowUrl, "_blank")} className="h-8 text-xs border-gray-200">
               <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Zillow
             </Button>
           </div>
@@ -189,7 +189,7 @@ export function StickyPropertyHeader({
         {/* Middle Row: Status and Tags */}
         <div className="flex items-center gap-4 mb-3">
           <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase ml-1 mr-1">Temp:</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase ml-1 mr-1">Temp:</span>
             {["SUPER HOT", "HOT", "WARM", "COLD", "TBD"].map((temp) => (
               <Button
                 key={temp}
@@ -216,7 +216,7 @@ export function StickyPropertyHeader({
               "h-8 text-[11px] font-bold border-2",
               property.ownerVerified 
                 ? "border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" 
-                : "border-slate-200 text-slate-400 hover:bg-slate-50"
+                : "border-gray-200 text-gray-500 hover:bg-gray-50"
             )}
             onClick={onToggleOwnerVerified}
           >
@@ -239,12 +239,12 @@ export function StickyPropertyHeader({
               <ChevronRight className={cn("h-3.5 w-3.5 ml-1 transition-transform", deskDropdownOpen && "rotate-90")} />
             </Button>
             {deskDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-[160px]">
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[160px]">
                 {DESK_OPTIONS.map((desk) => (
                   <button
                     key={desk.value}
                     className={cn(
-                      "w-full px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2",
+                      "w-full px-3 py-2 text-left text-xs font-bold hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2",
                       property.deskName === desk.value && "bg-slate-100"
                     )}
                     onClick={() => {
@@ -263,7 +263,7 @@ export function StickyPropertyHeader({
 
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (
-              <Badge key={tag.id} variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] py-0 h-6">
+              <Badge key={tag.id} variant="secondary" className="bg-slate-100 text-slate-600 border-gray-200 text-[10px] py-0 h-6">
                 {tag.tag}
               </Badge>
             ))}
@@ -273,61 +273,61 @@ export function StickyPropertyHeader({
         {/* Bottom Row: Info Grid (4 Columns) — Full visibility, no truncation */}
         <div className="grid grid-cols-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100 p-3">
           {/* Property Details Column */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-r border-slate-200 pr-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-r border-gray-200 pr-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Type</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Type</span>
               <span className="text-[13px] font-bold text-slate-700">{property.propertyType || "N/A"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Built</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Built</span>
               <span className="text-[13px] font-bold text-slate-700">{yearBuilt}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Beds/Baths</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Beds/Baths</span>
               <span className="text-[13px] font-bold text-slate-700">{beds}/{baths}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Sqft</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Sqft</span>
               <span className="text-[13px] font-bold text-slate-700">{sqft}</span>
             </div>
           </div>
 
           {/* Financial Info Column */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-r border-slate-200 px-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-r border-gray-200 px-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Value</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Value</span>
               <span className="text-[13px] font-bold text-emerald-600">{formatCurrency(property.estimatedValue)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Equity</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Equity</span>
               <span className="text-[13px] font-bold text-blue-600">{formatCurrency(property.equityAmount)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Mortgage</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Mortgage</span>
               <span className="text-[13px] font-bold text-rose-600">{formatCurrency(property.mortgageBalance || property.mortgageAmount)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Taxes</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Taxes</span>
               <span className="text-[13px] font-bold text-slate-700">{formatCurrency(property.taxAmount || property.estimatedTaxes)}</span>
             </div>
           </div>
 
           {/* Identifiers Column */}
-          <div className="grid grid-cols-1 gap-y-1 border-r border-slate-200 px-3">
+          <div className="grid grid-cols-1 gap-y-1 border-r border-gray-200 px-3">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">APN</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">APN</span>
               <span className="text-[13px] font-bold text-purple-600 font-mono">{property.apnParcelId || property.parcelNumber || "N/A"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Prop ID</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Prop ID</span>
               <span className="text-[13px] font-bold text-slate-600 font-mono break-all">{property.propertyId || "N/A"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Lead Temp</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Lead Temp</span>
               <span className="text-[13px] font-bold text-slate-700">{property.leadTemperature || "TBD"}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Status</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Status</span>
               <span className="text-[13px] font-bold text-slate-700">{property.trackingStatus || "N/A"}</span>
             </div>
           </div>
@@ -335,19 +335,19 @@ export function StickyPropertyHeader({
           {/* Owner Info Column */}
           <div className="grid grid-cols-1 gap-y-1 pl-3">
             <div className="flex justify-between items-start gap-2">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight shrink-0">Owner</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight shrink-0">Owner</span>
               <span className="text-[13px] font-bold text-slate-700 text-right break-words">{ownerName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Location</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Location</span>
               <span className="text-[13px] font-bold text-slate-700">{location}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Equity %</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Equity %</span>
               <span className="text-[13px] font-bold text-slate-700">{property.equityPercent || "0"}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Verified</span>
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Verified</span>
               <span className="text-[13px] font-bold">{property.ownerVerified ? "✓" : "✗"}</span>
             </div>
           </div>

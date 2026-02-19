@@ -35,7 +35,7 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
       case "photo":
         return <ImageIcon className="h-3 w-3 text-purple-500" />;
       default:
-        return <Clock className="h-3 w-3 text-slate-400" />;
+        return <Clock className="h-3 w-3 text-gray-500" />;
     }
   };
 
@@ -86,7 +86,7 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
         <div className="h-12 flex items-center justify-center text-xs text-muted-foreground animate-pulse bg-slate-50 rounded-lg border border-dashed">Loading history...</div>
       ) : !activities || activities.length === 0 ? (
         <div className="py-6 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200">
-          <Clock className="h-8 w-8 mx-auto mb-2 text-slate-200" />
+          <Clock className="h-8 w-8 mx-auto mb-2 text-gray-300" />
           <p className="text-sm text-slate-500">No activity recorded yet</p>
         </div>
       ) : (
@@ -100,7 +100,7 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
               <div className="flex-1 pt-1 pb-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-bold text-sm text-slate-900">{getActivityTitle(activity)}</div>
-                  <div className="text-[10px] text-slate-400 font-medium">{formatDate(activity.timestamp)}</div>
+                  <div className="text-[10px] text-gray-500 font-medium">{formatDate(activity.timestamp)}</div>
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">
                   by <span className="font-semibold text-slate-700">{activity.user}</span>
@@ -127,7 +127,7 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
                       onClick={() => window.open(activity.metadata.url, "_blank")}
                     />
                     {activity.details && activity.details !== "Property photo uploaded" && activity.details !== "Screenshot added to note" && (
-                      <div className="mt-1 text-[10px] text-slate-400 italic">{activity.details}</div>
+                      <div className="mt-1 text-[10px] text-gray-500 italic">{activity.details}</div>
                     )}
                   </div>
                 )}

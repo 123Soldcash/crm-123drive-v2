@@ -123,7 +123,7 @@ export function TasksList() {
       case "Low":
         return "bg-green-500";
       default:
-        return "bg-slate-500";
+        return "bg-gray-400";
     }
   };
 
@@ -134,7 +134,7 @@ export function TasksList() {
       case "In Progress":
         return <Clock className="w-4 h-4 text-blue-500" />;
       default:
-        return <Circle className="w-4 h-4 text-slate-500" />;
+        return <Circle className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -147,16 +147,16 @@ export function TasksList() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <div className="border-b border-slate-700 bg-slate-800">
+      <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-white">Task Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
               <div className="flex gap-2">
                 <Link href="/tasks/kanban">
-                  <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-700">
+                  <Button variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                     <Filter className="w-4 h-4 mr-2" />
                     Kanban
                   </Button>
@@ -168,7 +168,7 @@ export function TasksList() {
                   </Button>
                 </Link>
                 <Link href="/tasks/calendar">
-                  <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-700">
+                  <Button variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                     <Calendar className="w-4 h-4 mr-2" />
                     Calendar
                   </Button>
@@ -184,112 +184,74 @@ export function TasksList() {
       </div>
 
       {/* Filters */}
-      <div className="border-b border-slate-700 bg-slate-800/50">
+      <div className="border-b border-gray-200 bg-white/80">
         <div className="container mx-auto px-6 py-4">
           <div className="grid grid-cols-6 gap-4">
             {/* Search */}
             <div className="col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                  className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
             </div>
 
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="all" className="text-white hover:bg-slate-600">
-                  All Status
-                </SelectItem>
-                <SelectItem value="To Do" className="text-white hover:bg-slate-600">
-                  To Do
-                </SelectItem>
-                <SelectItem value="In Progress" className="text-white hover:bg-slate-600">
-                  In Progress
-                </SelectItem>
-                <SelectItem value="Done" className="text-white hover:bg-slate-600">
-                  Done
-                </SelectItem>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="To Do">To Do</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Done">Done</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Priority Filter */}
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="all" className="text-white hover:bg-slate-600">
-                  All Priority
-                </SelectItem>
-                <SelectItem value="High" className="text-white hover:bg-slate-600">
-                  High
-                </SelectItem>
-                <SelectItem value="Medium" className="text-white hover:bg-slate-600">
-                  Medium
-                </SelectItem>
-                <SelectItem value="Low" className="text-white hover:bg-slate-600">
-                  Low
-                </SelectItem>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Type Filter */}
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="all" className="text-white hover:bg-slate-600">
-                  All Types
-                </SelectItem>
-                <SelectItem value="Call" className="text-white hover:bg-slate-600">
-                  Call
-                </SelectItem>
-                <SelectItem value="Email" className="text-white hover:bg-slate-600">
-                  Email
-                </SelectItem>
-                <SelectItem value="Visit" className="text-white hover:bg-slate-600">
-                  Visit
-                </SelectItem>
-                <SelectItem value="Research" className="text-white hover:bg-slate-600">
-                  Research
-                </SelectItem>
-                <SelectItem value="Follow-up" className="text-white hover:bg-slate-600">
-                  Follow-up
-                </SelectItem>
-                <SelectItem value="Offer" className="text-white hover:bg-slate-600">
-                  Offer
-                </SelectItem>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Call">Call</SelectItem>
+                <SelectItem value="Email">Email</SelectItem>
+                <SelectItem value="Visit">Visit</SelectItem>
+                <SelectItem value="Research">Research</SelectItem>
+                <SelectItem value="Follow-up">Follow-up</SelectItem>
+                <SelectItem value="Offer">Offer</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Date Filter */}
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Due Date" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="all" className="text-white hover:bg-slate-600">
-                  All Dates
-                </SelectItem>
-                <SelectItem value="overdue" className="text-white hover:bg-slate-600">
-                  Overdue
-                </SelectItem>
-                <SelectItem value="today" className="text-white hover:bg-slate-600">
-                  Due Today
-                </SelectItem>
-                <SelectItem value="upcoming" className="text-white hover:bg-slate-600">
-                  Upcoming (7 days)
-                </SelectItem>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="all">All Dates</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="today">Due Today</SelectItem>
+                <SelectItem value="upcoming">Upcoming (7 days)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -298,16 +260,16 @@ export function TasksList() {
 
       {/* Bulk Actions Bar */}
       {selectedTasks.size > 0 && (
-        <div className="border-b border-slate-700 bg-blue-900/50">
+        <div className="border-b border-blue-200 bg-blue-50">
           <div className="container mx-auto px-6 py-3">
             <div className="flex items-center justify-between">
-              <span className="text-white font-semibold">{selectedTasks.size} tasks selected</span>
+              <span className="text-blue-800 font-semibold">{selectedTasks.size} tasks selected</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkStatusChange("To Do")}
-                  className="border-slate-600 hover:bg-slate-700"
+                  className="border-gray-300 hover:bg-gray-50"
                 >
                   Mark as To Do
                 </Button>
@@ -315,7 +277,7 @@ export function TasksList() {
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkStatusChange("In Progress")}
-                  className="border-slate-600 hover:bg-slate-700"
+                  className="border-gray-300 hover:bg-gray-50"
                 >
                   Mark as In Progress
                 </Button>
@@ -323,7 +285,7 @@ export function TasksList() {
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkStatusChange("Done")}
-                  className="border-slate-600 hover:bg-slate-700"
+                  className="border-gray-300 hover:bg-gray-50"
                 >
                   Mark as Done
                 </Button>
@@ -344,9 +306,9 @@ export function TasksList() {
 
       {/* Task List Table */}
       <div className="container mx-auto px-6 py-6">
-        <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <table className="w-full">
-            <thead className="bg-slate-700 border-b border-slate-600">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left w-12">
                   <Checkbox
@@ -355,21 +317,21 @@ export function TasksList() {
                   />
                 </th>
                 <th className="px-4 py-3 text-left w-12"></th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Task</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Type</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Priority</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Assigned To</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Due Date</th>
-                <th className="px-4 py-3 text-left font-semibold text-white">Property</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Task</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Priority</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Assigned To</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Due Date</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Property</th>
               </tr>
             </thead>
             <tbody>
               {filteredTasks.map((task) => (
                 <tr
                   key={task.id}
-                  className={`border-b border-slate-700 hover:bg-slate-700/50 transition-colors ${
-                    isOverdue(task) ? "bg-red-900/20" : isDueToday(task) ? "bg-yellow-900/20" : ""
+                  className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                    isOverdue(task) ? "bg-red-50" : isDueToday(task) ? "bg-yellow-50" : ""
                   }`}
                 >
                   <td className="px-4 py-3">
@@ -383,53 +345,53 @@ export function TasksList() {
                   </td>
                   <td className="px-4 py-3">
                     <div>
-                      <div className="font-medium text-white">{task.title}</div>
+                      <div className="font-medium text-gray-900">{task.title}</div>
                       {task.description && (
-                        <div className="text-sm text-slate-400 line-clamp-1">{task.description}</div>
+                        <div className="text-sm text-gray-500 line-clamp-1">{task.description}</div>
                       )}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className="border-slate-600 text-slate-300">
+                    <Badge variant="outline" className="border-gray-300 text-gray-600">
                       {task.taskType}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-slate-300">{task.priority}</span>
+                    <span className="text-gray-700">{task.priority}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(task.status)}
-                      <span className="text-slate-300">{task.status}</span>
+                      <span className="text-gray-700">{task.status}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-slate-300">{task.assignedToName || "Unassigned"}</span>
+                    <span className="text-gray-700">{task.assignedToName || "Unassigned"}</span>
                   </td>
                   <td className="px-4 py-3">
                     {task.dueDate ? (
                       <span
                         className={
                           isOverdue(task)
-                            ? "text-red-400 font-semibold"
+                            ? "text-red-600 font-semibold"
                             : isDueToday(task)
-                            ? "text-yellow-400 font-semibold"
-                            : "text-slate-300"
+                            ? "text-yellow-600 font-semibold"
+                            : "text-gray-700"
                         }
                       >
                         {format(new Date(task.dueDate), "MMM d, yyyy")}
                       </span>
                     ) : (
-                      <span className="text-slate-500">No due date</span>
+                      <span className="text-gray-400">No due date</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {task.propertyAddress ? (
-                      <span className="text-slate-300 text-sm">
+                      <span className="text-gray-600 text-sm">
                         {task.propertyAddress}, {task.propertyCity}
                       </span>
                     ) : (
-                      <span className="text-slate-500">-</span>
+                      <span className="text-gray-400">-</span>
                     )}
                   </td>
                 </tr>
@@ -438,13 +400,13 @@ export function TasksList() {
           </table>
 
           {filteredTasks.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-gray-400">
               <p>No tasks found</p>
             </div>
           )}
         </div>
 
-        <div className="mt-4 text-sm text-slate-400">
+        <div className="mt-4 text-sm text-gray-500">
           Showing {filteredTasks.length} of {tasks.length} tasks
         </div>
       </div>

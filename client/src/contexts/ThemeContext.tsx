@@ -22,8 +22,12 @@ export function ThemeProvider({
   switchable = false,
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
+    // Always clear any stale dark theme from localStorage
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" && !switchable) {
+      localStorage.removeItem("theme");
+    }
     if (switchable) {
-      const stored = localStorage.getItem("theme");
       return (stored as Theme) || defaultTheme;
     }
     return defaultTheme;

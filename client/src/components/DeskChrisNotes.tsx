@@ -265,7 +265,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           rows={3}
-          className="resize-none bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+          className="resize-none bg-white border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
         />
 
         <div className="space-y-2">
@@ -327,12 +327,12 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
 
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Search notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-slate-200"
+            className="pl-10 bg-white border-gray-200"
           />
         </div>
         <Button
@@ -340,7 +340,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
           size="sm"
           onClick={handleExportCSV}
           disabled={deskChrisNotes.length === 0}
-          className="whitespace-nowrap border-slate-200"
+          className="whitespace-nowrap border-gray-200"
         >
           <Download className="h-4 w-4 mr-2" />
           Export
@@ -360,18 +360,18 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
       <div className="space-y-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
           </div>
         ) : deskChrisNotes.length === 0 ? (
-          <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-            <StickyNote className="h-8 w-8 mx-auto mb-2 text-slate-200" />
+          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <StickyNote className="h-8 w-8 mx-auto mb-2 text-gray-300" />
             <p className="text-sm">No Desk-Chris notes yet</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse bg-white">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="px-2 py-2 text-center w-12">
                     <Checkbox
                       checked={selectedNotes.length === filteredNotes.length && filteredNotes.length > 0}
@@ -391,7 +391,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredNotes.map((note) => (
-                  <tr key={note.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={note.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-2 py-2 text-center">
                       <Checkbox
                         checked={selectedNotes.includes(note.id)}

@@ -13,16 +13,25 @@ interface DroppableColumnProps {
 
 const colorClasses = {
   slate: {
-    header: "bg-slate-700 border-slate-600",
-    badge: "bg-slate-600 text-slate-200",
+    header: "bg-gray-100 border-gray-300",
+    headerText: "text-gray-800",
+    badge: "bg-gray-200 text-gray-700",
+    body: "bg-gray-50 border-gray-200",
+    bodyOver: "bg-blue-50/50 border-blue-400",
   },
   blue: {
-    header: "bg-blue-900 border-blue-700",
-    badge: "bg-blue-700 text-blue-100",
+    header: "bg-blue-50 border-blue-200",
+    headerText: "text-blue-800",
+    badge: "bg-blue-100 text-blue-700",
+    body: "bg-blue-50/30 border-blue-100",
+    bodyOver: "bg-blue-100/50 border-blue-400",
   },
   green: {
-    header: "bg-green-900 border-green-700",
-    badge: "bg-green-700 text-green-100",
+    header: "bg-green-50 border-green-200",
+    headerText: "text-green-800",
+    badge: "bg-green-100 text-green-700",
+    body: "bg-green-50/30 border-green-100",
+    bodyOver: "bg-green-100/50 border-green-400",
   },
 };
 
@@ -38,7 +47,7 @@ export function DroppableColumn({ id, title, count, color, children, onAddTask }
       {/* Column Header */}
       <div className={`${colors.header} border rounded-t-lg px-4 py-3 flex items-center justify-between`}>
         <div className="flex items-center gap-3">
-          <h2 className="font-bold text-white">{title}</h2>
+          <h2 className={`font-bold ${colors.headerText}`}>{title}</h2>
           <span className={`${colors.badge} px-2 py-1 rounded-full text-xs font-semibold`}>
             {count}
           </span>
@@ -47,18 +56,16 @@ export function DroppableColumn({ id, title, count, color, children, onAddTask }
           variant="ghost"
           size="sm"
           onClick={onAddTask}
-          className="h-7 w-7 p-0 hover:bg-white/10"
+          className="h-7 w-7 p-0 hover:bg-black/5"
         >
-          <Plus className="w-4 h-4 text-white" />
+          <Plus className="w-4 h-4 text-gray-600" />
         </Button>
       </div>
 
       {/* Column Content */}
       <div
         ref={setNodeRef}
-        className={`flex-1 bg-slate-800 border-x border-b border-slate-700 rounded-b-lg p-4 min-h-[600px] transition-colors ${
-          isOver ? "bg-slate-700/50 border-blue-500" : ""
-        }`}
+        className={`flex-1 ${isOver ? colors.bodyOver : colors.body} border-x border-b rounded-b-lg p-4 min-h-[600px] transition-colors`}
       >
         {children}
       </div>
