@@ -1159,6 +1159,24 @@ export const renovationEstimates = mysqlTable("renovationEstimates", {
   offer70: int("offer70"), // 70% of estimated value
   offer90: int("offer90"), // 90% of estimated value
   
+  // Custom formula rates (editable per property/region)
+  kitchenRate: decimal("kitchenRate", { precision: 10, scale: 2 }).default("180.00"),
+  kitchenPct: decimal("kitchenPct", { precision: 5, scale: 2 }).default("10.00"),
+  bathroomRate: decimal("bathroomRate", { precision: 10, scale: 2 }).default("110.00"),
+  bathroomPct: decimal("bathroomPct", { precision: 5, scale: 2 }).default("3.00"),
+  paintingRate: decimal("paintingRate", { precision: 10, scale: 2 }).default("6.00"),
+  flooringRate: decimal("flooringRate", { precision: 10, scale: 2 }).default("11.00"),
+  flooringPct: decimal("flooringPct", { precision: 5, scale: 2 }).default("80.00"),
+  roofRate: decimal("roofRate", { precision: 10, scale: 2 }).default("15.00"),
+  acRate: decimal("acRate", { precision: 10, scale: 2 }).default("6.50"),
+  cleaningRate: decimal("cleaningRate", { precision: 10, scale: 2 }).default("1.50"),
+  gardensRate: decimal("gardensRate", { precision: 10, scale: 2 }).default("1.80"),
+  miscPct: decimal("miscPct", { precision: 5, scale: 2 }).default("5.00"),
+  permitsPct: decimal("permitsPct", { precision: 5, scale: 2 }).default("3.00"),
+  holdCostRate: decimal("holdCostRate", { precision: 10, scale: 2 }).default("2.00"),
+  holdCostMonths: int("holdCostMonths").default(6),
+  commissionPct: decimal("commissionPct", { precision: 5, scale: 2 }).default("6.00"),
+
   // Metadata
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

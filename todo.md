@@ -1666,3 +1666,10 @@
 - [x] Fix dueDate handling: empty string "" caused Invalid Date, now sends undefined; server validates length before new Date()
 - [x] Fix create mutation: explicitly map fields instead of spreading input (avoids extra fields like repeat/assignedTo)
 - [x] Fix update mutation: handle empty dueDate string by setting null
+
+## Feature - Editable Renovation Formulas & Total Display (Feb 19, 2026) - COMPLETED ✅
+- [x] Make renovation calculator multipliers and percentages editable per property (all rates, %, months customizable)
+- [x] Show total renovation cost at top of Comparables section with offers (60%/70%/90%)
+- [x] Show amber warning when no calculation exists yet with current property value
+- [x] Added "Edit Formulas" toggle button and "Reset Defaults" button
+- [x] Store custom formulas per property in database (16 new columns in renovation_estimates)
