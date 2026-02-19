@@ -2338,9 +2338,17 @@ export const appRouter = router({
           throw new Error('Either title or description is required');
         }
         const taskData: any = {
-          ...input,
+          title: input.title,
+          description: input.description,
+          taskType: input.taskType,
+          priority: input.priority,
+          status: input.status,
+          propertyId: input.propertyId,
+          dueTime: input.dueTime,
+          repeatTask: input.repeatTask,
+          checklist: input.checklist,
           createdById: ctx.user.id,
-          dueDate: input.dueDate ? new Date(input.dueDate) : null,
+          dueDate: input.dueDate && input.dueDate.length > 0 ? new Date(input.dueDate) : null,
         };
         return await db.createTask(taskData);
       }),
@@ -2367,8 +2375,10 @@ export const appRouter = router({
         const { taskId, ...updates } = input;
         const updateData: any = { ...updates };
         
-        if (updates.dueDate) {
+        if (updates.dueDate && updates.dueDate.length > 0) {
           updateData.dueDate = new Date(updates.dueDate);
+        } else if (updates.dueDate === '') {
+          updateData.dueDate = null;
         }
         if (updates.completedDate) {
           updateData.completedDate = new Date(updates.completedDate);

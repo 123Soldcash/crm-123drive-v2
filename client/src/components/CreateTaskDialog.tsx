@@ -111,9 +111,9 @@ export function CreateTaskDialog({
         taskType,
         priority,
         status,
-        dueDate: dueDate || "",
-        repeat,
-        assignedTo: assignedTo || "",
+        dueDate: dueDate || undefined,
+        dueTime: dueTime || undefined,
+        repeatTask: repeat !== "No repeat" ? repeat as any : undefined,
         propertyId: defaultPropertyId,
       };
 

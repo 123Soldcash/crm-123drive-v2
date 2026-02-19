@@ -1661,3 +1661,8 @@
 
 ## BUG FIX - Task Creation Error: taskId undefined (Feb 19, 2026) - COMPLETED ✅
 - [x] Fix CreateTaskDialog sending `id` instead of `taskId` when updating a task (line 122: id → taskId)
+
+## BUG FIX - Task dueDate toISOString error (Feb 19, 2026) - COMPLETED ✅
+- [x] Fix dueDate handling: empty string "" caused Invalid Date, now sends undefined; server validates length before new Date()
+- [x] Fix create mutation: explicitly map fields instead of spreading input (avoids extra fields like repeat/assignedTo)
+- [x] Fix update mutation: handle empty dueDate string by setting null
