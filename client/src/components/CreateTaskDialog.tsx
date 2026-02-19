@@ -119,7 +119,7 @@ export function CreateTaskDialog({
 
       if (editingTask) {
         await updateTaskMutation.mutateAsync({
-          id: editingTask.id,
+          taskId: editingTask.id,
           ...taskData,
         });
         toast.success("Task updated successfully!");

@@ -1658,3 +1658,6 @@
 - [x] Batch replace text-slate-200/300 → text-gray-300/400 for secondary text
 - [x] Batch replace border-slate-* → border-gray-* for borders
 - [x] Only remaining dark elements: image overlays (bg-black/60, bg-slate-900/60) — intentional for contrast
+
+## BUG FIX - Task Creation Error: taskId undefined (Feb 19, 2026) - COMPLETED ✅
+- [x] Fix CreateTaskDialog sending `id` instead of `taskId` when updating a task (line 122: id → taskId)
