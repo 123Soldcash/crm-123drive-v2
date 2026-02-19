@@ -1632,3 +1632,13 @@
 - [x] Add DealMachine Contact Data CSV import field in Edit Lead modal (importContactsFromDealMachineCSV mutation)
 - [x] Support both paste CSV text and upload .csv file
 - [x] All 194 Twilio/call tests pass, 33 DealMachine parser tests pass
+
+## Feature - Comparables Section (Feb 19, 2026) - COMPLETED ✅
+- [x] Create comparables table in database schema (address, bed, bath, sf, lotSize, yearBuilt, distance, saleDate, amount, buyerName, condition, category)
+- [x] Create renovation_estimates table for storing calculator results
+- [x] Create backend CRUD procedures for comparables
+- [x] Build Comparables UI with 5 category tables (Sold 6mo, Sold 12mo, Pending, For Sale, For Rent)
+- [x] Build Renovation Cost Calculator with auto-calculation based on SF
+- [x] Build Offer Generator at 60%, 70%, 90% of estimated value with net profit estimates
+- [x] Integrate into PropertyDetail page as collapsible section
+- [x] Test all calculations and CRUD operations

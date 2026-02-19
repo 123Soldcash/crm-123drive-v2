@@ -47,6 +47,7 @@ import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { StickyPropertyHeader } from "@/components/StickyPropertyHeader";
+import Comparables from "@/components/Comparables";
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
@@ -66,6 +67,10 @@ export default function PropertyDetail() {
     const saved = localStorage.getItem('showFamilyTree');
     return saved ? JSON.parse(saved) : false;
   });
+  const [showComparables, setShowComparables] = useState(() => {
+    const saved = localStorage.getItem('showComparables');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [showFieldVisit, setShowFieldVisit] = useState(() => {
     const saved = localStorage.getItem('showFieldVisit');
     return saved ? JSON.parse(saved) : false;
@@ -82,6 +87,9 @@ export default function PropertyDetail() {
   useEffect(() => {
     localStorage.setItem('showFieldVisit', JSON.stringify(showFieldVisit));
   }, [showFieldVisit]);
+  useEffect(() => {
+    localStorage.setItem('showComparables', JSON.stringify(showComparables));
+  }, [showComparables]);
 
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
@@ -421,6 +429,15 @@ export default function PropertyDetail() {
       <AutomatedFollowUps propertyId={propertyId} />
       
       {/* Collapsible Sections */}
+      <CollapsibleSection title="Comparables & Renovation Calculator" icon="📊" isOpen={showComparables} onToggle={() => setShowComparables(!showComparables)} accentColor="blue">
+        <Comparables
+          propertyId={propertyId}
+          buildingSF={property?.buildingSquareFeet ? parseInt(String(property.buildingSquareFeet)) : undefined}
+          totalBaths={property?.totalBaths ? parseInt(String(property.totalBaths)) : undefined}
+          estimatedValue={property?.estimatedValue ? parseInt(String(property.estimatedValue)) : undefined}
+        />
+      </CollapsibleSection>
+
       <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
         <DeepSearchTabs propertyId={propertyId} />
       </CollapsibleSection>

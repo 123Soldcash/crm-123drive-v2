@@ -1078,3 +1078,92 @@ export const callNotes = mysqlTable("callNotes", {
 
 export type CallNote = typeof callNotes.$inferSelect;
 export type InsertCallNote = typeof callNotes.$inferInsert;
+
+
+/**
+ * Comparables table - stores comparable properties for analysis
+ * Each comparable belongs to a property and has a category (Sold 6mo, Sold 12mo, Pending, For Sale, For Rent)
+ */
+export const comparables = mysqlTable("comparables", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(), // The subject property this comp belongs to
+  category: mysqlEnum("category", [
+    "SOLD_6MO",
+    "SOLD_12MO",
+    "PENDING",
+    "FOR_SALE",
+    "FOR_RENT"
+  ]).notNull(),
+  
+  // Comparable property details
+  address: varchar("address", { length: 500 }).notNull(),
+  bedrooms: int("bedrooms"),
+  bathrooms: decimal("bathrooms", { precision: 3, scale: 1 }),
+  squareFeet: int("squareFeet"),
+  lotSize: varchar("lotSize", { length: 100 }), // e.g., "0.25 acres" or "10,000 sqft"
+  yearBuilt: int("yearBuilt"),
+  distanceFromSubject: varchar("distanceFromSubject", { length: 50 }), // e.g., "0.3 mi"
+  
+  // Sale/listing info
+  saleDate: varchar("saleDate", { length: 50 }), // Flexible date format
+  listedDate: varchar("listedDate", { length: 50 }),
+  amount: int("amount"), // Sale or listing price
+  buyerName: varchar("buyerName", { length: 255 }),
+  overallCondition: varchar("overallCondition", { length: 100 }), // e.g., "Good", "Fair", "Excellent", "Needs Work"
+  
+  // Source
+  source: varchar("source", { length: 100 }), // e.g., "Zillow", "Redfin", "Realtor", "Movoto"
+  notes: text("notes"),
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Comparable = typeof comparables.$inferSelect;
+export type InsertComparable = typeof comparables.$inferInsert;
+
+/**
+ * Renovation Estimates table - stores renovation cost calculations for a property
+ * All costs are auto-calculated based on square footage formulas
+ */
+export const renovationEstimates = mysqlTable("renovationEstimates", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().unique(), // One estimate per property
+  
+  // Input fields
+  squareFeet: int("squareFeet").notNull(), // SF used for calculations
+  numberOfBathrooms: int("numberOfBathrooms").default(1), // For bathroom cost multiplier
+  estimatedPropertyValue: int("estimatedPropertyValue"), // For commission and offer calculations
+  
+  // Calculated renovation costs (stored for audit/override)
+  kitchenCost: int("kitchenCost"), // $180 × 10% of SF
+  bathroomCost: int("bathroomCost"), // $110 × 3% of SF × number of bathrooms
+  paintingCost: int("paintingCost"), // $6 × SF
+  flooringCost: int("flooringCost"), // $11 × 80% of SF
+  roofCost: int("roofCost"), // $15 × SF
+  acCost: int("acCost"), // $6.5 × SF
+  cleaningCost: int("cleaningCost"), // $1.5 × SF
+  gardensCost: int("gardensCost"), // $1.8 × SF
+  
+  // Subtotals
+  renovationSubtotal: int("renovationSubtotal"), // Sum of all above
+  miscellaneous: int("miscellaneous"), // 5% of renovation subtotal
+  permitsAndRelated: int("permitsAndRelated"), // 3% of renovation subtotal
+  holdCost: int("holdCost"), // $2.00 × SF × 6 months
+  realEstateCommission: int("realEstateCommission"), // 6% × (estimated price + total renovations)
+  totalGeral: int("totalGeral"), // Grand total
+  
+  // Offer calculations
+  offer60: int("offer60"), // 60% of estimated value
+  offer70: int("offer70"), // 70% of estimated value
+  offer90: int("offer90"), // 90% of estimated value
+  
+  // Metadata
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RenovationEstimate = typeof renovationEstimates.$inferSelect;
+export type InsertRenovationEstimate = typeof renovationEstimates.$inferInsert;

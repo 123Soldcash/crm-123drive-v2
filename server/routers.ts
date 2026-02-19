@@ -19,6 +19,7 @@ import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
 import { dealmachineRolandoRouter } from "./routers/dealmachine-rolando";
+import { comparablesRouter } from "./routers/comparables";
 import { importDealMachineRouter } from "./routers/import-dealmachine";
 import { findDuplicates } from "./utils/duplicateDetection";
 import { ENV } from "./_core/env";
@@ -28,6 +29,7 @@ export const appRouter = router({
   agents: agentsRouter,
   dealmachine: dealmachineRouter,
   dealmachineRolando: dealmachineRolandoRouter,
+  comparables: comparablesRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
