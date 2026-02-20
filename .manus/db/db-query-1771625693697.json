@@ -1,0 +1,29 @@
+{
+  "query": "SELECT propertyId, fm_delinquentTax2025, fm_delinquentTax2024, fm_delinquentTax2023, fm_delinquentTax2022, fm_delinquentTax2021, fm_delinquentTax2020, fm_delinquentTaxTotal, fm_needsRepairs, fm_repairCategories, fm_estimatedRepairCost, fm_mortgage, fm_liens, fm_lienNotes, fm_codeViolations, fm_codeTaxNotes, fm_deedHistory FROM financialModule WHERE propertyId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT propertyId, fm_delinquentTax2025, fm_delinquentTax2024, fm_delinquentTax2023, fm_delinquentTax2022, fm_delinquentTax2021, fm_delinquentTax2020, fm_delinquentTaxTotal, fm_needsRepairs, fm_repairCategories, fm_estimatedRepairCost, fm_mortgage, fm_liens, fm_lienNotes, fm_codeViolations, fm_codeTaxNotes, fm_deedHistory FROM financialModule WHERE propertyId = 1;",
+  "rows": [
+    {
+      "propertyId": "1",
+      "fm_delinquentTax2025": "125",
+      "fm_delinquentTax2024": "125",
+      "fm_delinquentTax2023": "2500",
+      "fm_delinquentTax2022": "2450",
+      "fm_delinquentTax2021": "2390",
+      "fm_delinquentTax2020": "1250",
+      "fm_delinquentTaxTotal": "8840",
+      "fm_needsRepairs": "1",
+      "fm_repairCategories": "[\"Outdated\"]",
+      "fm_estimatedRepairCost": "50000",
+      "fm_mortgage": "Yes",
+      "fm_liens": "1",
+      "fm_lienNotes": "repreiproiq",
+      "fm_codeViolations": "1",
+      "fm_codeTaxNotes": "rerepreqp",
+      "fm_deedHistory": "[{\"type\":\"Quit Claim Deed\",\"date\":\"2025-12-28\",\"amount\":\"0\",\"notes\":\"\"}]"
+    }
+  ],
+  "messages": [],
+  "stdout": "propertyId\tfm_delinquentTax2025\tfm_delinquentTax2024\tfm_delinquentTax2023\tfm_delinquentTax2022\tfm_delinquentTax2021\tfm_delinquentTax2020\tfm_delinquentTaxTotal\tfm_needsRepairs\tfm_repairCategories\tfm_estimatedRepairCost\tfm_mortgage\tfm_liens\tfm_lienNotes\tfm_codeViolations\tfm_codeTaxNotes\tfm_deedHistory\n1\t125\t125\t2500\t2450\t2390\t1250\t8840\t1\t[\"Outdated\"]\t50000\tYes\t1\trepreiproiq\t1\trerepreqp\t[{\"type\":\"Quit Claim Deed\",\"date\":\"2025-12-28\",\"amount\":\"0\",\"notes\":\"\"}]\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

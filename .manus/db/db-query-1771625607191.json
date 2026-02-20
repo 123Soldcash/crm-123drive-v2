@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as overview_count FROM deepSearchOverview; SELECT COUNT(*) as financial_count FROM financialModule;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as overview_count FROM deepSearchOverview; SELECT COUNT(*) as financial_count FROM financialModule;",
+  "rows": [
+    {
+      "overview_count": "0"
+    },
+    {
+      "overview_count": "financial_count"
+    },
+    {
+      "overview_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "overview_count\n0\nfinancial_count\n0\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

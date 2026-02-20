@@ -1,0 +1,23 @@
+{
+  "query": "SELECT propertyId, ds_propertyType, ds_conditionRating, ds_conditionTags, ds_occupancy, ds_probate, ds_probateNotes, LEFT(ds_generalNotes, 100) as notes_preview FROM deepSearchOverview WHERE propertyId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT propertyId, ds_propertyType, ds_conditionRating, ds_conditionTags, ds_occupancy, ds_probate, ds_probateNotes, LEFT(ds_generalNotes, 100) as notes_preview FROM deepSearchOverview WHERE propertyId = 1;",
+  "rows": [
+    {
+      "propertyId": "1",
+      "ds_propertyType": "Single Family Home",
+      "ds_conditionRating": "Average",
+      "ds_conditionTags": "[\"Boarded Up\",\"Needs New Roof\",\"Abandoned\"]",
+      "ds_occupancy": "Owner Occupied",
+      "ds_probate": "1",
+      "ds_probateNotes": "jkdjfkajfkja",
+      "notes_preview": "DECEASED: VEACH, DOROTHY L EST"
+    }
+  ],
+  "messages": [
+    "KEY CONTACTS:",
+    "• Charlotte Holland (Daughter) - 285 SW 12th St., Pomp"
+  ],
+  "stdout": "propertyId\tds_propertyType\tds_conditionRating\tds_conditionTags\tds_occupancy\tds_probate\tds_probateNotes\tnotes_preview\n1\tSingle Family Home\tAverage\t[\"Boarded Up\",\"Needs New Roof\",\"Abandoned\"]\tOwner Occupied\t1\tjkdjfkajfkja\tDECEASED: VEACH, DOROTHY L EST\n\nKEY CONTACTS:\n• Charlotte Holland (Daughter) - 285 SW 12th St., Pomp\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

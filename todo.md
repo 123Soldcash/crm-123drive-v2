@@ -1709,3 +1709,9 @@
 - [x] Display Distress Score in lead header with band (LOW/MEDIUM/HIGH) + top drivers
 - [x] Integrate new components into PropertyDetail page
 - [x] Write tests for new Deep Search, Financial, and Distress Score — 27 tests passing
+
+## DATA MIGRATION - Old Deep Search to New Tables (Feb 20, 2026) - COMPLETED
+- [x] Analyze old propertyDeepSearch schema and existing data (22 records found)
+- [x] Map old fields to new deepSearchOverview and financialModule tables
+- [x] Build and run migration script to copy relevant data (22 overview + 16 financial records migrated)
+- [x] Verify migrated data is correct (verified property 660003 and propertyId=1)

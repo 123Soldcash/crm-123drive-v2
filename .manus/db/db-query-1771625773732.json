@@ -1,0 +1,19 @@
+{
+  "query": "SELECT propertyId, ds_probate, ds_conditionRating, ds_conditionTags, ds_occupancy, ds_propertyType, ds_propertyTags FROM deepSearchOverview WHERE propertyId = 660003;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT propertyId, ds_probate, ds_conditionRating, ds_conditionTags, ds_occupancy, ds_propertyType, ds_propertyTags FROM deepSearchOverview WHERE propertyId = 660003;",
+  "rows": [
+    {
+      "propertyId": "660003",
+      "ds_probate": "0",
+      "ds_conditionRating": "Average",
+      "ds_conditionTags": "[\"Abandoned\",\"Needs New Roof\",\"Needs Repairs\",\"Old / Damaged Carport\"]",
+      "ds_occupancy": "Vacant",
+      "ds_propertyType": "Single Family Home",
+      "ds_propertyTags": "[]"
+    }
+  ],
+  "messages": [],
+  "stdout": "propertyId\tds_probate\tds_conditionRating\tds_conditionTags\tds_occupancy\tds_propertyType\tds_propertyTags\n660003\t0\tAverage\t[\"Abandoned\",\"Needs New Roof\",\"Needs Repairs\",\"Old / Damaged Carport\"]\tVacant\tSingle Family Home\t[]\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
