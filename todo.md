@@ -1685,3 +1685,27 @@
 - [x] Clean up related records (propertyAgents, leadAssignments, properties.assignedAgentId) on user deletion
 - [x] Rewrite reassignAgentProperties to work directly with users/properties tables
 - [x] Add role-based access control checks (admin-only, prevent self-deletion)
+
+## DEEP SEARCH COMPLETE REBUILD (Feb 20, 2026) — From Spec Document — COMPLETED
+- [x] Remove old Deep Search component entirely (has duplicated data with property header)
+- [x] Create new DB schema: deepSearchOverview table (Property Basics, Condition, Occupancy, Seller Situation, Legal & Title, Probate, Notes)
+- [x] Create new DB schema: financialModule table (Delinquent Taxes, Repairs, Debt & Liens, Foreclosure, Code/Tax Lien, Deed History)
+- [x] Build backend tRPC routers for Deep Search Overview CRUD
+- [x] Build backend tRPC routers for Financial Module CRUD
+- [x] Build Distress Score auto-calculator (0-100, 5 categories with caps)
+- [x] Build Deep Search Overview UI: Property Basics section
+- [x] Build Deep Search Overview UI: Condition section (rating + tags)
+- [x] Build Deep Search Overview UI: Occupancy section (+ eviction risk)
+- [x] Build Deep Search Overview UI: Seller Situation section (3 sub-categories)
+- [x] Build Deep Search Overview UI: Legal & Title section (3 sub-categories)
+- [x] Build Deep Search Overview UI: Probate section (switch + stage + findings)
+- [x] Build Deep Search Overview UI: Notes section (General, Probate, Internal)
+- [x] Build Financial Module UI: Card 1 — Delinquent Taxes (year rows + auto total)
+- [x] Build Financial Module UI: Card 2 — Repairs (yes/no + categories + cost)
+- [x] Build Financial Module UI: Card 3 — Debt & Liens (mortgage + liens + types)
+- [x] Build Financial Module UI: Card 4 — Foreclosure/Pre-Foreclosure
+- [x] Build Financial Module UI: Card 5 — Code/Tax Lien (optional)
+- [x] Build Financial Module UI: Card 6 — Deed/Title Costs (optional, table)
+- [x] Display Distress Score in lead header with band (LOW/MEDIUM/HIGH) + top drivers
+- [x] Integrate new components into PropertyDetail page
+- [x] Write tests for new Deep Search, Financial, and Distress Score — 27 tests passing

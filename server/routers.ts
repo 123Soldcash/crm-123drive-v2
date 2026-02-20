@@ -24,10 +24,12 @@ import { comparablesRouter } from "./routers/comparables";
 import { importDealMachineRouter } from "./routers/import-dealmachine";
 import { findDuplicates } from "./utils/duplicateDetection";
 import { ENV } from "./_core/env";
+import { deepSearchRouter } from "./routers/deep-search";
 
 export const appRouter = router({
   system: systemRouter,
   agents: agentsRouter,
+  deepSearch: deepSearchRouter,
   dealmachine: dealmachineRouter,
   dealmachineRolando: dealmachineRolandoRouter,
   comparables: comparablesRouter,

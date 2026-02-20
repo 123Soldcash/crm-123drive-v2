@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
+import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 
 // Desk options with colors
 const DESK_OPTIONS = [
@@ -260,6 +261,8 @@ export function StickyPropertyHeader({
               </div>
             )}
           </div>
+
+          <DistressScoreBadge propertyId={property.id} />
 
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (

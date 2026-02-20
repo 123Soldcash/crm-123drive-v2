@@ -43,6 +43,13 @@
       "when": 1771538786247,
       "tag": "0005_bizarre_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1771621809690,
+      "tag": "0006_jittery_thunderbolt_ross",
+      "breakpoints": true
     }
   ]
 }

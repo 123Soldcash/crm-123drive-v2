@@ -34,7 +34,8 @@ import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
-import { DeepSearchTabs } from "@/components/DeepSearchTabs";
+import { DeepSearchOverview } from "@/components/DeepSearchOverview";
+import { FinancialModule } from "@/components/FinancialModule";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { STAGE_CONFIGS } from "@/lib/stageConfig";
 import { LeadSummary } from "@/components/LeadSummary";
@@ -438,8 +439,14 @@ export default function PropertyDetail() {
         />
       </CollapsibleSection>
 
-      <CollapsibleSection title="Deep Search" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
-        <DeepSearchTabs propertyId={propertyId} />
+      <CollapsibleSection title="Deep Search Overview" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
+        <div className="space-y-6">
+          <DeepSearchOverview propertyId={propertyId} />
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">💰 Financial Module</h3>
+            <FinancialModule propertyId={propertyId} />
+          </div>
+        </div>
       </CollapsibleSection>
 
       <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} accentColor="yellow">

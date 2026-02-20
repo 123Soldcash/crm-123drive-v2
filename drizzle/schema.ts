@@ -1185,3 +1185,123 @@ export const renovationEstimates = mysqlTable("renovationEstimates", {
 
 export type RenovationEstimate = typeof renovationEstimates.$inferSelect;
 export type InsertRenovationEstimate = typeof renovationEstimates.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEW DEEP SEARCH OVERVIEW MODULE (Feb 2026 Rebuild)
+// FLAGS and categories only — no dollar amounts (those go in Financial)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const deepSearchOverview = mysqlTable("deepSearchOverview", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().unique(),
+
+  // ── Property Basics ──────────────────────────────────────────────────────
+  propertyType: mysqlEnum("ds_propertyType", [
+    "Single Family Home", "Condo", "Duplex", "Triplex", "Fourplex",
+    "Townhouse", "Mobile Home", "Vacant Lot", "Other"
+  ]),
+  propertyUse: mysqlEnum("ds_propertyUse", ["Residential", "Commercial", "Mixed Use"]),
+  propertyTags: text("ds_propertyTags"), // JSON array of selected tags
+
+  // ── Condition ────────────────────────────────────────────────────────────
+  conditionRating: mysqlEnum("ds_conditionRating", ["Excellent", "Good", "Fair", "Average", "Poor"]),
+  conditionTags: text("ds_conditionTags"), // JSON array of selected condition tags
+
+  // ── Occupancy ────────────────────────────────────────────────────────────
+  occupancy: mysqlEnum("ds_occupancy", [
+    "Vacant", "Owner Occupied", "Tenant Occupied", "Squatter Occupied", "Unknown"
+  ]),
+  evictionRisk: mysqlEnum("ds_evictionRisk", ["Low", "Medium", "High"]),
+  evictionNotes: text("ds_evictionNotes"),
+
+  // ── Seller Situation (Motivation) ────────────────────────────────────────
+  sellerFinancialPressure: text("ds_sellerFinancialPressure"), // JSON array: Behind Taxes, Need Cash Quickly, etc.
+  sellerLifeEvents: text("ds_sellerLifeEvents"), // JSON array: Divorce, Death in Family, etc.
+  sellerLegalBehavioral: text("ds_sellerLegalBehavioral"), // JSON array: Deportation, Jail, Hoarder
+
+  // ── Legal & Title ────────────────────────────────────────────────────────
+  legalOwnershipTitle: text("ds_legalOwnershipTitle"), // JSON array: Title Issues, Break in Chain, etc.
+  legalCourtLawsuit: text("ds_legalCourtLawsuit"), // JSON array: Pending Lawsuit, Judgments, etc.
+  legalPropertyStatus: text("ds_legalPropertyStatus"), // JSON array: Occupied Without Consent, Code Violations, etc.
+
+  // ── Probate ──────────────────────────────────────────────────────────────
+  probate: int("ds_probate").default(0), // 0=No, 1=Yes
+  probateStage: mysqlEnum("ds_probateStage", [
+    "Not Started", "Open Case", "Executor Assigned", "Court Approval Required",
+    "Ready to Sell", "Probate Not Completed", "Finished"
+  ]),
+  probateFindings: text("ds_probateFindings"), // JSON array of findings
+
+  // ── Notes ────────────────────────────────────────────────────────────────
+  generalNotes: text("ds_generalNotes"),
+  probateNotes: text("ds_probateNotes"),
+  internalNotes: text("ds_internalNotes"),
+
+  // ── Distress Score (auto-calculated) ─────────────────────────────────────
+  distressScore: int("ds_distressScore").default(0),
+  distressDrivers: text("ds_distressDrivers"), // JSON array of top 5 drivers
+
+  // ── Metadata ─────────────────────────────────────────────────────────────
+  createdAt: timestamp("ds_createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("ds_updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DeepSearchOverview = typeof deepSearchOverview.$inferSelect;
+export type InsertDeepSearchOverview = typeof deepSearchOverview.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEW FINANCIAL MODULE (Feb 2026 Rebuild)
+// NUMBERS only — dollar amounts, year breakdowns, estimates
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const financialModule = mysqlTable("financialModule", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull().unique(),
+
+  // ── Card 1: Delinquent Taxes ─────────────────────────────────────────────
+  delinquentTax2025: int("fm_delinquentTax2025"),
+  delinquentTax2024: int("fm_delinquentTax2024"),
+  delinquentTax2023: int("fm_delinquentTax2023"),
+  delinquentTax2022: int("fm_delinquentTax2022"),
+  delinquentTax2021: int("fm_delinquentTax2021"),
+  delinquentTax2020: int("fm_delinquentTax2020"),
+  delinquentTaxTotal: int("fm_delinquentTaxTotal"),
+  taxNotes: text("fm_taxNotes"),
+
+  // ── Card 2: Repairs ──────────────────────────────────────────────────────
+  needsRepairs: int("fm_needsRepairs").default(0), // 0=No, 1=Yes
+  repairCategories: text("fm_repairCategories"), // JSON array: Roof, Kitchen, Bath, Outdated, Other
+  estimatedRepairCost: int("fm_estimatedRepairCost"),
+  repairNotes: text("fm_repairNotes"),
+
+  // ── Card 3: Debt & Liens ─────────────────────────────────────────────────
+  mortgage: mysqlEnum("fm_mortgage", ["Yes", "No", "Unknown"]),
+  mortgageNotes: text("fm_mortgageNotes"),
+  liens: int("fm_liens").default(0), // 0=No, 1=Yes
+  totalLienAmount: int("fm_totalLienAmount"),
+  lienTypes: text("fm_lienTypes"), // JSON array: HOA, IRS, Judgment, Utility, Contractor, Other
+  lienNotes: text("fm_lienNotes"),
+
+  // ── Card 4: Foreclosure / Pre-Foreclosure ────────────────────────────────
+  preForeclosure: int("fm_preForeclosure").default(0), // 0=No, 1=Yes
+  auctionScheduled: int("fm_auctionScheduled").default(0),
+  lisPendens: int("fm_lisPendens").default(0),
+  nodFiled: int("fm_nodFiled").default(0),
+  foreclosureNotes: text("fm_foreclosureNotes"),
+
+  // ── Card 5: Code / Tax Lien ──────────────────────────────────────────────
+  codeViolations: int("fm_codeViolations").default(0), // 0=No, 1=Yes
+  taxLien: int("fm_taxLien").default(0), // 0=No, 1=Yes
+  codeTaxNotes: text("fm_codeTaxNotes"),
+
+  // ── Card 6: Deed / Title Costs ───────────────────────────────────────────
+  deedHistory: text("fm_deedHistory"), // JSON array: [{type, date, amount, notes}]
+
+  // ── Metadata ─────────────────────────────────────────────────────────────
+  createdAt: timestamp("fm_createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("fm_updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FinancialModule = typeof financialModule.$inferSelect;
+export type InsertFinancialModule = typeof financialModule.$inferInsert;
