@@ -1673,3 +1673,6 @@
 - [x] Show amber warning when no calculation exists yet with current property value
 - [x] Added "Edit Formulas" toggle button and "Reset Defaults" button
 - [x] Store custom formulas per property in database (16 new columns in renovation_estimates)
+
+## BUG FIX - db.deleteAgent is not a function (Feb 20, 2026) - COMPLETED ✅
+- [x] Fix deleteAgent: imported from agents.db.ts instead of calling through db namespace

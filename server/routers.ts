@@ -12,6 +12,7 @@ import { getWeightAdjustmentSummary } from "./utils/aiScoringWeights";
 import { searchLeadsByPhone } from "./db-phoneSearch";
 import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, getStageStats, bulkUpdateStages } from "./db-stageManagement";
 import { getDb } from "./db";
+import { deleteAgent as deleteAgentFn } from "./agents.db";
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
@@ -1295,7 +1296,8 @@ export const appRouter = router({
           throw new Error('Cannot delete your own account');
         }
         
-        return await db.deleteAgent(input.userId);
+        await deleteAgentFn(input.userId);
+        return { success: true };
       }),
     reassignAgentProperties: protectedProcedure
       .input(z.object({ fromAgentId: z.number(), toAgentId: z.number() }))
