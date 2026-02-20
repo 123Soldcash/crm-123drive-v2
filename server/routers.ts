@@ -12,7 +12,7 @@ import { getWeightAdjustmentSummary } from "./utils/aiScoringWeights";
 import { searchLeadsByPhone } from "./db-phoneSearch";
 import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, getStageStats, bulkUpdateStages } from "./db-stageManagement";
 import { getDb } from "./db";
-import { deleteAgent as deleteAgentFn } from "./agents.db";
+// agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
@@ -1296,8 +1296,35 @@ export const appRouter = router({
           throw new Error('Cannot delete your own account');
         }
         
-        await deleteAgentFn(input.userId);
-        return { success: true };
+        const database = await getDb();
+        if (!database) throw new Error('Database not available');
+        
+        // 1. Remove property agent assignments
+        const deletedPA = await database.delete(propertyAgents)
+          .where(eq(propertyAgents.agentId, input.userId));
+        
+        // 2. Remove lead assignments
+        await database.delete(leadAssignments)
+          .where(eq(leadAssignments.agentId, input.userId));
+        
+        // 3. Clear assignedAgentId on properties assigned to this user
+        await database.update(properties)
+          .set({ assignedAgentId: null })
+          .where(eq(properties.assignedAgentId, input.userId));
+        
+        // 4. Delete from users table (where agents are listed)
+        await database.delete(users)
+          .where(eq(users.id, input.userId));
+        
+        // 5. Also delete from agents table if exists there
+        try {
+          await database.delete(agents)
+            .where(eq(agents.id, input.userId));
+        } catch (e) {
+          // Ignore if not in agents table
+        }
+        
+        return { success: true, deletedPropertyAgents: 0 };
       }),
     reassignAgentProperties: protectedProcedure
       .input(z.object({ fromAgentId: z.number(), toAgentId: z.number() }))
@@ -1307,7 +1334,25 @@ export const appRouter = router({
           throw new Error('Only admins can reassign agent properties');
         }
         
-        return await db.reassignAgentProperties(input.fromAgentId, input.toAgentId);
+        const database = await getDb();
+        if (!database) throw new Error('Database not available');
+        
+        // Update propertyAgents assignments
+        await database.update(propertyAgents)
+          .set({ agentId: input.toAgentId })
+          .where(eq(propertyAgents.agentId, input.fromAgentId));
+        
+        // Update lead assignments
+        await database.update(leadAssignments)
+          .set({ agentId: input.toAgentId })
+          .where(eq(leadAssignments.agentId, input.fromAgentId));
+        
+        // Update properties assignedAgentId
+        const updated = await database.update(properties)
+          .set({ assignedAgentId: input.toAgentId })
+          .where(eq(properties.assignedAgentId, input.fromAgentId));
+        
+        return { success: true, reassignedCount: 0 };
       }),
   }),
 

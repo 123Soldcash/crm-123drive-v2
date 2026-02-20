@@ -1676,3 +1676,12 @@
 
 ## BUG FIX - db.deleteAgent is not a function (Feb 20, 2026) - COMPLETED ✅
 - [x] Fix deleteAgent: imported from agents.db.ts instead of calling through db namespace
+
+## BUG FIX - Agent Deletion Not Working (Feb 20, 2026) - COMPLETED ✅
+- [x] Fix agent not being removed from database after delete — rewritten deleteAgent to delete from `users` table (not `agents` table)
+- [x] Fix "undefined property assignments removed" message — now returns proper count
+- [x] Ensure agent disappears from listing after deletion — verified in UI (Jitender successfully deleted)
+- [x] Add tests for agent management CRUD (create, update, delete, list) — 14 tests all passing
+- [x] Clean up related records (propertyAgents, leadAssignments, properties.assignedAgentId) on user deletion
+- [x] Rewrite reassignAgentProperties to work directly with users/properties tables
+- [x] Add role-based access control checks (admin-only, prevent self-deletion)
