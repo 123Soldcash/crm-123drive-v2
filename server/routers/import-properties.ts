@@ -335,6 +335,10 @@ const CONTACT_COLUMN_MAP: Record<string, string> = {
   mailing_state: "mailingState",
   mailing_zip: "mailingZip",
   mailing_zipcode: "mailingZip",
+  current_mailing_address: "mailingAddress",
+  current_mailing_city: "mailingCity",
+  current_mailing_state: "mailingState",
+  current_mailing_zip_code: "mailingZip",
   // Previous mailing address
   mailing_address_previous: "mailingAddressPrev",
   mailing_address_city_previous: "mailingCityPrev",
@@ -359,14 +363,73 @@ function mapColumns(row: any, columnMap: Record<string, string>): Record<string,
 
 // ─── Insert contacts helper ──────────────────────────────────────────────────
 
+async function upsertPhoneForContact(
+  dbInstance: any,
+  contactId: number,
+  phoneNumber: string,
+  phoneType: string,
+  isPrimary: number,
+  metadata?: { dnc?: number; carrier?: string | null; isPrepaid?: number; activityStatus?: string | null; usage2Months?: string | null; usage12Months?: string | null }
+): Promise<boolean> {
+  const cleanNumber = phoneNumber.replace(/[^\d+]/g, "");
+  if (!cleanNumber) return false;
+  // Check if this phone already exists for this contact
+  const existing = await dbInstance
+    .select({ id: contactPhones.id })
+    .from(contactPhones)
+    .where(and(eq(contactPhones.contactId, contactId), eq(contactPhones.phoneNumber, cleanNumber)))
+    .limit(1);
+  if (existing.length > 0) {
+    // Update metadata if provided
+    if (metadata) {
+      const updateData: any = { phoneType: mapPhoneType(phoneType) };
+      if (metadata.dnc !== undefined) updateData.dnc = metadata.dnc;
+      if (metadata.carrier) updateData.carrier = metadata.carrier;
+      if (metadata.isPrepaid !== undefined) updateData.isPrepaid = metadata.isPrepaid;
+      if (metadata.activityStatus) updateData.activityStatus = metadata.activityStatus;
+      if (metadata.usage2Months) updateData.usage2Months = metadata.usage2Months;
+      if (metadata.usage12Months) updateData.usage12Months = metadata.usage12Months;
+      await dbInstance.update(contactPhones).set(updateData).where(eq(contactPhones.id, existing[0].id));
+    }
+    return false; // not new
+  }
+  await dbInstance.insert(contactPhones).values({
+    contactId,
+    phoneNumber: cleanNumber,
+    phoneType: mapPhoneType(phoneType),
+    isPrimary,
+    ...(metadata || {}),
+  } as any);
+  return true; // new phone
+}
+
+async function upsertEmailForContact(
+  dbInstance: any,
+  contactId: number,
+  email: string,
+  isPrimary: number
+): Promise<boolean> {
+  if (!email) return false;
+  const normalizedEmail = email.toLowerCase().trim();
+  const existing = await dbInstance
+    .select({ id: contactEmails.id })
+    .from(contactEmails)
+    .where(and(eq(contactEmails.contactId, contactId), sql`LOWER(${contactEmails.email}) = ${normalizedEmail}`))
+    .limit(1);
+  if (existing.length > 0) return false;
+  await dbInstance.insert(contactEmails).values({ contactId, email: normalizedEmail, isPrimary });
+  return true;
+}
+
 async function insertContactsForProperty(
   dbInstance: any,
   propertyId: number,
   embeddedContacts: ExtractedContact[],
   ownerAddress: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; zip?: string | null } | null,
   facebookProfiles: string[]
-): Promise<{ contactsImported: number; phonesImported: number; emailsImported: number; addressesImported: number; socialsImported: number }> {
+): Promise<{ contactsImported: number; contactsUpdated: number; phonesImported: number; emailsImported: number; addressesImported: number; socialsImported: number }> {
   let contactsImported = 0;
+  let contactsUpdated = 0;
   let phonesImported = 0;
   let emailsImported = 0;
   let addressesImported = 0;
@@ -387,77 +450,89 @@ async function insertContactsForProperty(
       )
       .limit(1);
 
+    let contactId: number;
+
     if (existingContacts.length > 0) {
-      // Contact already exists, skip to avoid duplicates
-      continue;
+      // Contact exists — UPDATE it with new data and add missing phones/emails
+      contactId = existingContacts[0].id;
+      const updateData: any = {};
+      if (c.flags) updateData.flags = c.flags;
+      updateData.updatedAt = new Date();
+      await dbInstance.update(contacts).set(updateData).where(eq(contacts.id, contactId));
+      contactsUpdated++;
+    } else {
+      // Insert new contact
+      const contactResult = await dbInstance.insert(contacts).values({
+        propertyId,
+        name: c.name,
+        relationship: "Owner",
+        flags: c.flags,
+      } as any);
+      contactId = contactResult[0].insertId;
+      contactsImported++;
     }
 
-    // Insert contact
-    const contactResult = await dbInstance.insert(contacts).values({
-      propertyId,
-      name: c.name,
-      email: c.emails[0] || "",
-      relationship: "Owner",
-      flags: c.flags,
-    } as any);
-    const contactId = contactResult[0].insertId;
-    contactsImported++;
-
-    // Insert all phones
+    // Upsert all phones (add new ones, update metadata on existing)
     for (let pi = 0; pi < c.phones.length; pi++) {
       const p = c.phones[pi];
       if (p.number) {
-        await dbInstance.insert(contactPhones).values({
-          contactId,
-          phoneNumber: p.number,
-          phoneType: mapPhoneType(p.type),
-          isPrimary: pi === 0 ? 1 : 0,
-        } as any);
-        phonesImported++;
+        const isNew = await upsertPhoneForContact(dbInstance, contactId, p.number, p.type, pi === 0 ? 1 : 0);
+        if (isNew) phonesImported++;
       }
     }
 
-    // Insert all emails
+    // Upsert all emails
     for (let ei = 0; ei < c.emails.length; ei++) {
       const email = c.emails[ei];
       if (email) {
-        await dbInstance.insert(contactEmails).values({
-          contactId,
-          email,
-          isPrimary: ei === 0 ? 1 : 0,
-        });
-        emailsImported++;
+        const isNew = await upsertEmailForContact(dbInstance, contactId, email, ei === 0 ? 1 : 0);
+        if (isNew) emailsImported++;
       }
     }
 
     // Insert owner mailing address for the first contact (likely owner)
     if (ci === 0 && ownerAddress && ownerAddress.line1 && ownerAddress.city && ownerAddress.state && ownerAddress.zip) {
-      await dbInstance.insert(contactAddresses).values({
-        contactId,
-        addressLine1: ownerAddress.line1,
-        addressLine2: ownerAddress.line2 || null,
-        city: ownerAddress.city,
-        state: ownerAddress.state.substring(0, 2).toUpperCase(),
-        zipcode: ownerAddress.zip,
-        addressType: "Mailing",
-        isPrimary: 1,
-      } as any);
-      addressesImported++;
+      // Check if address already exists
+      const existingAddr = await dbInstance
+        .select({ id: contactAddresses.id })
+        .from(contactAddresses)
+        .where(and(eq(contactAddresses.contactId, contactId), sql`LOWER(${contactAddresses.addressLine1}) = ${ownerAddress.line1!.toLowerCase()}`))
+        .limit(1);
+      if (existingAddr.length === 0) {
+        await dbInstance.insert(contactAddresses).values({
+          contactId,
+          addressLine1: ownerAddress.line1,
+          addressLine2: ownerAddress.line2 || null,
+          city: ownerAddress.city,
+          state: ownerAddress.state.substring(0, 2).toUpperCase(),
+          zipcode: ownerAddress.zip,
+          addressType: "Mailing",
+          isPrimary: 1,
+        } as any);
+        addressesImported++;
+      }
     }
 
     // Assign Facebook profiles to contacts (distribute sequentially)
     if (facebookProfiles[ci]) {
-      await dbInstance.insert(contactSocialMedia).values({
-        contactId,
-        platform: "Facebook" as const,
-        profileUrl: facebookProfiles[ci],
-        contacted: 0,
-      } as any);
-      socialsImported++;
+      const existingSocial = await dbInstance
+        .select({ id: contactSocialMedia.id })
+        .from(contactSocialMedia)
+        .where(and(eq(contactSocialMedia.contactId, contactId), eq(contactSocialMedia.platform, "Facebook")))
+        .limit(1);
+      if (existingSocial.length === 0) {
+        await dbInstance.insert(contactSocialMedia).values({
+          contactId,
+          platform: "Facebook" as const,
+          profileUrl: facebookProfiles[ci],
+          contacted: 0,
+        } as any);
+        socialsImported++;
+      }
     }
   }
 
-  return { contactsImported, phonesImported, emailsImported, addressesImported, socialsImported };
+  return { contactsImported, contactsUpdated, phonesImported, emailsImported, addressesImported, socialsImported };
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────
@@ -642,7 +717,7 @@ export const importPropertiesRouter = router({
 
       let insertedCount = 0;
       let updatedCount = 0;
-      let contactStats = { contactsImported: 0, phonesImported: 0, emailsImported: 0, addressesImported: 0, socialsImported: 0 };
+      let contactStats = { contactsImported: 0, contactsUpdated: 0, phonesImported: 0, emailsImported: 0, addressesImported: 0, socialsImported: 0 };
       const errors: string[] = [];
 
       // Process new rows (INSERT)
@@ -716,6 +791,7 @@ export const importPropertiesRouter = router({
             if (embeddedContacts.length > 0) {
               const stats = await insertContactsForProperty(dbInstance, propertyId, embeddedContacts, ownerAddress, facebookProfiles);
               contactStats.contactsImported += stats.contactsImported;
+              contactStats.contactsUpdated += stats.contactsUpdated;
               contactStats.phonesImported += stats.phonesImported;
               contactStats.emailsImported += stats.emailsImported;
               contactStats.addressesImported += stats.addressesImported;
@@ -785,6 +861,7 @@ export const importPropertiesRouter = router({
             if (embeddedContacts.length > 0) {
               const stats = await insertContactsForProperty(dbInstance, existingId, embeddedContacts, ownerAddress, facebookProfiles);
               contactStats.contactsImported += stats.contactsImported;
+              contactStats.contactsUpdated += stats.contactsUpdated;
               contactStats.phonesImported += stats.phonesImported;
               contactStats.emailsImported += stats.emailsImported;
               contactStats.addressesImported += stats.addressesImported;
@@ -911,6 +988,64 @@ export const importPropertiesRouter = router({
           businessOwner: str(mapped.businessOwner),
         };
 
+        // Check if contact already exists in the database for this property
+        let existingContact: any = null;
+        let existingPhones: any[] = [];
+        let existingEmails: any[] = [];
+        let contactStatus: "new" | "update" | "up_to_date" = "new";
+        let newPhones: typeof allPhones = [];
+        let newEmails: string[] = [];
+        let updatedFields: { field: string; oldValue: string; newValue: string }[] = [];
+
+        if (matchedProperty && contactName && contactName !== "N/A") {
+          const existingContactRows = await dbInstance
+            .select()
+            .from(contacts)
+            .where(
+              and(
+                eq(contacts.propertyId, matchedProperty.id),
+                sql`LOWER(${contacts.name}) = ${(contactName as string).toLowerCase()}`
+              )
+            )
+            .limit(1);
+
+          if (existingContactRows.length > 0) {
+            existingContact = existingContactRows[0];
+            const cId = existingContact.id;
+
+            // Load existing phones and emails
+            existingPhones = await dbInstance.select().from(contactPhones).where(eq(contactPhones.contactId, cId));
+            existingEmails = await dbInstance.select().from(contactEmails).where(eq(contactEmails.contactId, cId));
+
+            // Find NEW phones (not already in DB)
+            const existingPhoneNumbers = new Set(existingPhones.map((p: any) => p.phoneNumber));
+            newPhones = allPhones.filter(p => !existingPhoneNumbers.has(p.number));
+
+            // Find NEW emails (not already in DB)
+            const existingEmailSet = new Set(existingEmails.map((e: any) => e.email?.toLowerCase()));
+            newEmails = allEmails.filter(e => !existingEmailSet.has(e.toLowerCase()));
+
+            // Compare demographics
+            const demoFields: { key: string; label: string; csvVal: string | null; dbVal: any }[] = [
+              { key: "gender", label: "Gender", csvVal: demographics.gender, dbVal: existingContact.gender },
+              { key: "maritalStatus", label: "Marital Status", csvVal: demographics.maritalStatus, dbVal: existingContact.maritalStatus },
+              { key: "netAssetValue", label: "Net Asset Value", csvVal: demographics.netAssetValue, dbVal: existingContact.netAssetValue },
+              { key: "flags", label: "Flags", csvVal: str(mapped.flags), dbVal: existingContact.flags },
+            ];
+            for (const df of demoFields) {
+              if (df.csvVal && normalizeForCompare(df.csvVal) !== normalizeForCompare(df.dbVal)) {
+                updatedFields.push({ field: df.label, oldValue: df.dbVal || "(empty)", newValue: df.csvVal });
+              }
+            }
+
+            if (newPhones.length === 0 && newEmails.length === 0 && updatedFields.length === 0) {
+              contactStatus = "up_to_date";
+            } else {
+              contactStatus = "update";
+            }
+          }
+        }
+
         rows.push({
           rowIndex: i,
           contactName: contactName || "N/A",
@@ -938,17 +1073,31 @@ export const importPropertiesRouter = router({
           matchedPropertyId: matchedProperty?.id || null,
           matchedPropertyAddress: matchedProperty ? `${matchedProperty.addressLine1}, ${matchedProperty.city}` : null,
           matchedLeadId: matchedProperty?.leadId || null,
+          // Comparison data
+          contactStatus,
+          existingContactId: existingContact?.id || null,
+          existingPhoneCount: existingPhones.length,
+          existingEmailCount: existingEmails.length,
+          newPhones,
+          newEmails,
+          updatedFields,
           rawData: mapped,
         });
       }
 
       const matchedCount = rows.filter((r) => r.matched).length;
       const unmatchedCount = rows.filter((r) => !r.matched).length;
+      const newContactsCount = rows.filter((r) => r.contactStatus === "new" && r.matched).length;
+      const updateContactsCount = rows.filter((r) => r.contactStatus === "update").length;
+      const upToDateCount = rows.filter((r) => r.contactStatus === "up_to_date").length;
 
       return {
         totalRows: rows.length,
         matchedCount,
         unmatchedCount,
+        newContactsCount,
+        updateContactsCount,
+        upToDateCount,
         detectedColumns: rawColumns,
         rows,
       };
@@ -975,10 +1124,12 @@ export const importPropertiesRouter = router({
       const dbInstance = await getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      let contactsImported = 0;
-      let phonesImported = 0;
-      let emailsImported = 0;
-      let addressesImported = 0;
+      let contactsCreated = 0;
+      let contactsUpdated = 0;
+      let phonesAdded = 0;
+      let emailsAdded = 0;
+      let addressesAdded = 0;
+      let skippedUpToDate = 0;
       const errors: string[] = [];
 
       for (const { rowIndex, propertyId } of input.contactRows) {
@@ -990,6 +1141,33 @@ export const importPropertiesRouter = router({
           const firstName = str(mapped.firstName);
           const lastName = str(mapped.lastName);
           const contactName = str(mapped.name) || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || "Unknown");
+
+          // Collect all phones with metadata
+          const allPhones: { number: string; type: string; dnc: number; carrier: string | null; isPrepaid: number; activityStatus: string | null; usage2Months: string | null; usage12Months: string | null }[] = [];
+          for (let p = 1; p <= 10; p++) {
+            const phone = str(mapped[`phone${p}`]);
+            if (phone) {
+              const dncVal = str(mapped[`phone${p}Dnc`]);
+              const prepaidVal = str(mapped[`phone${p}Prepaid`]);
+              allPhones.push({
+                number: phone.replace(/[^\d+]/g, ""),
+                type: str(mapped[`phone${p}Type`]) || "Mobile",
+                dnc: dncVal && dncVal.toLowerCase().includes("do not call") ? 1 : 0,
+                carrier: str(mapped[`phone${p}Carrier`]),
+                isPrepaid: prepaidVal && prepaidVal.toLowerCase().includes("prepaid") ? 1 : 0,
+                activityStatus: str(mapped[`phone${p}Activity`]),
+                usage2Months: str(mapped[`phone${p}Usage2m`]),
+                usage12Months: str(mapped[`phone${p}Usage12m`]),
+              });
+            }
+          }
+
+          // Collect all emails
+          const allEmails: string[] = [];
+          for (let e = 1; e <= 10; e++) {
+            const email = str(mapped[`email${e}`]);
+            if (email) allEmails.push(email);
+          }
 
           // Check if contact already exists
           const existingContacts = await dbInstance
@@ -1003,118 +1181,174 @@ export const importPropertiesRouter = router({
             )
             .limit(1);
 
+          let contactId: number;
+
           if (existingContacts.length > 0) {
-            continue; // Skip duplicate
-          }
+            // EXISTING contact — UPDATE demographics and upsert phones/emails
+            contactId = existingContacts[0].id;
 
-          // Collect all emails
-          const allEmails: string[] = [];
-          for (let e = 1; e <= 10; e++) {
-            const email = str(mapped[`email${e}`]);
-            if (email) allEmails.push(email);
-          }
+            // Update demographics
+            const updateData: any = { updatedAt: new Date() };
+            if (firstName) updateData.firstName = firstName;
+            if (lastName) updateData.lastName = lastName;
+            if (str(mapped.middleInitial)) updateData.middleInitial = str(mapped.middleInitial);
+            if (str(mapped.generationalSuffix)) updateData.suffix = str(mapped.generationalSuffix);
+            if (str(mapped.flags)) updateData.flags = str(mapped.flags);
+            if (str(mapped.gender)) updateData.gender = str(mapped.gender);
+            if (str(mapped.maritalStatus)) updateData.maritalStatus = str(mapped.maritalStatus);
+            if (str(mapped.netAssetValue)) updateData.netAssetValue = str(mapped.netAssetValue);
+            if (str(mapped.relationship)) updateData.relationship = str(mapped.relationship);
+            if (parseNumber(mapped.age)) updateData.age = parseNumber(mapped.age);
 
-          // Insert contact with ALL demographics
-          const contactResult = await dbInstance.insert(contacts).values({
-            propertyId,
-            name: contactName as string,
-            firstName: firstName,
-            lastName: lastName,
-            middleInitial: str(mapped.middleInitial),
-            generationalSuffix: str(mapped.generationalSuffix),
-            relationship: str(mapped.relationship) || "Owner",
-            flags: str(mapped.flags),
-            age: parseNumber(mapped.age),
-            gender: str(mapped.gender),
-            maritalStatus: str(mapped.maritalStatus),
-            netAssetValue: str(mapped.netAssetValue),
-            homeBusiness: str(mapped.homeBusiness),
-            educationModel: str(mapped.educationModel),
-            occupationGroup: str(mapped.occupationGroup),
-            occupationCode: str(mapped.occupationCode),
-            businessOwner: str(mapped.businessOwner),
-            dealMachineContactId: str(mapped.dealMachineContactId),
-          } as any);
-          const contactId = contactResult[0].insertId;
-          contactsImported++;
+            await dbInstance.update(contacts).set(updateData).where(eq(contacts.id, contactId));
 
-          // Insert ALL phones with FULL metadata (DNC, carrier, prepaid, activity, usage)
-          for (let p = 1; p <= 10; p++) {
-            const phone = str(mapped[`phone${p}`]);
-            if (phone) {
-              const dncVal = str(mapped[`phone${p}Dnc`]);
-              const prepaidVal = str(mapped[`phone${p}Prepaid`]);
+            let hadChanges = false;
+
+            // Upsert phones
+            for (let pi = 0; pi < allPhones.length; pi++) {
+              const p = allPhones[pi];
+              const isNew = await upsertPhoneForContact(dbInstance, contactId, p.number, p.type, pi === 0 ? 1 : 0, {
+                dnc: p.dnc,
+                carrier: p.carrier,
+                isPrepaid: p.isPrepaid,
+                activityStatus: p.activityStatus,
+                usage2Months: p.usage2Months,
+                usage12Months: p.usage12Months,
+              });
+              if (isNew) { phonesAdded++; hadChanges = true; }
+            }
+
+            // Upsert emails
+            for (let ei = 0; ei < allEmails.length; ei++) {
+              const isNew = await upsertEmailForContact(dbInstance, contactId, allEmails[ei], ei === 0 ? 1 : 0);
+              if (isNew) { emailsAdded++; hadChanges = true; }
+            }
+
+            if (hadChanges || Object.keys(updateData).length > 1) {
+              contactsUpdated++;
+            } else {
+              skippedUpToDate++;
+            }
+          } else {
+            // NEW contact — INSERT with all data
+            const contactResult = await dbInstance.insert(contacts).values({
+              propertyId,
+              name: contactName as string,
+              firstName,
+              lastName,
+              middleInitial: str(mapped.middleInitial),
+              generationalSuffix: str(mapped.generationalSuffix),
+              relationship: str(mapped.relationship) || "Owner",
+              flags: str(mapped.flags),
+              age: parseNumber(mapped.age),
+              gender: str(mapped.gender),
+              maritalStatus: str(mapped.maritalStatus),
+              netAssetValue: str(mapped.netAssetValue),
+              homeBusiness: str(mapped.homeBusiness),
+              educationModel: str(mapped.educationModel),
+              occupationGroup: str(mapped.occupationGroup),
+              occupationCode: str(mapped.occupationCode),
+              businessOwner: str(mapped.businessOwner),
+              dealMachineContactId: str(mapped.dealMachineContactId),
+            } as any);
+            contactId = contactResult[0].insertId;
+            contactsCreated++;
+
+            // Insert all phones with full metadata
+            for (let pi = 0; pi < allPhones.length; pi++) {
+              const p = allPhones[pi];
               await dbInstance.insert(contactPhones).values({
                 contactId,
-                phoneNumber: phone.replace(/[^\d+]/g, ""),
-                phoneType: mapPhoneType(str(mapped[`phone${p}Type`])),
-                isPrimary: p === 1 ? 1 : 0,
-                dnc: dncVal && dncVal.toLowerCase().includes("do not call") ? 1 : 0,
-                carrier: str(mapped[`phone${p}Carrier`]),
-                isPrepaid: prepaidVal && prepaidVal.toLowerCase().includes("prepaid") ? 1 : 0,
-                activityStatus: str(mapped[`phone${p}Activity`]),
-                usage2Months: str(mapped[`phone${p}Usage2m`]),
-                usage12Months: str(mapped[`phone${p}Usage12m`]),
+                phoneNumber: p.number,
+                phoneType: mapPhoneType(p.type),
+                isPrimary: pi === 0 ? 1 : 0,
+                dnc: p.dnc,
+                carrier: p.carrier,
+                isPrepaid: p.isPrepaid,
+                activityStatus: p.activityStatus,
+                usage2Months: p.usage2Months,
+                usage12Months: p.usage12Months,
               } as any);
-              phonesImported++;
+              phonesAdded++;
+            }
+
+            // Insert all emails
+            for (let ei = 0; ei < allEmails.length; ei++) {
+              await dbInstance.insert(contactEmails).values({
+                contactId,
+                email: allEmails[ei].toLowerCase().trim(),
+                isPrimary: ei === 0 ? 1 : 0,
+              });
+              emailsAdded++;
             }
           }
 
-          // Insert ALL emails
-          for (let e = 0; e < allEmails.length; e++) {
-            await dbInstance.insert(contactEmails).values({
-              contactId,
-              email: allEmails[e],
-              isPrimary: e === 0 ? 1 : 0,
-            });
-            emailsImported++;
-          }
-
-          // Insert primary mailing address
+          // Upsert mailing address (for both new and existing contacts)
           const mailingAddr = str(mapped.mailingAddress);
           const mailingCity = str(mapped.mailingCity);
           const mailingState = str(mapped.mailingState);
           const mailingZip = str(mapped.mailingZip);
           if (mailingAddr && mailingCity && mailingState && mailingZip) {
-            await dbInstance.insert(contactAddresses).values({
-              contactId,
-              addressLine1: mailingAddr,
-              city: mailingCity,
-              state: mailingState.substring(0, 2).toUpperCase(),
-              zipcode: mailingZip,
-              addressType: "Mailing",
-              isPrimary: 1,
-            } as any);
-            addressesImported++;
+            const existingAddr = await dbInstance
+              .select({ id: contactAddresses.id })
+              .from(contactAddresses)
+              .where(and(eq(contactAddresses.contactId, contactId), sql`LOWER(${contactAddresses.addressLine1}) = ${mailingAddr.toLowerCase()}`))
+              .limit(1);
+            if (existingAddr.length === 0) {
+              await dbInstance.insert(contactAddresses).values({
+                contactId,
+                addressLine1: mailingAddr,
+                city: mailingCity,
+                state: mailingState.substring(0, 2).toUpperCase(),
+                zipcode: mailingZip,
+                addressType: "Mailing",
+                isPrimary: 1,
+              } as any);
+              addressesAdded++;
+            }
           }
 
-          // Insert previous mailing address if present
+          // Upsert previous address
           const prevAddr = str(mapped.mailingAddressPrev);
           const prevCity = str(mapped.mailingCityPrev);
           const prevState = str(mapped.mailingStatePrev);
           const prevZip = str(mapped.mailingZipPrev);
           if (prevAddr && prevCity && prevState && prevZip) {
-            await dbInstance.insert(contactAddresses).values({
-              contactId,
-              addressLine1: prevAddr,
-              city: prevCity,
-              state: prevState.substring(0, 2).toUpperCase(),
-              zipcode: prevZip,
-              addressType: "Previous",
-              isPrimary: 0,
-            } as any);
-            addressesImported++;
+            const existingPrev = await dbInstance
+              .select({ id: contactAddresses.id })
+              .from(contactAddresses)
+              .where(and(eq(contactAddresses.contactId, contactId), sql`LOWER(${contactAddresses.addressLine1}) = ${prevAddr.toLowerCase()}`))
+              .limit(1);
+            if (existingPrev.length === 0) {
+              await dbInstance.insert(contactAddresses).values({
+                contactId,
+                addressLine1: prevAddr,
+                city: prevCity,
+                state: prevState.substring(0, 2).toUpperCase(),
+                zipcode: prevZip,
+                addressType: "Previous",
+                isPrimary: 0,
+              } as any);
+              addressesAdded++;
+            }
           }
 
-          // Insert Facebook profile if present
+          // Upsert Facebook profile
           const facebook = str(mapped.facebook);
           if (facebook) {
-            await dbInstance.insert(contactSocialMedia).values({
-              contactId,
-              platform: "Facebook" as const,
-              profileUrl: facebook,
-              contacted: 0,
-            } as any);
+            const existingSocial = await dbInstance
+              .select({ id: contactSocialMedia.id })
+              .from(contactSocialMedia)
+              .where(and(eq(contactSocialMedia.contactId, contactId), eq(contactSocialMedia.platform, "Facebook")))
+              .limit(1);
+            if (existingSocial.length === 0) {
+              await dbInstance.insert(contactSocialMedia).values({
+                contactId,
+                platform: "Facebook" as const,
+                profileUrl: facebook,
+                contacted: 0,
+              } as any);
+            }
           }
         } catch (error: any) {
           errors.push(`Row ${rowIndex + 2}: ${error.message}`);
@@ -1122,10 +1356,12 @@ export const importPropertiesRouter = router({
       }
 
       return {
-        contactsImported,
-        phonesImported,
-        emailsImported,
-        addressesImported,
+        contactsCreated,
+        contactsUpdated,
+        skippedUpToDate,
+        phonesAdded,
+        emailsAdded,
+        addressesAdded,
         errorCount: errors.length,
         errors: errors.slice(0, 20),
       };

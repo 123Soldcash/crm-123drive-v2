@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, address, city, state, apn FROM properties WHERE address LIKE '%2066%Brink%' OR address LIKE '%2066 BRINK%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, address, city, state, apn FROM properties WHERE address LIKE '%2066%Brink%' OR address LIKE '%2066 BRINK%' LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'address' in 'where clause'"
+  ]
+}

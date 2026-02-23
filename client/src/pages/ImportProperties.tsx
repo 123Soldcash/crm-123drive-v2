@@ -109,6 +109,14 @@ type ContactPreviewRow = {
   matchedPropertyId: number | null;
   matchedPropertyAddress: string | null;
   matchedLeadId: number | null;
+  // Comparison fields
+  contactStatus: "new" | "update" | "up_to_date";
+  existingContactId: number | null;
+  existingPhoneCount: number;
+  existingEmailCount: number;
+  newPhones: { number: string; type: string; dnc: boolean; carrier: string | null; prepaid: boolean; activity: string | null; usage2m: string | null; usage12m: string | null }[];
+  newEmails: string[];
+  updatedFields: { field: string; oldValue: string; newValue: string }[];
   rawData: any;
 };
 
@@ -141,9 +149,13 @@ export default function ImportProperties() {
     totalRows: number;
     matchedCount: number;
     unmatchedCount: number;
+    newContactsCount: number;
+    updateContactsCount: number;
+    upToDateCount: number;
     detectedColumns: string[];
     rows: ContactPreviewRow[];
   } | null>(null);
+  const [contactChangesDialog, setContactChangesDialog] = useState<ContactPreviewRow | null>(null);
   const [selectedContactRows, setSelectedContactRows] = useState<Set<number>>(new Set());
 
   // ─── Shared State ───────────────────────────────────────────────────────
@@ -311,7 +323,7 @@ export default function ImportProperties() {
       });
 
       toast.success(
-        `Contacts imported! ${result.contactsImported} contacts, ${result.phonesImported} phones, ${result.emailsImported} emails.${result.errorCount > 0 ? ` ${result.errorCount} errors.` : ""}`,
+        `Contacts imported! ${result.contactsCreated} new, ${result.contactsUpdated} updated, ${result.phonesAdded} phones, ${result.emailsAdded} emails.${result.skippedUpToDate > 0 ? ` ${result.skippedUpToDate} already up-to-date.` : ""}${result.errorCount > 0 ? ` ${result.errorCount} errors.` : ""}`,
         { duration: 6000 }
       );
 
@@ -903,28 +915,52 @@ export default function ImportProperties() {
           {contactPreview && (
             <div className="space-y-6">
               {/* Summary */}
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-3xl font-bold">{contactPreview.totalRows}</div>
-                      <p className="text-sm text-muted-foreground">Total Contacts</p>
+                      <div className="text-2xl font-bold">{contactPreview.totalRows}</div>
+                      <p className="text-xs text-muted-foreground">Total</p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="border-green-500/50">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">{contactPreview.matchedCount}</div>
-                      <p className="text-sm text-muted-foreground">Matched to Property</p>
+                      <div className="text-2xl font-bold text-green-600">{contactPreview.matchedCount}</div>
+                      <p className="text-xs text-muted-foreground">Matched</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-emerald-500/50">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-emerald-600">{contactPreview.newContactsCount}</div>
+                      <p className="text-xs text-muted-foreground">New</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-amber-500/50">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-amber-600">{contactPreview.updateContactsCount}</div>
+                      <p className="text-xs text-muted-foreground">To Update</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-blue-500/50">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{contactPreview.upToDateCount}</div>
+                      <p className="text-xs text-muted-foreground">Up-to-Date</p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="border-red-500/50">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-red-600">{contactPreview.unmatchedCount}</div>
-                      <p className="text-sm text-muted-foreground">No Match (Skipped)</p>
+                      <div className="text-2xl font-bold text-red-600">{contactPreview.unmatchedCount}</div>
+                      <p className="text-xs text-muted-foreground">No Match</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -967,11 +1003,11 @@ export default function ImportProperties() {
                               />
                             </TableHead>
                             <TableHead>Contact</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Phones</TableHead>
                             <TableHead>Emails</TableHead>
-                            <TableHead>Demographics</TableHead>
                             <TableHead>Matched Property</TableHead>
-                            <TableHead>Match</TableHead>
+                            <TableHead>Changes</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1002,6 +1038,17 @@ export default function ImportProperties() {
                                     )}
                                   </div>
                                 </TableCell>
+                                <TableCell>
+                                  {row.contactStatus === "new" && (
+                                    <Badge className="bg-emerald-600 text-white text-[10px]">New</Badge>
+                                  )}
+                                  {row.contactStatus === "update" && (
+                                    <Badge className="bg-amber-600 text-white text-[10px]">Update</Badge>
+                                  )}
+                                  {row.contactStatus === "up_to_date" && (
+                                    <Badge className="bg-blue-600 text-white text-[10px]">Up-to-Date</Badge>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-sm">
                                   {row.phones && row.phones.length > 0 ? (
                                     <div className="flex flex-col gap-1">
@@ -1013,18 +1060,14 @@ export default function ImportProperties() {
                                             {p.dnc && <Badge variant="destructive" className="text-[10px] px-1">DNC</Badge>}
                                             {p.prepaid && <Badge className="text-[10px] px-1 bg-yellow-500">Prepaid</Badge>}
                                           </div>
-                                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                            {p.carrier && <span>{p.carrier}</span>}
-                                            {p.activity && <span>\u00B7 {p.activity}</span>}
-                                          </div>
-                                          {(p.usage2m || p.usage12m) && (
-                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                              {p.usage2m && <span>2mo: {p.usage2m}</span>}
-                                              {p.usage12m && <span>12mo: {p.usage12m}</span>}
-                                            </div>
+                                          {p.carrier && (
+                                            <span className="text-[10px] text-muted-foreground">{p.carrier}{p.activity ? ` \u00B7 ${p.activity}` : ""}</span>
                                           )}
                                         </div>
                                       ))}
+                                      {row.contactStatus === "update" && row.newPhones.length > 0 && (
+                                        <span className="text-[10px] text-emerald-600 font-medium">+{row.newPhones.length} new phone(s)</span>
+                                      )}
                                     </div>
                                   ) : "\u2014"}
                                 </TableCell>
@@ -1034,17 +1077,9 @@ export default function ImportProperties() {
                                       {row.emails.map((e: string, i: number) => (
                                         <span key={i} className="text-xs">{e}</span>
                                       ))}
-                                    </div>
-                                  ) : "\u2014"}
-                                </TableCell>
-                                <TableCell className="text-xs">
-                                  {row.demographics ? (
-                                    <div className="flex flex-col gap-0.5">
-                                      {row.demographics.gender && <span>Gender: {row.demographics.gender}</span>}
-                                      {row.demographics.maritalStatus && <span>Status: {row.demographics.maritalStatus}</span>}
-                                      {row.demographics.netAssetValue && <span>Net Asset: {row.demographics.netAssetValue}</span>}
-                                      {row.demographics.occupationGroup && <span>Occ: {row.demographics.occupationGroup}</span>}
-                                      {row.demographics.businessOwner && <span>Biz Owner: {row.demographics.businessOwner}</span>}
+                                      {row.contactStatus === "update" && row.newEmails.length > 0 && (
+                                        <span className="text-[10px] text-emerald-600 font-medium">+{row.newEmails.length} new email(s)</span>
+                                      )}
                                     </div>
                                   ) : "\u2014"}
                                 </TableCell>
@@ -1054,10 +1089,19 @@ export default function ImportProperties() {
                                     {row.matchedLeadId && (
                                       <Badge variant="outline" className="text-[10px] w-fit">#{row.matchedLeadId}</Badge>
                                     )}
+                                    <Badge variant="secondary" className="text-[10px] w-fit">{row.matchMethod}</Badge>
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="secondary" className="text-[10px]">{row.matchMethod}</Badge>
+                                  {row.contactStatus === "update" && (row.updatedFields.length > 0 || row.newPhones.length > 0 || row.newEmails.length > 0) ? (
+                                    <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setContactChangesDialog(row)}>
+                                      View ({row.updatedFields.length + row.newPhones.length + row.newEmails.length})
+                                    </Button>
+                                  ) : row.contactStatus === "up_to_date" ? (
+                                    <span className="text-xs text-muted-foreground">No changes</span>
+                                  ) : (
+                                    <span className="text-xs text-emerald-600">All new</span>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -1181,7 +1225,7 @@ export default function ImportProperties() {
       </Tabs>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          CHANGES COMPARISON DIALOG — Shows only fields that will be updated
+          PROPERTY CHANGES COMPARISON DIALOG
           ═══════════════════════════════════════════════════════════════════ */}
       <Dialog open={!!changesDialogRow} onOpenChange={(open) => !open && setChangesDialogRow(null)}>
         <DialogContent className="max-w-lg">
@@ -1223,6 +1267,83 @@ export default function ImportProperties() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setChangesDialogRow(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          CONTACT CHANGES COMPARISON DIALOG
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Dialog open={!!contactChangesDialog} onOpenChange={(open) => !open && setContactChangesDialog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Contact Changes</DialogTitle>
+            <DialogDescription>
+              {contactChangesDialog?.contactName} — {contactChangesDialog?.matchedPropertyAddress}
+              <br />
+              <span className="text-xs">New data that will be added or updated for this contact.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[400px] overflow-auto space-y-4">
+            {/* Updated Fields */}
+            {contactChangesDialog?.updatedFields && contactChangesDialog.updatedFields.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Updated Fields</h4>
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead>Field</TableHead>
+                      <TableHead>Current</TableHead>
+                      <TableHead className="w-[30px]"></TableHead>
+                      <TableHead>New</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {contactChangesDialog.updatedFields.map((uf, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium text-sm">{uf.field}</TableCell>
+                        <TableCell className="text-sm text-red-600 dark:text-red-400">{uf.oldValue}</TableCell>
+                        <TableCell><ArrowRight className="h-4 w-4 text-muted-foreground" /></TableCell>
+                        <TableCell className="text-sm text-green-600 dark:text-green-400 font-medium">{uf.newValue}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            {/* New Phones */}
+            {contactChangesDialog?.newPhones && contactChangesDialog.newPhones.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-emerald-700">+{contactChangesDialog.newPhones.length} New Phone(s)</h4>
+                <div className="space-y-2">
+                  {contactChangesDialog.newPhones.map((p, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm">
+                      <span className="font-mono">{p.number}</span>
+                      <Badge variant="secondary" className="text-[10px]">{p.type}</Badge>
+                      {p.dnc && <Badge variant="destructive" className="text-[10px]">DNC</Badge>}
+                      {p.prepaid && <Badge className="text-[10px] bg-yellow-500">Prepaid</Badge>}
+                      {p.carrier && <span className="text-xs text-muted-foreground">{p.carrier}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* New Emails */}
+            {contactChangesDialog?.newEmails && contactChangesDialog.newEmails.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-emerald-700">+{contactChangesDialog.newEmails.length} New Email(s)</h4>
+                <div className="space-y-1">
+                  {contactChangesDialog.newEmails.map((e, i) => (
+                    <div key={i} className="text-sm">{e}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContactChangesDialog(null)}>
               Close
             </Button>
           </DialogFooter>

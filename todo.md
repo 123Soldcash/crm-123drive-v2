@@ -1768,3 +1768,13 @@
 - [x] Test with real XLSX data — 185 contacts all matched, phones/emails/flags displayed correctly
 - [x] Added usage2Months and usage12Months columns to contactPhones table
 - [x] Added gender, maritalStatus, netAssetValue, middleInitial, suffix, notes to contacts table
+
+## CONTACTS IMPORT BUG FIX - Contacts Not Saving (Feb 23, 2026) — COMPLETED
+- [x] Investigate: 2066 Brink contacts existed with only names (no phones/emails) — import was skipping duplicates
+- [x] Fix executeContactsImport: upsert logic replaces skip — existing contacts now get updated with phones/emails/demographics
+- [x] Add duplicate detection for contacts (compare existing vs new by name+propertyId)
+- [x] Add update comparison UI for contacts: contactStatus = new/update/up_to_date, shows existing vs new phone/email counts
+- [x] Allow user to see which contacts will be created vs updated in preview
+- [x] Write professional-grade engineering tests — 21 tests covering: full data creation, phone metadata (DNC/carrier/prepaid/activity/usage), upsert existing contacts, preview comparison (new/update/up-to-date), address upsert + dedup, multiple contacts per property
+- [x] Fixed missing updatedAt column in contactAddresses table causing silent insert failures
+- [x] All 21 tests passing

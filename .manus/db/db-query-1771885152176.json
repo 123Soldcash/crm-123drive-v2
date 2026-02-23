@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, leadId, addressLine1, city, state FROM properties WHERE addressLine1 LIKE '%2066%BRINK%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, leadId, addressLine1, city, state FROM properties WHERE addressLine1 LIKE '%2066%BRINK%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "1860009",
+      "leadId": "NULL",
+      "addressLine1": "2066 Brink Aly",
+      "city": "Orlando",
+      "state": "FL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tleadId\taddressLine1\tcity\tstate\n1860009\tNULL\t2066 Brink Aly\tOrlando\tFL\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
