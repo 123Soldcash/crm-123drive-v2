@@ -1715,3 +1715,17 @@
 - [x] Map old fields to new deepSearchOverview and financialModule tables
 - [x] Build and run migration script to copy relevant data (22 overview + 16 financial records migrated)
 - [x] Verify migrated data is correct (verified property 660003 and propertyId=1)
+
+## IMPORT PROPERTIES REBUILD (Feb 23, 2026) — COMPLETED
+- [x] Review current Import Properties page and backend
+- [x] Validate fields match current database schema (properties table)
+- [x] Support xlsx, xls, and csv file formats
+- [x] Properties Import: Parse file, preview data, detect duplicates by address/APN
+- [x] Properties Import: Show comparison when duplicate found (old vs new values)
+- [x] Properties Import: Let user choose to skip or update each duplicate
+- [x] Properties Import: Insert new properties, update selected duplicates
+- [x] Contacts Import: Separate upload section for contacts
+- [x] Contacts Import: Match contacts to existing properties by address/APN/leadId
+- [x] Contacts Import: Only import if matching property exists in system
+- [x] Contacts Import: Show which property each contact will be linked to
+- [x] Write tests for import functionality — 15 tests passing
