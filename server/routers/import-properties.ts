@@ -182,6 +182,13 @@ const CONTACT_COLUMN_MAP: Record<string, string> = {
   zip: "propertyZipcode",
   apn_parcel_id: "apn",
   apn: "apn",
+  associated_property_apn_parcel_id: "apn",
+  "associated property apn parcel id": "apn",
+  "associated_property_apn": "apn",
+  property_apn: "apn",
+  "property apn": "apn",
+  parcel_id: "apn",
+  "parcel id": "apn",
   lead_id: "leadId",
   "lead id": "leadId",
 
@@ -697,7 +704,8 @@ export const importPropertiesRouter = router({
           // Insert contact
           const contactResult = await dbInstance.insert(contacts).values({
             propertyId,
-            name: contactName,
+            name: contactName as string,
+            email: "",
             relationship: str(mapped.relationship) || "Owner",
             flags: str(mapped.flags),
           } as any);

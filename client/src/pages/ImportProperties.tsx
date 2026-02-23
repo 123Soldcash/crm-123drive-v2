@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   Upload,
@@ -43,6 +42,7 @@ import {
   Eye,
   Building2,
   UserPlus,
+  CheckCheck,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
@@ -126,13 +126,8 @@ export default function ImportProperties() {
   const handlePropFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const f = e.target.files[0];
-      const validTypes = [
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-excel",
-        "text/csv",
-      ];
       const validExt = f.name.endsWith(".xlsx") || f.name.endsWith(".xls") || f.name.endsWith(".csv");
-      if (validTypes.includes(f.type) || validExt) {
+      if (validExt || f.type === "text/csv" || f.type.includes("spreadsheet") || f.type.includes("excel")) {
         setPropFile(f);
         setPropPreview(null);
         setPropFileData(null);
@@ -189,7 +184,8 @@ export default function ImportProperties() {
       result.rows.filter((r: PreviewRow) => r.isDuplicate && r.hasChanges).forEach((r: PreviewRow) => updateSet.add(r.rowIndex));
       setSelectedUpdateRows(updateSet);
 
-      toast.success(`Preview ready: ${result.newCount} new, ${result.duplicateCount} duplicates (${result.updatableCount} with updates)`);
+      const noChangeCount = result.duplicateCount - result.updatableCount;
+      toast.success(`Preview ready: ${result.newCount} new, ${result.updatableCount} with updates, ${noChangeCount} already up-to-date`);
     } catch (error: any) {
       toast.error(`Preview failed: ${error.message}`);
     } finally {
@@ -454,7 +450,7 @@ export default function ImportProperties() {
 
           {/* Preview Results */}
           {propPreview && (
-            <>
+            <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
@@ -481,11 +477,13 @@ export default function ImportProperties() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-gray-500/50">
+                <Card className="border-blue-500/50">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-500">{propPreview.duplicateCount - propPreview.updatableCount}</div>
-                      <p className="text-sm text-muted-foreground">No Changes</p>
+                      <div className="text-3xl font-bold text-blue-500">
+                        {propPreview.duplicateCount - propPreview.updatableCount}
+                      </div>
+                      <p className="text-sm text-muted-foreground">Already Up-to-Date</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -509,7 +507,7 @@ export default function ImportProperties() {
 
               {/* New Properties Table */}
               {propPreview.newCount > 0 && (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                       <CheckCircle2 className="h-5 w-5" />
@@ -517,14 +515,14 @@ export default function ImportProperties() {
                     </CardTitle>
                     <CardDescription>These properties do not exist in the system and will be inserted</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[400px]">
+                  <CardContent className="p-0">
+                    <div className="max-h-[400px] overflow-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
                             <TableHead className="w-[40px]">
                               <Checkbox
-                                checked={selectedNewRows.size === propPreview.rows.filter((r) => !r.isDuplicate).length}
+                                checked={selectedNewRows.size === propPreview.rows.filter((r) => !r.isDuplicate).length && propPreview.newCount > 0}
                                 onCheckedChange={toggleAllNew}
                               />
                             </TableHead>
@@ -555,37 +553,39 @@ export default function ImportProperties() {
                             ))}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
               {/* Duplicates with Updates Table */}
               {propPreview.updatableCount > 0 && (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                       <AlertTriangle className="h-5 w-5" />
                       Duplicates with Updates ({selectedUpdateRows.size} / {propPreview.updatableCount} selected)
                     </CardTitle>
-                    <CardDescription>These properties already exist but have updated data. Click "View Changes" to see what will be updated.</CardDescription>
+                    <CardDescription>
+                      These properties already exist but have updated data. Only the changed fields are shown.
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[400px]">
+                  <CardContent className="p-0">
+                    <div className="max-h-[400px] overflow-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
                             <TableHead className="w-[40px]">
                               <Checkbox
-                                checked={selectedUpdateRows.size === propPreview.rows.filter((r) => r.isDuplicate && r.hasChanges).length}
+                                checked={selectedUpdateRows.size === propPreview.rows.filter((r) => r.isDuplicate && r.hasChanges).length && propPreview.updatableCount > 0}
                                 onCheckedChange={toggleAllUpdates}
                               />
                             </TableHead>
                             <TableHead>Address</TableHead>
                             <TableHead>City</TableHead>
                             <TableHead>Match</TableHead>
-                            <TableHead>Changes</TableHead>
-                            <TableHead className="w-[120px]">Actions</TableHead>
+                            <TableHead>Fields to Update</TableHead>
+                            <TableHead className="w-[100px]">Details</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -607,7 +607,18 @@ export default function ImportProperties() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="secondary">{row.changes.length} field(s)</Badge>
+                                  <div className="flex flex-wrap gap-1">
+                                    {row.changes.slice(0, 3).map((c, i) => (
+                                      <Badge key={i} variant="secondary" className="text-xs">
+                                        {c.field}
+                                      </Badge>
+                                    ))}
+                                    {row.changes.length > 3 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        +{row.changes.length - 3} more
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </TableCell>
                                 <TableCell>
                                   <Button
@@ -622,81 +633,105 @@ export default function ImportProperties() {
                             ))}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Duplicates without changes */}
+              {/* Duplicates without changes — Already Imported */}
               {propPreview.duplicateCount - propPreview.updatableCount > 0 && (
-                <Card>
+                <Card className="overflow-hidden border-blue-500/30">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-gray-500">
-                      <XCircle className="h-5 w-5" />
-                      Duplicates — No Changes ({propPreview.duplicateCount - propPreview.updatableCount})
+                    <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                      <CheckCheck className="h-5 w-5" />
+                      Already Up-to-Date ({propPreview.duplicateCount - propPreview.updatableCount})
                     </CardTitle>
-                    <CardDescription>These properties already exist with identical data. They will be skipped.</CardDescription>
+                    <CardDescription>
+                      These properties already exist with identical data. No import needed.
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[200px]">
+                  <CardContent className="p-0">
+                    <div className="max-h-[250px] overflow-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
+                            <TableHead className="w-[40px]">
+                              <CheckCheck className="h-4 w-4 text-blue-500" />
+                            </TableHead>
                             <TableHead>Address</TableHead>
                             <TableHead>City</TableHead>
                             <TableHead>Match</TableHead>
                             <TableHead>Lead ID</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {propPreview.rows
                             .filter((r) => r.isDuplicate && !r.hasChanges)
                             .map((row) => (
-                              <TableRow key={row.rowIndex} className="opacity-60">
+                              <TableRow key={row.rowIndex} className="opacity-70">
+                                <TableCell>
+                                  <CheckCheck className="h-4 w-4 text-blue-500" />
+                                </TableCell>
                                 <TableCell>{row.address}</TableCell>
                                 <TableCell>{row.city}</TableCell>
                                 <TableCell>
                                   <Badge variant="outline" className="text-xs">{row.matchType}</Badge>
                                 </TableCell>
                                 <TableCell>{row.existingLeadId || "—"}</TableCell>
+                                <TableCell>
+                                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-xs">
+                                    Already Imported
+                                  </Badge>
+                                </TableCell>
                               </TableRow>
                             ))}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Execute Button */}
-              <div className="flex justify-end gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setPropPreview(null);
-                    setPropFileData(null);
-                    setPropFile(null);
-                    setSelectedNewRows(new Set());
-                    setSelectedUpdateRows(new Set());
-                  }}
-                  disabled={isProcessing}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleExecuteImport}
-                  disabled={isProcessing || (selectedNewRows.size === 0 && selectedUpdateRows.size === 0)}
-                  size="lg"
-                  className="min-w-[200px]"
-                >
-                  {isProcessing && executeImportMut.isPending ? (
-                    <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
-                  ) : (
-                    <><Upload className="mr-2 h-4 w-4" /> Import {selectedNewRows.size} New + {selectedUpdateRows.size} Updates</>
-                  )}
-                </Button>
+              {/* Execute Button — always visible at bottom with sticky positioning */}
+              <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm py-4 border-t z-20">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedNewRows.size > 0 && <span className="text-green-600 font-medium">{selectedNewRows.size} new</span>}
+                    {selectedNewRows.size > 0 && selectedUpdateRows.size > 0 && " + "}
+                    {selectedUpdateRows.size > 0 && <span className="text-amber-600 font-medium">{selectedUpdateRows.size} updates</span>}
+                    {selectedNewRows.size === 0 && selectedUpdateRows.size === 0 && "No rows selected"}
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setPropPreview(null);
+                        setPropFileData(null);
+                        setPropFile(null);
+                        setSelectedNewRows(new Set());
+                        setSelectedUpdateRows(new Set());
+                      }}
+                      disabled={isProcessing}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleExecuteImport}
+                      disabled={isProcessing || (selectedNewRows.size === 0 && selectedUpdateRows.size === 0)}
+                      size="lg"
+                      className="min-w-[200px]"
+                    >
+                      {isProcessing && executeImportMut.isPending ? (
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
+                      ) : (
+                        <><Upload className="mr-2 h-4 w-4" /> Import {selectedNewRows.size + selectedUpdateRows.size} Properties</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Instructions (shown when no preview) */}
@@ -714,10 +749,10 @@ export default function ImportProperties() {
                     <strong>2. Preview &amp; detect duplicates:</strong> The system checks each row against existing properties by address, APN, or property ID.
                   </p>
                   <p>
-                    <strong>3. Review changes:</strong> For duplicates with updated data, you can view a side-by-side comparison of old vs new values.
+                    <strong>3. Review changes:</strong> For duplicates with updated data, you can view only the fields that will be updated (side-by-side comparison).
                   </p>
                   <p>
-                    <strong>4. Select &amp; import:</strong> Choose which new properties to insert and which duplicates to update, then execute the import.
+                    <strong>4. Select &amp; import:</strong> Choose which new properties to insert and which duplicates to update. Properties with identical data are marked as "Already Imported".
                   </p>
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
                     <p className="text-blue-900 dark:text-blue-100">
@@ -743,7 +778,7 @@ export default function ImportProperties() {
                     Contacts can only be imported for properties that already exist in the system.
                   </p>
                   <p className="text-amber-700 dark:text-amber-300 mt-1">
-                    Your file must include property identifiers (address, APN, or Lead ID) so the system can match each contact to the correct property. Unmatched contacts will be skipped.
+                    Your file must include property identifiers (<strong>associated_property_apn_parcel_id</strong>, address, or Lead ID) so the system can match each contact to the correct property. Unmatched contacts will be skipped.
                   </p>
                 </div>
               </div>
@@ -792,7 +827,7 @@ export default function ImportProperties() {
 
           {/* Contact Preview Results */}
           {contactPreview && (
-            <>
+            <div className="space-y-6">
               {/* Summary */}
               <div className="grid gap-4 md:grid-cols-3">
                 <Card>
@@ -821,23 +856,39 @@ export default function ImportProperties() {
                 </Card>
               </div>
 
+              {/* Detected Columns Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Detected Columns</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {contactPreview.detectedColumns.map((col) => (
+                      <Badge key={col} variant="secondary" className="text-xs">
+                        {col}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Matched Contacts Table */}
               {contactPreview.matchedCount > 0 && (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                       <CheckCircle2 className="h-5 w-5" />
                       Matched Contacts ({selectedContactRows.size} / {contactPreview.matchedCount} selected)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[400px]">
+                  <CardContent className="p-0">
+                    <div className="max-h-[400px] overflow-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
                             <TableHead className="w-[40px]">
                               <Checkbox
-                                checked={selectedContactRows.size === contactPreview.rows.filter((r) => r.matched).length}
+                                checked={selectedContactRows.size === contactPreview.rows.filter((r) => r.matched).length && contactPreview.matchedCount > 0}
                                 onCheckedChange={toggleAllContacts}
                               />
                             </TableHead>
@@ -875,14 +926,14 @@ export default function ImportProperties() {
                             ))}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
               {/* Unmatched Contacts */}
               {contactPreview.unmatchedCount > 0 && (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-red-600">
                       <XCircle className="h-5 w-5" />
@@ -890,14 +941,15 @@ export default function ImportProperties() {
                     </CardTitle>
                     <CardDescription>These contacts could not be matched to any existing property and will be skipped.</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[200px]">
+                  <CardContent className="p-0">
+                    <div className="max-h-[250px] overflow-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
                             <TableHead>Contact Name</TableHead>
                             <TableHead>Property Address</TableHead>
                             <TableHead>City</TableHead>
+                            <TableHead>APN</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -908,43 +960,55 @@ export default function ImportProperties() {
                                 <TableCell>{row.contactName}</TableCell>
                                 <TableCell>{row.propertyAddress}</TableCell>
                                 <TableCell>{row.propertyCity}</TableCell>
+                                <TableCell>{row.rawData?.apn || "—"}</TableCell>
                               </TableRow>
                             ))}
                         </TableBody>
                       </Table>
-                    </ScrollArea>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
               {/* Execute Button */}
-              <div className="flex justify-end gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setContactPreview(null);
-                    setContactFileData(null);
-                    setContactFile(null);
-                    setSelectedContactRows(new Set());
-                  }}
-                  disabled={isProcessing}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleExecuteContacts}
-                  disabled={isProcessing || selectedContactRows.size === 0}
-                  size="lg"
-                  className="min-w-[200px]"
-                >
-                  {isProcessing && executeContactsMut.isPending ? (
-                    <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
-                  ) : (
-                    <><Upload className="mr-2 h-4 w-4" /> Import {selectedContactRows.size} Contacts</>
-                  )}
-                </Button>
+              <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm py-4 border-t z-20">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    {selectedContactRows.size > 0 ? (
+                      <span className="text-green-600 font-medium">{selectedContactRows.size} contacts selected</span>
+                    ) : (
+                      "No contacts selected"
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setContactPreview(null);
+                        setContactFileData(null);
+                        setContactFile(null);
+                        setSelectedContactRows(new Set());
+                      }}
+                      disabled={isProcessing}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleExecuteContacts}
+                      disabled={isProcessing || selectedContactRows.size === 0}
+                      size="lg"
+                      className="min-w-[200px]"
+                    >
+                      {isProcessing && executeContactsMut.isPending ? (
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Importing...</>
+                      ) : (
+                        <><Upload className="mr-2 h-4 w-4" /> Import {selectedContactRows.size} Contacts</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Instructions (shown when no preview) */}
@@ -959,17 +1023,17 @@ export default function ImportProperties() {
                     <strong>1. Import properties first:</strong> Contacts can only be linked to properties that already exist in the system.
                   </p>
                   <p>
-                    <strong>2. Include property identifiers:</strong> Your contacts file must include columns that identify the property (address + city, APN, or Lead ID).
+                    <strong>2. Include property identifiers:</strong> Your contacts file must include <strong>associated_property_apn_parcel_id</strong> (APN), address + city, or Lead ID to match contacts to properties.
                   </p>
                   <p>
-                    <strong>3. Upload &amp; preview:</strong> The system matches each contact row to an existing property and shows the results.
+                    <strong>3. Upload &amp; preview:</strong> The system matches each contact row to an existing property using the APN field and shows the results.
                   </p>
                   <p>
                     <strong>4. Select &amp; import:</strong> Choose which matched contacts to import. Unmatched contacts are automatically skipped.
                   </p>
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
                     <p className="text-blue-900 dark:text-blue-100">
-                      <strong>Supported columns:</strong> contact name, first name, last name, relationship, phone (1-3), email (1-3), mailing address, flags, plus property identifiers (address, city, state, APN, lead ID).
+                      <strong>Supported columns:</strong> contact name, first name, last name, relationship, phone (1-3), email (1-3), mailing address, flags, plus property identifiers (<strong>associated_property_apn_parcel_id</strong>, address, city, state, APN, lead ID).
                     </p>
                   </div>
                 </div>
@@ -980,23 +1044,25 @@ export default function ImportProperties() {
       </Tabs>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          CHANGES COMPARISON DIALOG
+          CHANGES COMPARISON DIALOG — Shows only fields that will be updated
           ═══════════════════════════════════════════════════════════════════ */}
       <Dialog open={!!changesDialogRow} onOpenChange={(open) => !open && setChangesDialogRow(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Data Changes</DialogTitle>
+            <DialogTitle>Fields to Update</DialogTitle>
             <DialogDescription>
               {changesDialogRow?.address}, {changesDialogRow?.city} {changesDialogRow?.state}
+              <br />
+              <span className="text-xs">Only fields with different values are shown below.</span>
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[400px]">
+          <div className="max-h-[400px] overflow-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead>Field</TableHead>
                   <TableHead>Current Value</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="w-[30px]"></TableHead>
                   <TableHead>New Value</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1017,7 +1083,7 @@ export default function ImportProperties() {
                 ))}
               </TableBody>
             </Table>
-          </ScrollArea>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setChangesDialogRow(null)}>
               Close

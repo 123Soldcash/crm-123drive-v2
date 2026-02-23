@@ -1729,3 +1729,10 @@
 - [x] Contacts Import: Only import if matching property exists in system
 - [x] Contacts Import: Show which property each contact will be linked to
 - [x] Write tests for import functionality — 15 tests passing
+
+## IMPORT PROPERTIES BUG FIXES (Feb 23, 2026) — COMPLETED
+- [x] Fix: Show only fields that will be updated in comparison (not all fields) — dialog now shows "Fields to Update" with only changed fields
+- [x] Fix: Mark identical properties as "already imported" — blue "Already Up-to-Date" section with CheckCheck icon
+- [x] Fix: Layout overflow after 11 items — replaced ScrollArea with overflow-auto div, sticky headers, sticky bottom action bar
+- [x] Fix: Contacts import not reading associated_property_apn_parcel_id field — mapped in CONTACT_COLUMN_MAP
+- [x] Fix: Match contacts to properties using APN from associated_property_apn_parcel_id — APN matching works correctly
