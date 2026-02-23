@@ -1421,7 +1421,7 @@ export const appRouter = router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
-        return await db.getVisitsByPropertyId(input.propertyId);
+        return await db.getPropertyVisits(input.propertyId);
       }),
 
     recent: protectedProcedure

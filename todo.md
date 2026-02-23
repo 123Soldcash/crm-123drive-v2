@@ -1778,3 +1778,6 @@
 - [x] Write professional-grade engineering tests — 21 tests covering: full data creation, phone metadata (DNC/carrier/prepaid/activity/usage), upsert existing contacts, preview comparison (new/update/up-to-date), address upsert + dedup, multiple contacts per property
 - [x] Fixed missing updatedAt column in contactAddresses table causing silent insert failures
 - [x] All 21 tests passing
+
+## BUG FIX - db.getVisitsByPropertyId is not a function (Feb 23, 2026)
+- [x] Fix missing getVisitsByPropertyId function causing error on property detail page /properties/:id — renamed to getPropertyVisits
