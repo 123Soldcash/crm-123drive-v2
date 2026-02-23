@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, addressLine1, owner2Name, LENGTH(owner2Name) as len, HEX(owner2Name) as hex_val FROM properties WHERE addressLine1 LIKE '%3838 Haws%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, owner2Name, LENGTH(owner2Name) as len, HEX(owner2Name) as hex_val FROM properties WHERE addressLine1 LIKE '%3838 Haws%' LIMIT 1;",
+  "rows": [
+    {
+      "id": "1860007",
+      "addressLine1": "3838 Haws Ln",
+      "owner2Name": "Tyler  Bauer",
+      "len": "12",
+      "hex_val": "54796C657220204261756572"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\towner2Name\tlen\thex_val\n1860007\t3838 Haws Ln\tTyler  Bauer\t12\t54796C657220204261756572\n",
+  "stderr": "",
+  "execution_time_ms": 118
+}

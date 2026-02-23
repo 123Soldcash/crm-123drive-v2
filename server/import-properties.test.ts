@@ -240,6 +240,80 @@ describe("Import Properties Router", () => {
     });
   });
 
+  // ── Whitespace & Normalization ─────────────────────────────────────────
+
+  describe("Whitespace & Normalization", () => {
+    it("does NOT flag as changed when values differ only by whitespace", async () => {
+      const uniqueAddr = `${Date.now()} Whitespace Test St`;
+      // Insert with clean value
+      const fileData1 = createExcelBase64([
+        { address: uniqueAddr, city: "WSCity", state: "FL", zipcode: "33100", "owner name": "Tyler Bauer" },
+      ]);
+      await adminCaller.importProperties.executeImport({
+        fileData: fileData1,
+        assignedAgentId: null,
+        newRows: [0],
+        updateRows: [],
+      });
+
+      // Preview with extra spaces and trailing space
+      const fileData2 = createExcelBase64([
+        { address: uniqueAddr, city: "WSCity", state: "FL", zipcode: "33100", "owner name": "Tyler  Bauer " },
+      ]);
+      const preview = await adminCaller.importProperties.previewProperties({ fileData: fileData2 });
+
+      expect(preview.duplicateCount).toBe(1);
+      // Should NOT have changes since normalized values are the same
+      expect(preview.rows[0].hasChanges).toBe(false);
+      expect(preview.rows[0].changes.length).toBe(0);
+    });
+
+    it("does NOT flag as changed when values differ only by case", async () => {
+      const uniqueAddr = `${Date.now()} Case Test St`;
+      const fileData1 = createExcelBase64([
+        { address: uniqueAddr, city: "CaseCity", state: "FL", zipcode: "33100", "property type": "Single Family" },
+      ]);
+      await adminCaller.importProperties.executeImport({
+        fileData: fileData1,
+        assignedAgentId: null,
+        newRows: [0],
+        updateRows: [],
+      });
+
+      const fileData2 = createExcelBase64([
+        { address: uniqueAddr, city: "CaseCity", state: "FL", zipcode: "33100", "property type": "single family" },
+      ]);
+      const preview = await adminCaller.importProperties.previewProperties({ fileData: fileData2 });
+
+      expect(preview.duplicateCount).toBe(1);
+      expect(preview.rows[0].hasChanges).toBe(false);
+    });
+
+    it("still detects real changes even with whitespace normalization", async () => {
+      const uniqueAddr = `${Date.now()} RealChange Test St`;
+      const fileData1 = createExcelBase64([
+        { address: uniqueAddr, city: "RCCity", state: "FL", zipcode: "33100", "owner name": "Tyler Bauer" },
+      ]);
+      await adminCaller.importProperties.executeImport({
+        fileData: fileData1,
+        assignedAgentId: null,
+        newRows: [0],
+        updateRows: [],
+      });
+
+      const fileData2 = createExcelBase64([
+        { address: uniqueAddr, city: "RCCity", state: "FL", zipcode: "33100", "owner name": "John Smith" },
+      ]);
+      const preview = await adminCaller.importProperties.previewProperties({ fileData: fileData2 });
+
+      expect(preview.duplicateCount).toBe(1);
+      expect(preview.rows[0].hasChanges).toBe(true);
+      const ownerChange = preview.rows[0].changes.find((c: any) => c.field === "Owner 1");
+      expect(ownerChange).toBeDefined();
+      expect(ownerChange?.newValue).toBe("John Smith");
+    });
+  });
+
   // ── Contacts Preview ────────────────────────────────────────────────────
 
   describe("Preview Contacts", () => {

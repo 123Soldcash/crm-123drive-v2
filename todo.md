@@ -1736,3 +1736,9 @@
 - [x] Fix: Layout overflow after 11 items — replaced ScrollArea with overflow-auto div, sticky headers, sticky bottom action bar
 - [x] Fix: Contacts import not reading associated_property_apn_parcel_id field — mapped in CONTACT_COLUMN_MAP
 - [x] Fix: Match contacts to properties using APN from associated_property_apn_parcel_id — APN matching works correctly
+
+## IMPORT COMPARISON FALSE POSITIVES BUG (Feb 23, 2026) — COMPLETED
+- [x] Fix: Comparison detects changes when values are identical — caused by extra spaces/trailing whitespace in CSV
+- [x] Add normalizeForCompare() function: trim + collapse multiple spaces + lowercase
+- [x] Validate with real CSV data — "Tyler  Bauer " (13 chars) vs "Tyler  Bauer" (12 chars) now correctly detected as same
+- [x] Added 3 new tests: whitespace normalization, case insensitivity, real changes still detected (18 tests total)

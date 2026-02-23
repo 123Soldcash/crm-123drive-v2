@@ -1,0 +1,16 @@
+{
+  "query": "SELECT owner2Name, HEX(owner2Name) as hex_val, LENGTH(owner2Name) as byte_len, CHAR_LENGTH(owner2Name) as char_len FROM properties WHERE addressLine1 LIKE '%3838 Haws%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT owner2Name, HEX(owner2Name) as hex_val, LENGTH(owner2Name) as byte_len, CHAR_LENGTH(owner2Name) as char_len FROM properties WHERE addressLine1 LIKE '%3838 Haws%' LIMIT 1;",
+  "rows": [
+    {
+      "owner2Name": "Tyler  Bauer",
+      "hex_val": "54796C657220204261756572",
+      "byte_len": "12",
+      "char_len": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "owner2Name\thex_val\tbyte_len\tchar_len\nTyler  Bauer\t54796C657220204261756572\t12\t12\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

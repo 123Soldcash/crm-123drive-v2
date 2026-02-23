@@ -49,6 +49,12 @@ function str(value: any): string | null {
   return String(value).trim();
 }
 
+/** Normalize a string for comparison: trim, collapse multiple spaces, lowercase */
+function normalizeForCompare(value: any): string {
+  if (value === null || value === undefined) return "";
+  return String(value).trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 // Normalize address for comparison (lowercase, remove extra spaces, remove dots, etc.)
 function normalizeAddress(addr: string): string {
   return addr
@@ -371,8 +377,13 @@ export const importPropertiesRouter = router({
               newVal = parsePercent(newVal);
             }
             const oldVal = existingProperty[f.key];
-            if (newVal !== null && newVal !== undefined && newVal !== "" && String(newVal) !== String(oldVal ?? "")) {
-              changes.push({ field: f.label, oldValue: oldVal, newValue: newVal });
+            if (newVal !== null && newVal !== undefined && newVal !== "") {
+              // Normalize both values for comparison: trim, collapse spaces, case-insensitive
+              const normalizedNew = normalizeForCompare(newVal);
+              const normalizedOld = normalizeForCompare(oldVal);
+              if (normalizedNew !== normalizedOld) {
+                changes.push({ field: f.label, oldValue: oldVal, newValue: newVal });
+              }
             }
           }
         }
