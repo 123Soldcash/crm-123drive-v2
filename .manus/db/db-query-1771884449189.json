@@ -1,0 +1,58 @@
+{
+  "query": "SHOW COLUMNS FROM contactPhones WHERE Field IN ('usage2Months','usage12Months','carrier','activityStatus','isPrepaid','dnc')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SHOW COLUMNS FROM contactPhones WHERE Field IN ('usage2Months','usage12Months','carrier','activityStatus','isPrepaid','dnc')",
+  "rows": [
+    {
+      "Field": "dnc",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "carrier",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "activityStatus",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "isPrepaid",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "usage2Months",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "usage12Months",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ndnc\tint(11)\tNO\t\t0\t\ncarrier\tvarchar(100)\tYES\t\tNULL\t\nactivityStatus\tvarchar(50)\tYES\t\tNULL\t\nisPrepaid\tint(11)\tNO\t\t0\t\nusage2Months\tvarchar(50)\tYES\t\tNULL\t\nusage12Months\tvarchar(50)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -318,6 +318,22 @@ export const contacts = mysqlTable("contacts", {
   currentAddress: text("currentAddress"), // May be different from property address
   flags: text("flags"), // e.g., "Likely Owner, Family, Resident"
   
+  // Demographics from DealMachine
+  firstName: varchar("firstName", { length: 100 }),
+  lastName: varchar("lastName", { length: 100 }),
+  middleInitial: varchar("middleInitial", { length: 10 }),
+  generationalSuffix: varchar("generationalSuffix", { length: 20 }),
+  gender: varchar("gender", { length: 20 }),
+  maritalStatus: varchar("maritalStatus", { length: 50 }),
+  netAssetValue: varchar("netAssetValue", { length: 50 }),
+  homeBusiness: varchar("homeBusiness", { length: 50 }),
+  educationModel: varchar("educationModel", { length: 100 }),
+  occupationGroup: varchar("occupationGroup", { length: 100 }),
+  occupationCode: varchar("occupationCode", { length: 50 }),
+  businessOwner: varchar("businessOwner", { length: 50 }),
+  notes: text("notes"),
+  dealMachineContactId: varchar("dealMachineContactId", { length: 50 }),
+  
   // Decision making & flags
   isDecisionMaker: int("isDecisionMaker").default(0).notNull(), // 0=NO, 1=YES - who can sell the property
   dnc: int("dnc").default(0).notNull(), // 0=NO, 1=YES - Do Not Call flag
@@ -376,6 +392,8 @@ export const contactPhones = mysqlTable("contactPhones", {
   carrier: varchar("carrier", { length: 100 }),
   activityStatus: varchar("activityStatus", { length: 50 }),
   isPrepaid: int("isPrepaid").default(0).notNull(),
+  usage2Months: varchar("usage2Months", { length: 50 }),
+  usage12Months: varchar("usage12Months", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

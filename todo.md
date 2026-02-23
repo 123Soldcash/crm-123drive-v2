@@ -1754,3 +1754,17 @@
 - [x] Update contacts tab preview to show all phones with types and all emails per contact
 - [x] Phone types mapped: Wireless, Landline, VOIP from CSV phone_type fields
 - [x] 18 tests passing
+
+## CONTACTS IMPORT - FULL DealMachine XLSX Support (Feb 23, 2026) — COMPLETED
+- [x] Map all 72 columns from DealMachine contacts XLSX
+- [x] Import phone_1/2/3 with all metadata (DNC, type, carrier, prepaid, activity, usage 2mo/12mo)
+- [x] Import email_address_1/2/3
+- [x] Store phone flags (DNC, Prepaid, Carrier, Activity, Usage) in contactPhones table
+- [x] Import contact_flags (Likely Owner, Family, Resident, etc.) as badges
+- [x] Import demographic data (gender, marital_status, net_asset_value, occupation)
+- [x] Import mailing addresses (current + previous)
+- [x] Match contacts to properties by APN/address — 185/185 matched (100%)
+- [x] Update frontend preview to show all phone metadata, flags, and demographics
+- [x] Test with real XLSX data — 185 contacts all matched, phones/emails/flags displayed correctly
+- [x] Added usage2Months and usage12Months columns to contactPhones table
+- [x] Added gender, maritalStatus, netAssetValue, middleInitial, suffix, notes to contacts table

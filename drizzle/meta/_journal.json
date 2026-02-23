@@ -50,6 +50,13 @@
       "when": 1771621809690,
       "tag": "0006_jittery_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1771884767861,
+      "tag": "0007_wild_punisher",
+      "breakpoints": true
     }
   ]
 }

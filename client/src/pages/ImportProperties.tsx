@@ -69,12 +69,38 @@ type PreviewRow = {
 type ContactPreviewRow = {
   rowIndex: number;
   contactName: string;
+  firstName: string | null;
+  lastName: string | null;
+  middleInitial: string | null;
+  generationalSuffix: string | null;
+  dealMachineContactId: string | null;
   relationship: string;
   flags: string | null;
-  phones: { number: string; type: string }[];
+  phones: {
+    number: string;
+    type: string;
+    dnc: boolean;
+    carrier: string | null;
+    prepaid: boolean;
+    activity: string | null;
+    usage2m: string | null;
+    usage12m: string | null;
+  }[];
   emails: string[];
   phoneCount: number;
   emailCount: number;
+  demographics: {
+    gender: string | null;
+    maritalStatus: string | null;
+    netAssetValue: string | null;
+    homeBusiness: string | null;
+    occupationGroup: string | null;
+    businessOwner: string | null;
+  };
+  mailingAddress: string | null;
+  mailingCity: string | null;
+  mailingState: string | null;
+  mailingZip: string | null;
   propertyAddress: string;
   propertyCity: string;
   apn: string | null;
@@ -930,7 +956,7 @@ export default function ImportProperties() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="max-h-[400px] overflow-auto">
+                    <div className="max-h-[500px] overflow-auto">
                       <Table>
                         <TableHeader className="sticky top-0 bg-background z-10">
                           <TableRow>
@@ -940,11 +966,12 @@ export default function ImportProperties() {
                                 onCheckedChange={toggleAllContacts}
                               />
                             </TableHead>
-                            <TableHead>Contact Name</TableHead>
+                            <TableHead>Contact</TableHead>
                             <TableHead>Phones</TableHead>
                             <TableHead>Emails</TableHead>
+                            <TableHead>Demographics</TableHead>
                             <TableHead>Matched Property</TableHead>
-                            <TableHead>Match By</TableHead>
+                            <TableHead>Match</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -959,39 +986,78 @@ export default function ImportProperties() {
                                   />
                                 </TableCell>
                                 <TableCell className="font-medium">
-                                  <div>{row.contactName}</div>
-                                  {row.relationship && <span className="text-xs text-muted-foreground">{row.relationship}</span>}
-                                  {row.flags && <Badge variant="outline" className="text-xs ml-1">{row.flags}</Badge>}
+                                  <div className="flex flex-col gap-0.5">
+                                    <span>{row.contactName}</span>
+                                    {row.flags && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {row.flags.split(",").map((f: string, i: number) => (
+                                          <Badge key={i} variant="outline" className="text-[10px] px-1">{f.trim()}</Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {row.mailingAddress && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {row.mailingAddress}, {row.mailingCity} {row.mailingState} {row.mailingZip}
+                                      </span>
+                                    )}
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-sm">
                                   {row.phones && row.phones.length > 0 ? (
-                                    <div className="flex flex-col gap-0.5">
-                                      {row.phones.map((p: {number: string; type: string}, i: number) => (
-                                        <div key={i} className="flex items-center gap-1">
-                                          <span>{p.number}</span>
-                                          {p.type && <Badge variant="secondary" className="text-[10px] px-1">{p.type}</Badge>}
+                                    <div className="flex flex-col gap-1">
+                                      {row.phones.map((p, i: number) => (
+                                        <div key={i} className="flex flex-col">
+                                          <div className="flex items-center gap-1">
+                                            <span className="font-mono text-xs">{p.number}</span>
+                                            <Badge variant="secondary" className="text-[10px] px-1">{p.type}</Badge>
+                                            {p.dnc && <Badge variant="destructive" className="text-[10px] px-1">DNC</Badge>}
+                                            {p.prepaid && <Badge className="text-[10px] px-1 bg-yellow-500">Prepaid</Badge>}
+                                          </div>
+                                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                            {p.carrier && <span>{p.carrier}</span>}
+                                            {p.activity && <span>\u00B7 {p.activity}</span>}
+                                          </div>
+                                          {(p.usage2m || p.usage12m) && (
+                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                              {p.usage2m && <span>2mo: {p.usage2m}</span>}
+                                              {p.usage12m && <span>12mo: {p.usage12m}</span>}
+                                            </div>
+                                          )}
                                         </div>
                                       ))}
                                     </div>
-                                  ) : "—"}
+                                  ) : "\u2014"}
                                 </TableCell>
                                 <TableCell className="text-sm">
                                   {row.emails && row.emails.length > 0 ? (
                                     <div className="flex flex-col gap-0.5">
                                       {row.emails.map((e: string, i: number) => (
-                                        <span key={i}>{e}</span>
+                                        <span key={i} className="text-xs">{e}</span>
                                       ))}
                                     </div>
-                                  ) : "—"}
+                                  ) : "\u2014"}
+                                </TableCell>
+                                <TableCell className="text-xs">
+                                  {row.demographics ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      {row.demographics.gender && <span>Gender: {row.demographics.gender}</span>}
+                                      {row.demographics.maritalStatus && <span>Status: {row.demographics.maritalStatus}</span>}
+                                      {row.demographics.netAssetValue && <span>Net Asset: {row.demographics.netAssetValue}</span>}
+                                      {row.demographics.occupationGroup && <span>Occ: {row.demographics.occupationGroup}</span>}
+                                      {row.demographics.businessOwner && <span>Biz Owner: {row.demographics.businessOwner}</span>}
+                                    </div>
+                                  ) : "\u2014"}
                                 </TableCell>
                                 <TableCell className="text-sm">
-                                  <span className="text-muted-foreground">{row.matchedPropertyAddress}</span>
-                                  {row.matchedLeadId && (
-                                    <Badge variant="outline" className="ml-2 text-xs">#{row.matchedLeadId}</Badge>
-                                  )}
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-muted-foreground text-xs">{row.matchedPropertyAddress}</span>
+                                    {row.matchedLeadId && (
+                                      <Badge variant="outline" className="text-[10px] w-fit">#{row.matchedLeadId}</Badge>
+                                    )}
+                                  </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="secondary" className="text-xs">{row.matchMethod}</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">{row.matchMethod}</Badge>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -1104,7 +1170,7 @@ export default function ImportProperties() {
                   </p>
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-md">
                     <p className="text-blue-900 dark:text-blue-100">
-                      <strong>Supported columns:</strong> contact name, first name, last name, relationship, phone (1-3), email (1-3), mailing address, flags, plus property identifiers (<strong>associated_property_apn_parcel_id</strong>, address, city, state, APN, lead ID).
+                      <strong>Supported columns:</strong> contact name, first/last name, relationship, phone_1 to phone_3 (with DNC, carrier, prepaid, activity, usage indicators), email_address_1 to email_address_3, mailing address (current + previous), demographics (gender, marital status, net asset value, occupation, business owner), flags, plus property identifiers (<strong>associated_property_apn_parcel_id</strong>, address, city, state, APN, lead ID).
                     </p>
                   </div>
                 </div>

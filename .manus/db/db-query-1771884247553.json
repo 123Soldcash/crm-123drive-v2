@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE contacts \n  ADD COLUMN firstName VARCHAR(100) NULL,\n  ADD COLUMN lastName VARCHAR(100) NULL,\n  ADD COLUMN middleInitial VARCHAR(10) NULL,\n  ADD COLUMN generationalSuffix VARCHAR(20) NULL,\n  ADD COLUMN gender VARCHAR(20) NULL,\n  ADD COLUMN maritalStatus VARCHAR(50) NULL,\n  ADD COLUMN netAssetValue VARCHAR(50) NULL,\n  ADD COLUMN homeBusiness VARCHAR(50) NULL,\n  ADD COLUMN educationModel VARCHAR(100) NULL,\n  ADD COLUMN occupationGroup VARCHAR(100) NULL,\n  ADD COLUMN occupationCode VARCHAR(50) NULL,\n  ADD COLUMN businessOwner VARCHAR(50) NULL,\n  ADD COLUMN notes TEXT NULL,\n  ADD COLUMN dealMachineContactId VARCHAR(50) NULL;\n\nALTER TABLE contactPhones\n  ADD COLUMN usage2Months VARCHAR(50) NULL,\n  ADD COLUMN usage12Months VARCHAR(50) NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE contacts \n  ADD COLUMN firstName VARCHAR(100) NULL,\n  ADD COLUMN lastName VARCHAR(100) NULL,\n  ADD COLUMN middleInitial VARCHAR(10) NULL,\n  ADD COLUMN generationalSuffix VARCHAR(20) NULL,\n  ADD COLUMN gender VARCHAR(20) NULL,\n  ADD COLUMN maritalStatus VARCHAR(50) NULL,\n  ADD COLUMN netAssetValue VARCHAR(50) NULL,\n  ADD COLUMN homeBusiness VARCHAR(50) NULL,\n  ADD COLUMN educationModel VARCHAR(100) NULL,\n  ADD COLUMN occupationGroup VARCHAR(100) NULL,\n  ADD COLUMN occupationCode VARCHAR(50) NULL,\n  ADD COLUMN businessOwner VARCHAR(50) NULL,\n  ADD COLUMN notes TEXT NULL,\n  ADD COLUMN dealMachineContactId VARCHAR(50) NULL;\n\nALTER TABLE contactPhones\n  ADD COLUMN usage2Months VARCHAR(50) NULL,\n  ADD COLUMN usage12Months VARCHAR(50) NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 6872
+}

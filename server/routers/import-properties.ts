@@ -237,69 +237,111 @@ const PROPERTY_COLUMN_MAP: Record<string, string> = {
 };
 
 const CONTACT_COLUMN_MAP: Record<string, string> = {
-  // Property identifiers for matching
+  // ─── Property identifiers for matching ─────────────────────────────────
+  associated_property_address_line_1: "propertyAddress",
+  associated_property_address_full: "propertyAddressFull",
   property_address_line_1: "propertyAddress",
   address: "propertyAddress",
   "address line 1": "propertyAddress",
   "property address": "propertyAddress",
   street: "propertyAddress",
+  associated_property_address_city: "propertyCity",
   property_address_city: "propertyCity",
   city: "propertyCity",
+  associated_property_address_state: "propertyState",
   property_address_state: "propertyState",
   state: "propertyState",
+  associated_property_address_zipcode: "propertyZipcode",
   property_address_zipcode: "propertyZipcode",
   zipcode: "propertyZipcode",
   zip: "propertyZipcode",
+  associated_property_apn_parcel_id: "apn",
   apn_parcel_id: "apn",
   apn: "apn",
-  associated_property_apn_parcel_id: "apn",
-  "associated property apn parcel id": "apn",
-  associated_property_apn: "apn",
-  property_apn: "apn",
-  "property apn": "apn",
   parcel_id: "apn",
-  "parcel id": "apn",
+  associated_property_id: "associatedPropertyId",
   lead_id: "leadId",
-  "lead id": "leadId",
 
-  // Contact fields
+  // ─── Contact identity ─────────────────────────────────────────────────
+  contact_id: "dealMachineContactId",
+  first_name: "firstName",
+  last_name: "lastName",
+  middle_initial: "middleInitial",
+  generational_suffix: "generationalSuffix",
   name: "name",
   contact_name: "name",
-  "contact name": "name",
   "full name": "name",
-  first_name: "firstName",
-  "first name": "firstName",
-  last_name: "lastName",
-  "last name": "lastName",
   relationship: "relationship",
   age: "age",
+  contact_flags: "flags",
   flags: "flags",
   notes: "notes",
 
-  // Phones (up to 10)
-  phone: "phone1", phone1: "phone1", "phone 1": "phone1", phone_number: "phone1", "phone number": "phone1",
-  phone1_type: "phone1Type", "phone 1 type": "phone1Type",
-  phone2: "phone2", "phone 2": "phone2",
-  phone2_type: "phone2Type", "phone 2 type": "phone2Type",
-  phone3: "phone3", "phone 3": "phone3",
-  phone3_type: "phone3Type", "phone 3 type": "phone3Type",
-  phone4: "phone4", phone5: "phone5", phone6: "phone6",
-  phone7: "phone7", phone8: "phone8", phone9: "phone9", phone10: "phone10",
+  // ─── Demographics ─────────────────────────────────────────────────────
+  gender: "gender",
+  marital_status: "maritalStatus",
+  net_asset_value: "netAssetValue",
+  home_business: "homeBusiness",
+  education_model: "educationModel",
+  occupation_group: "occupationGroup",
+  occupation_code: "occupationCode",
+  business_owner: "businessOwner",
 
-  // Emails (up to 10)
-  email: "email1", email1: "email1", "email 1": "email1", email_address: "email1", "email address": "email1",
-  email2: "email2", "email 2": "email2",
-  email3: "email3", "email 3": "email3",
+  // ─── Phones (DealMachine: phone_1 through phone_3 with metadata) ─────
+  phone_1: "phone1",
+  phone_1_type: "phone1Type",
+  phone_1_do_not_call: "phone1Dnc",
+  phone_1_carrier: "phone1Carrier",
+  phone_1_prepaid_indicator: "phone1Prepaid",
+  phone_1_activity_status: "phone1Activity",
+  phone_1_usage_2_months: "phone1Usage2m",
+  phone_1_usage_12_months: "phone1Usage12m",
+  phone_2: "phone2",
+  phone_2_type: "phone2Type",
+  phone_2_do_not_call: "phone2Dnc",
+  phone_2_carrier: "phone2Carrier",
+  phone_2_prepaid_indicator: "phone2Prepaid",
+  phone_2_activity_status: "phone2Activity",
+  phone_2_usage_2_months: "phone2Usage2m",
+  phone_2_usage_12_months: "phone2Usage12m",
+  phone_3: "phone3",
+  phone_3_type: "phone3Type",
+  phone_3_do_not_call: "phone3Dnc",
+  phone_3_carrier: "phone3Carrier",
+  phone_3_prepaid_indicator: "phone3Prepaid",
+  phone_3_activity_status: "phone3Activity",
+  phone_3_usage_2_months: "phone3Usage2m",
+  phone_3_usage_12_months: "phone3Usage12m",
+  // Generic fallbacks
+  phone: "phone1", phone1: "phone1", phone_number: "phone1",
+  phone2: "phone2", phone3: "phone3",
+
+  // ─── Emails (DealMachine: email_address_1 through email_address_3) ────
+  email_address_1: "email1",
+  email_address_2: "email2",
+  email_address_3: "email3",
+  email: "email1", email1: "email1", email_address: "email1",
+  email2: "email2", email3: "email3",
   email4: "email4", email5: "email5", email6: "email6",
   email7: "email7", email8: "email8", email9: "email9", email10: "email10",
 
-  // Mailing address
-  mailing_address: "mailingAddress", "mailing address": "mailingAddress",
-  mailing_city: "mailingCity", "mailing city": "mailingCity",
-  mailing_state: "mailingState", "mailing state": "mailingState",
-  mailing_zipcode: "mailingZipcode", "mailing zip": "mailingZipcode", mailing_zip: "mailingZipcode",
+  // ─── Mailing addresses ────────────────────────────────────────────────
+  primary_mailing_address: "mailingAddress",
+  primary_mailing_city: "mailingCity",
+  primary_mailing_state: "mailingState",
+  primary_mailing_zip: "mailingZip",
+  mailing_address: "mailingAddress",
+  mailing_city: "mailingCity",
+  mailing_state: "mailingState",
+  mailing_zip: "mailingZip",
+  mailing_zipcode: "mailingZip",
+  // Previous mailing address
+  mailing_address_previous: "mailingAddressPrev",
+  mailing_address_city_previous: "mailingCityPrev",
+  mailing_address_state_previous: "mailingStatePrev",
+  mailing_address_zip_previous: "mailingZipPrev",
 
-  // Facebook
+  // ─── Facebook ─────────────────────────────────────────────────────────
   facebookprofile: "facebook", facebook: "facebook", "facebook profile": "facebook",
 };
 
@@ -787,8 +829,10 @@ export const importPropertiesRouter = router({
         const raw = data[i];
         const mapped = mapColumns(raw, CONTACT_COLUMN_MAP);
 
-        const contactName = str(mapped.name) || (str(mapped.firstName) && str(mapped.lastName) ? `${str(mapped.firstName)} ${str(mapped.lastName)}` : null);
-        const propertyAddress = str(mapped.propertyAddress);
+        const firstName = str(mapped.firstName);
+        const lastName = str(mapped.lastName);
+        const contactName = str(mapped.name) || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || null);
+        const propertyAddress = str(mapped.propertyAddress) || str(mapped.propertyAddressFull);
         const propertyCity = str(mapped.propertyCity);
         const propertyState = str(mapped.propertyState);
         const apn = str(mapped.apn);
@@ -813,39 +857,79 @@ export const importPropertiesRouter = router({
         }
 
         if (!matchedProperty && propertyAddress && propertyCity) {
+          // Try to extract just the street address from full address
+          let searchAddr = propertyAddress;
+          // If it's a full address like "123 Main St, Orlando, FL 32801", extract just the street
+          if (propertyAddress.includes(",")) {
+            searchAddr = propertyAddress.split(",")[0].trim();
+          }
           const existing = await dbInstance
             .select({ id: properties.id, addressLine1: properties.addressLine1, city: properties.city, leadId: properties.leadId })
             .from(properties)
             .where(and(
-              sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(propertyAddress)}`,
+              sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(searchAddr)}`,
               sql`LOWER(${properties.city}) = ${normalizeAddress(propertyCity)}`
             ))
             .limit(1);
           if (existing.length > 0) { matchedProperty = existing[0]; matchMethod = "address"; }
         }
 
-        // Collect ALL phones and emails from the row
-        const allPhones: { number: string; type: string }[] = [];
-        const allEmails: string[] = [];
+        // Collect ALL phones with full metadata
+        const allPhones: { number: string; type: string; dnc: boolean; carrier: string | null; prepaid: boolean; activity: string | null; usage2m: string | null; usage12m: string | null }[] = [];
         for (let p = 1; p <= 10; p++) {
           const phone = str(mapped[`phone${p}`]);
-          const phoneType = str(mapped[`phone${p}Type`]);
-          if (phone) allPhones.push({ number: phone.replace(/[^\d+]/g, ""), type: phoneType || "Mobile" });
+          if (phone) {
+            const dncVal = str(mapped[`phone${p}Dnc`]);
+            const prepaidVal = str(mapped[`phone${p}Prepaid`]);
+            allPhones.push({
+              number: phone.replace(/[^\d+]/g, ""),
+              type: str(mapped[`phone${p}Type`]) || "Mobile",
+              dnc: dncVal ? dncVal.toLowerCase().includes("do not call") : false,
+              carrier: str(mapped[`phone${p}Carrier`]),
+              prepaid: prepaidVal ? prepaidVal.toLowerCase().includes("prepaid") : false,
+              activity: str(mapped[`phone${p}Activity`]),
+              usage2m: str(mapped[`phone${p}Usage2m`]),
+              usage12m: str(mapped[`phone${p}Usage12m`]),
+            });
+          }
         }
+
+        // Collect ALL emails
+        const allEmails: string[] = [];
         for (let e = 1; e <= 10; e++) {
           const email = str(mapped[`email${e}`]);
           if (email) allEmails.push(email);
         }
 
+        // Demographics
+        const demographics = {
+          gender: str(mapped.gender),
+          maritalStatus: str(mapped.maritalStatus),
+          netAssetValue: str(mapped.netAssetValue),
+          homeBusiness: str(mapped.homeBusiness),
+          occupationGroup: str(mapped.occupationGroup),
+          businessOwner: str(mapped.businessOwner),
+        };
+
         rows.push({
           rowIndex: i,
           contactName: contactName || "N/A",
+          firstName,
+          lastName,
+          middleInitial: str(mapped.middleInitial),
+          generationalSuffix: str(mapped.generationalSuffix),
+          dealMachineContactId: str(mapped.dealMachineContactId),
           relationship: str(mapped.relationship) || "N/A",
           flags: str(mapped.flags) || null,
           phones: allPhones,
           emails: allEmails,
           phoneCount: allPhones.length,
           emailCount: allEmails.length,
+          demographics,
+          mailingAddress: str(mapped.mailingAddress),
+          mailingCity: str(mapped.mailingCity),
+          mailingState: str(mapped.mailingState),
+          mailingZip: str(mapped.mailingZip),
           propertyAddress: propertyAddress || "N/A",
           propertyCity: propertyCity || "N/A",
           apn: apn || null,
@@ -903,7 +987,9 @@ export const importPropertiesRouter = router({
         const mapped = mapColumns(raw, CONTACT_COLUMN_MAP);
 
         try {
-          const contactName = str(mapped.name) || (str(mapped.firstName) && str(mapped.lastName) ? `${str(mapped.firstName)} ${str(mapped.lastName)}` : "Unknown");
+          const firstName = str(mapped.firstName);
+          const lastName = str(mapped.lastName);
+          const contactName = str(mapped.name) || (firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || "Unknown");
 
           // Check if contact already exists
           const existingContacts = await dbInstance
@@ -918,8 +1004,7 @@ export const importPropertiesRouter = router({
             .limit(1);
 
           if (existingContacts.length > 0) {
-            // Skip duplicate contact
-            continue;
+            continue; // Skip duplicate
           }
 
           // Collect all emails
@@ -929,34 +1014,53 @@ export const importPropertiesRouter = router({
             if (email) allEmails.push(email);
           }
 
-          // Insert contact
+          // Insert contact with ALL demographics
           const contactResult = await dbInstance.insert(contacts).values({
             propertyId,
             name: contactName as string,
-            email: allEmails[0] || "",
+            firstName: firstName,
+            lastName: lastName,
+            middleInitial: str(mapped.middleInitial),
+            generationalSuffix: str(mapped.generationalSuffix),
             relationship: str(mapped.relationship) || "Owner",
             flags: str(mapped.flags),
             age: parseNumber(mapped.age),
+            gender: str(mapped.gender),
+            maritalStatus: str(mapped.maritalStatus),
+            netAssetValue: str(mapped.netAssetValue),
+            homeBusiness: str(mapped.homeBusiness),
+            educationModel: str(mapped.educationModel),
+            occupationGroup: str(mapped.occupationGroup),
+            occupationCode: str(mapped.occupationCode),
+            businessOwner: str(mapped.businessOwner),
+            dealMachineContactId: str(mapped.dealMachineContactId),
           } as any);
           const contactId = contactResult[0].insertId;
           contactsImported++;
 
-          // Insert ALL phones (up to 10)
+          // Insert ALL phones with FULL metadata (DNC, carrier, prepaid, activity, usage)
           for (let p = 1; p <= 10; p++) {
             const phone = str(mapped[`phone${p}`]);
-            const phoneType = str(mapped[`phone${p}Type`]);
             if (phone) {
+              const dncVal = str(mapped[`phone${p}Dnc`]);
+              const prepaidVal = str(mapped[`phone${p}Prepaid`]);
               await dbInstance.insert(contactPhones).values({
                 contactId,
                 phoneNumber: phone.replace(/[^\d+]/g, ""),
-                phoneType: mapPhoneType(phoneType),
+                phoneType: mapPhoneType(str(mapped[`phone${p}Type`])),
                 isPrimary: p === 1 ? 1 : 0,
+                dnc: dncVal && dncVal.toLowerCase().includes("do not call") ? 1 : 0,
+                carrier: str(mapped[`phone${p}Carrier`]),
+                isPrepaid: prepaidVal && prepaidVal.toLowerCase().includes("prepaid") ? 1 : 0,
+                activityStatus: str(mapped[`phone${p}Activity`]),
+                usage2Months: str(mapped[`phone${p}Usage2m`]),
+                usage12Months: str(mapped[`phone${p}Usage12m`]),
               } as any);
               phonesImported++;
             }
           }
 
-          // Insert ALL emails (up to 10)
+          // Insert ALL emails
           for (let e = 0; e < allEmails.length; e++) {
             await dbInstance.insert(contactEmails).values({
               contactId,
@@ -966,11 +1070,11 @@ export const importPropertiesRouter = router({
             emailsImported++;
           }
 
-          // Insert mailing address if present
+          // Insert primary mailing address
           const mailingAddr = str(mapped.mailingAddress);
           const mailingCity = str(mapped.mailingCity);
           const mailingState = str(mapped.mailingState);
-          const mailingZip = str(mapped.mailingZipcode);
+          const mailingZip = str(mapped.mailingZip);
           if (mailingAddr && mailingCity && mailingState && mailingZip) {
             await dbInstance.insert(contactAddresses).values({
               contactId,
@@ -980,6 +1084,24 @@ export const importPropertiesRouter = router({
               zipcode: mailingZip,
               addressType: "Mailing",
               isPrimary: 1,
+            } as any);
+            addressesImported++;
+          }
+
+          // Insert previous mailing address if present
+          const prevAddr = str(mapped.mailingAddressPrev);
+          const prevCity = str(mapped.mailingCityPrev);
+          const prevState = str(mapped.mailingStatePrev);
+          const prevZip = str(mapped.mailingZipPrev);
+          if (prevAddr && prevCity && prevState && prevZip) {
+            await dbInstance.insert(contactAddresses).values({
+              contactId,
+              addressLine1: prevAddr,
+              city: prevCity,
+              state: prevState.substring(0, 2).toUpperCase(),
+              zipcode: prevZip,
+              addressType: "Previous",
+              isPrimary: 0,
             } as any);
             addressesImported++;
           }
