@@ -59,6 +59,10 @@ type PreviewRow = {
   existingLeadId: number | null;
   changes: { field: string; oldValue: any; newValue: any }[];
   hasChanges: boolean;
+  contactCount: number;
+  totalPhones: number;
+  totalEmails: number;
+  contactNames: string[];
   rawData: any;
 };
 
@@ -66,10 +70,14 @@ type ContactPreviewRow = {
   rowIndex: number;
   contactName: string;
   relationship: string;
-  phone1: string | null;
-  email1: string | null;
+  flags: string | null;
+  phones: { number: string; type: string }[];
+  emails: string[];
+  phoneCount: number;
+  emailCount: number;
   propertyAddress: string;
   propertyCity: string;
+  apn: string | null;
   matched: boolean;
   matchMethod: string | null;
   matchedPropertyId: number | null;
@@ -90,6 +98,8 @@ export default function ImportProperties() {
     newCount: number;
     duplicateCount: number;
     updatableCount: number;
+    hasEmbeddedContacts: boolean;
+    totalContactsDetected: number;
     detectedColumns: string[];
     mappedColumns: Record<string, string>;
     rows: PreviewRow[];
@@ -208,12 +218,14 @@ export default function ImportProperties() {
         assignedAgentId: selectedAgentId && selectedAgentId !== "unassigned" ? Number(selectedAgentId) : null,
         newRows,
         updateRows,
+        importContacts: true,
       });
 
       utils.properties.list.invalidate();
+      const contactInfo = result.contactsImported > 0 ? ` | ${result.contactsImported} contacts, ${result.phonesImported} phones, ${result.emailsImported} emails` : "";
       toast.success(
-        `Import complete! ${result.insertedCount} inserted, ${result.updatedCount} updated.${result.errorCount > 0 ? ` ${result.errorCount} errors.` : ""}`,
-        { duration: 6000 }
+        `Import complete! ${result.insertedCount} inserted, ${result.updatedCount} updated.${contactInfo}${result.errorCount > 0 ? ` ${result.errorCount} errors.` : ""}`,
+        { duration: 8000 }
       );
 
       if (result.errorCount > 0) {
@@ -451,6 +463,25 @@ export default function ImportProperties() {
           {/* Preview Results */}
           {propPreview && (
             <div className="space-y-6">
+              {/* Embedded Contacts Banner */}
+              {propPreview.hasEmbeddedContacts && (
+                <Card className="border-purple-500/30 bg-purple-50/50 dark:bg-purple-950/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <Users className="h-5 w-5 text-purple-600 mt-0.5 shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-purple-800 dark:text-purple-200">
+                          {propPreview.totalContactsDetected} embedded contacts detected in this file
+                        </p>
+                        <p className="text-purple-700 dark:text-purple-300 mt-1">
+                          Contacts (with phones, emails, and Facebook profiles) will be automatically imported along with each property. No separate contacts file needed.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Summary Cards */}
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
@@ -531,6 +562,7 @@ export default function ImportProperties() {
                             <TableHead>State</TableHead>
                             <TableHead>Zip</TableHead>
                             <TableHead>Owner</TableHead>
+                            {propPreview.hasEmbeddedContacts && <TableHead>Contacts</TableHead>}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -549,6 +581,22 @@ export default function ImportProperties() {
                                 <TableCell>{row.state}</TableCell>
                                 <TableCell>{row.zipcode}</TableCell>
                                 <TableCell>{row.owner}</TableCell>
+                                {propPreview.hasEmbeddedContacts && (
+                                  <TableCell>
+                                    {row.contactCount > 0 ? (
+                                      <div className="flex flex-col gap-0.5">
+                                        <Badge variant="secondary" className="text-xs w-fit">
+                                          {row.contactCount} contacts
+                                        </Badge>
+                                        <span className="text-xs text-muted-foreground">
+                                          {row.totalPhones} phones, {row.totalEmails} emails
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground">—</span>
+                                    )}
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))}
                         </TableBody>
@@ -893,8 +941,8 @@ export default function ImportProperties() {
                               />
                             </TableHead>
                             <TableHead>Contact Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>Phones</TableHead>
+                            <TableHead>Emails</TableHead>
                             <TableHead>Matched Property</TableHead>
                             <TableHead>Match By</TableHead>
                           </TableRow>
@@ -910,9 +958,32 @@ export default function ImportProperties() {
                                     onCheckedChange={() => toggleContactRow(row.rowIndex)}
                                   />
                                 </TableCell>
-                                <TableCell className="font-medium">{row.contactName}</TableCell>
-                                <TableCell className="text-sm">{row.phone1 || "—"}</TableCell>
-                                <TableCell className="text-sm">{row.email1 || "—"}</TableCell>
+                                <TableCell className="font-medium">
+                                  <div>{row.contactName}</div>
+                                  {row.relationship && <span className="text-xs text-muted-foreground">{row.relationship}</span>}
+                                  {row.flags && <Badge variant="outline" className="text-xs ml-1">{row.flags}</Badge>}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {row.phones && row.phones.length > 0 ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      {row.phones.map((p: {number: string; type: string}, i: number) => (
+                                        <div key={i} className="flex items-center gap-1">
+                                          <span>{p.number}</span>
+                                          {p.type && <Badge variant="secondary" className="text-[10px] px-1">{p.type}</Badge>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : "—"}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {row.emails && row.emails.length > 0 ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      {row.emails.map((e: string, i: number) => (
+                                        <span key={i}>{e}</span>
+                                      ))}
+                                    </div>
+                                  ) : "—"}
+                                </TableCell>
                                 <TableCell className="text-sm">
                                   <span className="text-muted-foreground">{row.matchedPropertyAddress}</span>
                                   {row.matchedLeadId && (

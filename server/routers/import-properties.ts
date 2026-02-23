@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { properties, contacts, contactPhones, contactEmails, contactAddresses } from "../../drizzle/schema";
+import { properties, contacts, contactPhones, contactEmails, contactAddresses, contactSocialMedia } from "../../drizzle/schema";
 import { eq, and, or, sql } from "drizzle-orm";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,7 +32,6 @@ function parsePercent(value: any): number | null {
 function parseDate(value: any): Date | null {
   if (!value) return null;
   if (typeof value === "number") {
-    // Excel serial date
     const utc_days = Math.floor(value - 25569);
     const d = new Date(utc_days * 86400 * 1000);
     return isNaN(d.getTime()) ? null : d;
@@ -55,18 +54,74 @@ function normalizeForCompare(value: any): string {
   return String(value).trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-// Normalize address for comparison (lowercase, remove extra spaces, remove dots, etc.)
 function normalizeAddress(addr: string): string {
-  return addr
-    .toLowerCase()
-    .replace(/\./g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return addr.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
+}
+
+/** Map phone type from CSV to our enum */
+function mapPhoneType(csvType: string | null): "Mobile" | "Landline" | "Wireless" | "Work" | "Home" | "Other" {
+  if (!csvType) return "Mobile";
+  const t = csvType.toLowerCase().trim();
+  if (t === "wireless" || t === "cell" || t === "mobile") return "Wireless";
+  if (t === "landline" || t === "land line" || t === "home") return "Landline";
+  if (t === "work" || t === "business") return "Work";
+  return "Mobile";
+}
+
+// ─── Extract embedded contacts from a DealMachine-style property row ─────────
+// DealMachine CSV has contact_1_name through contact_10_name, each with
+// phone1-3, phone1_type-3_type, email1-3, and flags
+
+interface ExtractedContact {
+  name: string;
+  flags: string | null;
+  phones: { number: string; type: string }[];
+  emails: string[];
+}
+
+function extractEmbeddedContacts(raw: Record<string, any>): ExtractedContact[] {
+  const result: ExtractedContact[] = [];
+  for (let i = 1; i <= 10; i++) {
+    const name = str(raw[`contact_${i}_name`]);
+    if (!name) continue;
+
+    const flags = str(raw[`contact_${i}_flags`]);
+    const phones: { number: string; type: string }[] = [];
+    const emails: string[] = [];
+
+    // Extract up to 3 phones per contact
+    for (let p = 1; p <= 3; p++) {
+      const phone = str(raw[`contact_${i}_phone${p}`]);
+      const phoneType = str(raw[`contact_${i}_phone${p}_type`]);
+      if (phone) {
+        phones.push({ number: phone.replace(/[^\d+]/g, ""), type: phoneType || "Mobile" });
+      }
+    }
+
+    // Extract up to 3 emails per contact
+    for (let e = 1; e <= 3; e++) {
+      const email = str(raw[`contact_${i}_email${e}`]);
+      if (email) {
+        emails.push(email);
+      }
+    }
+
+    result.push({ name, flags, phones, emails });
+  }
+  return result;
+}
+
+/** Extract Facebook profiles from the raw row */
+function extractFacebookProfiles(raw: Record<string, any>): string[] {
+  const profiles: string[] = [];
+  for (let i = 1; i <= 10; i++) {
+    const fb = str(raw[`facebookprofile${i}`]);
+    if (fb) profiles.push(fb);
+  }
+  return profiles;
 }
 
 // ─── Column Mapping ───────────────────────────────────────────────────────────
-// Maps various common column names to our internal field names
-// Supports DealMachine format and generic CSV/Excel formats
 
 const PROPERTY_COLUMN_MAP: Record<string, string> = {
   // Address
@@ -101,6 +156,15 @@ const PROPERTY_COLUMN_MAP: Record<string, string> = {
   owner_2_name: "owner2Name",
   owner2name: "owner2Name",
   owner_location: "ownerLocation",
+
+  // Owner mailing address
+  owner_address_full: "ownerAddressFull",
+  owner_address_line_1: "ownerAddressLine1",
+  owner_address_line_2: "ownerAddressLine2",
+  owner_address_city: "ownerAddressCity",
+  owner_address_state: "ownerAddressState",
+  owner_address_zip: "ownerAddressZip",
+  mailing_addresses: "mailingAddresses",
 
   // Financial
   estimated_value: "estimatedValue",
@@ -190,7 +254,7 @@ const CONTACT_COLUMN_MAP: Record<string, string> = {
   apn: "apn",
   associated_property_apn_parcel_id: "apn",
   "associated property apn parcel id": "apn",
-  "associated_property_apn": "apn",
+  associated_property_apn: "apn",
   property_apn: "apn",
   "property apn": "apn",
   parcel_id: "apn",
@@ -209,35 +273,34 @@ const CONTACT_COLUMN_MAP: Record<string, string> = {
   "last name": "lastName",
   relationship: "relationship",
   age: "age",
-  phone: "phone1",
-  phone1: "phone1",
-  "phone 1": "phone1",
-  phone_number: "phone1",
-  "phone number": "phone1",
-  phone2: "phone2",
-  "phone 2": "phone2",
-  phone3: "phone3",
-  "phone 3": "phone3",
-  email: "email1",
-  email1: "email1",
-  "email 1": "email1",
-  email_address: "email1",
-  "email address": "email1",
-  email2: "email2",
-  "email 2": "email2",
-  email3: "email3",
-  "email 3": "email3",
-  mailing_address: "mailingAddress",
-  "mailing address": "mailingAddress",
-  mailing_city: "mailingCity",
-  "mailing city": "mailingCity",
-  mailing_state: "mailingState",
-  "mailing state": "mailingState",
-  mailing_zipcode: "mailingZipcode",
-  "mailing zip": "mailingZipcode",
-  mailing_zip: "mailingZipcode",
   flags: "flags",
   notes: "notes",
+
+  // Phones (up to 10)
+  phone: "phone1", phone1: "phone1", "phone 1": "phone1", phone_number: "phone1", "phone number": "phone1",
+  phone1_type: "phone1Type", "phone 1 type": "phone1Type",
+  phone2: "phone2", "phone 2": "phone2",
+  phone2_type: "phone2Type", "phone 2 type": "phone2Type",
+  phone3: "phone3", "phone 3": "phone3",
+  phone3_type: "phone3Type", "phone 3 type": "phone3Type",
+  phone4: "phone4", phone5: "phone5", phone6: "phone6",
+  phone7: "phone7", phone8: "phone8", phone9: "phone9", phone10: "phone10",
+
+  // Emails (up to 10)
+  email: "email1", email1: "email1", "email 1": "email1", email_address: "email1", "email address": "email1",
+  email2: "email2", "email 2": "email2",
+  email3: "email3", "email 3": "email3",
+  email4: "email4", email5: "email5", email6: "email6",
+  email7: "email7", email8: "email8", email9: "email9", email10: "email10",
+
+  // Mailing address
+  mailing_address: "mailingAddress", "mailing address": "mailingAddress",
+  mailing_city: "mailingCity", "mailing city": "mailingCity",
+  mailing_state: "mailingState", "mailing state": "mailingState",
+  mailing_zipcode: "mailingZipcode", "mailing zip": "mailingZipcode", mailing_zip: "mailingZipcode",
+
+  // Facebook
+  facebookprofile: "facebook", facebook: "facebook", "facebook profile": "facebook",
 };
 
 function mapColumns(row: any, columnMap: Record<string, string>): Record<string, any> {
@@ -252,11 +315,113 @@ function mapColumns(row: any, columnMap: Record<string, string>): Record<string,
   return mapped;
 }
 
+// ─── Insert contacts helper ──────────────────────────────────────────────────
+
+async function insertContactsForProperty(
+  dbInstance: any,
+  propertyId: number,
+  embeddedContacts: ExtractedContact[],
+  ownerAddress: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; zip?: string | null } | null,
+  facebookProfiles: string[]
+): Promise<{ contactsImported: number; phonesImported: number; emailsImported: number; addressesImported: number; socialsImported: number }> {
+  let contactsImported = 0;
+  let phonesImported = 0;
+  let emailsImported = 0;
+  let addressesImported = 0;
+  let socialsImported = 0;
+
+  for (let ci = 0; ci < embeddedContacts.length; ci++) {
+    const c = embeddedContacts[ci];
+
+    // Check if contact already exists for this property (by name)
+    const existingContacts = await dbInstance
+      .select({ id: contacts.id })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.propertyId, propertyId),
+          sql`LOWER(${contacts.name}) = ${c.name.toLowerCase()}`
+        )
+      )
+      .limit(1);
+
+    if (existingContacts.length > 0) {
+      // Contact already exists, skip to avoid duplicates
+      continue;
+    }
+
+    // Insert contact
+    const contactResult = await dbInstance.insert(contacts).values({
+      propertyId,
+      name: c.name,
+      email: c.emails[0] || "",
+      relationship: "Owner",
+      flags: c.flags,
+    } as any);
+    const contactId = contactResult[0].insertId;
+    contactsImported++;
+
+    // Insert all phones
+    for (let pi = 0; pi < c.phones.length; pi++) {
+      const p = c.phones[pi];
+      if (p.number) {
+        await dbInstance.insert(contactPhones).values({
+          contactId,
+          phoneNumber: p.number,
+          phoneType: mapPhoneType(p.type),
+          isPrimary: pi === 0 ? 1 : 0,
+        } as any);
+        phonesImported++;
+      }
+    }
+
+    // Insert all emails
+    for (let ei = 0; ei < c.emails.length; ei++) {
+      const email = c.emails[ei];
+      if (email) {
+        await dbInstance.insert(contactEmails).values({
+          contactId,
+          email,
+          isPrimary: ei === 0 ? 1 : 0,
+        });
+        emailsImported++;
+      }
+    }
+
+    // Insert owner mailing address for the first contact (likely owner)
+    if (ci === 0 && ownerAddress && ownerAddress.line1 && ownerAddress.city && ownerAddress.state && ownerAddress.zip) {
+      await dbInstance.insert(contactAddresses).values({
+        contactId,
+        addressLine1: ownerAddress.line1,
+        addressLine2: ownerAddress.line2 || null,
+        city: ownerAddress.city,
+        state: ownerAddress.state.substring(0, 2).toUpperCase(),
+        zipcode: ownerAddress.zip,
+        addressType: "Mailing",
+        isPrimary: 1,
+      } as any);
+      addressesImported++;
+    }
+
+    // Assign Facebook profiles to contacts (distribute sequentially)
+    if (facebookProfiles[ci]) {
+      await dbInstance.insert(contactSocialMedia).values({
+        contactId,
+        platform: "Facebook" as const,
+        profileUrl: facebookProfiles[ci],
+        contacted: 0,
+      } as any);
+      socialsImported++;
+    }
+  }
+
+  return { contactsImported, phonesImported, emailsImported, addressesImported, socialsImported };
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const importPropertiesRouter = router({
   // ── Preview Properties ────────────────────────────────────────────────────
-  // Parses file, maps columns, detects duplicates, returns preview data
   previewProperties: protectedProcedure
     .input(z.object({ fileData: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -271,7 +436,6 @@ export const importPropertiesRouter = router({
 
       if (data.length === 0) throw new Error("File is empty");
 
-      // Detect columns
       const rawColumns = Object.keys(data[0]);
       const detectedMappings: Record<string, string> = {};
       for (const col of rawColumns) {
@@ -281,10 +445,12 @@ export const importPropertiesRouter = router({
         }
       }
 
+      // Detect if file has embedded contacts
+      const hasEmbeddedContacts = rawColumns.some((c) => /^contact_\d+_name$/i.test(c));
+
       const dbInstance = await getDb();
       if (!dbInstance) throw new Error("Database not available");
 
-      // Process rows and check for duplicates
       const rows: any[] = [];
       for (let i = 0; i < data.length; i++) {
         const raw = data[i];
@@ -302,83 +468,57 @@ export const importPropertiesRouter = router({
         let matchType: string | null = null;
 
         if (propId) {
-          const existing = await dbInstance
-            .select()
-            .from(properties)
-            .where(eq(properties.propertyId, propId))
-            .limit(1);
-          if (existing.length > 0) {
-            existingProperty = existing[0];
-            matchType = "propertyId";
-          }
+          const existing = await dbInstance.select().from(properties).where(eq(properties.propertyId, propId)).limit(1);
+          if (existing.length > 0) { existingProperty = existing[0]; matchType = "propertyId"; }
         }
 
         if (!existingProperty && apn) {
-          const existing = await dbInstance
-            .select()
-            .from(properties)
-            .where(eq(properties.apnParcelId, apn))
-            .limit(1);
-          if (existing.length > 0) {
-            existingProperty = existing[0];
-            matchType = "apn";
-          }
+          const existing = await dbInstance.select().from(properties).where(eq(properties.apnParcelId, apn)).limit(1);
+          if (existing.length > 0) { existingProperty = existing[0]; matchType = "apn"; }
         }
 
-        if (!existingProperty && addressLine1 && city && state) {
+        if (!existingProperty && addressLine1 && city) {
           const existing = await dbInstance
-            .select()
-            .from(properties)
-            .where(
-              and(
-                sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(addressLine1)}`,
-                sql`LOWER(${properties.city}) = ${normalizeAddress(city)}`,
-                eq(properties.state, state.toUpperCase().substring(0, 2))
-              )
-            )
+            .select().from(properties)
+            .where(and(
+              sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(addressLine1)}`,
+              sql`LOWER(${properties.city}) = ${normalizeAddress(city)}`
+            ))
             .limit(1);
-          if (existing.length > 0) {
-            existingProperty = existing[0];
-            matchType = "address";
-          }
+          if (existing.length > 0) { existingProperty = existing[0]; matchType = "address"; }
         }
 
-        // Build changes list for duplicates
-        let changes: { field: string; oldValue: any; newValue: any }[] = [];
+        // Detect changes for duplicates
+        const changes: any[] = [];
         if (existingProperty) {
-          const fieldsToCompare = [
-            { key: "owner1Name", label: "Owner 1" },
-            { key: "owner2Name", label: "Owner 2" },
-            { key: "estimatedValue", label: "Estimated Value" },
-            { key: "equityAmount", label: "Equity Amount" },
-            { key: "equityPercent", label: "Equity %" },
-            { key: "mortgageAmount", label: "Mortgage" },
-            { key: "totalLoanBalance", label: "Loan Balance" },
-            { key: "taxAmount", label: "Tax Amount" },
-            { key: "taxYear", label: "Tax Year" },
-            { key: "taxDelinquent", label: "Tax Delinquent" },
-            { key: "propertyType", label: "Property Type" },
-            { key: "yearBuilt", label: "Year Built" },
-            { key: "totalBedrooms", label: "Bedrooms" },
-            { key: "totalBaths", label: "Baths" },
-            { key: "buildingSquareFeet", label: "Sqft" },
-            { key: "marketStatus", label: "Market Status" },
-            { key: "ownerLocation", label: "Owner Location" },
-            { key: "salePrice", label: "Sale Price" },
+          const COMPARE_FIELDS = [
+            { key: "owner1Name", label: "Owner 1", parse: str },
+            { key: "owner2Name", label: "Owner 2", parse: str },
+            { key: "ownerLocation", label: "Owner Location", parse: str },
+            { key: "estimatedValue", label: "Estimated Value", parse: parseNumber },
+            { key: "equityAmount", label: "Equity Amount", parse: parseNumber },
+            { key: "equityPercent", label: "Equity %", parse: parsePercent },
+            { key: "mortgageAmount", label: "Mortgage", parse: parseNumber },
+            { key: "totalLoanBalance", label: "Loan Balance", parse: parseNumber },
+            { key: "salePrice", label: "Sale Price", parse: parseNumber },
+            { key: "taxAmount", label: "Tax Amount", parse: parseNumber },
+            { key: "taxYear", label: "Tax Year", parse: parseNumber },
+            { key: "taxDelinquent", label: "Tax Delinquent", parse: str },
+            { key: "estimatedRepairCost", label: "Repair Cost", parse: parseNumber },
+            { key: "propertyType", label: "Property Type", parse: str },
+            { key: "constructionType", label: "Construction", parse: str },
+            { key: "yearBuilt", label: "Year Built", parse: parseNumber },
+            { key: "totalBedrooms", label: "Bedrooms", parse: parseNumber },
+            { key: "totalBaths", label: "Baths", parse: parseNumber },
+            { key: "buildingSquareFeet", label: "Sqft", parse: parseNumber },
+            { key: "marketStatus", label: "Market Status", parse: str },
           ];
 
-          for (const f of fieldsToCompare) {
-            let newVal: any = mapped[f.key];
-            // Parse numbers for comparison
-            if (["estimatedValue", "equityAmount", "mortgageAmount", "totalLoanBalance", "taxAmount", "salePrice", "buildingSquareFeet", "yearBuilt", "totalBedrooms", "totalBaths", "taxYear", "estimatedRepairCost"].includes(f.key)) {
-              newVal = parseNumber(newVal);
-            }
-            if (f.key === "equityPercent") {
-              newVal = parsePercent(newVal);
-            }
+          for (const f of COMPARE_FIELDS) {
+            let newVal = f.parse(mapped[f.key]);
+            if (f.key === "equityPercent") newVal = parsePercent(mapped[f.key]);
             const oldVal = existingProperty[f.key];
             if (newVal !== null && newVal !== undefined && newVal !== "") {
-              // Normalize both values for comparison: trim, collapse spaces, case-insensitive
               const normalizedNew = normalizeForCompare(newVal);
               const normalizedOld = normalizeForCompare(oldVal);
               if (normalizedNew !== normalizedOld) {
@@ -388,6 +528,11 @@ export const importPropertiesRouter = router({
           }
         }
 
+        // Count embedded contacts for this row
+        const embeddedContacts = hasEmbeddedContacts ? extractEmbeddedContacts(raw) : [];
+        const totalPhones = embeddedContacts.reduce((sum, c) => sum + c.phones.length, 0);
+        const totalEmails = embeddedContacts.reduce((sum, c) => sum + c.emails.length, 0);
+
         rows.push({
           rowIndex: i,
           address: addressLine1 || "N/A",
@@ -395,12 +540,18 @@ export const importPropertiesRouter = router({
           state: state || "N/A",
           zipcode: zipcode || "N/A",
           owner: str(mapped.owner1Name) || "N/A",
+          apn: apn || null,
           isDuplicate: !!existingProperty,
           matchType,
           existingId: existingProperty?.id || null,
           existingLeadId: existingProperty?.leadId || null,
           changes,
           hasChanges: changes.length > 0,
+          // Embedded contacts info
+          contactCount: embeddedContacts.length,
+          totalPhones,
+          totalEmails,
+          contactNames: embeddedContacts.map((c) => c.name),
           rawData: mapped,
         });
       }
@@ -408,12 +559,15 @@ export const importPropertiesRouter = router({
       const newCount = rows.filter((r) => !r.isDuplicate).length;
       const duplicateCount = rows.filter((r) => r.isDuplicate).length;
       const updatableCount = rows.filter((r) => r.isDuplicate && r.hasChanges).length;
+      const totalContactsDetected = rows.reduce((sum, r) => sum + r.contactCount, 0);
 
       return {
         totalRows: rows.length,
         newCount,
         duplicateCount,
         updatableCount,
+        hasEmbeddedContacts,
+        totalContactsDetected,
         detectedColumns: rawColumns,
         mappedColumns: detectedMappings,
         rows,
@@ -426,10 +580,9 @@ export const importPropertiesRouter = router({
       z.object({
         fileData: z.string(),
         assignedAgentId: z.number().nullable(),
-        // Array of row indices to import as new
         newRows: z.array(z.number()),
-        // Array of { rowIndex, existingId } to update
         updateRows: z.array(z.object({ rowIndex: z.number(), existingId: z.number() })),
+        importContacts: z.boolean().default(true), // Whether to also import embedded contacts
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -447,6 +600,7 @@ export const importPropertiesRouter = router({
 
       let insertedCount = 0;
       let updatedCount = 0;
+      let contactStats = { contactsImported: 0, phonesImported: 0, emailsImported: 0, addressesImported: 0, socialsImported: 0 };
       const errors: string[] = [];
 
       // Process new rows (INSERT)
@@ -498,26 +652,46 @@ export const importPropertiesRouter = router({
             dealStage: "NEW_LEAD",
             entryDate: new Date(),
             stageChangedAt: new Date(),
+            dealMachineRawData: JSON.stringify(raw),
           };
 
-          // Store raw data as JSON for reference
-          propertyData.dealMachineRawData = JSON.stringify(raw);
-
-          await dbInstance.insert(properties).values(propertyData);
+          const result = await dbInstance.insert(properties).values(propertyData);
+          const propertyId = result[0].insertId;
           insertedCount++;
+
+          // Import embedded contacts if enabled
+          if (input.importContacts) {
+            const embeddedContacts = extractEmbeddedContacts(raw);
+            const facebookProfiles = extractFacebookProfiles(raw);
+            const ownerAddress = {
+              line1: str(mapped.ownerAddressLine1),
+              line2: str(mapped.ownerAddressLine2),
+              city: str(mapped.ownerAddressCity),
+              state: str(mapped.ownerAddressState),
+              zip: str(mapped.ownerAddressZip),
+            };
+
+            if (embeddedContacts.length > 0) {
+              const stats = await insertContactsForProperty(dbInstance, propertyId, embeddedContacts, ownerAddress, facebookProfiles);
+              contactStats.contactsImported += stats.contactsImported;
+              contactStats.phonesImported += stats.phonesImported;
+              contactStats.emailsImported += stats.emailsImported;
+              contactStats.addressesImported += stats.addressesImported;
+              contactStats.socialsImported += stats.socialsImported;
+            }
+          }
         } catch (error: any) {
           errors.push(`Row ${rowIndex + 2}: ${error.message}`);
         }
       }
 
-      // Process update rows (UPDATE)
+      // Process update rows (UPDATE property + import contacts if missing)
       for (const { rowIndex, existingId } of input.updateRows) {
         if (rowIndex >= data.length) continue;
         const raw = data[rowIndex];
         const mapped = mapColumns(raw, PROPERTY_COLUMN_MAP);
 
         try {
-          // Only update non-null fields from the import
           const updateData: any = {};
           const setIfPresent = (field: string, value: any) => {
             if (value !== null && value !== undefined && value !== "") {
@@ -550,11 +724,30 @@ export const importPropertiesRouter = router({
 
           if (Object.keys(updateData).length > 0) {
             updateData.updatedAt = new Date();
-            await dbInstance
-              .update(properties)
-              .set(updateData)
-              .where(eq(properties.id, existingId));
+            await dbInstance.update(properties).set(updateData).where(eq(properties.id, existingId));
             updatedCount++;
+          }
+
+          // Also import contacts for updated properties if enabled
+          if (input.importContacts) {
+            const embeddedContacts = extractEmbeddedContacts(raw);
+            const facebookProfiles = extractFacebookProfiles(raw);
+            const ownerAddress = {
+              line1: str(mapped.ownerAddressLine1),
+              line2: str(mapped.ownerAddressLine2),
+              city: str(mapped.ownerAddressCity),
+              state: str(mapped.ownerAddressState),
+              zip: str(mapped.ownerAddressZip),
+            };
+
+            if (embeddedContacts.length > 0) {
+              const stats = await insertContactsForProperty(dbInstance, existingId, embeddedContacts, ownerAddress, facebookProfiles);
+              contactStats.contactsImported += stats.contactsImported;
+              contactStats.phonesImported += stats.phonesImported;
+              contactStats.emailsImported += stats.emailsImported;
+              contactStats.addressesImported += stats.addressesImported;
+              contactStats.socialsImported += stats.socialsImported;
+            }
           }
         } catch (error: any) {
           errors.push(`Row ${rowIndex + 2} (update): ${error.message}`);
@@ -564,12 +757,13 @@ export const importPropertiesRouter = router({
       return {
         insertedCount,
         updatedCount,
+        ...contactStats,
         errorCount: errors.length,
         errors: errors.slice(0, 20),
       };
     }),
 
-  // ── Preview Contacts ──────────────────────────────────────────────────────
+  // ── Preview Contacts (separate file) ──────────────────────────────────────
   previewContacts: protectedProcedure
     .input(z.object({ fileData: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -604,58 +798,57 @@ export const importPropertiesRouter = router({
         let matchedProperty: any = null;
         let matchMethod: string | null = null;
 
-        // Match by leadId first
         if (!matchedProperty && leadId) {
           const existing = await dbInstance
             .select({ id: properties.id, addressLine1: properties.addressLine1, city: properties.city, leadId: properties.leadId })
-            .from(properties)
-            .where(eq(properties.leadId, leadId))
-            .limit(1);
-          if (existing.length > 0) {
-            matchedProperty = existing[0];
-            matchMethod = "leadId";
-          }
+            .from(properties).where(eq(properties.leadId, leadId)).limit(1);
+          if (existing.length > 0) { matchedProperty = existing[0]; matchMethod = "leadId"; }
         }
 
-        // Match by APN
         if (!matchedProperty && apn) {
           const existing = await dbInstance
             .select({ id: properties.id, addressLine1: properties.addressLine1, city: properties.city, leadId: properties.leadId })
-            .from(properties)
-            .where(eq(properties.apnParcelId, apn))
-            .limit(1);
-          if (existing.length > 0) {
-            matchedProperty = existing[0];
-            matchMethod = "apn";
-          }
+            .from(properties).where(eq(properties.apnParcelId, apn)).limit(1);
+          if (existing.length > 0) { matchedProperty = existing[0]; matchMethod = "apn"; }
         }
 
-        // Match by address
         if (!matchedProperty && propertyAddress && propertyCity) {
           const existing = await dbInstance
             .select({ id: properties.id, addressLine1: properties.addressLine1, city: properties.city, leadId: properties.leadId })
             .from(properties)
-            .where(
-              and(
-                sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(propertyAddress)}`,
-                sql`LOWER(${properties.city}) = ${normalizeAddress(propertyCity)}`
-              )
-            )
+            .where(and(
+              sql`LOWER(${properties.addressLine1}) = ${normalizeAddress(propertyAddress)}`,
+              sql`LOWER(${properties.city}) = ${normalizeAddress(propertyCity)}`
+            ))
             .limit(1);
-          if (existing.length > 0) {
-            matchedProperty = existing[0];
-            matchMethod = "address";
-          }
+          if (existing.length > 0) { matchedProperty = existing[0]; matchMethod = "address"; }
+        }
+
+        // Collect ALL phones and emails from the row
+        const allPhones: { number: string; type: string }[] = [];
+        const allEmails: string[] = [];
+        for (let p = 1; p <= 10; p++) {
+          const phone = str(mapped[`phone${p}`]);
+          const phoneType = str(mapped[`phone${p}Type`]);
+          if (phone) allPhones.push({ number: phone.replace(/[^\d+]/g, ""), type: phoneType || "Mobile" });
+        }
+        for (let e = 1; e <= 10; e++) {
+          const email = str(mapped[`email${e}`]);
+          if (email) allEmails.push(email);
         }
 
         rows.push({
           rowIndex: i,
           contactName: contactName || "N/A",
           relationship: str(mapped.relationship) || "N/A",
-          phone1: str(mapped.phone1) || null,
-          email1: str(mapped.email1) || null,
+          flags: str(mapped.flags) || null,
+          phones: allPhones,
+          emails: allEmails,
+          phoneCount: allPhones.length,
+          emailCount: allEmails.length,
           propertyAddress: propertyAddress || "N/A",
           propertyCity: propertyCity || "N/A",
+          apn: apn || null,
           matched: !!matchedProperty,
           matchMethod,
           matchedPropertyId: matchedProperty?.id || null,
@@ -677,12 +870,11 @@ export const importPropertiesRouter = router({
       };
     }),
 
-  // ── Execute Contacts Import ───────────────────────────────────────────────
+  // ── Execute Contacts Import (separate file) ───────────────────────────────
   executeContactsImport: protectedProcedure
     .input(
       z.object({
         fileData: z.string(),
-        // Array of { rowIndex, propertyId } to import
         contactRows: z.array(z.object({ rowIndex: z.number(), propertyId: z.number() })),
       })
     )
@@ -702,6 +894,7 @@ export const importPropertiesRouter = router({
       let contactsImported = 0;
       let phonesImported = 0;
       let emailsImported = 0;
+      let addressesImported = 0;
       const errors: string[] = [];
 
       for (const { rowIndex, propertyId } of input.contactRows) {
@@ -712,42 +905,65 @@ export const importPropertiesRouter = router({
         try {
           const contactName = str(mapped.name) || (str(mapped.firstName) && str(mapped.lastName) ? `${str(mapped.firstName)} ${str(mapped.lastName)}` : "Unknown");
 
+          // Check if contact already exists
+          const existingContacts = await dbInstance
+            .select({ id: contacts.id })
+            .from(contacts)
+            .where(
+              and(
+                eq(contacts.propertyId, propertyId),
+                sql`LOWER(${contacts.name}) = ${(contactName as string).toLowerCase()}`
+              )
+            )
+            .limit(1);
+
+          if (existingContacts.length > 0) {
+            // Skip duplicate contact
+            continue;
+          }
+
+          // Collect all emails
+          const allEmails: string[] = [];
+          for (let e = 1; e <= 10; e++) {
+            const email = str(mapped[`email${e}`]);
+            if (email) allEmails.push(email);
+          }
+
           // Insert contact
           const contactResult = await dbInstance.insert(contacts).values({
             propertyId,
             name: contactName as string,
-            email: "",
+            email: allEmails[0] || "",
             relationship: str(mapped.relationship) || "Owner",
             flags: str(mapped.flags),
+            age: parseNumber(mapped.age),
           } as any);
           const contactId = contactResult[0].insertId;
           contactsImported++;
 
-          // Insert phones
-          for (const phoneKey of ["phone1", "phone2", "phone3"]) {
-            const phone = str(mapped[phoneKey]);
+          // Insert ALL phones (up to 10)
+          for (let p = 1; p <= 10; p++) {
+            const phone = str(mapped[`phone${p}`]);
+            const phoneType = str(mapped[`phone${p}Type`]);
             if (phone) {
               await dbInstance.insert(contactPhones).values({
                 contactId,
                 phoneNumber: phone.replace(/[^\d+]/g, ""),
-                phoneType: "Mobile",
-                isPrimary: phoneKey === "phone1" ? 1 : 0,
+                phoneType: mapPhoneType(phoneType),
+                isPrimary: p === 1 ? 1 : 0,
               } as any);
               phonesImported++;
             }
           }
 
-          // Insert emails
-          for (const emailKey of ["email1", "email2", "email3"]) {
-            const email = str(mapped[emailKey]);
-            if (email) {
-              await dbInstance.insert(contactEmails).values({
-                contactId,
-                email,
-                isPrimary: emailKey === "email1" ? 1 : 0,
-              });
-              emailsImported++;
-            }
+          // Insert ALL emails (up to 10)
+          for (let e = 0; e < allEmails.length; e++) {
+            await dbInstance.insert(contactEmails).values({
+              contactId,
+              email: allEmails[e],
+              isPrimary: e === 0 ? 1 : 0,
+            });
+            emailsImported++;
           }
 
           // Insert mailing address if present
@@ -765,6 +981,18 @@ export const importPropertiesRouter = router({
               addressType: "Mailing",
               isPrimary: 1,
             } as any);
+            addressesImported++;
+          }
+
+          // Insert Facebook profile if present
+          const facebook = str(mapped.facebook);
+          if (facebook) {
+            await dbInstance.insert(contactSocialMedia).values({
+              contactId,
+              platform: "Facebook" as const,
+              profileUrl: facebook,
+              contacted: 0,
+            } as any);
           }
         } catch (error: any) {
           errors.push(`Row ${rowIndex + 2}: ${error.message}`);
@@ -775,6 +1003,7 @@ export const importPropertiesRouter = router({
         contactsImported,
         phonesImported,
         emailsImported,
+        addressesImported,
         errorCount: errors.length,
         errors: errors.slice(0, 20),
       };

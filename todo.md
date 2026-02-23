@@ -1742,3 +1742,15 @@
 - [x] Add normalizeForCompare() function: trim + collapse multiple spaces + lowercase
 - [x] Validate with real CSV data — "Tyler  Bauer " (13 chars) vs "Tyler  Bauer" (12 chars) now correctly detected as same
 - [x] Added 3 new tests: whitespace normalization, case insensitivity, real changes still detected (18 tests total)
+
+## CONTACTS IMPORT - MAXIMIZE CONTACT DATA (Feb 23, 2026) — COMPLETED
+- [x] Analyze all CSV contact columns — found contact_1 to contact_10 embedded in properties CSV with name, flags, phone1-3, phone_type1-3, email1-3
+- [x] Ensure ALL phone fields are mapped and imported (phone1-3 per contact x 10 contacts = up to 30 phones per property)
+- [x] Ensure ALL email fields are mapped and imported (email1-3 per contact x 10 contacts = up to 30 emails per property)
+- [x] Ensure mailing address fields are imported (owner_mailing_address/city/state/zip)
+- [x] Ensure contact name, first/last name, relationship, flags are captured
+- [x] Auto-extract embedded contacts during properties import (no separate file needed)
+- [x] Update preview to show contact count, phone count, email count per property row
+- [x] Update contacts tab preview to show all phones with types and all emails per contact
+- [x] Phone types mapped: Wireless, Landline, VOIP from CSV phone_type fields
+- [x] 18 tests passing
