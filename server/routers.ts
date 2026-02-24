@@ -536,19 +536,8 @@ export const appRouter = router({
 
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const property = await db.getPropertyById(input.id);
-        if (!property) return null;
-        
-        // For agents: strip sensitive data and filter contacts
-        if (ctx.user.role !== 'admin') {
-          // Strip deep search fields
-          const { propertyCondition, issues, hasMortgage, delinquentTaxTotal, dealMachineRawData, ...safeProperty } = property as any;
-          // Filter contacts to only decision makers
-          const filteredContacts = (safeProperty.contacts || []).filter((c: any) => c.isDecisionMaker === 1);
-          return { ...safeProperty, contacts: filteredContacts };
-        }
-        return property;
+      .query(async ({ input }) => {
+        return await db.getPropertyById(input.id);
       }),
 
     updateProperty: protectedProcedure
@@ -1445,13 +1434,8 @@ export const appRouter = router({
   contacts: router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const allContacts = await communication.getPropertyContactsWithDetails(input.propertyId);
-        // Agents can only see contacts marked as decision makers
-        if (ctx.user.role !== 'admin') {
-          return allContacts.filter((c: any) => c.isDecisionMaker === 1);
-        }
-        return allContacts;
+      .query(async ({ input }) => {
+        return await communication.getPropertyContactsWithDetails(input.propertyId);
       }),
 
     updateContact: protectedProcedure
@@ -1734,13 +1718,8 @@ export const appRouter = router({
   notes: router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const allNotes = await db.getPropertyNotes(input.propertyId);
-        // Agents can only see their own notes
-        if (ctx.user.role !== 'admin') {
-          return allNotes.filter((n: any) => n.userId === ctx.user.id);
-        }
-        return allNotes;
+      .query(async ({ input }) => {
+        return await db.getPropertyNotes(input.propertyId);
       }),
 
     create: protectedProcedure
@@ -1966,14 +1945,9 @@ export const appRouter = router({
     // Contact Management
     getContactsByProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input, ctx }) => {
+      .query(async ({ input }) => {
         const { getPropertyContactsSimple } = await import("./contacts-simple.js");
-        const allContacts = await getPropertyContactsSimple(input.propertyId);
-        // Agents can only see contacts marked as decision makers
-        if (ctx.user.role !== 'admin') {
-          return allContacts.filter((c: any) => c.isDecisionMaker === 1);
-        }
-        return allContacts;
+        return await getPropertyContactsSimple(input.propertyId);
       }),
 
     getContactById: protectedProcedure
@@ -2460,13 +2434,8 @@ export const appRouter = router({
 
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const allTasks = await db.getTasksByPropertyId(input.propertyId);
-        // Agents can only see their own tasks
-        if (ctx.user.role !== 'admin') {
-          return allTasks.filter((t: any) => t.createdById === ctx.user.id || t.assignedToId === ctx.user.id);
-        }
-        return allTasks;
+      .query(async ({ input }) => {
+        return await db.getTasksByPropertyId(input.propertyId);
       }),
 
     create: protectedProcedure

@@ -1,9 +1,0 @@
-{
-  "query": "ALTER TABLE `users` ADD COLUMN `twilioPhone` varchar(50) DEFAULT NULL;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE `users` ADD COLUMN `twilioPhone` varchar(50) DEFAULT NULL;",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 753
-}

@@ -587,7 +587,6 @@ export async function getPropertyNotes(propertyId: number) {
   const results = await db
     .select({
       id: notes.id,
-      userId: notes.userId,
       content: notes.content,
       noteType: notes.noteType,
       userName: users.name,
