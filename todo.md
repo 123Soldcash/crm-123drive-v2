@@ -1806,3 +1806,17 @@
 - [x] Auto-detect logged-in user's Twilio number for calls
 - [x] Write tests for per-user Twilio phone functionality
 - [x] Validate calling flow end-to-end
+
+## AGENT ACCESS RESTRICTIONS - Role-Based Data Visibility (Feb 24, 2026)
+- [x] Backend: Filter contacts to only return decision makers for agents
+- [x] Backend: Filter tasks to only return agent's own tasks
+- [x] Backend: Filter notes to only return agent's own notes
+- [x] Backend: Strip DeepSearch data from property responses for agents
+- [x] Backend: Strip Family Tree data from property responses for agents
+- [x] Backend: Block all DeepSearch endpoints for agents (adminProcedure)
+- [x] Backend: Strip Potential Cash Buyers data from property responses for agents
+- [x] Frontend: Hide DeepSearch section on PropertyDetail for agents
+- [x] Frontend: Hide Family Tree section on PropertyDetail for agents
+- [x] Frontend: Hide Activity Timeline section on PropertyDetail for agents
+- [x] Frontend: Hide Potential Cash Buyers section on PropertyDetail for agents
+- [x] Write tests for agent access restrictions (12 tests passing)
