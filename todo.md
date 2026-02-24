@@ -1797,3 +1797,12 @@
 - [x] Update all frontend components referencing agents
 - [x] Write tests for unified user system
 - [x] Validate all existing functionality still works
+
+## TWILIO PER-USER PHONE NUMBER - Custom Caller ID (Feb 24, 2026)
+- [x] Add twilioPhone field to users table schema
+- [x] Push schema migration to database
+- [x] Update User Management UI to show/edit Twilio phone number per user
+- [x] Update Twilio calling flow to use user's assigned phone as Caller ID
+- [x] Auto-detect logged-in user's Twilio number for calls
+- [x] Write tests for per-user Twilio phone functionality
+- [x] Validate calling flow end-to-end

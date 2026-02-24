@@ -39,16 +39,18 @@ export function registerTwilioWebhooks(app: Express) {
       // Twilio sends a POST to this webhook with the 'To' parameter in the body.
       // The body is application/x-www-form-urlencoded.
       const to = req.body?.To || req.query?.To;
+      // CallerPhone is a custom param passed from device.connect() with the user's assigned Twilio number
+      const callerPhone = req.body?.CallerPhone || req.query?.CallerPhone;
       console.log("[Twilio Voice] Incoming request. Method:", req.method, "Body keys:", Object.keys(req.body || {}));
-      console.log("[Twilio Voice] To:", to, "| From:", req.body?.From, "| CallSid:", req.body?.CallSid);
+      console.log("[Twilio Voice] To:", to, "| From:", req.body?.From, "| CallerPhone:", callerPhone, "| CallSid:", req.body?.CallSid);
 
       const { buildTwimlResponse, formatPhoneNumber } = await import("./twilio");
       // Format the number to E.164 if it's a phone number
       const formattedTo = to && (to.startsWith("+") || /^\d+$/.test(to))
         ? formatPhoneNumber(to)
         : to;
-      const twiml = buildTwimlResponse(formattedTo as string);
-      console.log("[Twilio Voice] Generated TwiML for:", formattedTo);
+      const twiml = buildTwimlResponse(formattedTo as string, callerPhone as string | undefined);
+      console.log("[Twilio Voice] Generated TwiML for:", formattedTo, "with callerId:", callerPhone || "default");
       res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {
@@ -63,9 +65,10 @@ export function registerTwilioWebhooks(app: Express) {
   app.all("/api/twilio/connect", async (req, res) => {
     try {
       const to = (req.query?.to as string) || req.body?.To;
+      const callerPhone = (req.query?.callerPhone as string) || req.body?.CallerPhone;
       const { buildConnectTwiml } = await import("./twilio");
-      const twiml = buildConnectTwiml(to);
-      console.log("[Twilio Connect] Bridging call to:", to);
+      const twiml = buildConnectTwiml(to, callerPhone as string | undefined);
+      console.log("[Twilio Connect] Bridging call to:", to, "with callerId:", callerPhone || "default");
       res.set("Content-Type", "text/xml");
       res.send(twiml);
     } catch (error) {

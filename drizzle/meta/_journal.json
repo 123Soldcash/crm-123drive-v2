@@ -64,6 +64,13 @@
       "when": 1771967869631,
       "tag": "0008_broken_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771970180702,
+      "tag": "0009_melodic_doorman",
+      "breakpoints": true
     }
   ]
 }

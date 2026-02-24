@@ -2860,7 +2860,11 @@ export const appRouter = router({
       });
       token.addGrant(voiceGrant);
 
-      return { token: token.toJwt(), identity };
+      return {
+        token: token.toJwt(),
+        identity,
+        twilioPhone: ctx.user.twilioPhone || ENV.twilioPhoneNumber || null,
+      };
     }),
 
     /**
@@ -2881,7 +2885,8 @@ export const appRouter = router({
           throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
         }
 
-        const result = await makeOutboundCall({ to: input.to });
+        const userTwilioPhone = ctx.user.twilioPhone || undefined;
+        const result = await makeOutboundCall({ to: input.to, fromNumber: userTwilioPhone });
 
         // Create a call log entry if contact and property IDs are provided
         let callLogId: number | undefined;
@@ -2941,12 +2946,13 @@ export const appRouter = router({
 
         let callLogId: number | undefined;
         if (input.contactId && input.propertyId) {
+          const userTwilioPhone = ctx.user.twilioPhone || ENV.twilioPhoneNumber || "browser";
           const logResult = await createCallLog({
             propertyId: input.propertyId,
             contactId: input.contactId,
             userId: ctx.user.id,
             toPhoneNumber: formatPhoneNumber(input.to),
-            fromPhoneNumber: ENV.twilioPhoneNumber || "browser",
+            fromPhoneNumber: userTwilioPhone,
             callType: "outbound",
             status: input.status,
           });

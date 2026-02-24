@@ -14,6 +14,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["agent", "admin"]).default("agent").notNull(),
   status: mysqlEnum("status", ["Active", "Inactive", "Suspended"]).default("Active").notNull(),
   notes: text("notes"),
+  twilioPhone: varchar("twilioPhone", { length: 20 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

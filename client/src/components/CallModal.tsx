@@ -372,12 +372,15 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       }
 
       // Step 3: Connect via the Twilio Voice SDK
-      console.log("[CallModal] Calling device.connect() to:", phoneNumber);
+      // Pass the user's assigned Twilio phone as CallerPhone so the webhook uses it as Caller ID
+      const userCallerPhone = tokenData?.twilioPhone || "";
+      console.log("[CallModal] Calling device.connect() to:", phoneNumber, "callerPhone:", userCallerPhone || "default");
       const call = await device.connect({
         params: {
           To: phoneNumber,
           ContactId: String(contactId),
           PropertyId: String(propertyId),
+          ...(userCallerPhone ? { CallerPhone: userCallerPhone } : {}),
         },
       });
 

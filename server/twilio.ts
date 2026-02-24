@@ -74,7 +74,7 @@ export function formatPhoneNumber(phone: string): string {
  * @param to - Destination phone number or client identity
  * @returns TwiML XML string
  */
-export function buildTwimlResponse(to: string | undefined): string {
+export function buildTwimlResponse(to: string | undefined, callerPhone?: string): string {
   const VoiceResponse = twilio.twiml.VoiceResponse;
   const response = new VoiceResponse();
 
@@ -83,7 +83,7 @@ export function buildTwimlResponse(to: string | undefined): string {
     return response.toString();
   }
 
-  const callerId = ENV.twilioPhoneNumber;
+  const callerId = callerPhone || ENV.twilioPhoneNumber;
   const dial = response.dial({ callerId });
 
   // Phone numbers start with + or are all digits
@@ -103,11 +103,11 @@ export function buildTwimlResponse(to: string | undefined): string {
  * Build TwiML that connects the answered call to the destination number.
  * Used as the URL for REST API-initiated calls.
  */
-export function buildConnectTwiml(to: string): string {
+export function buildConnectTwiml(to: string, callerPhone?: string): string {
   const VoiceResponse = twilio.twiml.VoiceResponse;
   const response = new VoiceResponse();
 
-  const callerId = ENV.twilioPhoneNumber;
+  const callerId = callerPhone || ENV.twilioPhoneNumber;
   const dial = response.dial({ callerId, timeout: 30 });
   dial.number(formatPhoneNumber(to));
 
@@ -153,14 +153,16 @@ export function buildAnsweredTwiml(): string {
  */
 export async function makeOutboundCall(params: {
   to: string;
+  fromNumber?: string;
   statusCallbackUrl?: string;
 }) {
   const client = getClient();
-  const { to, statusCallbackUrl } = params;
+  const { to, fromNumber, statusCallbackUrl } = params;
   const formattedTo = formatPhoneNumber(to);
+  const callerPhone = fromNumber || ENV.twilioPhoneNumber;
   const baseUrl = getBaseUrl();
 
-  // Create a call from our Twilio number to the destination.
+  // Create a call from the user's Twilio number (or default) to the destination.
   // The `url` points to /api/twilio/answered which returns <Pause> TwiML.
   // Do NOT point to /api/twilio/voice which has <Dial> — that would duplicate the call.
   //
@@ -171,7 +173,7 @@ export async function makeOutboundCall(params: {
   // the exact /api/oauth/callback path, not nested paths.
   const call = await client.calls.create({
     to: formattedTo,
-    from: ENV.twilioPhoneNumber,
+    from: callerPhone,
     url: `${baseUrl}/api/twilio/answered`,
     ...(statusCallbackUrl
       ? {
@@ -190,7 +192,7 @@ export async function makeOutboundCall(params: {
     callSid: call.sid,
     status: call.status,
     to: formattedTo,
-    from: ENV.twilioPhoneNumber,
+    from: callerPhone,
   };
 }
 

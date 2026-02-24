@@ -74,6 +74,7 @@ export const agentsRouter = router({
         role: users.role,
         status: users.status,
         notes: users.notes,
+        twilioPhone: users.twilioPhone,
         loginMethod: users.loginMethod,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -139,6 +140,7 @@ export const agentsRouter = router({
         role: z.enum(["agent", "admin"]).optional(),
         status: z.enum(["Active", "Inactive", "Suspended"]).optional(),
         notes: z.string().optional().nullable(),
+        twilioPhone: z.string().optional().nullable(),
       })
     )
     .mutation(async ({ input }) => {
