@@ -14,7 +14,7 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, agents, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -1078,8 +1078,8 @@ export const appRouter = router({
           assignments.map(async (assignment) => {
             const agent = await database
               .select()
-              .from(agents)
-              .where(eq(agents.id, assignment.agentId))
+              .from(users)
+              .where(eq(users.id, assignment.agentId))
               .limit(1);
             return {
               ...assignment,
@@ -1253,7 +1253,84 @@ export const appRouter = router({
       if (ctx.user?.role !== 'admin') {
         throw new Error('Only admins can view agent statistics');
       }
-      return await db.getAgentStatistics();
+      const database = await getDb();
+      if (!database) throw new Error('Database not available');
+
+      // Get all non-admin users (agents)
+      const agentsList = await database
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          status: users.status,
+          createdAt: users.createdAt,
+          lastSignedIn: users.lastSignedIn,
+        })
+        .from(users)
+        .where(eq(users.role, 'agent'));
+
+      // Build per-agent statistics
+      const stats = await Promise.all(
+        agentsList.map(async (agent) => {
+          // Get assigned properties
+          const assignedProps = await database
+            .select()
+            .from(properties)
+            .where(eq(properties.assignedAgentId, agent.id));
+
+          const propIds = assignedProps.map(p => p.id);
+          const hotLeads = assignedProps.filter(p => p.leadTemperature === 'HOT' || p.leadTemperature === 'SUPER HOT').length;
+          const warmLeads = assignedProps.filter(p => p.leadTemperature === 'WARM').length;
+          const coldLeads = assignedProps.filter(p => p.leadTemperature === 'COLD').length;
+
+          // Get visits, notes, photos for these properties
+          let totalCheckIns = 0;
+          let visitedProperties = 0;
+          let totalNotes = 0;
+          let totalPhotos = 0;
+
+          if (propIds.length > 0) {
+            const allVisits = await database
+              .select()
+              .from(visits)
+              .where(sql`${visits.propertyId} IN (${sql.join(propIds.map(id => sql`${id}`), sql`, `)})`);
+            totalCheckIns = allVisits.length;
+            const visitedPropIds = new Set(allVisits.map(v => v.propertyId));
+            visitedProperties = visitedPropIds.size;
+
+            const allNotes = await database
+              .select()
+              .from(notes)
+              .where(sql`${notes.propertyId} IN (${sql.join(propIds.map(id => sql`${id}`), sql`, `)})`);
+            totalNotes = allNotes.length;
+
+            const allPhotos = await database
+              .select()
+              .from(photos)
+              .where(sql`${photos.propertyId} IN (${sql.join(propIds.map(id => sql`${id}`), sql`, `)})`);
+            totalPhotos = allPhotos.length;
+          }
+
+          return {
+            agentId: agent.id,
+            agentName: agent.name,
+            role: agent.role,
+            status: agent.status,
+            totalProperties: assignedProps.length,
+            hotLeads,
+            warmLeads,
+            coldLeads,
+            visitedProperties,
+            totalCheckIns,
+            totalNotes,
+            totalPhotos,
+          };
+        })
+      );
+
+      return stats;
     }),
     updateAgent: protectedProcedure
       .input(
@@ -1320,13 +1397,7 @@ export const appRouter = router({
         await database.delete(users)
           .where(eq(users.id, input.userId));
         
-        // 5. Also delete from agents table if exists there
-        try {
-          await database.delete(agents)
-            .where(eq(agents.id, input.userId));
-        } catch (e) {
-          // Ignore if not in agents table
-        }
+        // agents table no longer used — unified into users table
         
         return { success: true, deletedPropertyAgents: 0 };
       }),
@@ -3101,8 +3172,8 @@ export const appRouter = router({
 
         const result = await importDealMachineProperties(
           validProperties,
-          input.assignedAgentId || null,
-          input.listName || null
+          input.assignedAgentId ?? undefined,
+          input.listName ?? undefined
         );
 
         return result;

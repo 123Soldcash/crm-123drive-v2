@@ -374,7 +374,7 @@ export default function PropertyDetail() {
                     <Checkbox checked={isSelected} />
                     <div className="flex flex-col flex-1">
                       <span className="text-sm font-bold">{agent.name}</span>
-                      <span className="text-[10px] text-slate-500 uppercase">{agent.agentType || agent.role}</span>
+                      <span className="text-[10px] text-slate-500 uppercase">{agent.role}</span>
                     </div>
                     {isSelected && (
                       <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-700">Selected</Badge>
@@ -405,7 +405,7 @@ export default function PropertyDetail() {
           <div className="flex flex-wrap gap-2">
             {assignedAgents.map((assignment: any) => (
               <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2 pr-1">
-                <Users className="h-3 w-3" /> {assignment.agent?.name} ({assignment.agent?.agentType})
+                <Users className="h-3 w-3" /> {assignment.agent?.name} ({assignment.agent?.role})
                 <button
                   onClick={() => removeAgentMutation.mutate({ propertyId, agentId: assignment.agent?.id })}
                   className="ml-1 hover:bg-red-100 rounded-full p-0.5 transition-colors"

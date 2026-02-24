@@ -1781,3 +1781,19 @@
 
 ## BUG FIX - db.getVisitsByPropertyId is not a function (Feb 23, 2026)
 - [x] Fix missing getVisitsByPropertyId function causing error on property detail page /properties/:id — renamed to getPropertyVisits
+
+## UNIFY AGENTS & USERS - Single User System with Roles (Feb 24, 2026)
+- [x] Audit all agent/user references across codebase
+- [x] Plan unified schema migration strategy
+- [x] Update database schema: unify agents into users table with role (admin/agent)
+- [x] Migrate existing agent data into users table
+- [x] Update backend routers and db helpers to use unified users
+- [x] Remove separate agents table and agent-specific routers
+- [x] Create unified User Management panel (merge Agent Management + User Management)
+- [x] Update property detail: agent assignment uses unified users
+- [x] Update dashboard: agent filter uses unified users
+- [x] Update bulk assign: uses unified users
+- [x] Update lead assignments to reference unified users
+- [x] Update all frontend components referencing agents
+- [x] Write tests for unified user system
+- [x] Validate all existing functionality still works

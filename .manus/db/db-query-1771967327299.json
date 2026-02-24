@@ -1,0 +1,45 @@
+{
+  "query": "SELECT DISTINCT pa.agentId, u.name as userName, a.name as agentName FROM propertyAgents pa LEFT JOIN users u ON pa.agentId = u.id LEFT JOIN agents a ON pa.agentId = a.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT DISTINCT pa.agentId, u.name as userName, a.name as agentName FROM propertyAgents pa LEFT JOIN users u ON pa.agentId = u.id LEFT JOIN agents a ON pa.agentId = a.id;",
+  "rows": [
+    {
+      "agentId": "90008",
+      "userName": "NULL",
+      "agentName": "NULL"
+    },
+    {
+      "agentId": "90006",
+      "userName": "NULL",
+      "agentName": "NULL"
+    },
+    {
+      "agentId": "90005",
+      "userName": "NULL",
+      "agentName": "NULL"
+    },
+    {
+      "agentId": "1",
+      "userName": "Rosangela Russo",
+      "agentName": "NULL"
+    },
+    {
+      "agentId": "360027",
+      "userName": "NULL",
+      "agentName": " TAYLOR"
+    },
+    {
+      "agentId": "360028",
+      "userName": "NULL",
+      "agentName": "172"
+    },
+    {
+      "agentId": "90007",
+      "userName": "NULL",
+      "agentName": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "agentId\tuserName\tagentName\n90008\tNULL\tNULL\n90006\tNULL\tNULL\n90005\tNULL\tNULL\n1\tRosangela Russo\tNULL\n360027\tNULL\t TAYLOR\n360028\tNULL\t172\n90007\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

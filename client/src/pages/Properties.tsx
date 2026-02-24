@@ -705,7 +705,7 @@ export default function Properties() {
                       <SelectItem value="unassigned">
                         <span className="text-muted-foreground">Unassigned</span>
                       </SelectItem>
-                      {agents.map((agent: { id: number; name: string | null; agentType?: string }) => (
+                      {agents.map((agent: { id: number; name: string | null; role?: string }) => (
                         <SelectItem key={agent.id} value={agent.id.toString()}>
                           {agent.name || agent.openId}
                         </SelectItem>

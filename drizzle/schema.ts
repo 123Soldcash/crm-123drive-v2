@@ -2,6 +2,7 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean 
 
 /**
  * Core user table backing auth flow.
+ * Unified: both "agents" and "admins" live here, distinguished by role.
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -10,7 +11,9 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["agent", "admin"]).default("agent").notNull(),
+  status: mysqlEnum("status", ["Active", "Inactive", "Suspended"]).default("Active").notNull(),
+  notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

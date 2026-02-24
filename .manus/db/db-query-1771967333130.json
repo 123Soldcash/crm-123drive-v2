@@ -1,0 +1,45 @@
+{
+  "query": "SELECT DISTINCT pa.agentId, COALESCE(u.name, 'NOT IN USERS') as userName, COALESCE(a.name, 'NOT IN AGENTS') as agentName FROM propertyAgents pa LEFT JOIN users u ON pa.agentId = u.id LEFT JOIN agents a ON pa.agentId = a.id ORDER BY pa.agentId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT DISTINCT pa.agentId, COALESCE(u.name, 'NOT IN USERS') as userName, COALESCE(a.name, 'NOT IN AGENTS') as agentName FROM propertyAgents pa LEFT JOIN users u ON pa.agentId = u.id LEFT JOIN agents a ON pa.agentId = a.id ORDER BY pa.agentId;",
+  "rows": [
+    {
+      "agentId": "1",
+      "userName": "Rosangela Russo",
+      "agentName": "NOT IN AGENTS"
+    },
+    {
+      "agentId": "90005",
+      "userName": "NOT IN USERS",
+      "agentName": "NOT IN AGENTS"
+    },
+    {
+      "agentId": "90006",
+      "userName": "NOT IN USERS",
+      "agentName": "NOT IN AGENTS"
+    },
+    {
+      "agentId": "90007",
+      "userName": "NOT IN USERS",
+      "agentName": "NOT IN AGENTS"
+    },
+    {
+      "agentId": "90008",
+      "userName": "NOT IN USERS",
+      "agentName": "NOT IN AGENTS"
+    },
+    {
+      "agentId": "360027",
+      "userName": "NOT IN USERS",
+      "agentName": " TAYLOR"
+    },
+    {
+      "agentId": "360028",
+      "userName": "NOT IN USERS",
+      "agentName": "172"
+    }
+  ],
+  "messages": [],
+  "stdout": "agentId\tuserName\tagentName\n1\tRosangela Russo\tNOT IN AGENTS\n90005\tNOT IN USERS\tNOT IN AGENTS\n90006\tNOT IN USERS\tNOT IN AGENTS\n90007\tNOT IN USERS\tNOT IN AGENTS\n90008\tNOT IN USERS\tNOT IN AGENTS\n360027\tNOT IN USERS\t TAYLOR\n360028\tNOT IN USERS\t172\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

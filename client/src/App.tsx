@@ -18,7 +18,6 @@ import BuyerDetail from "./pages/BuyerDetail";
 import { TasksKanban } from "./pages/TasksKanban";
 import { TasksList } from "./pages/TasksList";
 import { TasksCalendar } from "./pages/TasksCalendar";
-import AgentManagement from "./pages/AgentManagement";
 import BulkAgentAssignment from "./pages/BulkAgentAssignment";
 import ImportDealMachine from "./pages/ImportDealMachine";
 import { DuplicatesDashboard } from "./pages/DuplicatesDashboard";
@@ -37,8 +36,8 @@ function Router() {
       <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
       <Route path="/buyers" component={() => <DashboardLayout><Buyers /></DashboardLayout>} />
       <Route path="/buyers/:id" component={() => <DashboardLayout><BuyerDetail /></DashboardLayout>} />
-      <Route path="/agents" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
-      <Route path="/agent-management" component={() => <DashboardLayout><AgentManagement /></DashboardLayout>} />
+      <Route path="/agents" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
+      <Route path="/agent-management" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
       <Route path="/bulk-assign-agents" component={() => <DashboardLayout><BulkAgentAssignment /></DashboardLayout>} />
       <Route path="/import-dealmachine" component={() => <DashboardLayout><ImportDealMachine /></DashboardLayout>} />
       <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />

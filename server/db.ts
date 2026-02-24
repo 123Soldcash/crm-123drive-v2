@@ -109,6 +109,8 @@ export async function listAgents() {
       email: users.email,
       phone: users.phone,
       role: users.role,
+      status: users.status,
+      notes: users.notes,
       createdAt: users.createdAt,
       lastSignedIn: users.lastSignedIn,
     })

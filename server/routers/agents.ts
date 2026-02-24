@@ -1,54 +1,108 @@
-import { router, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import {
-  agents,
-  agentPermissions,
+  users,
   leadAssignments,
   leadTransferHistory,
   properties,
+  propertyAgents,
 } from "../../drizzle/schema";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, ne } from "drizzle-orm";
 
+/**
+ * Unified agents router — now queries the `users` table.
+ * "Agents" are simply users whose role is "agent".
+ * Admin users are excluded from agent lists unless explicitly requested.
+ */
 export const agentsRouter = router({
-  // ============ AGENT CRUD ============
+  // ============ AGENT (USER) CRUD ============
 
+  /** List active agents (non-admin users with status Active) */
   list: protectedProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    return db.select().from(agents).where(eq(agents.status, "Active"));
+    return db
+      .select({
+        id: users.id,
+        openId: users.openId,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        status: users.status,
+        notes: users.notes,
+        createdAt: users.createdAt,
+        lastSignedIn: users.lastSignedIn,
+      })
+      .from(users)
+      .where(and(eq(users.role, "agent"), eq(users.status, "Active")));
   }),
 
+  /** List all agents regardless of status */
   listAll: protectedProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    return db.select().from(agents);
+    return db
+      .select({
+        id: users.id,
+        openId: users.openId,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        status: users.status,
+        notes: users.notes,
+        createdAt: users.createdAt,
+        lastSignedIn: users.lastSignedIn,
+      })
+      .from(users)
+      .where(eq(users.role, "agent"));
   }),
 
-  listExternal: protectedProcedure.query(async () => {
+  /** List all users (agents + admins) — admin only */
+  listAllUsers: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     return db
-      .select()
-      .from(agents)
-      .where(
-        or(
-          eq(agents.agentType, "External"),
-          eq(agents.agentType, "Birddog"),
-          eq(agents.agentType, "Corretor")
-        )
-      );
+      .select({
+        id: users.id,
+        openId: users.openId,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        status: users.status,
+        notes: users.notes,
+        loginMethod: users.loginMethod,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastSignedIn: users.lastSignedIn,
+      })
+      .from(users)
+      .orderBy(users.name);
   }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
       const result = await db
-        .select()
-        .from(agents)
-        .where(eq(agents.id, input.id));
+        .select({
+          id: users.id,
+          openId: users.openId,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          status: users.status,
+          notes: users.notes,
+          createdAt: users.createdAt,
+          lastSignedIn: users.lastSignedIn,
+        })
+        .from(users)
+        .where(eq(users.id, input.id));
       return result[0] || null;
     }),
 
@@ -56,181 +110,106 @@ export const agentsRouter = router({
     .input(z.object({ query: z.string() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
-      const allAgents = await db.select().from(agents);
-      return allAgents.filter(
-        (a) =>
-          a.name.toLowerCase().includes(input.query.toLowerCase()) ||
-          a.email.toLowerCase().includes(input.query.toLowerCase())
+      if (!db) throw new Error("Database not available");
+      const allUsers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          status: users.status,
+        })
+        .from(users);
+      return allUsers.filter(
+        (u) =>
+          (u.name && u.name.toLowerCase().includes(input.query.toLowerCase())) ||
+          (u.email && u.email.toLowerCase().includes(input.query.toLowerCase()))
       );
     }),
 
-  create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        email: z.string().email().optional().nullable(),
-        phone: z.string().optional().nullable(),
-        role: z
-          .enum([
-            "Birddog",
-            "Acquisition Manager",
-            "Disposition Manager",
-            "Admin",
-            "Manager",
-            "Corretor",
-            "Other",
-          ])
-          .optional()
-          .default("Birddog"),
-        agentType: z
-          .enum(["Internal", "External", "Birddog", "Corretor"])
-          .optional()
-          .default("Internal"),
-        status: z.enum(["Active", "Inactive", "Suspended"]).optional().default("Active"),
-        notes: z.string().optional().nullable(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-    if (!db) throw new Error("Database not available");
-      try {
-        const result = await db.insert(agents).values({
-          name: input.name,
-          email: input.email || undefined,
-          phone: input.phone || undefined,
-          role: input.role,
-          agentType: input.agentType,
-          status: input.status,
-          notes: input.notes || undefined,
-        });
-        return { id: Number((result as any).insertId), success: true };
-      } catch (error: any) {
-        console.error('Agent creation error:', error);
-        throw new Error(`Failed to create agent: ${error.message}`);
-      }
-    }),
-
-  update: protectedProcedure
+  /** Update a user (admin only) */
+  update: adminProcedure
     .input(
       z.object({
         id: z.number(),
         name: z.string().optional(),
         email: z.string().email().optional(),
-        phone: z.string().optional(),
-        role: z
-          .enum([
-            "Birddog",
-            "Acquisition Manager",
-            "Disposition Manager",
-            "Admin",
-            "Manager",
-            "Corretor",
-            "Other",
-          ])
-          .optional()
-          .default("Birddog"),
-        agentType: z
-          .enum(["Internal", "External", "Birddog", "Corretor"])
-          .optional()
-          .default("Internal"),
-        status: z.enum(["Active", "Inactive", "Suspended"]).optional().default("Active"),
+        phone: z.string().optional().nullable(),
+        role: z.enum(["agent", "admin"]).optional(),
+        status: z.enum(["Active", "Inactive", "Suspended"]).optional(),
         notes: z.string().optional().nullable(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
       const { id, ...updateData } = input;
       const cleanData = Object.fromEntries(
         Object.entries(updateData).filter(([, v]) => v !== undefined)
       );
-      await db.update(agents).set(cleanData as any).where(eq(agents.id, id));
-      return { success: true };
-    }),
-
-  delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-    if (!db) throw new Error("Database not available");
-      await db.delete(agents).where(eq(agents.id, input.id));
-      return { success: true };
-    }),
-
-  // ============ PERMISSIONS ============
-
-  grantPermission: protectedProcedure
-    .input(
-      z.object({
-        agentId: z.number(),
-        feature: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-    if (!db) throw new Error("Database not available");
-      const existing = await db
-        .select()
-        .from(agentPermissions)
-        .where(
-          and(
-            eq(agentPermissions.agentId, input.agentId),
-            eq(agentPermissions.feature, input.feature as any)
-          )
-        );
-
-      if (existing.length > 0) {
-        await db
-          .update(agentPermissions)
-          .set({ granted: 1 })
-          .where(
-            and(
-              eq(agentPermissions.agentId, input.agentId),
-              eq(agentPermissions.feature, input.feature as any)
-            )
-          );
-      } else {
-        await db.insert(agentPermissions).values({
-          agentId: input.agentId,
-          feature: input.feature,
-          granted: 1,
-        } as any);
+      if (Object.keys(cleanData).length > 0) {
+        await db.update(users).set(cleanData as any).where(eq(users.id, id));
       }
       return { success: true };
     }),
 
-  revokePermission: protectedProcedure
-    .input(
-      z.object({
-        agentId: z.number(),
-        feature: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
+  /** Delete a user (admin only) */
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
+
+      // Prevent deleting yourself
+      if (ctx.user?.id === input.id) {
+        throw new Error("Cannot delete your own account");
+      }
+
+      // 1. Remove property agent assignments
+      await db.delete(propertyAgents).where(eq(propertyAgents.agentId, input.id));
+
+      // 2. Remove lead assignments
+      await db.delete(leadAssignments).where(eq(leadAssignments.agentId, input.id));
+
+      // 3. Clear assignedAgentId on properties assigned to this user
       await db
-        .update(agentPermissions)
-        .set({ granted: 0 })
-        .where(
-          and(
-            eq(agentPermissions.agentId, input.agentId),
-            eq(agentPermissions.feature, input.feature as any)
-          )
-        );
+        .update(properties)
+        .set({ assignedAgentId: null })
+        .where(eq(properties.assignedAgentId, input.id));
+
+      // 4. Delete from users table
+      await db.delete(users).where(eq(users.id, input.id));
+
       return { success: true };
     }),
 
-  getPermissions: protectedProcedure
-    .input(z.object({ agentId: z.number() }))
-    .query(async ({ input }) => {
+  /** Reassign all properties from one user to another (admin only) */
+  reassignProperties: adminProcedure
+    .input(z.object({ fromUserId: z.number(), toUserId: z.number() }))
+    .mutation(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
-      return db
-        .select()
-        .from(agentPermissions)
-        .where(eq(agentPermissions.agentId, input.agentId));
+      if (!db) throw new Error("Database not available");
+
+      // Update propertyAgents assignments
+      await db
+        .update(propertyAgents)
+        .set({ agentId: input.toUserId })
+        .where(eq(propertyAgents.agentId, input.fromUserId));
+
+      // Update lead assignments
+      await db
+        .update(leadAssignments)
+        .set({ agentId: input.toUserId })
+        .where(eq(leadAssignments.agentId, input.fromUserId));
+
+      // Update properties assignedAgentId
+      await db
+        .update(properties)
+        .set({ assignedAgentId: input.toUserId })
+        .where(eq(properties.assignedAgentId, input.fromUserId));
+
+      return { success: true };
     }),
 
   // ============ LEAD ASSIGNMENTS ============
@@ -240,15 +219,13 @@ export const agentsRouter = router({
       z.object({
         propertyId: z.number(),
         agentId: z.number(),
-        assignmentType: z
-          .enum(["Exclusive", "Shared", "Temporary"])
-          .optional(),
+        assignmentType: z.enum(["Exclusive", "Shared", "Temporary"]).optional(),
         expiresAt: z.date().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
 
       const existing = await db
         .select()
@@ -296,7 +273,7 @@ export const agentsRouter = router({
     .input(z.object({ propertyId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
       return db
         .select()
         .from(leadAssignments)
@@ -307,7 +284,7 @@ export const agentsRouter = router({
     .input(z.object({ agentId: z.number(), includeShared: z.boolean().optional() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
 
       const conditions = [eq(leadAssignments.agentId, input.agentId)];
       if (!input.includeShared) {
@@ -329,15 +306,10 @@ export const agentsRouter = router({
     }),
 
   removeLeadAssignment: protectedProcedure
-    .input(
-      z.object({
-        propertyId: z.number(),
-        agentId: z.number(),
-      })
-    )
+    .input(z.object({ propertyId: z.number(), agentId: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
       await db
         .delete(leadAssignments)
         .where(
@@ -362,7 +334,7 @@ export const agentsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
 
       // Record transfer
       await db.insert(leadTransferHistory).values({
@@ -407,7 +379,7 @@ export const agentsRouter = router({
     .input(z.object({ propertyId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
       return db
         .select()
         .from(leadTransferHistory)
@@ -420,14 +392,14 @@ export const agentsRouter = router({
     .input(z.object({ agentId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
-    if (!db) throw new Error("Database not available");
+      if (!db) throw new Error("Database not available");
 
-      const agent = await db
+      const user = await db
         .select()
-        .from(agents)
-        .where(eq(agents.id, input.agentId));
+        .from(users)
+        .where(eq(users.id, input.agentId));
 
-      if (!agent.length) return null;
+      if (!user.length) return null;
 
       const assignments = await db
         .select()
@@ -450,7 +422,7 @@ export const agentsRouter = router({
       const coldLeads = leads.filter((l) => l.leadTemperature === "COLD").length;
 
       return {
-        agent: agent[0],
+        agent: user[0],
         totalLeads: leads.length,
         hotLeads,
         warmLeads,

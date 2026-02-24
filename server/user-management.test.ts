@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { getDb } from "./db";
-import { users, propertyAgents, leadAssignments, properties, agents } from "../drizzle/schema";
+import { users, propertyAgents, leadAssignments, properties } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
@@ -40,7 +40,7 @@ function createUserContext(userId = 2): { ctx: TrpcContext } {
     email: "user@test.com",
     name: "Regular User",
     loginMethod: "manus",
-    role: "user",
+    role: "agent",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
@@ -107,7 +107,7 @@ describe("User Management - deleteAgent", () => {
       openId: "test-delete-user-openid",
       name: "Test Delete User",
       email: "testdelete@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -143,7 +143,7 @@ describe("User Management - deleteAgent", () => {
       openId: "test-delete-user2-openid",
       name: "Test Delete User 2",
       email: "testdelete2@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -191,7 +191,7 @@ describe("User Management - deleteAgent", () => {
       openId: "test-delete-user-openid",
       name: "Test PA Cleanup User",
       email: "testpa@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -259,7 +259,7 @@ describe("User Management - deleteAgent", () => {
       openId: "test-delete-user-openid",
       name: "Test Assign Cleanup",
       email: "testassign@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -364,7 +364,7 @@ describe("User Management - updateAgent", () => {
       openId: "test-update-user-openid",
       name: "Original Name",
       email: "original@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -444,7 +444,7 @@ describe("User Management - deleteAgent targets correct table", () => {
       openId: "test-correct-table-openid",
       name: "Correct Table Test",
       email: "correcttable@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db
@@ -476,7 +476,7 @@ describe("User Management - deleteAgent targets correct table", () => {
       openId: "test-list-table-openid",
       name: "List Table Test",
       email: "listtable@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const { ctx } = createAdminContext();
@@ -500,7 +500,7 @@ describe("User Management - deleteAgent targets correct table", () => {
       openId: "test-disappear-openid",
       name: "Disappear Test",
       email: "disappear@example.com",
-      role: "user",
+      role: "agent",
     });
 
     const created = await db

@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `users` MODIFY COLUMN `role` enum('agent','admin') NOT NULL DEFAULT 'agent'; ALTER TABLE `users` ADD COLUMN `status` enum('Active','Inactive','Suspended') DEFAULT 'Active' NOT NULL; ALTER TABLE `users` ADD COLUMN `notes` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE `users` MODIFY COLUMN `role` enum('agent','admin') NOT NULL DEFAULT 'agent'; ALTER TABLE `users` ADD COLUMN `status` enum('Active','Inactive','Suspended') DEFAULT 'Active' NOT NULL; ALTER TABLE `users` ADD COLUMN `notes` text;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1654
+}

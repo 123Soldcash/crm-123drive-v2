@@ -57,6 +57,13 @@
       "when": 1771884767861,
       "tag": "0007_wild_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771967869631,
+      "tag": "0008_broken_serpent_society",
+      "breakpoints": true
     }
   ]
 }

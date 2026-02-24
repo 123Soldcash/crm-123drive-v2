@@ -1,0 +1,50 @@
+{
+  "query": "SELECT 'propertyAgents' as tbl, agentId, COUNT(*) as cnt FROM propertyAgents GROUP BY agentId UNION ALL SELECT 'leadAssignments' as tbl, agentId, COUNT(*) as cnt FROM leadAssignments GROUP BY agentId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'propertyAgents' as tbl, agentId, COUNT(*) as cnt FROM propertyAgents GROUP BY agentId UNION ALL SELECT 'leadAssignments' as tbl, agentId, COUNT(*) as cnt FROM leadAssignments GROUP BY agentId;",
+  "rows": [
+    {
+      "tbl": "leadAssignments",
+      "agentId": "360028",
+      "cnt": "1"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "360028",
+      "cnt": "3"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "360027",
+      "cnt": "3"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "90007",
+      "cnt": "1"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "1",
+      "cnt": "6"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "90006",
+      "cnt": "1"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "90008",
+      "cnt": "1"
+    },
+    {
+      "tbl": "propertyAgents",
+      "agentId": "90005",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tagentId\tcnt\nleadAssignments\t360028\t1\npropertyAgents\t360028\t3\npropertyAgents\t360027\t3\npropertyAgents\t90007\t1\npropertyAgents\t1\t6\npropertyAgents\t90006\t1\npropertyAgents\t90008\t1\npropertyAgents\t90005\t1\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

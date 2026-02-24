@@ -176,7 +176,7 @@ export default function BulkAgentAssignment() {
                 <SelectContent>
                   {agents?.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id.toString()}>
-                      {agent.name} ({agent.agentType})
+                      {agent.name} ({agent.role})
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, email, phone, role, agentType, status FROM agents ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email, phone, role, agentType, status FROM agents ORDER BY id;",
+  "rows": [
+    {
+      "id": "360027",
+      "name": " TAYLOR",
+      "email": "drtaylor1050@gmail.com",
+      "phone": "NULL",
+      "role": "Birddog",
+      "agentType": "Internal",
+      "status": "Active"
+    },
+    {
+      "id": "360028",
+      "name": "172",
+      "email": "fortlauderdale172@gmail.com",
+      "phone": "NULL",
+      "role": "Birddog",
+      "agentType": "External",
+      "status": "Active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\trole\tagentType\tstatus\n360027\t TAYLOR\tdrtaylor1050@gmail.com\tNULL\tBirddog\tInternal\tActive\n360028\t172\tfortlauderdale172@gmail.com\tNULL\tBirddog\tExternal\tActive\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

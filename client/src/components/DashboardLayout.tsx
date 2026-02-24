@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, UserPlus, Zap, GitMerge, Workflow } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -38,9 +38,8 @@ const menuItems = [
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
   { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },
-  { icon: UserPlus, label: "Agent Management", path: "/agents", adminOnly: true },
-  { icon: Zap, label: "Bulk Assign Agents", path: "/bulk-assign-agents", adminOnly: true },
   { icon: Users, label: "User Management", path: "/users", adminOnly: true },
+  { icon: Zap, label: "Bulk Assign Agents", path: "/bulk-assign-agents", adminOnly: true },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
