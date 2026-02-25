@@ -1908,3 +1908,6 @@
 - [x] Add instructions explaining how whitelist works
 - [x] Write 14 vitest tests for whitelist system + update 11 invite tests (all passing)
 - [x] 1013 tests passing, 2 pre-existing CSV failures only
+
+## Whitelist UI - Change text to English (Feb 25, 2026)
+- [x] Change all Portuguese text in whitelist dialog/UI to English (buttons, labels, toasts, instructions)

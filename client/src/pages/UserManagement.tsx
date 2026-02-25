@@ -143,7 +143,7 @@ export default function UserManagement() {
   // Reset password mutation
   const resetPassword = trpc.agents.resetPassword.useMutation({
     onSuccess: (data) => {
-      toast.success(`Senha de ${data.userName || "usuário"} atualizada com sucesso!`);
+      toast.success(`Password for ${data.userName || "user"} updated successfully!`);
       setPasswordDialogOpen(false);
       setPasswordUser(null);
       setNewPassword("");
@@ -151,7 +151,7 @@ export default function UserManagement() {
       setShowPassword(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Falha ao resetar senha");
+      toast.error(error.message || "Failed to reset password");
     },
   });
 
@@ -201,11 +201,11 @@ export default function UserManagement() {
   const handleConfirmPasswordReset = () => {
     if (!passwordUser) return;
     if (newPassword.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+      toast.error("Password must be at least 6 characters");
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      toast.error("Passwords do not match");
       return;
     }
     resetPassword.mutate({ userId: passwordUser.id, newPassword });
@@ -250,23 +250,23 @@ export default function UserManagement() {
   const addToWhitelist = trpc.agents.whitelistAdd.useMutation({
     onSuccess: () => {
       utils.agents.whitelistList.invalidate();
-      toast.success("Email adicionado à whitelist!");
+      toast.success("Email added to whitelist!");
       setWhitelistEmail("");
       setWhitelistName("");
       setWhitelistRole("agent");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Falha ao adicionar email");
+      toast.error(error.message || "Failed to add email");
     },
   });
 
   const removeFromWhitelist = trpc.agents.whitelistRemove.useMutation({
     onSuccess: () => {
       utils.agents.whitelistList.invalidate();
-      toast.success("Email removido da whitelist");
+      toast.success("Email removed from whitelist");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Falha ao remover email");
+      toast.error(error.message || "Failed to remove email");
     },
   });
 
@@ -279,7 +279,7 @@ export default function UserManagement() {
 
   const handleAddToWhitelist = () => {
     if (!whitelistEmail.trim()) {
-      toast.error("Digite um email válido");
+      toast.error("Please enter a valid email");
       return;
     }
     addToWhitelist.mutate({
@@ -339,7 +339,7 @@ export default function UserManagement() {
         </div>
         <Button onClick={handleWhitelistClick}>
           <ListChecks className="mr-2 h-4 w-4" />
-          Whitelist de Emails
+          Email Whitelist
         </Button>
       </div>
 
@@ -723,20 +723,20 @@ export default function UserManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5" />
-              Resetar Senha
+              Reset Password
             </DialogTitle>
             <DialogDescription>
-              Definir nova senha para <strong>{passwordUser?.name || passwordUser?.email || "usuário"}</strong>
+              Set new password for <strong>{passwordUser?.name || passwordUser?.email || "user"}</strong>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="newPassword">Nova Senha</Label>
+              <Label htmlFor="newPassword">New Password</Label>
               <div className="relative">
                 <Input
                   id="newPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Minimum 6 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pr-10"
@@ -753,25 +753,25 @@ export default function UserManagement() {
               </div>
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Repita a nova senha"
+                placeholder="Repeat new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
             {newPassword && confirmPassword && newPassword !== confirmPassword && (
-              <p className="text-sm text-destructive">As senhas não coincidem</p>
+              <p className="text-sm text-destructive">Passwords do not match</p>
             )}
             {newPassword && newPassword.length > 0 && newPassword.length < 6 && (
-              <p className="text-sm text-destructive">A senha deve ter pelo menos 6 caracteres</p>
+              <p className="text-sm text-destructive">Password must be at least 6 characters</p>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
-              Cancelar
+              Cancel
             </Button>
             <Button
               onClick={handleConfirmPasswordReset}
@@ -782,7 +782,7 @@ export default function UserManagement() {
                 newPassword !== confirmPassword
               }
             >
-              {resetPassword.isPending ? "Salvando..." : "Salvar Nova Senha"}
+              {resetPassword.isPending ? "Saving..." : "Save New Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -794,38 +794,38 @@ export default function UserManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ListChecks className="h-5 w-5" />
-              Whitelist de Emails
+              Email Whitelist
             </DialogTitle>
             <DialogDescription>
-              Adicione emails autorizados a acessar o CRM. Apenas emails nesta lista podem se cadastrar.
+              Add authorized emails to access the CRM. Only emails on this list can register.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {/* Add new email form */}
             <div className="bg-muted/50 border rounded-lg p-4 space-y-3">
-              <p className="text-sm font-medium">Adicionar novo email</p>
+              <p className="text-sm font-medium">Add new email</p>
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <Label htmlFor="wlEmail">Email *</Label>
                   <Input
                     id="wlEmail"
                     type="email"
-                    placeholder="usuario@exemplo.com"
+                    placeholder="user@example.com"
                     value={whitelistEmail}
                     onChange={(e) => setWhitelistEmail(e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="wlName">Nome (opcional)</Label>
+                  <Label htmlFor="wlName">Name (optional)</Label>
                   <Input
                     id="wlName"
-                    placeholder="Nome do usu\u00e1rio"
+                    placeholder="User name"
                     value={whitelistName}
                     onChange={(e) => setWhitelistName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="wlRole">Cargo</Label>
+                  <Label htmlFor="wlRole">Role</Label>
                   <Select value={whitelistRole} onValueChange={(v) => setWhitelistRole(v as "agent" | "admin")}>
                     <SelectTrigger>
                       <SelectValue />
@@ -843,20 +843,20 @@ export default function UserManagement() {
                 className="w-full"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {addToWhitelist.isPending ? "Adicionando..." : "Adicionar \u00e0 Whitelist"}
+                {addToWhitelist.isPending ? "Adding..." : "Add to Whitelist"}
               </Button>
             </div>
 
             {/* Current whitelist */}
             <div className="border-t pt-4">
               <p className="text-sm font-medium mb-2">
-                Emails autorizados ({whitelistEntries.length})
+                Authorized emails ({whitelistEntries.length})
               </p>
               {whitelistEntries.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
                   <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Nenhum email na whitelist ainda.</p>
-                  <p className="text-xs">Adicione emails acima para autorizar o acesso.</p>
+                  <p className="text-sm">No emails in the whitelist yet.</p>
+                  <p className="text-xs">Add emails above to authorize access.</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -867,7 +867,7 @@ export default function UserManagement() {
                           <span className="font-medium truncate">{entry.email}</span>
                           <Badge variant="secondary" className="text-xs shrink-0">{entry.role}</Badge>
                           {entry.usedAt && (
-                            <Badge className="bg-green-600 text-white text-xs shrink-0">Cadastrado</Badge>
+                            <Badge className="bg-green-600 text-white text-xs shrink-0">Registered</Badge>
                           )}
                         </div>
                         {entry.name && (
@@ -880,7 +880,7 @@ export default function UserManagement() {
                           size="sm"
                           onClick={() => removeFromWhitelist.mutate({ id: entry.id })}
                           disabled={removeFromWhitelist.isPending}
-                          title="Remover da whitelist"
+                          title="Remove from whitelist"
                         >
                           <Trash2 className="h-3 w-3 text-red-500" />
                         </Button>
@@ -894,13 +894,13 @@ export default function UserManagement() {
             {/* Instructions */}
             <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
               <p className="text-xs text-blue-800 dark:text-blue-300">
-                <strong>Como funciona:</strong> Adicione o email da pessoa aqui, depois envie o link do site para ela.
-                Ao fazer login, se o email estiver na whitelist, o acesso ser\u00e1 liberado automaticamente.
+                <strong>How it works:</strong> Add the person's email here, then send them the site link.
+                When they log in, if their email is on the whitelist, access will be granted automatically.
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setWhitelistDialogOpen(false)}>Fechar</Button>
+            <Button onClick={() => setWhitelistDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
