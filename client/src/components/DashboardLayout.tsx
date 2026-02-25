@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -68,25 +68,71 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+        <div className="flex flex-col items-center gap-8 p-10 max-w-md w-full">
+          {/* Logo / Brand */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-16 w-16 rounded-2xl bg-blue-700 flex items-center justify-center shadow-lg">
+              <Building2 className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground mt-3">
+              CRM 123Drive
             </h1>
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
+          </div>
+
+          {/* Access Denied Alert */}
+          {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('access') === 'denied' && (
+            <div className="w-full bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-red-700 font-medium">
+                Acesso negado. Sua conta não está cadastrada no sistema.
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                Solicite um link de convite ao administrador para participar.
+              </p>
+            </div>
+          )}
+
+          {/* Login Card */}
+          <div className="w-full bg-white rounded-xl border shadow-sm p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">
+                Entrar na sua conta
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Acesse o painel com suas credenciais.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => {
+                window.location.href = getLoginUrl();
+              }}
+              size="lg"
+              className="w-full shadow-md hover:shadow-lg transition-all text-base font-medium"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Entrar
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">Acesso restrito</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Este sistema é exclusivo para membros convidados.
+              Para participar, solicite um link de convite ao administrador.
             </p>
           </div>
-          <Button
-            onClick={() => {
-              window.location.href = getLoginUrl();
-            }}
-            size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
-          >
-            Sign in
-          </Button>
+
+          {/* Footer */}
+          <p className="text-xs text-muted-foreground/60">
+            123Drive &middot; Painel de Gestão de Leads
+          </p>
         </div>
       </div>
     );

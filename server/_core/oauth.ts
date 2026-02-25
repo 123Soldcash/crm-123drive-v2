@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { ENV } from "./env";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -25,6 +26,16 @@ export function registerOAuthRoutes(app: Express) {
 
       if (!userInfo.openId) {
         res.status(400).json({ error: "openId missing from user info" });
+        return;
+      }
+
+      // Invite-only access: only allow login for existing users or the project owner
+      const isOwner = userInfo.openId === ENV.ownerOpenId;
+      const existingUser = await db.getUserByOpenId(userInfo.openId);
+
+      if (!existingUser && !isOwner) {
+        // User doesn't exist and is not the owner — block access
+        res.redirect(302, "/?access=denied");
         return;
       }
 

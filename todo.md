@@ -1865,3 +1865,13 @@
 - [x] Fix server/import-properties.test.ts - fix return field names (contactsCreated vs contactsImported)
 - [x] Install @testing-library/react, @testing-library/user-event, @testing-library/jest-dom
 - [x] Add missing fields to getProperties select (dealStage, ownerLocation, status, deskName)
+
+## Login & Invite-Only Access (Feb 25, 2026)
+- [x] Remove registration option from login screen (login only)
+- [x] Redesign login screen with professional layout (logo, invite-only messaging)
+- [x] Block new users in OAuth callback (only allow existing users + project owner)
+- [x] Show access denied message when unauthorized user tries to login (?access=denied)
+- [x] Restrict new user access to invitation links only
+- [x] Ensure existing invite system works for new user onboarding
+- [x] Write 10 vitest tests for invite-only access control logic (all passing)
+- [x] Verify 982 tests still passing (3 pre-existing CSV failures)
