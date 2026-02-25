@@ -7,9 +7,11 @@ import {
   leadTransferHistory,
   properties,
   propertyAgents,
+  emailWhitelist,
 } from "../../drizzle/schema";
 import { eq, and, or, ne } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { addToWhitelist, removeFromWhitelist, listWhitelist } from "../db-whitelist";
 
 /**
  * Unified agents router — now queries the `users` table.
@@ -466,5 +468,37 @@ export const agentsRouter = router({
         coldLeads,
         leads,
       };
+    }),
+
+  // ============ EMAIL WHITELIST ============
+
+  /** List all whitelisted emails (admin only) */
+  whitelistList: adminProcedure.query(async () => {
+    return listWhitelist();
+  }),
+
+  /** Add email to whitelist (admin only) */
+  whitelistAdd: adminProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        role: z.enum(["agent", "admin"]).default("agent"),
+        name: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      return addToWhitelist({
+        email: input.email,
+        role: input.role,
+        name: input.name,
+        addedBy: ctx.user.id,
+      });
+    }),
+
+  /** Remove email from whitelist (admin only) */
+  whitelistRemove: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      return removeFromWhitelist(input.id);
     }),
 });

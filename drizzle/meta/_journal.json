@@ -127,6 +127,13 @@
       "when": 1772050845824,
       "tag": "0017_clumsy_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1772052914606,
+      "tag": "0018_handy_lockheed",
+      "breakpoints": true
     }
   ]
 }

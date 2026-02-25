@@ -39,7 +39,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Edit, Link as LinkIcon, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Users, Edit, Plus, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter, KeyRound, Eye, EyeOff, ListChecks, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 type UserRow = {
@@ -60,7 +60,10 @@ type UserRow = {
 
 export default function UserManagement() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [whitelistDialogOpen, setWhitelistDialogOpen] = useState(false);
+  const [whitelistEmail, setWhitelistEmail] = useState("");
+  const [whitelistName, setWhitelistName] = useState("");
+  const [whitelistRole, setWhitelistRole] = useState<"agent" | "admin">("agent");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
@@ -83,10 +86,7 @@ export default function UserManagement() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
-  const [inviteRole, setInviteRole] = useState<"agent" | "admin">("agent");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [createdInviteLink, setCreatedInviteLink] = useState("");
+
 
   // Fetch all users (agents + admins) using the unified endpoint
   const { data: allUsers = [], isLoading } = trpc.agents.listAllUsers.useQuery();
@@ -244,47 +244,49 @@ export default function UserManagement() {
     });
   };
 
-  // Create invite mutation
-  const createInvite = trpc.invites.create.useMutation({
-    onSuccess: (data) => {
-      const link = `${window.location.origin}/invite/${data.token}`;
-      setCreatedInviteLink(link);
-      toast.success("Invite link generated!");
+  // Whitelist queries and mutations
+  const { data: whitelistEntries = [] } = trpc.agents.whitelistList.useQuery();
+
+  const addToWhitelist = trpc.agents.whitelistAdd.useMutation({
+    onSuccess: () => {
+      utils.agents.whitelistList.invalidate();
+      toast.success("Email adicionado à whitelist!");
+      setWhitelistEmail("");
+      setWhitelistName("");
+      setWhitelistRole("agent");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to create invite");
+      toast.error(error.message || "Falha ao adicionar email");
     },
   });
 
-  // List pending invites
-  const { data: pendingInvites = [] } = trpc.invites.listPending.useQuery();
-  const cancelInvite = trpc.invites.cancel.useMutation({
+  const removeFromWhitelist = trpc.agents.whitelistRemove.useMutation({
     onSuccess: () => {
-      utils.invites.listPending.invalidate();
-      toast.success("Invite cancelled");
+      utils.agents.whitelistList.invalidate();
+      toast.success("Email removido da whitelist");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Falha ao remover email");
     },
   });
 
-  const handleInviteClick = () => {
-    setInviteDialogOpen(true);
-    setInviteLinkCopied(false);
-    setCreatedInviteLink("");
-    setInviteEmail("");
-    setInviteRole("agent");
+  const handleWhitelistClick = () => {
+    setWhitelistDialogOpen(true);
+    setWhitelistEmail("");
+    setWhitelistName("");
+    setWhitelistRole("agent");
   };
 
-  const handleGenerateInvite = () => {
-    createInvite.mutate({
-      email: inviteEmail.trim() || undefined,
-      role: inviteRole,
+  const handleAddToWhitelist = () => {
+    if (!whitelistEmail.trim()) {
+      toast.error("Digite um email válido");
+      return;
+    }
+    addToWhitelist.mutate({
+      email: whitelistEmail.trim().toLowerCase(),
+      role: whitelistRole,
+      name: whitelistName.trim() || undefined,
     });
-  };
-
-  const handleCopyInviteLink = () => {
-    navigator.clipboard.writeText(createdInviteLink);
-    setInviteLinkCopied(true);
-    toast.success("Invite link copied!");
-    setTimeout(() => setInviteLinkCopied(false), 3000);
   };
 
   const getRoleBadge = (role: string) => {
@@ -335,9 +337,9 @@ export default function UserManagement() {
             Manage all users and their access levels
           </p>
         </div>
-        <Button onClick={handleInviteClick}>
-          <LinkIcon className="mr-2 h-4 w-4" />
-          Invite User
+        <Button onClick={handleWhitelistClick}>
+          <ListChecks className="mr-2 h-4 w-4" />
+          Whitelist de Emails
         </Button>
       </div>
 
@@ -786,34 +788,45 @@ export default function UserManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Invite User Dialog */}
-      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+      {/* Email Whitelist Dialog */}
+      <Dialog open={whitelistDialogOpen} onOpenChange={setWhitelistDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Invite User to CRM</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5" />
+              Whitelist de Emails
+            </DialogTitle>
             <DialogDescription>
-              Generate a unique invite link. The user clicks the link, fills in their name and password, and gets access.
+              Adicione emails autorizados a acessar o CRM. Apenas emails nesta lista podem se cadastrar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {!createdInviteLink ? (
-              <>
+            {/* Add new email form */}
+            <div className="bg-muted/50 border rounded-lg p-4 space-y-3">
+              <p className="text-sm font-medium">Adicionar novo email</p>
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <Label htmlFor="inviteEmail">Email (optional)</Label>
+                  <Label htmlFor="wlEmail">Email *</Label>
                   <Input
-                    id="inviteEmail"
+                    id="wlEmail"
                     type="email"
-                    placeholder="user@example.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="usuario@exemplo.com"
+                    value={whitelistEmail}
+                    onChange={(e) => setWhitelistEmail(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Optional. If provided, will be pre-associated with the account.
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="inviteRole">Role</Label>
-                  <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "agent" | "admin")}>
+                  <Label htmlFor="wlName">Nome (opcional)</Label>
+                  <Input
+                    id="wlName"
+                    placeholder="Nome do usu\u00e1rio"
+                    value={whitelistName}
+                    onChange={(e) => setWhitelistName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="wlRole">Cargo</Label>
+                  <Select value={whitelistRole} onValueChange={(v) => setWhitelistRole(v as "agent" | "admin")}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -823,72 +836,71 @@ export default function UserManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button
-                  onClick={handleGenerateInvite}
-                  disabled={createInvite.isPending}
-                  className="w-full"
-                >
-                  {createInvite.isPending ? "Generating..." : "Generate Invite Link"}
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
-                  <p className="text-sm font-medium text-green-800">Invite link generated!</p>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={createdInviteLink}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
-                    <Button variant="outline" size="icon" onClick={handleCopyInviteLink}>
-                      {inviteLinkCopied ? (
-                        <Check className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    This link expires in 7 days. Send it via WhatsApp, SMS, or email.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setCreatedInviteLink("")}
-                  className="w-full"
-                >
-                  Generate Another Invite
-                </Button>
-              </>
-            )}
+              </div>
+              <Button
+                onClick={handleAddToWhitelist}
+                disabled={addToWhitelist.isPending || !whitelistEmail.trim()}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {addToWhitelist.isPending ? "Adicionando..." : "Adicionar \u00e0 Whitelist"}
+              </Button>
+            </div>
 
-            {/* Pending invites */}
-            {pendingInvites.length > 0 && (
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium mb-2">Pending Invites ({pendingInvites.length})</p>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {pendingInvites.map((inv: any) => (
-                    <div key={inv.id} className="flex items-center justify-between bg-muted p-2 rounded text-sm">
-                      <div>
-                        <span className="font-medium">{inv.email || "No email"}</span>
-                        <Badge variant="secondary" className="ml-2 text-xs">{inv.role}</Badge>
+            {/* Current whitelist */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium mb-2">
+                Emails autorizados ({whitelistEntries.length})
+              </p>
+              {whitelistEntries.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum email na whitelist ainda.</p>
+                  <p className="text-xs">Adicione emails acima para autorizar o acesso.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {whitelistEntries.map((entry: any) => (
+                    <div key={entry.id} className="flex items-center justify-between bg-muted p-3 rounded-lg text-sm">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">{entry.email}</span>
+                          <Badge variant="secondary" className="text-xs shrink-0">{entry.role}</Badge>
+                          {entry.usedAt && (
+                            <Badge className="bg-green-600 text-white text-xs shrink-0">Cadastrado</Badge>
+                          )}
+                        </div>
+                        {entry.name && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{entry.name}</p>
+                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => cancelInvite.mutate({ token: inv.token })}
-                      >
-                        <Trash2 className="h-3 w-3 text-red-500" />
-                      </Button>
+                      {!entry.usedAt && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromWhitelist.mutate({ id: entry.id })}
+                          disabled={removeFromWhitelist.isPending}
+                          title="Remover da whitelist"
+                        >
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+              <p className="text-xs text-blue-800 dark:text-blue-300">
+                <strong>Como funciona:</strong> Adicione o email da pessoa aqui, depois envie o link do site para ela.
+                Ao fazer login, se o email estiver na whitelist, o acesso ser\u00e1 liberado automaticamente.
+              </p>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setInviteDialogOpen(false)}>Done</Button>
+            <Button onClick={() => setWhitelistDialogOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

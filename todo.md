@@ -1894,3 +1894,17 @@
 - [x] Preserve user role, status, and permissions after openId linking
 - [x] Owner always bypasses invite-only check via OWNER_OPEN_ID
 - [x] Write 7 vitest tests for email-based OAuth linking (all passing)
+
+## Email Whitelist System (Feb 25, 2026)
+- [x] Create emailWhitelist table in schema (email, role, name, addedBy, usedAt)
+- [x] Create db-whitelist.ts with CRUD functions (add, list, remove, check, markUsed)
+- [x] Add whitelist CRUD endpoints in agents router (admin-only)
+- [x] Update OAuth callback to check whitelist for new users
+- [x] Auto-create user with whitelisted role on first OAuth login
+- [x] Mark whitelist entry as used after registration
+- [x] Replace Invite User dialog with Whitelist dialog in UserManagement
+- [x] Add/remove emails from whitelist UI with role selector
+- [x] Show "Cadastrado" badge for used entries
+- [x] Add instructions explaining how whitelist works
+- [x] Write 14 vitest tests for whitelist system + update 11 invite tests (all passing)
+- [x] 1013 tests passing, 2 pre-existing CSV failures only

@@ -1345,3 +1345,20 @@ export const invites = mysqlTable("invites", {
 });
 export type Invite = typeof invites.$inferSelect;
 export type InsertInvite = typeof invites.$inferInsert;
+
+/**
+ * Email whitelist - only emails in this list can register/login via OAuth.
+ * Admin adds emails here; when the person logs in via Manus OAuth, the system
+ * checks if their email is whitelisted before granting access.
+ */
+export const emailWhitelist = mysqlTable("email_whitelist", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  role: mysqlEnum("role", ["agent", "admin"]).notNull().default("agent"),
+  name: varchar("name", { length: 255 }),
+  addedBy: int("added_by").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type EmailWhitelist = typeof emailWhitelist.$inferSelect;
+export type InsertEmailWhitelist = typeof emailWhitelist.$inferInsert;

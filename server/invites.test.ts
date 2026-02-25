@@ -51,6 +51,10 @@ describe("Invite System - Schema", () => {
     expect(schemaSrc).toContain("expired");
     expect(schemaSrc).toContain("cancelled");
   });
+
+  it("should have emailWhitelist table in schema", () => {
+    expect(schemaSrc).toContain('export const emailWhitelist = mysqlTable("email_whitelist"');
+  });
 });
 
 describe("Invite System - Database Helpers", () => {
@@ -160,51 +164,50 @@ describe("Invite System - Router Endpoints", () => {
   });
 });
 
-describe("Invite System - Frontend: UserManagement Modal", () => {
-  it("should have invite dialog state", () => {
-    expect(userMgmtSrc).toContain("inviteDialogOpen");
+describe("Whitelist System - Frontend: UserManagement", () => {
+  it("should have whitelist dialog state", () => {
+    expect(userMgmtSrc).toContain("whitelistDialogOpen");
   });
 
-  it("should have invite role selector", () => {
-    expect(userMgmtSrc).toContain("inviteRole");
-    expect(userMgmtSrc).toContain('setInviteRole');
+  it("should have whitelist role selector", () => {
+    expect(userMgmtSrc).toContain("whitelistRole");
+    expect(userMgmtSrc).toContain("setWhitelistRole");
   });
 
-  it("should have invite email input (optional)", () => {
-    expect(userMgmtSrc).toContain("inviteEmail");
+  it("should have whitelist email input", () => {
+    expect(userMgmtSrc).toContain("whitelistEmail");
   });
 
-  it("should call trpc.invites.create mutation", () => {
-    expect(userMgmtSrc).toContain("trpc.invites.create.useMutation");
+  it("should call trpc.agents.whitelistAdd mutation", () => {
+    expect(userMgmtSrc).toContain("trpc.agents.whitelistAdd.useMutation");
   });
 
-  it("should call trpc.invites.listPending query", () => {
-    expect(userMgmtSrc).toContain("trpc.invites.listPending.useQuery");
+  it("should call trpc.agents.whitelistList query", () => {
+    expect(userMgmtSrc).toContain("trpc.agents.whitelistList.useQuery");
   });
 
-  it("should call trpc.invites.cancel mutation", () => {
-    expect(userMgmtSrc).toContain("trpc.invites.cancel.useMutation");
+  it("should call trpc.agents.whitelistRemove mutation", () => {
+    expect(userMgmtSrc).toContain("trpc.agents.whitelistRemove.useMutation");
   });
 
-  it("should generate invite link with token", () => {
-    expect(userMgmtSrc).toContain("/invite/${data.token}");
+  it("should have Whitelist de Emails button", () => {
+    expect(userMgmtSrc).toContain("Whitelist de Emails");
   });
 
-  it("should have copy link functionality", () => {
-    expect(userMgmtSrc).toContain("navigator.clipboard.writeText(createdInviteLink)");
+  it("should show empty state when no entries", () => {
+    expect(userMgmtSrc).toContain("Nenhum email na whitelist ainda");
   });
 
-  it("should show pending invites list", () => {
-    expect(userMgmtSrc).toContain("pendingInvites");
-    expect(userMgmtSrc).toContain("Pending Invites");
+  it("should show Cadastrado badge for used entries", () => {
+    expect(userMgmtSrc).toContain("Cadastrado");
   });
 
-  it("should show link expires in 7 days message", () => {
-    expect(userMgmtSrc).toContain("expires in 7 days");
+  it("should have instructions explaining how whitelist works", () => {
+    expect(userMgmtSrc).toContain("Como funciona");
   });
 
-  it("should have Generate Another Invite button", () => {
-    expect(userMgmtSrc).toContain("Generate Another Invite");
+  it("should show whitelist entry count", () => {
+    expect(userMgmtSrc).toContain("Emails autorizados");
   });
 });
 
