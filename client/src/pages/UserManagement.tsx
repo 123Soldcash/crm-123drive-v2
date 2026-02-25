@@ -39,7 +39,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Edit, Link as LinkIcon, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter } from "lucide-react";
+import { Users, Edit, Link as LinkIcon, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter, KeyRound, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 type UserRow = {
@@ -78,6 +78,11 @@ export default function UserManagement() {
     notes: "",
     twilioPhone: "",
   });
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<UserRow | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
   const [inviteRole, setInviteRole] = useState<"agent" | "admin">("agent");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -135,6 +140,21 @@ export default function UserManagement() {
     },
   });
 
+  // Reset password mutation
+  const resetPassword = trpc.agents.resetPassword.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Senha de ${data.userName || "usuário"} atualizada com sucesso!`);
+      setPasswordDialogOpen(false);
+      setPasswordUser(null);
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Falha ao resetar senha");
+    },
+  });
+
   // Filter users
   const filteredUsers = allUsers.filter((user: UserRow) => {
     const matchesSearch =
@@ -168,6 +188,27 @@ export default function UserManagement() {
   const handleDeleteClick = (user: UserRow) => {
     setUserToDelete(user);
     setDeleteDialogOpen(true);
+  };
+
+  const handlePasswordResetClick = (user: UserRow) => {
+    setPasswordUser(user);
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setPasswordDialogOpen(true);
+  };
+
+  const handleConfirmPasswordReset = () => {
+    if (!passwordUser) return;
+    if (newPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    resetPassword.mutate({ userId: passwordUser.id, newPassword });
   };
 
   const handleReassignClick = (user: UserRow) => {
@@ -466,6 +507,14 @@ export default function UserManagement() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handlePasswordResetClick(user)}
+                          title="Reset password"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleReassignClick(user)}
                           title="Transfer properties to another user"
                         >
@@ -661,6 +710,77 @@ export default function UserManagement() {
               disabled={!reassignToUserId || reassignProperties.isPending}
             >
               {reassignProperties.isPending ? "Transferring..." : "Transfer Properties"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              Resetar Senha
+            </DialogTitle>
+            <DialogDescription>
+              Definir nova senha para <strong>{passwordUser?.name || passwordUser?.email || "usuário"}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 6 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                placeholder="Repita a nova senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-sm text-destructive">As senhas não coincidem</p>
+            )}
+            {newPassword && newPassword.length > 0 && newPassword.length < 6 && (
+              <p className="text-sm text-destructive">A senha deve ter pelo menos 6 caracteres</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmPasswordReset}
+              disabled={
+                resetPassword.isPending ||
+                !newPassword ||
+                newPassword.length < 6 ||
+                newPassword !== confirmPassword
+              }
+            >
+              {resetPassword.isPending ? "Salvando..." : "Salvar Nova Senha"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@ import { getDb } from "./db";
 import { invites, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
 export function generateInviteToken(): string {
   return randomBytes(32).toString("hex");
@@ -73,6 +74,9 @@ export async function acceptInvite(
   if (invite.status !== "pending") throw new Error("Invite already used or cancelled");
   if (new Date() > invite.expiresAt) throw new Error("Invite expired");
 
+  // Hash password
+  const passwordHash = await bcrypt.hash(password, 10);
+
   // Create user
   const newUserResult = await db
     .insert(users)
@@ -83,6 +87,7 @@ export async function acceptInvite(
       role: invite.role,
       openId: `invite-${token.substring(0, 16)}`,
       loginMethod: "invite",
+      passwordHash,
       status: "Active",
     })
     .$returningId();

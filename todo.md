@@ -1875,3 +1875,14 @@
 - [x] Ensure existing invite system works for new user onboarding
 - [x] Write 10 vitest tests for invite-only access control logic (all passing)
 - [x] Verify 982 tests still passing (3 pre-existing CSV failures)
+
+## Admin Password Reset for Agents (Feb 25, 2026)
+- [x] Add passwordHash column to users table schema
+- [x] Create admin-only resetPassword endpoint in agents router (bcryptjs hashing)
+- [x] Update acceptInvite to hash and store passwords on user creation
+- [x] Add password reset button (KeyRound icon) in User Management table actions
+- [x] Create password reset dialog with new password + confirm fields + show/hide toggle
+- [x] Validate minimum 6 characters and password match (frontend + backend)
+- [x] Validate admin-only access (role check via adminProcedure)
+- [x] Write vitest tests for password reset logic (8 tests passing)
+- [x] Verify end-to-end flow

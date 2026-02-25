@@ -9,6 +9,7 @@ import {
   propertyAgents,
 } from "../../drizzle/schema";
 import { eq, and, or, ne } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 /**
  * Unified agents router — now queries the `users` table.
@@ -212,6 +213,40 @@ export const agentsRouter = router({
         .where(eq(properties.assignedAgentId, input.fromUserId));
 
       return { success: true };
+    }),
+
+  /** Admin resets a user's password */
+  resetPassword: adminProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        newPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Verify user exists
+      const targetUser = await db
+        .select({ id: users.id, name: users.name, role: users.role })
+        .from(users)
+        .where(eq(users.id, input.userId));
+
+      if (targetUser.length === 0) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Hash the new password
+      const passwordHash = await bcrypt.hash(input.newPassword, 10);
+
+      // Update the password
+      await db
+        .update(users)
+        .set({ passwordHash })
+        .where(eq(users.id, input.userId));
+
+      return { success: true, userName: targetUser[0].name };
     }),
 
   // ============ LEAD ASSIGNMENTS ============
