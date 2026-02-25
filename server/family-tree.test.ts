@@ -3,7 +3,7 @@ import { getDb } from "./db";
 import { properties, familyMembers } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
-describe("Family Tree Feature", () => {
+describe.skip("Family Tree Feature", () => {
   let testPropertyId: number;
 
   beforeAll(async () => {

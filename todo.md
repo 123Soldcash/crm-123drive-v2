@@ -1930,3 +1930,6 @@
 - [x] Delete all test/duplicate properties from the database (801 deleted, 337 remaining)
 - [x] Audit test files that may be inserting real data into the production database (19 dangerous files identified)
 - [x] Fix test files: global vitest-setup.ts mocks getDb() and drizzle connection for ALL tests
+- [x] Find and fix merge.test.ts and family-tree.test.ts that were still inserting test data
+- [x] Delete remaining 19 test properties (123 Test Primary/Secondary St + others)
+- [x] Final verification: 0 test properties in database, 317 clean properties remaining
