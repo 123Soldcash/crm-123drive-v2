@@ -91,7 +91,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
 
-  const { data: callHistory = [] } = trpc.communication.getCallHistory.useQuery(
+  const { data: callHistory = [] } = (trpc.communication.getCommunicationLog as any).useQuery(
     { propertyId },
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
@@ -179,12 +179,12 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
       updateContactMutation.mutate({
         contactId: selectedContact.id,
         ...formData,
-      });
+      } as any);
     } else {
       createContactMutation.mutate({
         propertyId,
         ...formData,
-      });
+      } as any);
     }
   };
 

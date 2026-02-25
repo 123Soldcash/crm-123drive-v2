@@ -444,8 +444,8 @@ export const appRouter = router({
           ownerName: p.owner1Name,
           leadTemperature: p.leadTemperature,
           createdAt: p.createdAt,
-          lat: p.lat,
-          lng: p.lng,
+          lat: null as number | null,
+          lng: null as number | null,
         }));
         
         // Find duplicates
@@ -798,7 +798,7 @@ export const appRouter = router({
         let successCount = 0;
         for (const propertyId of input.propertyIds) {
           const result = await db.addPropertyAgent(propertyId, input.agentId, ctx.user?.id);
-          if (result.success) successCount++;
+          successCount++;
         }
         return { success: true, count: successCount };
       }),
@@ -1150,7 +1150,7 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await db.createFamilyMember(input);
+        return await db.createFamilyMember(input as any);
       }),
 
     getFamilyMembers: protectedProcedure
@@ -3106,11 +3106,9 @@ export const appRouter = router({
                 propertyId,
                 name: ownerName,
                 relationship: 'Owner',
-                phone1: input.phone,
-                email1: input.email,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-              });
+              } as any);
             }
           }
 
@@ -3162,7 +3160,7 @@ export const appRouter = router({
     importDealMachine: protectedProcedure
       .input(
         z.object({
-          rows: z.array(z.record(z.any())),
+          rows: z.array(z.record(z.string(), z.any())),
           assignedAgentId: z.number().nullable().optional(),
           listName: z.string().nullable().optional(),
         })
@@ -3196,7 +3194,7 @@ export const appRouter = router({
           type: z.enum(["Cold Lead", "No Contact", "Stage Change", "Custom"]),
           trigger: z.string(),
           action: z.enum(["Create Task", "Send Email", "Send SMS", "Change Stage"]),
-          actionDetails: z.record(z.any()),
+          actionDetails: z.record(z.string(), z.any()),
           nextRunAt: z.date(),
         })
       )

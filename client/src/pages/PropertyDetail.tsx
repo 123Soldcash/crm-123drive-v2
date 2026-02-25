@@ -270,7 +270,7 @@ export default function PropertyDetail() {
   return (
     <div className={`space-y-6 p-6 rounded-lg ${getBackgroundColor()}`}>
       <StickyPropertyHeader
-        property={property}
+        property={property as any}
         tags={tags || []}
         onEdit={() => setEditDialogOpen(true)} 
         onAddToPipeline={() => {
@@ -288,7 +288,7 @@ export default function PropertyDetail() {
         onUpdateLeadTemperature={(temp) => 
           updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
         }
-        onToggleOwnerVerified={() => toggleOwnerVerified.mutate({ propertyId })}
+        onToggleOwnerVerified={() => toggleOwnerVerified.mutate({ propertyId, verified: !(property as any)?.ownerVerified })}
         onUpdateDesk={(deskName) => {
           const deskStatus = deskName === "BIN" ? "BIN" : deskName === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
           updateDesk.mutate({ propertyId, deskName: deskName === "BIN" ? undefined : deskName, deskStatus });
@@ -394,7 +394,7 @@ export default function PropertyDetail() {
       </Dialog>
 
       <EditPropertyDialog
-        property={property}
+        property={property as any}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />

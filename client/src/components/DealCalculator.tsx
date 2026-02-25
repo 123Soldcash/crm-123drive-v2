@@ -132,12 +132,12 @@ export function DealCalculator({ propertyId }: DealCalculatorProps) {
 
     setIsLoading(true);
     try {
-      const profitMargin = await trpc.dealCalculator.calculateProfitMargin.query({
+      const profitMargin = await (trpc.dealCalculator.calculateProfitMargin as any).query({
         propertyId,
         offerPrice: parseFloat(offerPrice),
       });
 
-      const analysis = await trpc.dealCalculator.analyzeDeal.query({
+      const analysis = await (trpc.dealCalculator.analyzeDeal as any).query({
         propertyId,
         offerPrice: parseFloat(offerPrice),
       });

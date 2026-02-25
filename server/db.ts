@@ -157,6 +157,11 @@ export async function getProperties(filters?: {
     dealMachineRawData: properties.dealMachineRawData,
     apnParcelId: properties.apnParcelId,
     propertyId: properties.propertyId,
+    status: properties.status,
+    deskName: properties.deskName,
+    deskStatus: properties.deskStatus,
+    dealStage: properties.dealStage,
+    ownerLocation: properties.ownerLocation,
     createdAt: properties.createdAt,
   }).from(properties);
   const conditions = [];
@@ -542,7 +547,7 @@ export async function getPropertiesForMap(filters?: { userId?: number; userRole?
   const db = await getDb();
   if (!db) return [];
 
-  let query = db
+  const baseQuery = db
     .select({
       id: properties.id,
       addressLine1: properties.addressLine1,
@@ -558,10 +563,11 @@ export async function getPropertiesForMap(filters?: { userId?: number; userRole?
 
   // Agent filtering: non-admin users only see their assigned properties
   if (filters?.userId && filters?.userRole !== 'admin') {
-    query = query.where(eq(properties.assignedAgentId, filters.userId));
+    const results = await baseQuery.where(eq(properties.assignedAgentId, filters.userId));
+    return results;
   }
 
-  const results = await query;
+  const results = await baseQuery;
   return results;
 }
 
@@ -628,14 +634,14 @@ export async function getPropertyVisits(propertyId: number) {
   const results = await db
     .select({
       id: visits.id,
-      visitDate: visits.visitDate,
+      visitDate: visits.checkInTime,
       notes: visits.notes,
-      agentId: visits.agentId,
+      agentId: visits.userId,
       createdAt: visits.createdAt,
     })
     .from(visits)
     .where(eq(visits.propertyId, propertyId))
-    .orderBy(desc(visits.visitDate));
+    .orderBy(desc(visits.checkInTime));
 
   return results;
 }
@@ -655,8 +661,8 @@ export async function getPropertyPhotos(propertyId: number) {
   const results = await db
     .select({
       id: photos.id,
-      url: photos.url,
-      description: photos.description,
+      url: photos.fileUrl,
+      description: photos.caption,
       createdAt: photos.createdAt,
     })
     .from(photos)
@@ -877,7 +883,7 @@ export async function transferLead(transfer: InsertLeadTransfer) {
   if (!db) throw new Error("Database not available");
 
   // Update the assignedAgentId in the properties table
-  await db.update(properties).set({ assignedAgentId: transfer.newAgentId }).where(eq(properties.id, transfer.propertyId));
+  await db.update(properties).set({ assignedAgentId: transfer.toAgentId }).where(eq(properties.id, transfer.propertyId));
 
   // Log the transfer in the leadTransfers table
   const result = await db.insert(leadTransfers).values(transfer);
@@ -943,7 +949,7 @@ export async function updateTaskStatus(taskId: number, status: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.update(tasks).set({ status: status }).where(eq(tasks.id, taskId));
+  const result = await db.update(tasks).set({ status: status as any }).where(eq(tasks.id, taskId));
   return result;
 }
 
@@ -954,12 +960,12 @@ export async function getTaskComments(taskId: number) {
   const results = await db
     .select({
       id: taskComments.id,
-      content: taskComments.content,
+      content: taskComments.comment,
       createdAt: taskComments.createdAt,
       authorName: users.name,
     })
     .from(taskComments)
-    .leftJoin(users, eq(taskComments.authorId, users.id))
+    .leftJoin(users, eq(taskComments.userId, users.id))
     .where(eq(taskComments.taskId, taskId))
     .orderBy(desc(taskComments.createdAt));
 
@@ -998,12 +1004,12 @@ export async function getStageHistory(propertyId: number) {
 
   const results = await db
     .select({
-      stage: stageHistory.stage,
+      stage: stageHistory.newStage,
       changedAt: stageHistory.changedAt,
       agentName: users.name,
     })
     .from(stageHistory)
-    .leftJoin(users, eq(stageHistory.agentId, users.id))
+    .leftJoin(users, eq(stageHistory.changedBy, users.id))
     .where(eq(stageHistory.propertyId, propertyId))
     .orderBy(desc(stageHistory.changedAt));
 
@@ -1101,10 +1107,10 @@ export async function updatePropertyStage(propertyId: number, stage: string, age
   if (!db) throw new Error("Database not available");
 
   // Update the stage in the properties table
-  await db.update(properties).set({ trackingStatus: stage }).where(eq(properties.id, propertyId));
+  await db.update(properties).set({ trackingStatus: stage as any }).where(eq(properties.id, propertyId));
 
   // Log the stage change in the stageHistory table
-  await db.insert(stageHistory).values({ propertyId, stage, agentId });
+  await db.insert(stageHistory).values({ propertyId, newStage: stage, changedBy: agentId });
 }
 
 export async function getPropertyCount() {
@@ -1690,7 +1696,7 @@ export async function addContactEmailNew(
     email,
     emailType: emailType as any,
     isPrimary,
-  });
+  } as any);
   return result;
 }
 /**
@@ -1857,7 +1863,7 @@ export async function createContactWithDetails(
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  const contactId = contactResult.insertId as number;
+  const contactId = (contactResult as any)[0]?.insertId as number;
   // Add phones
   if (contactData.phones && contactData.phones.length > 0) {
     for (const phone of contactData.phones) {
@@ -1921,7 +1927,7 @@ export async function updatePropertyStatus(propertyId: number, status: string): 
   
   await db
     .update(properties)
-    .set({ status, updatedAt: new Date() })
+    .set({ status: status as any, updatedAt: new Date() })
     .where(eq(properties.id, propertyId));
 }
 
@@ -1931,7 +1937,7 @@ export async function updateLeadTemperature(propertyId: number, temperature: str
   
   await db
     .update(properties)
-    .set({ leadTemperature: temperature, updatedAt: new Date() })
+    .set({ leadTemperature: temperature as any, updatedAt: new Date() })
     .where(eq(properties.id, propertyId));
 }
 
@@ -2307,4 +2313,153 @@ export async function deletePropertyDocument(docId: number) {
 
   await db.delete(propertyDocuments).where(eq(propertyDocuments.id, docId));
   return { success: true, fileKey: doc[0].fileKey };
+}
+
+
+// ============================================
+// Missing functions needed by routers.ts
+// ============================================
+
+export function generateZillowUrl(address: string, city: string, state: string, zipcode: string): string {
+  const formattedAddress = `${address}, ${city}, ${state} ${zipcode}`.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+  return `https://www.zillow.com/homes/${formattedAddress}_rb/`;
+}
+
+export async function toggleOwnerVerified(propertyId: number, verified: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(properties).set({ ownerVerified: verified ? 1 : 0, updatedAt: new Date() }).where(eq(properties.id, propertyId));
+}
+
+export async function getPropertyStats(filters?: { userId?: number; userRole?: string }) {
+  const allProperties = await getProperties(filters);
+  return {
+    total: allProperties.length,
+    superHot: allProperties.filter((p: any) => p.leadTemperature === "SUPER HOT").length,
+    hot: allProperties.filter((p: any) => p.leadTemperature === "HOT").length,
+    warm: allProperties.filter((p: any) => p.leadTemperature === "WARM").length,
+    cold: allProperties.filter((p: any) => p.leadTemperature === "COLD").length,
+    dead: allProperties.filter((p: any) => p.leadTemperature === "DEAD").length,
+    ownerVerified: allProperties.filter((p: any) => p.ownerVerified).length,
+  };
+}
+
+export async function addPropertyAgent(propertyId: number, agentId: number, assignedBy?: number) {
+  return await assignAgentToProperty({ propertyId, agentId, assignedBy: assignedBy || null } as any);
+}
+
+export async function createLeadTransfer(data: { propertyId: number; fromAgentId: number; toAgentId: number; reason?: string }) {
+  const result = await transferLead(data as any);
+  return { id: (result as any)[0]?.insertId || 0 };
+}
+
+export async function getPendingTransfersForAgent(agentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(leadTransfers)
+    .where(and(eq(leadTransfers.toAgentId, agentId), eq(leadTransfers.status, "pending")));
+}
+
+export async function deleteProperty(propertyId: number): Promise<{ success: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(properties).where(eq(properties.id, propertyId));
+  return { success: true };
+}
+
+export async function getPropertiesWithFilters(filters: {
+  leadTemperature?: string;
+  deskName?: string;
+  status?: string;
+  unassignedOnly?: boolean;
+  userId?: number;
+  userRole?: string;
+}) {
+  const allProperties = await getProperties({
+    userId: filters.userId,
+    userRole: filters.userRole,
+  });
+  
+  let filtered = allProperties;
+  if (filters.leadTemperature) {
+    filtered = filtered.filter((p: any) => p.leadTemperature === filters.leadTemperature);
+  }
+  if (filters.deskName) {
+    filtered = filtered.filter((p: any) => p.deskName === filters.deskName);
+  }
+  if (filters.status) {
+    filtered = filtered.filter((p: any) => p.status === filters.status);
+  }
+  if (filters.unassignedOnly) {
+    filtered = filtered.filter((p: any) => !p.assignedAgentId);
+  }
+  return filtered;
+}
+
+export async function bulkAssignAgentToProperties(agentId: number, filters: {
+  leadTemperature?: string;
+  deskName?: string;
+  status?: string;
+  unassignedOnly?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const matchingProperties = await getPropertiesWithFilters(filters);
+  let assignedCount = 0;
+  for (const prop of matchingProperties) {
+    await db.update(properties).set({ assignedAgentId: agentId, updatedAt: new Date() }).where(eq(properties.id, (prop as any).id));
+    assignedCount++;
+  }
+  return { success: true, count: assignedCount };
+}
+
+export async function bulkReassignProperties(propertyIds: number[], assignedAgentId: number | null, reassignedByUserId?: number): Promise<void> {
+  for (const propertyId of propertyIds) {
+    await reassignProperty(propertyId, assignedAgentId, reassignedByUserId);
+  }
+}
+
+export async function getRecentVisits(limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(visits)
+    .orderBy(desc(visits.checkInTime))
+    .limit(limit || 20);
+}
+
+export async function createVisit(data: { propertyId: number; userId: number; latitude?: string; longitude?: string; notes?: string }) {
+  return await addPropertyVisit(data as any);
+}
+
+export async function createSavedSearch(data: { userId: number; name: string; filters: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(savedSearches).values(data);
+  return { id: (result as any)[0]?.insertId || 0, ...data };
+}
+
+export async function deleteSavedSearch(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(savedSearches).where(eq(savedSearches.id, id));
+}
+
+export async function updateSavedSearch(id: number, name: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(savedSearches).set({ name }).where(eq(savedSearches.id, id));
+}
+
+export async function updateNote(noteId: number, userId: number, content: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(notes)
+    .set({ content, updatedAt: new Date() })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
 }

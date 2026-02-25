@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `invites` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `token` varchar(255) NOT NULL,\n  `email` varchar(255),\n  `role` enum('agent','admin') NOT NULL DEFAULT 'agent',\n  `status` enum('pending','accepted','expired','cancelled') NOT NULL DEFAULT 'pending',\n  `created_by` int NOT NULL,\n  `accepted_by` int,\n  `accepted_at` timestamp,\n  `expires_at` timestamp NOT NULL,\n  `created_at` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `invites_id` PRIMARY KEY(`id`),\n  CONSTRAINT `invites_token_unique` UNIQUE(`token`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute CREATE TABLE `invites` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `token` varchar(255) NOT NULL,\n  `email` varchar(255),\n  `role` enum('agent','admin') NOT NULL DEFAULT 'agent',\n  `status` enum('pending','accepted','expired','cancelled') NOT NULL DEFAULT 'pending',\n  `created_by` int NOT NULL,\n  `accepted_by` int,\n  `accepted_at` timestamp,\n  `expires_at` timestamp NOT NULL,\n  `created_at` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `invites_id` PRIMARY KEY(`id`),\n  CONSTRAINT `invites_token_unique` UNIQUE(`token`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 271
+}

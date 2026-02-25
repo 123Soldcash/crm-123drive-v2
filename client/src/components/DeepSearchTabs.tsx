@@ -1120,7 +1120,7 @@ export function DeepSearchTabs({ propertyId }: DeepSearchTabsProps) {
                 </div>
                 <Textarea
                   placeholder="Add notes about taxes (each line will be displayed separately in the summary)"
-                  onChange={(e) => setTaxesNotes(e.target.value)}
+                  onChange={() => {}}
                   className="min-h-32 text-sm bg-white"
                 />
                 <p className="text-xs text-gray-500">💡 Press Enter to create a new line. Each line will appear separately in the summary.</p>

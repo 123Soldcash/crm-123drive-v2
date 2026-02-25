@@ -375,16 +375,16 @@ export function FamilyTreeRedesigned({ propertyId }: FamilyTreeProps) {
                           )}
                         </td>
                         <td className="px-4 py-2 cursor-pointer hover:bg-blue-100" onClick={() => handleEditCell(member.id, "isCurrentResident", member.isCurrentResident === 1 ? 0 : 1)}>
-                          <Checkbox checked={member.isCurrentResident === 1} readOnly />
+                          <Checkbox checked={member.isCurrentResident === 1} disabled />
                         </td>
                         <td className="px-4 py-2 cursor-pointer hover:bg-blue-100" onClick={() => handleEditCell(member.id, "isRepresentative", member.isRepresentative === 1 ? 0 : 1)}>
-                          <Checkbox checked={member.isRepresentative === 1} readOnly />
+                          <Checkbox checked={member.isRepresentative === 1} disabled />
                         </td>
                         <td className="px-4 py-2 cursor-pointer hover:bg-blue-100" onClick={() => handleEditCell(member.id, "isDeceased", member.isDeceased === 1 ? 0 : 1)}>
                           {renderCellValue(member, "isDeceased")}
                         </td>
                         <td className="px-4 py-2 cursor-pointer hover:bg-blue-100" onClick={() => handleEditCell(member.id, "isContacted", member.isContacted === 1 ? 0 : 1)}>
-                          <Checkbox checked={member.isContacted === 1} readOnly />
+                          <Checkbox checked={member.isContacted === 1} disabled />
                         </td>
                         <td className="px-4 py-2 cursor-pointer hover:bg-blue-100" onClick={() => handleEditCell(member.id, "isOnBoard", member.isOnBoard === 1 ? 0 : 1)}>
                           {renderCellValue(member, "isOnBoard")}

@@ -161,7 +161,7 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
     updateMutation.mutate({
       id: memberId,
       ...editData,
-    });
+    } as any);
   };
 
   return (
@@ -327,7 +327,7 @@ export function FamilyTreeEnhanced({ propertyId }: FamilyTreeProps) {
                               min="0"
                               max="100"
                               step="0.01"
-                              value={editData.relationshipPercentage !== undefined ? editData.relationshipPercentage : member.relationshipPercentage || 0}
+                              value={editData.relationshipPercentage !== undefined ? (editData.relationshipPercentage ?? 0) : (member.relationshipPercentage ?? 0)}
                               onChange={(e) => setEditData({ ...editData, relationshipPercentage: parseFloat(e.target.value) || 0 })}
                               className="text-xs w-20"
                             />

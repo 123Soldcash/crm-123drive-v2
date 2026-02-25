@@ -64,10 +64,10 @@ export async function importDealMachineProperty(
       source: "DealMachine",
       listName: listName || null,
       entryDate: new Date(),
-      // Added missing property details for ADHD-friendly sticky header
-      bedrooms: mappedProperty.totalBedrooms || null,
-      bathrooms: mappedProperty.totalBaths || null,
-      squareFeet: mappedProperty.buildingSquareFeet || null,
+      // Property details
+      totalBedrooms: mappedProperty.totalBedrooms || null,
+      totalBaths: mappedProperty.totalBaths || null,
+      buildingSquareFeet: mappedProperty.buildingSquareFeet || null,
       yearBuilt: mappedProperty.yearBuilt || null,
       estimatedValue: mappedProperty.estimatedValue || null,
       equityAmount: mappedProperty.equityAmount || null,
@@ -122,13 +122,11 @@ async function importDealMachineContact(
     propertyId,
     name: contact.name,
     relationship,
-    phone1: contact.phones[0] || null,
-    email1: contact.emails[0] || null,
     dnc: flags.isDNC ? 1 : 0,
     flags: `Imported from DealMachine. Flags: ${contact.flags || "none"}`,
-  });
+  } as any);
 
-  const contactId = contactResult[0].insertId;
+  const contactId = (contactResult as any)[0]?.insertId;
 
   // Import additional phones
   for (let i = 0; i < contact.phones.length; i++) {

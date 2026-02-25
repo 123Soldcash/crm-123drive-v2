@@ -46,7 +46,7 @@ export async function getContactsByProperty(propertyId: number) {
   const dbPropertyId = await resolvePropertyDbId(propertyId);
   if (!dbPropertyId) return [];
   
-  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
+  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
   
   // For each contact, fetch phones, emails, and addresses with error handling for missing tables
   const contactsWithDetails = await Promise.all(
@@ -71,7 +71,7 @@ export async function getContactsByProperty(propertyId: number) {
       
       // Fetch addresses - table may not exist
       try {
-        addresses = await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id));
+        addresses = await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.addressLine1, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id));
       } catch (e) {
         // Table doesn't exist, ignore
       }
@@ -92,7 +92,7 @@ export async function getContactById(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, phone1: contacts.phone1, phone2: contacts.phone2, phone3: contacts.phone3, email1: contacts.email1, email2: contacts.email2, email3: contacts.email3 }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  const result = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
   return result[0] || null;
 }
 
@@ -254,7 +254,7 @@ export async function getSocialMediaByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select({ id: contactSocialMedia.id, contactId: contactSocialMedia.contactId, platform: contactSocialMedia.platform, handle: contactSocialMedia.handle }).from(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
+  return await db.select({ id: contactSocialMedia.id, contactId: contactSocialMedia.contactId, platform: contactSocialMedia.platform, handle: contactSocialMedia.profileUrl }).from(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
 }
 
 export async function addSocialMedia(social: InsertContactSocialMedia) {
@@ -412,7 +412,7 @@ export async function getAddressesByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.address, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contactId));
+  return await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.addressLine1, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contactId));
 }
 
 export async function addAddress(address: InsertContactAddress) {

@@ -406,9 +406,9 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
                     </td>
                     <td className="px-4 py-2 text-sm text-slate-600">
                       <p className="whitespace-pre-wrap mb-2">{note.content}</p>
-                      {allPhotos?.filter(photo => photo.noteId === note.id).length > 0 && (
+                      {(allPhotos?.filter(photo => photo.noteId === note.id)?.length ?? 0) > 0 && (
                         <div className="mt-2 grid grid-cols-3 gap-2">
-                          {allPhotos.filter(photo => photo.noteId === note.id).map((photo) => (
+                          {allPhotos?.filter(photo => photo.noteId === note.id).map((photo) => (
                             <div key={photo.id} className="relative group">
                               <img 
                                 src={photo.fileUrl} 

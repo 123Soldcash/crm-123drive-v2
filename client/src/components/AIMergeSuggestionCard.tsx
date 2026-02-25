@@ -217,22 +217,12 @@ export function AIMergeSuggestionCard({ suggestion, onMergeComplete }: AIMergeSu
         <MergeLeadsDialog
           open={showMergeDialog}
           onOpenChange={setShowMergeDialog}
-          primaryLead={{
-            id: primaryLead.id,
-            address: `${primaryLead.addressLine1}, ${primaryLead.city}, ${primaryLead.state} ${primaryLead.zipcode}`,
-            owner: primaryLead.owner1Name || "Unknown",
-            temperature: primaryLead.leadTemperature || "COLD",
-            status: primaryLead.deskStatus || "BIN",
-            createdAt: new Date(primaryLead.createdAt).toLocaleDateString(),
-          }}
-          secondaryLead={{
-            id: secondaryLeads[0].id,
-            address: `${secondaryLeads[0].addressLine1}, ${secondaryLeads[0].city}, ${secondaryLeads[0].state} ${secondaryLeads[0].zipcode}`,
-            owner: secondaryLeads[0].owner1Name || "Unknown",
-            temperature: secondaryLeads[0].leadTemperature || "COLD",
-            status: secondaryLeads[0].deskStatus || "BIN",
-            createdAt: new Date(secondaryLeads[0].createdAt).toLocaleDateString(),
-          }}
+          primaryLeadId={primaryLead.id}
+          secondaryLeadId={secondaryLeads[0].id}
+          primaryLeadAddress={`${primaryLead.addressLine1}, ${primaryLead.city}, ${primaryLead.state} ${primaryLead.zipcode}`}
+          secondaryLeadAddress={`${secondaryLeads[0].addressLine1}, ${secondaryLeads[0].city}, ${secondaryLeads[0].state} ${secondaryLeads[0].zipcode}`}
+          primaryLeadOwner={primaryLead.owner1Name || "Unknown"}
+          secondaryLeadOwner={secondaryLeads[0].owner1Name || "Unknown"}
           onMergeComplete={() => {
             setShowMergeDialog(false);
             onMergeComplete?.();

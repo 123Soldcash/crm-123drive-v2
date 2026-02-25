@@ -29,7 +29,7 @@ export default function ImportDealMachine() {
   const [importResult, setImportResult] = useState<any>(null);
 
   const agentsQuery = trpc.agents.list.useQuery();
-  const importMutation = trpc.properties.importDealMachine.useMutation();
+  const importMutation = trpc.dashboard.importDealMachine.useMutation();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -59,16 +59,9 @@ export default function ImportDealMachine() {
           }));
 
           setPreview(previewRows);
-          toast({
-            title: "File loaded",
-            description: `Found ${rows.length} properties in the file`,
-          });
+          toast.success(`File loaded: Found ${rows.length} properties in the file`);
         } catch (error) {
-          toast({
-            title: "Error reading file",
-            description: String(error),
-            variant: "destructive",
-          });
+          toast.error(`Error reading file: ${String(error)}`);
         }
       };
       reader.readAsArrayBuffer(selectedFile);
@@ -79,11 +72,7 @@ export default function ImportDealMachine() {
 
   const handleImport = async () => {
     if (!file) {
-      toast({
-        title: "Error",
-        description: "Please select a file first",
-        variant: "destructive",
-      });
+      toast.error("Please select a file first");
       return;
     }
 
@@ -107,27 +96,16 @@ export default function ImportDealMachine() {
 
           setImportResult(result);
 
-          toast({
-            title: "Import completed",
-            description: `Imported ${result.propertiesImported} properties with ${result.contactsImported} contacts`,
-          });
+          toast.success(`Import completed: Imported ${result.propertiesImported} properties with ${result.contactsImported} contacts`);
         } catch (error) {
-          toast({
-            title: "Import failed",
-            description: String(error),
-            variant: "destructive",
-          });
+          toast.error(`Import failed: ${String(error)}`);
         } finally {
           setLoading(false);
         }
       };
       reader.readAsArrayBuffer(file);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: String(error),
-        variant: "destructive",
-      });
+      toast.error(String(error));
       setLoading(false);
     }
   };

@@ -80,7 +80,7 @@ export function PropertyCheckIn({ propertyId }: PropertyCheckInProps) {
       setLocation(loc);
 
       // Create check-in
-      const visitResult = await checkInMutation.mutateAsync({
+      const visitResult: any = await checkInMutation.mutateAsync({
         propertyId,
         latitude: loc.lat,
         longitude: loc.lng,

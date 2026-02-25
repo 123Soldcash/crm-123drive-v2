@@ -627,9 +627,9 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       <p className="whitespace-pre-wrap">{note.content}</p>
                       
                       {/* Photos attached to this note */}
-                      {allPhotos?.filter(photo => photo.noteId === note.id).length > 0 && (
+                      {(allPhotos?.filter(photo => photo.noteId === note.id)?.length ?? 0) > 0 && (
                         <div className="mt-3 grid grid-cols-3 gap-2">
-                          {allPhotos.filter(photo => photo.noteId === note.id).map((photo) => (
+                          {allPhotos?.filter(photo => photo.noteId === note.id).map((photo) => (
                             <div key={photo.id} className="relative group">
                               <img 
                                 src={photo.fileUrl} 

@@ -236,7 +236,7 @@ export default function Buyers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  buyers?.map((buyer) => (
+                  buyers?.map((buyer: any) => (
                     <TableRow key={buyer.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">

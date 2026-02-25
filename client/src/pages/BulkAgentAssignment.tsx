@@ -36,7 +36,7 @@ export default function BulkAgentAssignment() {
   // Bulk assign mutation
   const bulkAssignMutation = trpc.properties.bulkAssignAgent.useMutation({
     onSuccess: (result) => {
-      toast.success(`Assigned ${result.assignedCount} properties to the agent`);
+      toast.success(`Assigned ${result.count} properties to the agent`);
       setShowConfirm(false);
       setSelectedAgent('');
       setFilters({ leadTemperature: '', deskName: '', status: '', unassignedOnly: false });

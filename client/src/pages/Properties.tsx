@@ -175,7 +175,7 @@ export default function Properties() {
     leadTemperature: (filters.leadTemperature && filters.leadTemperature !== "all" ? filters.leadTemperature as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" : undefined),
     ownerVerified: filters.ownerVerified || undefined,
     visited: filters.visited || undefined,
-  });
+  }) as { data: any[] | undefined; isLoading: boolean };
 
   // Fetch status counts
   const { data: statusCounts = {} } = trpc.properties.statusCounts.useQuery();
@@ -707,7 +707,7 @@ export default function Properties() {
                       </SelectItem>
                       {agents.map((agent: { id: number; name: string | null; role?: string }) => (
                         <SelectItem key={agent.id} value={agent.id.toString()}>
-                          {agent.name || agent.openId}
+                          {agent.name || `Agent #${agent.id}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -928,7 +928,7 @@ export default function Properties() {
                   {columns.statusTags && (
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {property.status?.split(", ").slice(0, 3).map((tag, i) => (
+                        {property.status?.split(", ").slice(0, 3).map((tag: string, i: number) => (
                           <Badge key={i} variant="secondary" className="text-xs">
                             {tag}
                           </Badge>

@@ -18,10 +18,13 @@ export async function updatePropertyStage(
   }
   
   // Get current property to calculate days in previous stage
-  const property = await db.query.properties.findFirst({
-    where: eq(properties.id, propertyId),
-  });
+  const propertyResult = await db
+    .select()
+    .from(properties)
+    .where(eq(properties.id, propertyId))
+    .limit(1);
 
+  const property = propertyResult[0];
   if (!property) {
     throw new Error("Property not found");
   }
@@ -69,10 +72,11 @@ export async function getPropertyStageHistory(propertyId: number) {
     throw new Error("Database not available");
   }
   
-  return await db.query.stageHistory.findMany({
-    where: eq(stageHistory.propertyId, propertyId),
-    orderBy: (stageHistory, { desc }) => [desc(stageHistory.changedAt)],
-  });
+  return await db
+    .select()
+    .from(stageHistory)
+    .where(eq(stageHistory.propertyId, propertyId))
+    .orderBy(desc(stageHistory.changedAt));
 }
 
 /**
@@ -189,7 +193,7 @@ export async function bulkUpdateStages(
   for (const propertyId of propertyIds) {
     try {
       const result = await updatePropertyStage(propertyId, newStage, userId, notes);
-      results.push({ propertyId, success: true, ...result });
+      results.push({ propertyId, ...result });
     } catch (error) {
       results.push({
         propertyId,

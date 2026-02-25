@@ -175,7 +175,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
   
   const handleDelete = (contactId: number) => {
     if (confirm("Are you sure you want to delete this contact?")) {
-      deleteContactMutation.mutate({ id: contactId });
+      deleteContactMutation.mutate({ contactId } as any);
     }
   };
 

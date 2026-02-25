@@ -1,7 +1,7 @@
 import { getDb } from "./db";
 import { automatedFollowUps, properties, tasks, notes } from "../drizzle/schema";
 import { eq, lt, and, isNull } from "drizzle-orm";
-import { toast } from "sonner";
+// toast removed - server-side code should not use client-side toast
 
 /**
  * Tipos para o Follow-up System
@@ -58,7 +58,7 @@ export async function createAutomatedFollowUp(input: CreateFollowUpInput) {
     return {
       success: true,
       message: "Follow-up criado com sucesso",
-      followUpId: result.insertId,
+      followUpId: (result as any)[0]?.insertId,
     };
   } catch (error) {
     console.error("Erro ao criar follow-up:", error);
@@ -220,7 +220,7 @@ async function createFollowUpTask(propertyId: number, actionDetails: any) {
 
     return {
       success: true,
-      taskId: result.insertId,
+      taskId: (result as any)[0]?.insertId,
       message: "Tarefa de follow-up criada",
     };
   } catch (error) {
@@ -244,13 +244,12 @@ async function scheduleFollowUpEmail(propertyId: number, actionDetails: any) {
     // Por enquanto, apenas criar uma nota no sistema
     const result = await db.insert(notes).values({
       propertyId,
+      userId: 1, // System user
       content: `Email agendado: ${actionDetails.subject || "Follow-up automático"}`,
-      createdBy: 1, // System user
     });
-
     return {
       success: true,
-      noteId: result.insertId,
+      noteId: (result as any)[0]?.insertId,
       message: "Email de follow-up agendado",
       note: "Email será enviado quando o serviço de email estiver configurado",
     };
@@ -275,13 +274,12 @@ async function scheduleFollowUpSMS(propertyId: number, actionDetails: any) {
     // Por enquanto, apenas criar uma nota no sistema
     const result = await db.insert(notes).values({
       propertyId,
+      userId: 1, // System user
       content: `SMS agendado: ${actionDetails.message || "Follow-up automático"}`,
-      createdBy: 1, // System user
     });
-
     return {
       success: true,
-      noteId: result.insertId,
+      noteId: (result as any)[0]?.insertId,
       message: "SMS de follow-up agendado",
       note: "SMS será enviado quando o Twilio estiver configurado",
     };

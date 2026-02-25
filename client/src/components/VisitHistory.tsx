@@ -9,7 +9,7 @@ interface VisitHistoryProps {
 }
 
 export function VisitHistory({ propertyId }: VisitHistoryProps) {
-  const { data: visits, isLoading } = trpc.visits.byProperty.useQuery({ propertyId });
+  const { data: visits, isLoading } = trpc.visits.byProperty.useQuery({ propertyId }) as { data: any[] | undefined; isLoading: boolean };
 
   if (isLoading) {
     return (

@@ -126,7 +126,7 @@ export default function BuyerDetail() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{buyer.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{buyer?.name}</h1>
             <p className="text-muted-foreground">Buyer Profile & Preferences</p>
           </div>
         </div>

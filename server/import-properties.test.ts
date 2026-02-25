@@ -391,9 +391,9 @@ describe("Import Properties Router", () => {
         contactRows: [{ rowIndex: 0, propertyId }],
       });
 
-      expect(result.contactsImported).toBe(1);
-      expect(result.phonesImported).toBe(1);
-      expect(result.emailsImported).toBe(1);
+      expect(result.contactsCreated).toBe(1);
+      expect(result.phonesAdded).toBe(1);
+      expect(result.emailsAdded).toBe(1);
       expect(result.errorCount).toBe(0);
     });
 
@@ -424,9 +424,9 @@ describe("Import Properties Router", () => {
         contactRows: [{ rowIndex: 0, propertyId }],
       });
 
-      expect(result.contactsImported).toBe(1);
-      expect(result.phonesImported).toBe(2);
-      expect(result.emailsImported).toBe(2);
+      expect(result.contactsCreated).toBe(1);
+      expect(result.phonesAdded).toBe(2);
+      expect(result.emailsAdded).toBe(2);
     });
   });
 });

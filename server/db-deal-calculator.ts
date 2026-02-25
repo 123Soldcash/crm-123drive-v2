@@ -56,7 +56,7 @@ export async function saveDealCalculation(
   try {
     // Get the property to find its APN
     const propertyResult = await db
-      .select({ apn: properties.apn })
+      .select({ apn: properties.apnParcelId })
       .from(properties)
       .where(eq(properties.id, propertyId))
       .limit(1);
@@ -81,7 +81,7 @@ export async function saveDealCalculation(
     const existing = await db
       .select({ id: dealCalculations.id })
       .from(dealCalculations)
-      .where(eq(dealCalculations.apn, apn))
+      .where(eq(dealCalculations.apn, apn as string))
       .limit(1);
 
     if (existing.length > 0) {
@@ -98,11 +98,11 @@ export async function saveDealCalculation(
           maoFormula: formula,
           updatedAt: new Date(),
         })
-        .where(eq(dealCalculations.apn, apn));
+        .where(eq(dealCalculations.apn, apn as string));
     } else {
       // Create new calculation
       await db.insert(dealCalculations).values({
-        apn,
+        apn: apn as string,
         arv: arv.toString(),
         repairCost: repairCost.toString(),
         closingCost: closingCost.toString(),
@@ -149,7 +149,7 @@ export async function getDealCalculation(propertyId: number | null | undefined) 
   try {
     // Get the property to find its APN
     const propertyResult = await db
-      .select({ apn: properties.apn })
+      .select({ apn: properties.apnParcelId })
       .from(properties)
       .where(eq(properties.id, propertyId))
       .limit(1);
@@ -181,7 +181,7 @@ export async function getDealCalculation(propertyId: number | null | undefined) 
         updatedAt: dealCalculations.updatedAt,
       })
       .from(dealCalculations)
-      .where(eq(dealCalculations.apn, apn))
+      .where(eq(dealCalculations.apn, apn as string))
       .limit(1);
 
     if (result.length === 0) {
@@ -221,7 +221,7 @@ export async function deleteDealCalculation(propertyId: number | null | undefine
   try {
     // Get the property to find its APN
     const propertyResult = await db
-      .select({ apn: properties.apn })
+      .select({ apn: properties.apnParcelId })
       .from(properties)
       .where(eq(properties.id, propertyId))
       .limit(1);
@@ -235,7 +235,7 @@ export async function deleteDealCalculation(propertyId: number | null | undefine
 
     await db
       .delete(dealCalculations)
-      .where(eq(dealCalculations.apn, apn));
+      .where(eq(dealCalculations.apn, apn as string));
 
     return { success: true };
   } catch (error) {
@@ -274,7 +274,7 @@ export async function getAllDealCalculations() {
         updatedAt: dealCalculations.updatedAt,
       })
       .from(dealCalculations)
-      .leftJoin(properties, eq(dealCalculations.apn, properties.apn));
+      .leftJoin(properties, eq(dealCalculations.apn, properties.apnParcelId));
 
     return results.map((r) => ({
       id: r.id,

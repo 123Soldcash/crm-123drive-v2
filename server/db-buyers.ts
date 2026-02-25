@@ -50,7 +50,7 @@ export async function createBuyer(input: CreateBuyerInput) {
       notes: input.notes,
     });
 
-    const buyerId = buyerResult.insertId;
+    const buyerId = (buyerResult as any)[0]?.insertId;
     console.log("[Buyers] Buyer inserted successfully, ID:", buyerId);
 
     // 2. Insert preferences if provided
@@ -99,8 +99,7 @@ export async function getAllBuyers(search?: string) {
       throw new Error("Database not available");
     }
 
-    let query = db.select().from(buyers);
-
+     let query: any = db.select().from(buyers);
     if (search && search.trim() !== "") {
       const searchPattern = `%${search.trim()}%`;
       query = query.where(

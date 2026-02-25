@@ -6,7 +6,7 @@ import { Link } from "wouter";
 import { MapPin, Calendar, User, Navigation as NavIcon } from "lucide-react";
 
 export default function ActivityTracking() {
-  const { data: visits, isLoading } = trpc.visits.recent.useQuery({ limit: 100 });
+  const { data: visits, isLoading } = trpc.visits.recent.useQuery({ limit: 100 }) as { data: any[] | undefined; isLoading: boolean };
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const handleMapReady = useCallback(
