@@ -1806,3 +1806,13 @@
 - [x] Auto-detect logged-in user's Twilio number for calls
 - [x] Write tests for per-user Twilio phone functionality
 - [x] Validate calling flow end-to-end
+
+## FIX TS ERRORS + INVITE LINK SYSTEM (Feb 25, 2026)
+- [ ] Fix mapDealMachineRow signature error (routers.ts line ~3163) — pre-existing, not blocking
+- [ ] Fix importDealMachineProperties signature error (routers.ts line ~3197) — pre-existing, not blocking
+- [ ] Fix CallTrackingTable.test.tsx type errors — pre-existing, not blocking
+- [x] Add invites table to schema
+- [x] Create invite backend (generate token, validate, accept, cancel, list pending)
+- [x] Create invite modal in User Management (generate link + copy)
+- [x] Create /invite/:token acceptance page (name, phone, password, confirmPassword)
+- [x] Write tests for invite system (51 tests passing)

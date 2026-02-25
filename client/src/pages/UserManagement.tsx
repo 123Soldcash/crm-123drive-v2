@@ -79,6 +79,9 @@ export default function UserManagement() {
     twilioPhone: "",
   });
   const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
+  const [inviteRole, setInviteRole] = useState<"agent" | "admin">("agent");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [createdInviteLink, setCreatedInviteLink] = useState("");
 
   // Fetch all users (agents + admins) using the unified endpoint
   const { data: allUsers = [], isLoading } = trpc.agents.listAllUsers.useQuery();
@@ -200,16 +203,46 @@ export default function UserManagement() {
     });
   };
 
+  // Create invite mutation
+  const createInvite = trpc.invites.create.useMutation({
+    onSuccess: (data) => {
+      const link = `${window.location.origin}/invite/${data.token}`;
+      setCreatedInviteLink(link);
+      toast.success("Invite link generated!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create invite");
+    },
+  });
+
+  // List pending invites
+  const { data: pendingInvites = [] } = trpc.invites.listPending.useQuery();
+  const cancelInvite = trpc.invites.cancel.useMutation({
+    onSuccess: () => {
+      utils.invites.listPending.invalidate();
+      toast.success("Invite cancelled");
+    },
+  });
+
   const handleInviteClick = () => {
     setInviteDialogOpen(true);
     setInviteLinkCopied(false);
+    setCreatedInviteLink("");
+    setInviteEmail("");
+    setInviteRole("agent");
+  };
+
+  const handleGenerateInvite = () => {
+    createInvite.mutate({
+      email: inviteEmail.trim() || undefined,
+      role: inviteRole,
+    });
   };
 
   const handleCopyInviteLink = () => {
-    const inviteLink = window.location.origin;
-    navigator.clipboard.writeText(inviteLink);
+    navigator.clipboard.writeText(createdInviteLink);
     setInviteLinkCopied(true);
-    toast.success("Invite link copied to clipboard!");
+    toast.success("Invite link copied!");
     setTimeout(() => setInviteLinkCopied(false), 3000);
   };
 
@@ -635,39 +668,104 @@ export default function UserManagement() {
 
       {/* Invite User Dialog */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Invite User to CRM</DialogTitle>
             <DialogDescription>
-              Share this link with new users. When they visit the link and sign in,
-              they'll automatically get access as an Agent. You can then change their role.
+              Generate a unique invite link. The user clicks the link, fills in their name and password, and gets access.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Input
-                value={window.location.origin}
-                readOnly
-                className="font-mono text-sm"
-              />
-              <Button variant="outline" size="icon" onClick={handleCopyInviteLink}>
-                {inviteLinkCopied ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <div className="bg-muted p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium">How it works:</p>
-              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Copy the invite link above</li>
-                <li>Send it to the new user via WhatsApp, email, or SMS</li>
-                <li>User clicks the link and signs in</li>
-                <li>They automatically get access as <strong>Agent</strong></li>
-                <li>You can change their role to <strong>Admin</strong> here</li>
-              </ol>
-            </div>
+            {!createdInviteLink ? (
+              <>
+                <div>
+                  <Label htmlFor="inviteEmail">Email (optional)</Label>
+                  <Input
+                    id="inviteEmail"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional. If provided, will be pre-associated with the account.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="inviteRole">Role</Label>
+                  <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as "agent" | "admin")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleGenerateInvite}
+                  disabled={createInvite.isPending}
+                  className="w-full"
+                >
+                  {createInvite.isPending ? "Generating..." : "Generate Invite Link"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
+                  <p className="text-sm font-medium text-green-800">Invite link generated!</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={createdInviteLink}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                    <Button variant="outline" size="icon" onClick={handleCopyInviteLink}>
+                      {inviteLinkCopied ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This link expires in 7 days. Send it via WhatsApp, SMS, or email.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCreatedInviteLink("")}
+                  className="w-full"
+                >
+                  Generate Another Invite
+                </Button>
+              </>
+            )}
+
+            {/* Pending invites */}
+            {pendingInvites.length > 0 && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Pending Invites ({pendingInvites.length})</p>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {pendingInvites.map((inv: any) => (
+                    <div key={inv.id} className="flex items-center justify-between bg-muted p-2 rounded text-sm">
+                      <div>
+                        <span className="font-medium">{inv.email || "No email"}</span>
+                        <Badge variant="secondary" className="ml-2 text-xs">{inv.role}</Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => cancelInvite.mutate({ token: inv.token })}
+                      >
+                        <Trash2 className="h-3 w-3 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button onClick={() => setInviteDialogOpen(false)}>Done</Button>

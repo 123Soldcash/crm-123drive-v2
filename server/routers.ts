@@ -26,6 +26,7 @@ import { findDuplicates } from "./utils/duplicateDetection";
 import { ENV } from "./_core/env";
 import { deepSearchRouter } from "./routers/deep-search";
 import { importPropertiesRouter } from "./routers/import-properties";
+import { invitesRouter } from "./routers/invites";
 
 export const appRouter = router({
   system: systemRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   dealmachine: dealmachineRouter,
   dealmachineRolando: dealmachineRolandoRouter,
   comparables: comparablesRouter,
+  invites: invitesRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

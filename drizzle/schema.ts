@@ -1327,3 +1327,20 @@ export const financialModule = mysqlTable("financialModule", {
 
 export type FinancialModule = typeof financialModule.$inferSelect;
 export type InsertFinancialModule = typeof financialModule.$inferInsert;
+
+
+// ── Invites ──────────────────────────────────────────────────────────────────
+export const invites = mysqlTable("invites", {
+  id: int("id").autoincrement().primaryKey(),
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  email: varchar("email", { length: 255 }),
+  role: mysqlEnum("role", ["agent", "admin"]).notNull().default("agent"),
+  status: mysqlEnum("status", ["pending", "accepted", "expired", "cancelled"]).notNull().default("pending"),
+  createdBy: int("created_by").notNull(),
+  acceptedBy: int("accepted_by"),
+  acceptedAt: timestamp("accepted_at"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type Invite = typeof invites.$inferSelect;
+export type InsertInvite = typeof invites.$inferInsert;

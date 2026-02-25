@@ -71,6 +71,55 @@
       "when": 1771970180702,
       "tag": "0009_melodic_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1771976531877,
+      "tag": "0010_bored_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1771977179003,
+      "tag": "0011_bouncy_ben_urich",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1771977454669,
+      "tag": "0012_faulty_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1771977829490,
+      "tag": "0013_round_dark_phoenix",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1771982030403,
+      "tag": "0014_fat_pete_wisdom",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1771983011754,
+      "tag": "0015_thick_starjammers",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1771983246358,
+      "tag": "0016_dazzling_jamie_braddock",
+      "breakpoints": true
     }
   ]
 }

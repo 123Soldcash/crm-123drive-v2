@@ -22,6 +22,7 @@ import BulkAgentAssignment from "./pages/BulkAgentAssignment";
 import ImportDealMachine from "./pages/ImportDealMachine";
 import { DuplicatesDashboard } from "./pages/DuplicatesDashboard";
 import PipelineKanban from "./pages/PipelineKanban";
+import InviteAccept from "./pages/InviteAccept";
 
 function Router() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
       <Route path="/duplicates" component={() => <DashboardLayout><DuplicatesDashboard /></DashboardLayout>} />
       <Route path="/pipeline" component={() => <DashboardLayout><PipelineKanban /></DashboardLayout>} />
+      <Route path="/invite/:token" component={() => <InviteAccept />} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
