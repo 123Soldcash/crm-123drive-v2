@@ -894,7 +894,7 @@ export default function UserManagement() {
             {/* Instructions */}
             <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
               <p className="text-xs text-blue-800 dark:text-blue-300">
-                <strong>How it works:</strong> Add the person's email here, then send them the site link.
+                <strong>How it works:</strong> Add the person&apos;s email here, then send them the site link.
                 When they log in, if their email is on the whitelist, access will be granted automatically.
               </p>
             </div>

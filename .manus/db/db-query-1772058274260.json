@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as total_properties FROM properties; SELECT COUNT(*) as since_feb23 FROM properties WHERE createdAt >= '2026-02-23 00:00:00'; SELECT MIN(createdAt) as earliest, MAX(createdAt) as latest FROM properties WHERE createdAt >= '2026-02-23 00:00:00';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_properties FROM properties; SELECT COUNT(*) as since_feb23 FROM properties WHERE createdAt >= '2026-02-23 00:00:00'; SELECT MIN(createdAt) as earliest, MAX(createdAt) as latest FROM properties WHERE createdAt >= '2026-02-23 00:00:00';",
+  "rows": [
+    {
+      "total_properties": "1138"
+    },
+    {
+      "total_properties": "since_feb23"
+    },
+    {
+      "total_properties": "940"
+    },
+    {
+      "total_properties": "earliest\tlatest"
+    },
+    {
+      "total_properties": "2026-02-23 20:49:24\t2026-02-25 21:01:59"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_properties\n1138\nsince_feb23\n940\nearliest\tlatest\n2026-02-23 20:49:24\t2026-02-25 21:01:59\n",
+  "stderr": "",
+  "execution_time_ms": 318
+}

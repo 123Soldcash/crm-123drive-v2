@@ -1911,3 +1911,22 @@
 
 ## Whitelist UI - Change text to English (Feb 25, 2026)
 - [x] Change all Portuguese text in whitelist dialog/UI to English (buttons, labels, toasts, instructions)
+
+## Agent Visibility Restrictions on Property Detail (Feb 25, 2026)
+- [ ] Contacts: Agents can only see contacts marked as Decision Maker
+- [ ] Tasks: Agents can only see their own tasks
+- [ ] Notes: Agents can only see their own notes
+- [ ] Hide Deep Search section for agents
+- [ ] Hide Family Tree section for agents
+- [ ] Hide Activity Timeline section for agents
+- [ ] Hide Potential Cash Buyers section for agents
+- [ ] Implement server-side filtering for contacts/tasks/notes by role
+- [ ] Implement client-side section hiding based on user role
+- [ ] Write tests for agent visibility restrictions
+
+
+## DATABASE CLEANUP - Test Properties Pollution (02/25/2026)
+- [x] Investigate and identify ~1500 test/duplicate properties inserted since 02/23
+- [x] Delete all test/duplicate properties from the database (801 deleted, 337 remaining)
+- [x] Audit test files that may be inserting real data into the production database (19 dangerous files identified)
+- [x] Fix test files: global vitest-setup.ts mocks getDb() and drizzle connection for ALL tests

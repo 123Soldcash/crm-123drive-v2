@@ -595,6 +595,7 @@ export async function getPropertyNotes(propertyId: number) {
       id: notes.id,
       content: notes.content,
       noteType: notes.noteType,
+      userId: notes.userId,
       userName: users.name,
       createdAt: notes.createdAt,
       updatedAt: notes.updatedAt,

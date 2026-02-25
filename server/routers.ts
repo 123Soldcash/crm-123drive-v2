@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { mergeLeads, getMergeHistory } from "./db-merge";
@@ -195,7 +195,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    getActivities: protectedProcedure
+    getActivities: adminProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -958,7 +958,7 @@ export const appRouter = router({
         return { success: true, count: deletedCount };
       }),
 
-    getDeepSearch: protectedProcedure
+    getDeepSearch: adminProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         const result = await db.getPropertyDeepSearch(input.propertyId);
@@ -966,7 +966,7 @@ export const appRouter = router({
         return result;
       }),
 
-    updateDeepSearch: protectedProcedure
+    updateDeepSearch: adminProcedure
       .input(
         z.object({
           propertyId: z.number(),
@@ -1436,8 +1436,13 @@ export const appRouter = router({
   contacts: router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input }) => {
-        return await communication.getPropertyContactsWithDetails(input.propertyId);
+      .query(async ({ input, ctx }) => {
+        const allContacts = await communication.getPropertyContactsWithDetails(input.propertyId);
+        // Agents only see decision makers
+        if (ctx.user?.role === 'agent') {
+          return allContacts.filter((c: any) => c.isDecisionMaker === 1);
+        }
+        return allContacts;
       }),
 
     updateContact: protectedProcedure
@@ -1720,8 +1725,13 @@ export const appRouter = router({
   notes: router({
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getPropertyNotes(input.propertyId);
+      .query(async ({ input, ctx }) => {
+        const allNotes = await db.getPropertyNotes(input.propertyId);
+        // Agents only see their own notes
+        if (ctx.user?.role === 'agent') {
+          return allNotes.filter((n: any) => n.userId === ctx.user!.id);
+        }
+        return allNotes;
       }),
 
     create: protectedProcedure
@@ -1947,9 +1957,14 @@ export const appRouter = router({
     // Contact Management
     getContactsByProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const { getPropertyContactsSimple } = await import("./contacts-simple.js");
-        return await getPropertyContactsSimple(input.propertyId);
+        const allContacts = await getPropertyContactsSimple(input.propertyId);
+        // Agents only see decision makers
+        if (ctx.user?.role === 'agent') {
+          return allContacts.filter((c: any) => c.isDecisionMaker === 1);
+        }
+        return allContacts;
       }),
 
     getContactById: protectedProcedure
@@ -2436,8 +2451,13 @@ export const appRouter = router({
 
     byProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getTasksByPropertyId(input.propertyId);
+      .query(async ({ input, ctx }) => {
+        const allTasks = await db.getTasksByPropertyId(input.propertyId);
+        // Agents only see their own tasks (assigned to them or created by them)
+        if (ctx.user?.role === 'agent') {
+          return allTasks.filter((t: any) => t.assignedToId === ctx.user!.id || t.createdById === ctx.user!.id);
+        }
+        return allTasks;
       }),
 
     create: protectedProcedure
@@ -3399,7 +3419,7 @@ export const appRouter = router({
         return await deleteBuyer(input.id);
       }),
 
-    getMatches: protectedProcedure
+    getMatches: adminProcedure
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         const { getMatchingBuyers } = await import("./db-buyers");

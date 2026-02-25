@@ -1,4 +1,4 @@
-import { protectedProcedure, router } from "../_core/trpc";
+import { adminProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { deepSearchOverview, financialModule } from "../../drizzle/schema";
@@ -184,7 +184,7 @@ function getDistressBand(score: number): "LOW" | "MEDIUM" | "HIGH" {
 
 export const deepSearchRouter = router({
   // ── Get Overview ─────────────────────────────────────────────────────────
-  getOverview: protectedProcedure
+  getOverview: adminProcedure
     .input(z.object({ propertyId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
@@ -209,7 +209,7 @@ export const deepSearchRouter = router({
     }),
 
   // ── Update Overview ──────────────────────────────────────────────────────
-  updateOverview: protectedProcedure
+  updateOverview: adminProcedure
     .input(
       z.object({
         propertyId: z.number(),
@@ -279,7 +279,7 @@ export const deepSearchRouter = router({
     }),
 
   // ── Get Financial ────────────────────────────────────────────────────────
-  getFinancial: protectedProcedure
+  getFinancial: adminProcedure
     .input(z.object({ propertyId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
@@ -293,7 +293,7 @@ export const deepSearchRouter = router({
     }),
 
   // ── Update Financial ─────────────────────────────────────────────────────
-  updateFinancial: protectedProcedure
+  updateFinancial: adminProcedure
     .input(
       z.object({
         propertyId: z.number(),
@@ -385,7 +385,7 @@ export const deepSearchRouter = router({
     }),
 
   // ── Get Distress Score Only (lightweight) ────────────────────────────────
-  getDistressScore: protectedProcedure
+  getDistressScore: adminProcedure
     .input(z.object({ propertyId: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
