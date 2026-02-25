@@ -4,6 +4,9 @@ import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { ENV } from "./env";
+import { getDb } from "../db";
+import { users } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -29,16 +32,48 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
-      // Invite-only access: only allow login for existing users or the project owner
       const isOwner = userInfo.openId === ENV.ownerOpenId;
-      const existingUser = await db.getUserByOpenId(userInfo.openId);
 
+      // Step 1: Check if user already exists by their OAuth openId
+      let existingUser = await db.getUserByOpenId(userInfo.openId);
+
+      // Step 2: If not found by openId, try to find by email (invited users have temporary openIds)
+      if (!existingUser && userInfo.email) {
+        const database = await getDb();
+        if (database) {
+          const emailMatch = await database
+            .select()
+            .from(users)
+            .where(eq(users.email, userInfo.email))
+            .limit(1);
+
+          if (emailMatch.length > 0) {
+            const matchedUser = emailMatch[0];
+            // Found a user with the same email — update their openId to the real OAuth openId
+            console.log(`[OAuth] Linking invited user "${matchedUser.name}" (email: ${userInfo.email}) to OAuth openId: ${userInfo.openId}`);
+            await database
+              .update(users)
+              .set({
+                openId: userInfo.openId,
+                loginMethod: userInfo.loginMethod ?? userInfo.platform ?? matchedUser.loginMethod,
+                lastSignedIn: new Date(),
+                name: userInfo.name || matchedUser.name,
+              })
+              .where(eq(users.id, matchedUser.id));
+
+            existingUser = { ...matchedUser, openId: userInfo.openId };
+          }
+        }
+      }
+
+      // Step 3: Invite-only access — block if user not found and not the owner
       if (!existingUser && !isOwner) {
-        // User doesn't exist and is not the owner — block access
+        console.log(`[OAuth] Access denied for unknown user: openId=${userInfo.openId}, email=${userInfo.email}`);
         res.redirect(302, "/?access=denied");
         return;
       }
 
+      // Step 4: Upsert user (creates owner on first login, updates existing users)
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,

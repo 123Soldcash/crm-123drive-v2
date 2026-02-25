@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, openId, name, email, role, status, loginMethod FROM users ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, openId, name, email, role, status, loginMethod FROM users ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "nXWmGZ5a9hzjmrMaTox45C",
+      "name": "Rosangela Russo",
+      "email": "mrsqny5w9r@privaterelay.appleid.com",
+      "role": "admin",
+      "status": "Active",
+      "loginMethod": "apple"
+    },
+    {
+      "id": "11880253",
+      "openId": "invite-b8ef008a69c8844a",
+      "name": "Lucas Beijato",
+      "email": "lucasbeijato0@gmail.com",
+      "role": "agent",
+      "status": "Active",
+      "loginMethod": "invite"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\tstatus\tloginMethod\n1\tnXWmGZ5a9hzjmrMaTox45C\tRosangela Russo\tmrsqny5w9r@privaterelay.appleid.com\tadmin\tActive\tapple\n11880253\tinvite-b8ef008a69c8844a\tLucas Beijato\tlucasbeijato0@gmail.com\tagent\tActive\tinvite\n",
+  "stderr": "",
+  "execution_time_ms": 96
+}

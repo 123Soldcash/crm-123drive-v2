@@ -1886,3 +1886,11 @@
 - [x] Validate admin-only access (role check via adminProcedure)
 - [x] Write vitest tests for password reset logic (8 tests passing)
 - [x] Verify end-to-end flow
+
+## BUG FIX - Invited Users Cannot Login via OAuth (Feb 25, 2026)
+- [x] Investigate OAuth callback — invited users have temporary openId (invite-xxx) that doesn't match OAuth openId
+- [x] Fix OAuth callback to match invited users by email when openId not found
+- [x] Auto-update temporary openId to real OAuth openId on first login
+- [x] Preserve user role, status, and permissions after openId linking
+- [x] Owner always bypasses invite-only check via OWNER_OPEN_ID
+- [x] Write 7 vitest tests for email-based OAuth linking (all passing)
