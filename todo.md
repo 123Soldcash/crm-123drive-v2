@@ -1985,3 +1985,13 @@
 - [x] Verify all buttons now wrap properly across multiple lines
 - [x] Test on desktop viewport (1920px, 1440px, 1024px) - buttons wrap correctly
 - [ ] Test on mobile viewport (375px, 414px, 768px)
+
+
+## MOBILE FONT SIZING & OVERLAPPING ELEMENTS (02/26/2026)
+- [x] Audit PropertyDetail page for font sizes that are too large on mobile
+- [x] Reduce Quick Stats info blocks font sizes (8px labels/10px values on mobile, 10px/12px on tablets)
+- [x] Reduce spacing in Quick Stats blocks for mobile (gap-2 sm:gap-3, p-1.5 sm:p-2)
+- [x] Reduce StickyPropertyHeader heading sizes (text-sm md:text-lg for sticky mode)
+- [x] Verify no overlapping text elements on desktop (1920px viewport)
+- [x] Verify button wrapping works correctly (Property Tags, Condition, etc.)
+- [ ] Test on actual mobile device (375px, 414px) to verify readability and no overlaps
