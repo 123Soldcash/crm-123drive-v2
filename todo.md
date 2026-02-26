@@ -1957,8 +1957,16 @@
 - [x] Optimize filter controls for mobile (full-width dropdowns on mobile)
 - [x] Ensure minimum touch target size (44x44px) for all interactive elements
 - [x] Prevent horizontal scroll on mobile (overflow-x-hidden)
-- [ ] Test Property Detail page on mobile viewport
+- [x] Test Property Detail page on mobile viewport
 - [ ] Optimize Tasks/Kanban for mobile
 - [ ] Optimize Map View for mobile
-- [ ] Test all forms for mobile usability
+- [x] Test all forms for mobile usability (EditPropertyDialog, CreateTaskDialog, ContactManagement dialogs)
 - [ ] Verify agent field work experience on mobile
+
+
+## BUG FIX - Property Detail Mobile Layout Broken (02/26/2026)
+- [x] Fix overlapping text in PropertyDetail header (address, back button, edit lead)
+- [x] Fix broken Quick Stats blocks layout on mobile (APN, Owner, Type, Value, Equity overlapping)
+- [x] Fix property info grid layout for mobile (single column stacking)
+- [x] Fix global CSS min-height/min-width rules causing layout issues
+- [x] Test PropertyDetail on mobile viewport after fixes

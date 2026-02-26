@@ -141,7 +141,7 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] flex flex-col w-[95vw] sm:w-auto">
         <DialogHeader>
           <DialogTitle className="text-gray-900 text-xl">
             {editingTask ? "Edit Task" : "Create New Task"}

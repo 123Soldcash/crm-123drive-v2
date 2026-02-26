@@ -87,7 +87,7 @@ export function CollapsibleSection({
       </CardHeader>
       
       {isOpen && (
-        <CardContent className="p-4 pt-2 border-t border-slate-100">
+        <CardContent className="p-2 sm:p-4 pt-2 border-t border-slate-100">
           {children}
         </CardContent>
       )}

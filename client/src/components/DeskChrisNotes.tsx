@@ -456,7 +456,7 @@ export function DeskChrisNotes({ propertyId }: DeskChrisNotesProps) {
 
     {/* Photo Lightbox */}
     <Dialog open={!!lightboxPhoto} onOpenChange={() => setLightboxPhoto(null)}>
-      <DialogContent className="max-w-4xl p-0">
+      <DialogContent className="max-w-4xl p-0 w-[95vw] sm:w-auto">
         <VisuallyHidden><DialogTitle>Photo Preview</DialogTitle></VisuallyHidden>
         {lightboxPhoto && (
           <div className="relative">

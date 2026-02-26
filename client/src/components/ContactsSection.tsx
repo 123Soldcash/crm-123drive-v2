@@ -234,12 +234,12 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
               Add Contact
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
             <DialogHeader>
               <DialogTitle>Add New Contact</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Name *</Label>
                   <Input
@@ -267,7 +267,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Age</Label>
                   <Input
@@ -287,7 +287,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={formData.isDecisionMaker}
@@ -304,7 +304,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={formData.isLitigator}
@@ -448,14 +448,14 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
 
       {/* Contact Detail Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedContact ? `Edit Contact: ${selectedContact.name}` : "Contact Details"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Left: Contact Form */}
             <div className="space-y-4">
               <h3 className="font-semibold">Contact Information</h3>

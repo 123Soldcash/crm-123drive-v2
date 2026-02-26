@@ -269,7 +269,7 @@ export default function PropertyDetail() {
   };
 
   return (
-    <div className={`space-y-6 p-6 rounded-lg ${getBackgroundColor()}`}>
+    <div className={`space-y-4 md:space-y-6 p-3 md:p-6 rounded-lg ${getBackgroundColor()}`}>
       <StickyPropertyHeader
         property={property as any}
         tags={tags || []}
