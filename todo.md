@@ -1995,3 +1995,23 @@
 - [x] Verify no overlapping text elements on desktop (1920px viewport)
 - [x] Verify button wrapping works correctly (Property Tags, Condition, etc.)
 - [ ] Test on actual mobile device (375px, 414px) to verify readability and no overlaps
+
+
+## BUG FIX - Notes and Activities Layout Issues (02/26/2026)
+- [ ] Audit Notes section for layout problems
+- [ ] Audit Activities section for layout problems
+- [ ] Fix Notes table/list layout on mobile
+- [ ] Fix Activities table/list layout on mobile
+- [ ] Verify responsive design for both sections
+- [ ] Test on desktop and mobile viewports
+
+
+## BUG FIX - Notes and Activities Layout Issues (02/26/2026)
+- [x] Fix Notes section textareas overlapping - added space-y-4 wrapper
+- [x] Add proper spacing between General Notes, Probate Notes, Internal Notes
+- [x] Fix Activities Timeline layout - made images responsive (h-24 sm:h-32)
+- [x] Make activity images responsive for mobile (max-w-xs sm:max-w-sm)
+- [x] Fix notes table overflow on mobile - added overflow-x-auto and min-w-max
+- [x] Make photo grid responsive (grid-cols-2 sm:grid-cols-3)
+- [x] Reduce font sizes in Notes section (text-xs sm:text-sm)
+- [x] Test Notes section on desktop - all sections properly separated and visible

@@ -123,7 +123,7 @@ export function ActivityTimeline({ propertyId }: ActivityTimelineProps) {
                     <img 
                       src={activity.metadata.url} 
                       alt="Activity photo" 
-                      className="rounded-lg border border-slate-200 max-w-xs h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      className="rounded-lg border border-slate-200 max-w-xs sm:max-w-sm h-24 sm:h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={() => window.open(activity.metadata.url, "_blank")}
                     />
                     {activity.details && activity.details !== "Property photo uploaded" && activity.details !== "Screenshot added to note" && (

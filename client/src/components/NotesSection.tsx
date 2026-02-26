@@ -598,8 +598,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
         </div>
 
         {/* Notes Table */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-          <table className="w-full">
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white overflow-x-auto">
+          <table className="w-full min-w-max">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left p-3 text-xs font-semibold text-slate-700 w-32">Date</th>
@@ -628,7 +628,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       
                       {/* Photos attached to this note */}
                       {(allPhotos?.filter(photo => photo.noteId === note.id)?.length ?? 0) > 0 && (
-                        <div className="mt-3 grid grid-cols-3 gap-2">
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {allPhotos?.filter(photo => photo.noteId === note.id).map((photo) => (
                             <div key={photo.id} className="relative group">
                               <img 
