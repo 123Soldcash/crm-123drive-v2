@@ -1970,3 +1970,8 @@
 - [x] Fix property info grid layout for mobile (single column stacking)
 - [x] Fix global CSS min-height/min-width rules causing layout issues
 - [x] Test PropertyDetail on mobile viewport after fixes
+
+
+## BUG FIX - StickyPropertyHeader covering screen on mobile (02/26/2026)
+- [x] Disable sticky positioning on mobile (only sticky on md: breakpoint and above)
+- [x] Test scroll behavior on mobile viewport
