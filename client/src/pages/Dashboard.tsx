@@ -62,15 +62,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Property CRM Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Property CRM Dashboard</h1>
+          <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
             Manage and track your property leads for seller outreach
           </p>
         </div>
-        <div className="w-[200px]">
+        <div className="w-full md:w-[200px]">
           <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by Agent" />
@@ -105,8 +105,8 @@ export default function Dashboard() {
 
       {/* Lead Temperature Cards */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Lead Temperature</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Lead Temperature</h2>
+        <div className="grid gap-2 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-5">
           <Link href="/properties?leadTemperature=SUPER%20HOT">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -186,8 +186,8 @@ export default function Dashboard() {
 
       {/* Status Cards */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Property Status</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Property Status</h2>
+        <div className="grid gap-2 md:gap-4 grid-cols-1 md:grid-cols-2">
           <Link href="/properties?ownerVerified=true">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -221,22 +221,24 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-2 md:gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Link href="/properties">
-              <Button className="w-full" variant="outline">
+              <Button className="w-full h-10 md:h-auto" variant="outline">
                 <Building2 className="mr-2 h-4 w-4" />
-                View All Properties
+                <span className="hidden sm:inline">View All Properties</span>
+                <span className="sm:hidden">Properties</span>
               </Button>
             </Link>
             <Link href="/map">
-              <Button className="w-full" variant="outline">
+              <Button className="w-full h-10 md:h-auto" variant="outline">
                 <MapPin className="mr-2 h-4 w-4" />
-                Open Map View
+                <span className="hidden sm:inline">Open Map View</span>
+                <span className="sm:hidden">Map</span>
               </Button>
             </Link>
           </CardContent>

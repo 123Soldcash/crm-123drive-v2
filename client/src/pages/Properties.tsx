@@ -764,7 +764,7 @@ export default function Properties() {
       {/* Property List */}
       <Card>
         <CardHeader>
-          <CardTitle>Property List</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Property List</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -774,6 +774,7 @@ export default function Properties() {
               No properties match your filters
             </div>
           ) : (
+            <div className="overflow-x-auto -mx-4 md:mx-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -991,6 +992,7 @@ export default function Properties() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
