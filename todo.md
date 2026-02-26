@@ -2015,3 +2015,18 @@
 - [x] Make photo grid responsive (grid-cols-2 sm:grid-cols-3)
 - [x] Reduce font sizes in Notes section (text-xs sm:text-sm)
 - [x] Test Notes section on desktop - all sections properly separated and visible
+
+
+## BUG FIX - PropertyDetail Header Covering Sidebar on Desktop (02/26/2026)
+- [ ] Audit StickyPropertyHeader positioning on desktop viewport
+- [ ] Fix header width to not overlap sidebar on desktop (should use md:left-64 when sidebar is open)
+- [ ] Ensure mobile changes don't affect desktop layout
+- [ ] Test on desktop viewport (1920px, 1440px) to verify sidebar is visible
+- [ ] Test sticky mode on desktop to ensure proper left offset
+
+## BUG FIX - PropertyDetail Header Covering Sidebar on Desktop (02/26/2026)
+- [x] Audit PropertyDetail header on desktop to identify sidebar overlap
+- [x] Fix StickyPropertyHeader sticky positioning to respect sidebar width
+- [x] Use CSS variable var(--sidebar-width) instead of fixed left-64 (279px actual width)
+- [x] Test on desktop viewport - sidebar is now visible, header starts after sidebar
+- [x] Verify mobile layout is not affected by desktop fix
