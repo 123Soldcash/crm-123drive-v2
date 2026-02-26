@@ -84,7 +84,7 @@ function ChipSelector({ options, selected, onChange, colorClass = "bg-blue-100 t
   };
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1.5 w-full">
       {options.map(opt => (
         <button
           key={opt}
@@ -283,7 +283,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             </Select>
           </div>
         </div>
-        <div>
+        <div className="col-span-full">
           <label className="text-xs font-medium text-gray-500 mb-1.5 block">Property Tags</label>
           <ChipSelector
             options={PROPERTY_TAGS}

@@ -1975,3 +1975,13 @@
 ## BUG FIX - StickyPropertyHeader covering screen on mobile (02/26/2026)
 - [x] Disable sticky positioning on mobile (only sticky on md: breakpoint and above)
 - [x] Test scroll behavior on mobile viewport
+
+
+## LAYOUT AUDIT - PropertyDetail Page (02/26/2026)
+- [x] Audit all sections for broken layouts and overflowing containers
+- [x] Fix button overflow in Deep Search Overview (Property Tags, Condition, Occupancy, Seller Situation, Legal & Title)
+- [x] Add col-span-full to Property Tags container to fix grid compression
+- [x] Add w-full to ChipSelector/TagGroup containers for proper flex-wrap
+- [x] Verify all buttons now wrap properly across multiple lines
+- [x] Test on desktop viewport (1920px, 1440px, 1024px) - buttons wrap correctly
+- [ ] Test on mobile viewport (375px, 414px, 768px)
