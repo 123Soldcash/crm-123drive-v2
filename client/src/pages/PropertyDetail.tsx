@@ -300,6 +300,7 @@ export default function PropertyDetail() {
         currentIndex={currentIndex}
         totalCount={navigationIds.length}
         zillowUrl={zillowUrl}
+        propertyImage={(property as any)?.propertyImage}
       />
 
       {/* Pipeline Dialog */}

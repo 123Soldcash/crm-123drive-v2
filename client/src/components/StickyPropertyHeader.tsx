@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
 import { DistressScoreBadge } from "@/components/DistressScoreBadge";
+import { PropertyImage } from "@/components/PropertyImage";
 
 // Desk options with colors
 const DESK_OPTIONS = [
@@ -49,6 +50,7 @@ interface StickyPropertyHeaderProps {
   currentIndex: number;
   totalCount: number;
   zillowUrl: string;
+  propertyImage?: string | null;
 }
 
 export function StickyPropertyHeader({
@@ -65,7 +67,8 @@ export function StickyPropertyHeader({
   onNext,
   currentIndex,
   totalCount,
-  zillowUrl
+  zillowUrl,
+  propertyImage = null
 }: StickyPropertyHeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
   const [deskDropdownOpen, setDeskDropdownOpen] = useState(false);
@@ -148,6 +151,17 @@ export function StickyPropertyHeader({
               </Button>
             </div>
           </div>
+
+          {/* Property Image */}
+          <PropertyImage
+            propertyId={property.id}
+            propertyImage={propertyImage}
+            address={property.addressLine1}
+            city={property.city}
+            state={property.state}
+            zipcode={property.zipcode || ""}
+            compact={isSticky}
+          />
 
           {/* Address - full width on mobile */}
           <div className="flex-1 min-w-0">

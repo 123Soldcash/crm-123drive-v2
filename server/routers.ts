@@ -1035,6 +1035,54 @@ export const appRouter = router({
         await db.updateDesk(input.propertyId, input.deskName, input.deskStatus);
         return { success: true };
       }),
+    // Property Image upload
+    updatePropertyImage: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        imageBase64: z.string(), // base64 encoded image data
+        mimeType: z.string().default("image/jpeg"),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        const ext = input.mimeType === "image/png" ? "png" : input.mimeType === "image/webp" ? "webp" : "jpg";
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        const fileKey = `property-images/${input.propertyId}-${randomSuffix}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        const drizzleDb = await getDb();
+        await drizzleDb!.update(properties).set({ propertyImage: url }).where(eq(properties.id, input.propertyId));
+        return { url };
+      }),
+    removePropertyImage: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        const drizzleDb = await getDb();
+        await drizzleDb!.update(properties).set({ propertyImage: null }).where(eq(properties.id, input.propertyId));
+        return { success: true };
+      }),
+    getStreetViewImage: protectedProcedure
+      .input(z.object({
+        address: z.string(),
+        city: z.string(),
+        state: z.string(),
+        zipcode: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const fullAddress = `${input.address}, ${input.city}, ${input.state} ${input.zipcode}`;
+        const forgeUrl = ENV.forgeApiUrl?.replace(/\/+$/, "");
+        const forgeKey = ENV.forgeApiKey;
+        if (!forgeUrl || !forgeKey) return { imageBase64: null };
+        const url = `${forgeUrl}/v1/maps/proxy/maps/api/streetview?size=600x400&location=${encodeURIComponent(fullAddress)}&key=${forgeKey}&fov=90&pitch=10`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return { imageBase64: null };
+          const contentType = res.headers.get("content-type") || "image/jpeg";
+          if (!contentType.startsWith("image/")) return { imageBase64: null };
+          const buffer = Buffer.from(await res.arrayBuffer());
+          return { imageBase64: `data:${contentType};base64,${buffer.toString("base64")}` };
+        } catch {
+          return { imageBase64: null };
+        }
+      }),
     getDeskStats: protectedProcedure.query(async () => {
       return await db.getDeskStats();
     }),

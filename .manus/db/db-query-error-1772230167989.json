@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE properties ADD COLUMN propertyImage TEXT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE properties ADD COLUMN propertyImage TEXT NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'propertyImage'"
+  ]
+}

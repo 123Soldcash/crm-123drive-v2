@@ -2067,3 +2067,11 @@
 - [x] Fix saving/saved indicator cycling endlessly in DeepSearchOverview
 - [x] Fix saving/saved indicator cycling endlessly in FinancialModule
 - [x] Prevent invalidate from re-triggering auto-save cascade
+
+## FEATURE - Property Image (Street View + Upload)
+- [x] Add propertyImage column to properties table in database
+- [ ] Create Street View URL generator using property address
+- [ ] Create image upload endpoint (S3 storage)
+- [ ] Update property header UI with image display
+- [ ] Add upload button to replace image manually
+- [ ] Fallback logic: custom image > Street View > placeholder

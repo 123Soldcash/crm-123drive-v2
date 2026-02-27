@@ -231,6 +231,9 @@ export const properties = mysqlTable("properties", {
   ]).default("NEW_LEAD"),
   stageChangedAt: timestamp("stageChangedAt").defaultNow().notNull(),
 
+  // Property Image (custom upload URL from S3, overrides Street View)
+  propertyImage: text("propertyImage"),
+
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
