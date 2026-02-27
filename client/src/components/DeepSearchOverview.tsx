@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, AlertTriangle, CheckCircle, Shield, Scale, Home, Eye, Users, FileText, TreePine } from "lucide-react";
+import { CheckCircle, Loader2, AlertTriangle, Shield, Scale, Home, Eye, Users, FileText, TreePine } from "lucide-react";
 import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -165,7 +165,10 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
   const [generalNotes, setGeneralNotes] = useState("");
   const [probateNotes, setProbateNotes] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
-  const [isDirty, setIsDirty] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isInitialLoad = useRef(true);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync from server data
   useEffect(() => {
@@ -190,47 +193,97 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
       setGeneralNotes(data.generalNotes || "");
       setProbateNotes(data.probateNotes || "");
       setInternalNotes(data.internalNotes || "");
-      setIsDirty(false);
+      isInitialLoad.current = false;
     }
   }, [data]);
 
-  const markDirty = useCallback(() => setIsDirty(true), []);
-
-  const handleSave = async () => {
+  // Auto-save function (called after debounce)
+  const performSave = useCallback(async (
+    vals: {
+      propertyType: string | null; propertyUse: string | null; propertyTags: string[];
+      conditionRating: string | null; conditionTags: string[]; occupancy: string | null;
+      evictionRisk: string | null; evictionNotes: string; sellerFinancialPressure: string[];
+      sellerLifeEvents: string[]; sellerLegalBehavioral: string[]; legalOwnershipTitle: string[];
+      legalCourtLawsuit: string[]; legalPropertyStatus: string[]; probate: boolean;
+      probateStage: string | null; probateFindings: string[]; generalNotes: string;
+      probateNotes: string; internalNotes: string;
+    }
+  ) => {
+    setSaveStatus("saving");
     try {
       await updateMutation.mutateAsync({
         propertyId,
-        propertyType: propertyType as any,
-        propertyUse: propertyUse as any,
-        propertyTags: JSON.stringify(propertyTags),
-        conditionRating: conditionRating as any,
-        conditionTags: JSON.stringify(conditionTags),
-        occupancy: occupancy as any,
-        evictionRisk: evictionRisk as any,
-        evictionNotes: evictionNotes || null,
-        sellerFinancialPressure: JSON.stringify(sellerFinancialPressure),
-        sellerLifeEvents: JSON.stringify(sellerLifeEvents),
-        sellerLegalBehavioral: JSON.stringify(sellerLegalBehavioral),
-        legalOwnershipTitle: JSON.stringify(legalOwnershipTitle),
-        legalCourtLawsuit: JSON.stringify(legalCourtLawsuit),
-        legalPropertyStatus: JSON.stringify(legalPropertyStatus),
-        probate: probate ? 1 : 0,
-        probateStage: probateStage as any,
-        probateFindings: JSON.stringify(probateFindings),
-        generalNotes: generalNotes || null,
-        probateNotes: probateNotes || null,
-        internalNotes: internalNotes || null,
+        propertyType: vals.propertyType as any,
+        propertyUse: vals.propertyUse as any,
+        propertyTags: JSON.stringify(vals.propertyTags),
+        conditionRating: vals.conditionRating as any,
+        conditionTags: JSON.stringify(vals.conditionTags),
+        occupancy: vals.occupancy as any,
+        evictionRisk: vals.evictionRisk as any,
+        evictionNotes: vals.evictionNotes || null,
+        sellerFinancialPressure: JSON.stringify(vals.sellerFinancialPressure),
+        sellerLifeEvents: JSON.stringify(vals.sellerLifeEvents),
+        sellerLegalBehavioral: JSON.stringify(vals.sellerLegalBehavioral),
+        legalOwnershipTitle: JSON.stringify(vals.legalOwnershipTitle),
+        legalCourtLawsuit: JSON.stringify(vals.legalCourtLawsuit),
+        legalPropertyStatus: JSON.stringify(vals.legalPropertyStatus),
+        probate: vals.probate ? 1 : 0,
+        probateStage: vals.probateStage as any,
+        probateFindings: JSON.stringify(vals.probateFindings),
+        generalNotes: vals.generalNotes || null,
+        probateNotes: vals.probateNotes || null,
+        internalNotes: vals.internalNotes || null,
       });
-      setIsDirty(false);
+      setSaveStatus("saved");
       utils.deepSearch.getOverview.invalidate({ propertyId });
       utils.deepSearch.getDistressScore.invalidate({ propertyId });
-      toast.success("Deep Search Overview saved!");
+      // Reset to idle after 2 seconds
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
-      toast.error("Failed to save overview");
+      setSaveStatus("idle");
+      toast.error("Auto-save failed");
     }
-  };
+  }, [propertyId, updateMutation, utils]);
+
+  // Debounced auto-save trigger
+  const triggerAutoSave = useCallback((vals: Parameters<typeof performSave>[0]) => {
+    if (isInitialLoad.current) return; // Don't save on initial data load
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setSaveStatus("saving");
+    autoSaveTimer.current = setTimeout(() => performSave(vals), 800);
+  }, [performSave]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    };
+  }, []);
+
+  // Helper to build current state snapshot for auto-save
+  const buildSnapshot = useCallback(() => ({
+    propertyType, propertyUse, propertyTags, conditionRating, conditionTags,
+    occupancy, evictionRisk, evictionNotes, sellerFinancialPressure, sellerLifeEvents,
+    sellerLegalBehavioral, legalOwnershipTitle, legalCourtLawsuit, legalPropertyStatus,
+    probate, probateStage, probateFindings, generalNotes, probateNotes, internalNotes,
+  }), [propertyType, propertyUse, propertyTags, conditionRating, conditionTags,
+    occupancy, evictionRisk, evictionNotes, sellerFinancialPressure, sellerLifeEvents,
+    sellerLegalBehavioral, legalOwnershipTitle, legalCourtLawsuit, legalPropertyStatus,
+    probate, probateStage, probateFindings, generalNotes, probateNotes, internalNotes]);
 
   const showEviction = occupancy === "Tenant Occupied" || occupancy === "Squatter Occupied";
+
+  // Auto-save whenever any state changes (after initial load)
+  useEffect(() => {
+    if (isInitialLoad.current) return;
+    triggerAutoSave(buildSnapshot());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyType, propertyUse, propertyTags, conditionRating, conditionTags,
+      occupancy, evictionRisk, evictionNotes, sellerFinancialPressure, sellerLifeEvents,
+      sellerLegalBehavioral, legalOwnershipTitle, legalCourtLawsuit, legalPropertyStatus,
+      probate, probateStage, probateFindings, generalNotes, probateNotes, internalNotes]);
 
   if (isLoading) {
     return (
@@ -244,17 +297,16 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
 
   return (
     <div className="space-y-4">
-      {/* Save Bar */}
-      {isDirty && (
-        <div className="sticky top-0 z-10 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
-          <span className="text-sm text-amber-700 font-medium flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Unsaved changes
-          </span>
-          <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
-            <Save className="w-4 h-4 mr-1" />
-            {updateMutation.isPending ? "Saving..." : "Save All"}
-          </Button>
+      {/* Auto-Save Status Indicator */}
+      {saveStatus !== "idle" && (
+        <div className="sticky top-0 z-10 rounded-lg p-2.5 flex items-center gap-2 shadow-sm text-sm font-medium transition-all"
+          style={{ background: saveStatus === "saved" ? "#f0fdf4" : "#eff6ff", border: `1px solid ${saveStatus === "saved" ? "#bbf7d0" : "#bfdbfe"}`, color: saveStatus === "saved" ? "#15803d" : "#1d4ed8" }}
+        >
+          {saveStatus === "saving" ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+          ) : (
+            <><CheckCircle className="w-4 h-4" /> Saved!</>
+          )}
         </div>
       )}
 
@@ -263,7 +315,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Property Type</label>
-            <Select value={propertyType || ""} onValueChange={(v) => { setPropertyType(v); markDirty(); }}>
+            <Select value={propertyType || ""} onValueChange={(v) => { setPropertyType(v); }}>
               <SelectTrigger className="h-9">
                 <SelectValue placeholder="Select type..." />
               </SelectTrigger>
@@ -274,7 +326,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           </div>
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Property Use</label>
-            <Select value={propertyUse || ""} onValueChange={(v) => { setPropertyUse(v); markDirty(); }}>
+            <Select value={propertyUse || ""} onValueChange={(v) => { setPropertyUse(v); }}>
               <SelectTrigger className="h-9">
                 <SelectValue placeholder="Select use..." />
               </SelectTrigger>
@@ -289,7 +341,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={PROPERTY_TAGS}
             selected={propertyTags}
-            onChange={(v) => { setPropertyTags(v); markDirty(); }}
+            onChange={(v) => { setPropertyTags(v); }}
           />
         </div>
       </SectionCard>
@@ -303,7 +355,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
               <button
                 key={r}
                 type="button"
-                onClick={() => { setConditionRating(r); markDirty(); }}
+                onClick={() => { setConditionRating(r); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   conditionRating === r
                     ? r === "Excellent" ? "bg-green-100 text-green-800 border-green-300"
@@ -325,7 +377,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             <ChipSelector
               options={tags}
               selected={conditionTags}
-              onChange={(v) => { setConditionTags(v); markDirty(); }}
+              onChange={(v) => { setConditionTags(v); }}
               colorClass={
                 group === "Severe/Unsafe" ? "bg-red-100 text-red-800 border-red-300"
                 : group === "Fire/Storm" ? "bg-orange-100 text-orange-800 border-orange-300"
@@ -346,7 +398,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
               <button
                 key={o}
                 type="button"
-                onClick={() => { setOccupancy(o); markDirty(); }}
+                onClick={() => { setOccupancy(o); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   occupancy === o
                     ? o === "Vacant" ? "bg-amber-100 text-amber-800 border-amber-300"
@@ -369,7 +421,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
                 <button
                   key={r}
                   type="button"
-                  onClick={() => { setEvictionRisk(r); markDirty(); }}
+                  onClick={() => { setEvictionRisk(r); }}
                   className={`px-3 py-1 rounded text-xs font-medium border ${
                     evictionRisk === r
                       ? r === "High" ? "bg-red-200 text-red-900 border-red-400"
@@ -384,7 +436,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             </div>
             <Textarea
               value={evictionNotes}
-              onChange={(e) => { setEvictionNotes(e.target.value); markDirty(); }}
+              onChange={(e) => { setEvictionNotes(e.target.value); }}
               placeholder="Eviction notes..."
               className="text-xs h-16 bg-white"
             />
@@ -399,7 +451,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={SELLER_FINANCIAL_PRESSURE}
             selected={sellerFinancialPressure}
-            onChange={(v) => { setSellerFinancialPressure(v); markDirty(); }}
+            onChange={(v) => { setSellerFinancialPressure(v); }}
             colorClass="bg-red-100 text-red-800 border-red-300"
           />
         </div>
@@ -408,7 +460,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={SELLER_LIFE_EVENTS}
             selected={sellerLifeEvents}
-            onChange={(v) => { setSellerLifeEvents(v); markDirty(); }}
+            onChange={(v) => { setSellerLifeEvents(v); }}
             colorClass="bg-purple-100 text-purple-800 border-purple-300"
           />
         </div>
@@ -417,7 +469,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={SELLER_LEGAL_BEHAVIORAL}
             selected={sellerLegalBehavioral}
-            onChange={(v) => { setSellerLegalBehavioral(v); markDirty(); }}
+            onChange={(v) => { setSellerLegalBehavioral(v); }}
             colorClass="bg-rose-100 text-rose-800 border-rose-300"
           />
         </div>
@@ -430,7 +482,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={LEGAL_OWNERSHIP_TITLE}
             selected={legalOwnershipTitle}
-            onChange={(v) => { setLegalOwnershipTitle(v); markDirty(); }}
+            onChange={(v) => { setLegalOwnershipTitle(v); }}
             colorClass="bg-purple-100 text-purple-800 border-purple-300"
           />
         </div>
@@ -439,7 +491,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={LEGAL_COURT_LAWSUIT}
             selected={legalCourtLawsuit}
-            onChange={(v) => { setLegalCourtLawsuit(v); markDirty(); }}
+            onChange={(v) => { setLegalCourtLawsuit(v); }}
             colorClass="bg-indigo-100 text-indigo-800 border-indigo-300"
           />
         </div>
@@ -448,7 +500,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <ChipSelector
             options={LEGAL_PROPERTY_STATUS}
             selected={legalPropertyStatus}
-            onChange={(v) => { setLegalPropertyStatus(v); markDirty(); }}
+            onChange={(v) => { setLegalPropertyStatus(v); }}
             colorClass="bg-violet-100 text-violet-800 border-violet-300"
           />
         </div>
@@ -459,7 +511,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
         <div className="flex items-center gap-3">
           <Switch
             checked={probate}
-            onCheckedChange={(v) => { setProbate(v); markDirty(); }}
+            onCheckedChange={(v) => { setProbate(v); }}
           />
           <span className="text-sm font-medium text-gray-700">
             {probate ? "Yes — Probate Case" : "No Probate"}
@@ -469,7 +521,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
           <>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">Probate Stage</label>
-              <Select value={probateStage || ""} onValueChange={(v) => { setProbateStage(v); markDirty(); }}>
+              <Select value={probateStage || ""} onValueChange={(v) => { setProbateStage(v); }}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Select stage..." />
                 </SelectTrigger>
@@ -483,7 +535,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
               <ChipSelector
                 options={PROBATE_FINDINGS}
                 selected={probateFindings}
-                onChange={(v) => { setProbateFindings(v); markDirty(); }}
+                onChange={(v) => { setProbateFindings(v); }}
                 colorClass="bg-yellow-100 text-yellow-800 border-yellow-300"
               />
             </div>
@@ -506,7 +558,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">General Notes</label>
             <Textarea
               value={generalNotes}
-              onChange={(e) => { setGeneralNotes(e.target.value); markDirty(); }}
+              onChange={(e) => { setGeneralNotes(e.target.value); }}
               placeholder="General observations, research findings..."
               className="text-xs sm:text-sm h-20 sm:h-24 w-full"
             />
@@ -515,7 +567,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">Probate Notes</label>
             <Textarea
               value={probateNotes}
-              onChange={(e) => { setProbateNotes(e.target.value); markDirty(); }}
+              onChange={(e) => { setProbateNotes(e.target.value); }}
               placeholder="Probate-specific notes, case numbers..."
               className="text-xs sm:text-sm h-20 sm:h-24 w-full"
             />
@@ -524,7 +576,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">Internal Notes</label>
             <Textarea
               value={internalNotes}
-              onChange={(e) => { setInternalNotes(e.target.value); markDirty(); }}
+              onChange={(e) => { setInternalNotes(e.target.value); }}
               placeholder="Internal team notes, strategy..."
               className="text-xs sm:text-sm h-20 sm:h-24 w-full"
             />
@@ -532,13 +584,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
         </div>
       </SectionCard>
 
-      {/* Bottom Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={updateMutation.isPending || !isDirty} size="lg">
-          <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "Saving..." : "Save Overview"}
-        </Button>
-      </div>
+
     </div>
   );
 }

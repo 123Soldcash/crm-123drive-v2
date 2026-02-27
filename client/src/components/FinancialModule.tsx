@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2 } from "lucide-react";
+import { CheckCircle, Loader2, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -169,8 +169,10 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   // Card 6: Deed History
   const [deedHistory, setDeedHistory] = useState<DeedEntry[]>([]);
 
-  const [isDirty, setIsDirty] = useState(false);
-  const markDirty = useCallback(() => setIsDirty(true), []);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isInitialLoad = useRef(true);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync from server data
   useEffect(() => {
@@ -201,52 +203,91 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
       setTaxLien(data.taxLien === 1);
       setCodeTaxNotes(data.codeTaxNotes || "");
       setDeedHistory(safeParseJsonDeeds(data.deedHistory));
-      setIsDirty(false);
+      isInitialLoad.current = false;
     }
   }, [data]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    };
+  }, []);
+
+  const performSave = useCallback(async (vals: {
+    tax2025: number|null; tax2024: number|null; tax2023: number|null; tax2022: number|null;
+    tax2021: number|null; tax2020: number|null; taxNotes: string; needsRepairs: boolean;
+    repairCategories: string[]; estimatedRepairCost: number|null; repairNotes: string;
+    mortgage: string|null; mortgageNotes: string; liens: boolean; totalLienAmount: number|null;
+    lienTypes: string[]; lienNotes: string; preForeclosure: boolean; auctionScheduled: boolean;
+    lisPendens: boolean; nodFiled: boolean; foreclosureNotes: string; codeViolations: boolean;
+    taxLien: boolean; codeTaxNotes: string; deedHistory: DeedEntry[];
+  }) => {
+    setSaveStatus("saving");
+    try {
+      await updateMutation.mutateAsync({
+        propertyId,
+        delinquentTax2025: vals.tax2025,
+        delinquentTax2024: vals.tax2024,
+        delinquentTax2023: vals.tax2023,
+        delinquentTax2022: vals.tax2022,
+        delinquentTax2021: vals.tax2021,
+        delinquentTax2020: vals.tax2020,
+        taxNotes: vals.taxNotes || null,
+        needsRepairs: vals.needsRepairs ? 1 : 0,
+        repairCategories: JSON.stringify(vals.repairCategories),
+        estimatedRepairCost: vals.estimatedRepairCost,
+        repairNotes: vals.repairNotes || null,
+        mortgage: vals.mortgage as any,
+        mortgageNotes: vals.mortgageNotes || null,
+        liens: vals.liens ? 1 : 0,
+        totalLienAmount: vals.totalLienAmount,
+        lienTypes: JSON.stringify(vals.lienTypes),
+        lienNotes: vals.lienNotes || null,
+        preForeclosure: vals.preForeclosure ? 1 : 0,
+        auctionScheduled: vals.auctionScheduled ? 1 : 0,
+        lisPendens: vals.lisPendens ? 1 : 0,
+        nodFiled: vals.nodFiled ? 1 : 0,
+        foreclosureNotes: vals.foreclosureNotes || null,
+        codeViolations: vals.codeViolations ? 1 : 0,
+        taxLien: vals.taxLien ? 1 : 0,
+        codeTaxNotes: vals.codeTaxNotes || null,
+        deedHistory: JSON.stringify(vals.deedHistory),
+      });
+      setSaveStatus("saved");
+      utils.deepSearch.getFinancial.invalidate({ propertyId });
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaveStatus("idle"), 2000);
+    } catch (err) {
+      setSaveStatus("idle");
+      toast.error("Auto-save failed");
+    }
+  }, [propertyId, updateMutation, utils]);
+
+  const triggerAutoSave = useCallback((vals: Parameters<typeof performSave>[0]) => {
+    if (isInitialLoad.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setSaveStatus("saving");
+    autoSaveTimer.current = setTimeout(() => performSave(vals), 800);
+  }, [performSave]);
+
+  const markDirty = useCallback(() => {
+    if (isInitialLoad.current) return;
+    triggerAutoSave({
+      tax2025, tax2024, tax2023, tax2022, tax2021, tax2020, taxNotes, needsRepairs,
+      repairCategories, estimatedRepairCost, repairNotes, mortgage, mortgageNotes,
+      liens, totalLienAmount, lienTypes, lienNotes, preForeclosure, auctionScheduled,
+      lisPendens, nodFiled, foreclosureNotes, codeViolations, taxLien, codeTaxNotes, deedHistory,
+    });
+  }, [triggerAutoSave, tax2025, tax2024, tax2023, tax2022, tax2021, tax2020, taxNotes, needsRepairs,
+    repairCategories, estimatedRepairCost, repairNotes, mortgage, mortgageNotes,
+    liens, totalLienAmount, lienTypes, lienNotes, preForeclosure, auctionScheduled,
+    lisPendens, nodFiled, foreclosureNotes, codeViolations, taxLien, codeTaxNotes, deedHistory]);
 
   // Auto-calculate tax total
   const taxTotal = [tax2025, tax2024, tax2023, tax2022, tax2021, tax2020]
     .reduce((sum: number, v) => sum + (v || 0), 0);
-
-  const handleSave = async () => {
-    try {
-      await updateMutation.mutateAsync({
-        propertyId,
-        delinquentTax2025: tax2025,
-        delinquentTax2024: tax2024,
-        delinquentTax2023: tax2023,
-        delinquentTax2022: tax2022,
-        delinquentTax2021: tax2021,
-        delinquentTax2020: tax2020,
-        taxNotes: taxNotes || null,
-        needsRepairs: needsRepairs ? 1 : 0,
-        repairCategories: JSON.stringify(repairCategories),
-        estimatedRepairCost,
-        repairNotes: repairNotes || null,
-        mortgage: mortgage as any,
-        mortgageNotes: mortgageNotes || null,
-        liens: liens ? 1 : 0,
-        totalLienAmount,
-        lienTypes: JSON.stringify(lienTypes),
-        lienNotes: lienNotes || null,
-        preForeclosure: preForeclosure ? 1 : 0,
-        auctionScheduled: auctionScheduled ? 1 : 0,
-        lisPendens: lisPendens ? 1 : 0,
-        nodFiled: nodFiled ? 1 : 0,
-        foreclosureNotes: foreclosureNotes || null,
-        codeViolations: codeViolations ? 1 : 0,
-        taxLien: taxLien ? 1 : 0,
-        codeTaxNotes: codeTaxNotes || null,
-        deedHistory: JSON.stringify(deedHistory),
-      });
-      setIsDirty(false);
-      utils.deepSearch.getFinancial.invalidate({ propertyId });
-      toast.success("Financial data saved!");
-    } catch (err) {
-      toast.error("Failed to save financial data");
-    }
-  };
 
   if (isLoading) {
     return (
@@ -260,17 +301,16 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
 
   return (
     <div className="space-y-4">
-      {/* Save Bar */}
-      {isDirty && (
-        <div className="sticky top-0 z-10 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
-          <span className="text-sm text-amber-700 font-medium flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Unsaved changes
-          </span>
-          <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
-            <Save className="w-4 h-4 mr-1" />
-            {updateMutation.isPending ? "Saving..." : "Save All"}
-          </Button>
+      {/* Auto-Save Status Indicator */}
+      {saveStatus !== "idle" && (
+        <div className="sticky top-0 z-10 rounded-lg p-2.5 flex items-center gap-2 shadow-sm text-sm font-medium transition-all"
+          style={{ background: saveStatus === "saved" ? "#f0fdf4" : "#eff6ff", border: `1px solid ${saveStatus === "saved" ? "#bbf7d0" : "#bfdbfe"}`, color: saveStatus === "saved" ? "#15803d" : "#1d4ed8" }}
+        >
+          {saveStatus === "saving" ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+          ) : (
+            <><CheckCircle className="w-4 h-4" /> Saved!</>
+          )}
         </div>
       )}
 
@@ -550,13 +590,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
         </Button>
       </FinancialCard>
 
-      {/* Bottom Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={updateMutation.isPending || !isDirty} size="lg">
-          <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "Saving..." : "Save Financial Data"}
-        </Button>
-      </div>
+
     </div>
   );
 }

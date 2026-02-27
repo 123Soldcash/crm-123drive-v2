@@ -2054,3 +2054,11 @@
 - [x] Fix navigation/routing issue causing stale React state
 - [x] Test fix by navigating between multiple pages
 - [x] Save checkpoint
+
+## AUTO-SAVE Deep Search (02/27/2026)
+- [x] Audit current save flow in DeepSearchOverview and FinancialModule
+- [x] Implement auto-save with debounce (1s) on all Deep Search fields
+- [x] Add visual saving indicator (spinner/checkmark)
+- [x] Remove or hide manual Save buttons
+- [x] Test all field types (dropdowns, chips, text, toggles)
+- [ ] Save checkpoint
