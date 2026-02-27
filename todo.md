@@ -2038,3 +2038,13 @@
 - [x] Remove "Duplicates" menu option from navigation
 - [x] Test Dashboard and verify no data loss
 - [x] Save checkpoint
+
+## FAMILY TREE INTO PROBATE - Integration (02/27/2026)
+- [x] Audit current Family Tree placement in PropertyDetail
+- [x] Audit Probate section structure in Deep Search
+- [x] Move Family Tree component inside Probate section in Deep Search
+- [x] Auto-activate Probate flag for properties with Family Tree data
+- [x] Validate Probate section displays correctly with Family Tree
+- [x] Validate Family Tree CRUD operations work inside Probate
+- [x] Test on live property with existing Family Tree data
+- [x] Save checkpoint

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'propertyDeepSearch' AND COLUMN_NAME LIKE '%robat%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'propertyDeepSearch' AND COLUMN_NAME LIKE '%robat%';",
+  "rows": [
+    {
+      "COLUMN_NAME": "probateFinds"
+    },
+    {
+      "COLUMN_NAME": "probateNotes"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nprobateFinds\nprobateNotes\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

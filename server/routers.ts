@@ -1150,7 +1150,42 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        return await db.createFamilyMember(input as any);
+        const result = await db.createFamilyMember(input as any);
+        
+        // Auto-activate probate when a family member is added
+        try {
+          const { getDb: getDatabase } = await import("./db");
+          const { deepSearchOverview } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const database = await getDatabase();
+          if (database) {
+            const existing = await database
+              .select()
+              .from(deepSearchOverview)
+              .where(eq(deepSearchOverview.propertyId, input.propertyId))
+              .limit(1);
+            
+            if (existing.length > 0) {
+              // Only update if probate is not already active
+              if (existing[0].probate !== 1) {
+                await database
+                  .update(deepSearchOverview)
+                  .set({ probate: 1 })
+                  .where(eq(deepSearchOverview.propertyId, input.propertyId));
+              }
+            } else {
+              // Create deep search overview with probate active
+              await database
+                .insert(deepSearchOverview)
+                .values({ propertyId: input.propertyId, probate: 1 } as any);
+            }
+          }
+        } catch (e) {
+          // Non-critical: don't fail family member creation if probate auto-activate fails
+          console.error("[Auto-Probate] Failed to auto-activate probate:", e);
+        }
+        
+        return result;
       }),
 
     getFamilyMembers: protectedProcedure

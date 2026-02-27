@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE deepSearchOverview SET ds_probate = 1 WHERE propertyId IN (SELECT DISTINCT propertyId FROM familyMembers);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE deepSearchOverview SET ds_probate = 1 WHERE propertyId IN (SELECT DISTINCT propertyId FROM familyMembers);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 169
+}

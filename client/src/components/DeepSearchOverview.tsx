@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, AlertTriangle, CheckCircle, Shield, Scale, Home, Eye, Users, FileText } from "lucide-react";
+import { Save, AlertTriangle, CheckCircle, Shield, Scale, Home, Eye, Users, FileText, TreePine } from "lucide-react";
+import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPTION CONSTANTS (from spec)
@@ -453,8 +454,8 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
         </div>
       </SectionCard>
 
-      {/* ── Probate ─────────────────────────────────────────────────────── */}
-      <SectionCard title="Probate" icon={<Shield className="w-4 h-4" />} accentColor="yellow">
+      {/* ── Probate & Family Tree ──────────────────────────────────────── */}
+      <SectionCard title="Probate & Family Tree" icon={<Shield className="w-4 h-4" />} accentColor="yellow">
         <div className="flex items-center gap-3">
           <Switch
             checked={probate}
@@ -485,6 +486,14 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
                 onChange={(v) => { setProbateFindings(v); markDirty(); }}
                 colorClass="bg-yellow-100 text-yellow-800 border-yellow-300"
               />
+            </div>
+            {/* Family Tree - inside Probate */}
+            <div className="border-t border-yellow-200 pt-4 mt-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
+                <TreePine className="w-4 h-4 text-yellow-600" />
+                🌳 Family Tree
+              </h4>
+              <FamilyTreeEnhanced propertyId={propertyId} />
             </div>
           </>
         )}

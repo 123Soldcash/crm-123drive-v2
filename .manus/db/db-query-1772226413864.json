@@ -1,0 +1,31 @@
+{
+  "query": "SELECT DISTINCT fm.propertyId, p.addressLine1, p.city, dso.ds_probate as probate, COUNT(fm.id) as family_count FROM familyMembers fm LEFT JOIN properties p ON fm.propertyId = p.id LEFT JOIN deepSearchOverview dso ON fm.propertyId = dso.propertyId GROUP BY fm.propertyId, p.addressLine1, p.city, dso.ds_probate ORDER BY fm.propertyId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT DISTINCT fm.propertyId, p.addressLine1, p.city, dso.ds_probate as probate, COUNT(fm.id) as family_count FROM familyMembers fm LEFT JOIN properties p ON fm.propertyId = p.id LEFT JOIN deepSearchOverview dso ON fm.propertyId = dso.propertyId GROUP BY fm.propertyId, p.addressLine1, p.city, dso.ds_probate ORDER BY fm.propertyId;",
+  "rows": [
+    {
+      "propertyId": "630080",
+      "addressLine1": "102 Marion Rd",
+      "city": "West Park",
+      "probate": "NULL",
+      "family_count": "2"
+    },
+    {
+      "propertyId": "780007",
+      "addressLine1": "11312 Sw 203rd Ter",
+      "city": "Miami",
+      "probate": "0",
+      "family_count": "1"
+    },
+    {
+      "propertyId": "1050023",
+      "addressLine1": "19905 Sw 147th Ave",
+      "city": "Miami",
+      "probate": "NULL",
+      "family_count": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "propertyId\taddressLine1\tcity\tprobate\tfamily_count\n630080\t102 Marion Rd\tWest Park\tNULL\t2\n780007\t11312 Sw 203rd Ter\tMiami\t0\t1\n1050023\t19905 Sw 147th Ave\tMiami\tNULL\t3\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

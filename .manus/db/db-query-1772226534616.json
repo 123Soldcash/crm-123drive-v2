@@ -1,0 +1,25 @@
+{
+  "query": "SELECT fm.propertyId, p.addressLine1, dso.ds_probate as probate FROM familyMembers fm LEFT JOIN properties p ON fm.propertyId = p.id LEFT JOIN deepSearchOverview dso ON fm.propertyId = dso.propertyId GROUP BY fm.propertyId, p.addressLine1, dso.ds_probate;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT fm.propertyId, p.addressLine1, dso.ds_probate as probate FROM familyMembers fm LEFT JOIN properties p ON fm.propertyId = p.id LEFT JOIN deepSearchOverview dso ON fm.propertyId = dso.propertyId GROUP BY fm.propertyId, p.addressLine1, dso.ds_probate;",
+  "rows": [
+    {
+      "propertyId": "630080",
+      "addressLine1": "102 Marion Rd",
+      "probate": "NULL"
+    },
+    {
+      "propertyId": "780007",
+      "addressLine1": "11312 Sw 203rd Ter",
+      "probate": "1"
+    },
+    {
+      "propertyId": "1050023",
+      "addressLine1": "19905 Sw 147th Ave",
+      "probate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "propertyId\taddressLine1\tprobate\n630080\t102 Marion Rd\tNULL\n780007\t11312 Sw 203rd Ter\t1\n1050023\t19905 Sw 147th Ave\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

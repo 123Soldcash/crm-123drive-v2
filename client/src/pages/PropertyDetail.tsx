@@ -452,11 +452,7 @@ export default function PropertyDetail() {
         </CollapsibleSection>
       )}
 
-      {isAdmin && (
-        <CollapsibleSection title="Family Tree" icon="🌳" isOpen={showFamilyTree} onToggle={() => setShowFamilyTree(!showFamilyTree)} accentColor="yellow">
-          <FamilyTreeEnhanced propertyId={propertyId} />
-        </CollapsibleSection>
-      )}
+      {/* Family Tree is now inside Deep Search > Probate section */}
 
       <CollapsibleSection title="Field Visit Check-In (Birddog)" icon="📍" isOpen={showFieldVisit} onToggle={() => setShowFieldVisit(!showFieldVisit)} accentColor="pink">
         <div className="grid gap-6 md:grid-cols-2">
