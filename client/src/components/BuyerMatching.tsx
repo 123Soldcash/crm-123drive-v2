@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Mail, Phone, Building, ExternalLink } from "lucide-react";
@@ -18,6 +19,7 @@ interface BuyerMatchingProps {
 }
 
 export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
+  const [, setLocationNav] = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   
   const { data: matches, isLoading } = trpc.buyers.getMatches.useQuery({ propertyId });
@@ -47,7 +49,7 @@ export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
           variant="outline" 
           size="sm"
           className="h-8 text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
-          onClick={() => window.location.href = '/buyers'}
+          onClick={() => setLocationNav('/buyers')}
         >
           Manage List
         </Button>
@@ -100,7 +102,7 @@ export default function BuyerMatching({ propertyId }: BuyerMatchingProps) {
                       variant="ghost" 
                       size="sm" 
                       className="h-7 w-7 p-0 text-gray-500 hover:text-purple-600 hover:bg-purple-50"
-                      onClick={() => window.location.href = `/buyers/${buyer.id}`}
+                      onClick={() => setLocationNav(`/buyers/${buyer.id}`)}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </Button>

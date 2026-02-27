@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertCircle, CheckCircle2, Upload, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 interface PreviewRow {
@@ -20,6 +21,7 @@ interface PreviewRow {
 }
 
 export default function ImportDealMachine() {
+  const [, setLocationNav] = useLocation();
   // Using sonner toast
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewRow[]>([]);
@@ -308,7 +310,7 @@ export default function ImportDealMachine() {
               </Alert>
             )}
 
-            <Button onClick={() => window.location.href = "/properties"} className="w-full">
+            <Button onClick={() => setLocationNav("/properties")} className="w-full">
               View Imported Properties
             </Button>
           </CardContent>

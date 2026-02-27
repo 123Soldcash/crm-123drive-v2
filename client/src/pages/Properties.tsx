@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -82,6 +82,7 @@ const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2
 
 export default function Properties() {
   const { user } = useAuth();
+  const [, setLocationNav] = useLocation();
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [filters, setFilters] = useState<FilterState>(() => {
     // Check URL parameters first
@@ -1050,6 +1051,7 @@ export default function Properties() {
 
 // Add Property Dialog Component
 function AddPropertyDialog() {
+  const [, setLocationDialog] = useLocation();
   const [open, setOpen] = useState(false);
   const [ignoreDuplicates, setIgnoreDuplicates] = useState(false);
   const [formData, setFormData] = useState({
@@ -1136,7 +1138,7 @@ function AddPropertyDialog() {
               }}
               onExistingLeadSelect={(leadId: number) => {
                 // Navigate to existing lead
-                window.location.href = `/properties/${leadId}`;
+                setLocationDialog(`/properties/${leadId}`);
               }}
               placeholder="Digite o endereço para buscar..."
             />

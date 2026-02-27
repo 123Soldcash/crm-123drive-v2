@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Buyers() {
+  const [, setLocationNav] = useLocation();
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newBuyer, setNewBuyer] = useState({
@@ -278,7 +280,7 @@ export default function Buyers() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => window.location.href = `/buyers/${buyer.id}`}>
+                            <DropdownMenuItem onClick={() => setLocationNav(`/buyers/${buyer.id}`)}>
                               <ExternalLink className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem>

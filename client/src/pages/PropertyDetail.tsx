@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +52,7 @@ import Comparables from "@/components/Comparables";
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
+  const [, setLocation] = useLocation();
   const propertyId = Number(params?.id);
   const [noteContent, setNoteContent] = useState("");
 
@@ -116,14 +117,14 @@ export default function PropertyDetail() {
   const handlePrevious = () => {
     if (currentIndex > 0) {
       const prevId = navigationIds[currentIndex - 1];
-      window.location.href = `/properties/${prevId}`;
+      setLocation(`/properties/${prevId}`);
     }
   };
 
   const handleNext = () => {
     if (currentIndex < navigationIds.length - 1) {
       const nextId = navigationIds[currentIndex + 1];
-      window.location.href = `/properties/${nextId}`;
+      setLocation(`/properties/${nextId}`);
     }
   };
 

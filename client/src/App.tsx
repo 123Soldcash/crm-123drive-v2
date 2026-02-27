@@ -24,29 +24,83 @@ import { DuplicatesDashboard } from "./pages/DuplicatesDashboard";
 import PipelineKanban from "./pages/PipelineKanban";
 import InviteAccept from "./pages/InviteAccept";
 
+// Named wrapper components to prevent React from unmounting/remounting
+// on every render (inline arrow functions create new references each time)
+function DashboardPage() {
+  return <DashboardLayout><Dashboard /></DashboardLayout>;
+}
+function PropertiesPage() {
+  return <DashboardLayout><Properties /></DashboardLayout>;
+}
+function PropertyDetailPage() {
+  return <DashboardLayout><PropertyDetail /></DashboardLayout>;
+}
+function MapViewPage() {
+  return <DashboardLayout><MapView /></DashboardLayout>;
+}
+function ActivityTrackingPage() {
+  return <DashboardLayout><ActivityTracking /></DashboardLayout>;
+}
+function ImportPropertiesPage() {
+  return <DashboardLayout><ImportProperties /></DashboardLayout>;
+}
+function AgentPerformancePage() {
+  return <DashboardLayout><AgentPerformance /></DashboardLayout>;
+}
+function UserManagementPage() {
+  return <DashboardLayout><UserManagement /></DashboardLayout>;
+}
+function BuyersPage() {
+  return <DashboardLayout><Buyers /></DashboardLayout>;
+}
+function BuyerDetailPage() {
+  return <DashboardLayout><BuyerDetail /></DashboardLayout>;
+}
+function TasksKanbanPage() {
+  return <DashboardLayout><TasksKanban /></DashboardLayout>;
+}
+function TasksListPage() {
+  return <DashboardLayout><TasksList /></DashboardLayout>;
+}
+function TasksCalendarPage() {
+  return <DashboardLayout><TasksCalendar /></DashboardLayout>;
+}
+function BulkAgentAssignmentPage() {
+  return <DashboardLayout><BulkAgentAssignment /></DashboardLayout>;
+}
+function ImportDealMachinePage() {
+  return <DashboardLayout><ImportDealMachine /></DashboardLayout>;
+}
+function DuplicatesDashboardPage() {
+  return <DashboardLayout><DuplicatesDashboard /></DashboardLayout>;
+}
+function PipelineKanbanPage() {
+  return <DashboardLayout><PipelineKanban /></DashboardLayout>;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
-      <Route path="/properties" component={() => <DashboardLayout><Properties /></DashboardLayout>} />
-      <Route path="/properties/:id" component={() => <DashboardLayout><PropertyDetail /></DashboardLayout>} />
-      <Route path="/map" component={() => <DashboardLayout><MapView /></DashboardLayout>} />
-      <Route path="/activity" component={() => <DashboardLayout><ActivityTracking /></DashboardLayout>} />
-      <Route path="/import" component={() => <DashboardLayout><ImportProperties /></DashboardLayout>} />
-      <Route path="/agent-performance" component={() => <DashboardLayout><AgentPerformance /></DashboardLayout>} />
-      <Route path="/users" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
-      <Route path="/buyers" component={() => <DashboardLayout><Buyers /></DashboardLayout>} />
-      <Route path="/buyers/:id" component={() => <DashboardLayout><BuyerDetail /></DashboardLayout>} />
-      <Route path="/agents" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
-      <Route path="/agent-management" component={() => <DashboardLayout><UserManagement /></DashboardLayout>} />
-      <Route path="/bulk-assign-agents" component={() => <DashboardLayout><BulkAgentAssignment /></DashboardLayout>} />
-      <Route path="/import-dealmachine" component={() => <DashboardLayout><ImportDealMachine /></DashboardLayout>} />
-      <Route path="/tasks/kanban" component={() => <DashboardLayout><TasksKanban /></DashboardLayout>} />
-      <Route path="/tasks/list" component={() => <DashboardLayout><TasksList /></DashboardLayout>} />
-      <Route path="/tasks/calendar" component={() => <DashboardLayout><TasksCalendar /></DashboardLayout>} />
-      <Route path="/duplicates" component={() => <DashboardLayout><DuplicatesDashboard /></DashboardLayout>} />
-      <Route path="/pipeline" component={() => <DashboardLayout><PipelineKanban /></DashboardLayout>} />
-      <Route path="/invite/:token" component={() => <InviteAccept />} />
+      <Route path="/" component={DashboardPage} />
+      <Route path="/properties" component={PropertiesPage} />
+      <Route path="/properties/:id" component={PropertyDetailPage} />
+      <Route path="/map" component={MapViewPage} />
+      <Route path="/activity" component={ActivityTrackingPage} />
+      <Route path="/import" component={ImportPropertiesPage} />
+      <Route path="/agent-performance" component={AgentPerformancePage} />
+      <Route path="/users" component={UserManagementPage} />
+      <Route path="/buyers" component={BuyersPage} />
+      <Route path="/buyers/:id" component={BuyerDetailPage} />
+      <Route path="/agents" component={UserManagementPage} />
+      <Route path="/agent-management" component={UserManagementPage} />
+      <Route path="/bulk-assign-agents" component={BulkAgentAssignmentPage} />
+      <Route path="/import-dealmachine" component={ImportDealMachinePage} />
+      <Route path="/tasks/kanban" component={TasksKanbanPage} />
+      <Route path="/tasks/list" component={TasksListPage} />
+      <Route path="/tasks/calendar" component={TasksCalendarPage} />
+      <Route path="/duplicates" component={DuplicatesDashboardPage} />
+      <Route path="/pipeline" component={PipelineKanbanPage} />
+      <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
