@@ -2062,3 +2062,8 @@
 - [x] Remove or hide manual Save buttons
 - [x] Test all field types (dropdowns, chips, text, toggles)
 - [ ] Save checkpoint
+
+## BUG FIX - Auto-Save Loop
+- [x] Fix saving/saved indicator cycling endlessly in DeepSearchOverview
+- [x] Fix saving/saved indicator cycling endlessly in FinancialModule
+- [x] Prevent invalidate from re-triggering auto-save cascade

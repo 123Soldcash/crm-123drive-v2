@@ -170,9 +170,11 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync from server data
+  // Sync from server data (guard with isInitialLoad to prevent save loop)
+  const isSyncing = useRef(false);
   useEffect(() => {
     if (data) {
+      isSyncing.current = true;
       setPropertyType(data.propertyType || null);
       setPropertyUse(data.propertyUse || null);
       setPropertyTags(safeParseJson(data.propertyTags));
@@ -193,7 +195,11 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
       setGeneralNotes(data.generalNotes || "");
       setProbateNotes(data.probateNotes || "");
       setInternalNotes(data.internalNotes || "");
-      isInitialLoad.current = false;
+      // Use microtask to ensure all setState batches complete before re-enabling auto-save
+      queueMicrotask(() => {
+        isSyncing.current = false;
+        isInitialLoad.current = false;
+      });
     }
   }, [data]);
 
@@ -235,7 +241,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
         internalNotes: vals.internalNotes || null,
       });
       setSaveStatus("saved");
-      utils.deepSearch.getOverview.invalidate({ propertyId });
+      // Don't invalidate getOverview to avoid re-fetch loop; distress score is separate
       utils.deepSearch.getDistressScore.invalidate({ propertyId });
       // Reset to idle after 2 seconds
       if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -248,7 +254,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
 
   // Debounced auto-save trigger
   const triggerAutoSave = useCallback((vals: Parameters<typeof performSave>[0]) => {
-    if (isInitialLoad.current) return; // Don't save on initial data load
+    if (isInitialLoad.current || isSyncing.current) return; // Don't save on initial/server data load
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setSaveStatus("saving");
     autoSaveTimer.current = setTimeout(() => performSave(vals), 800);

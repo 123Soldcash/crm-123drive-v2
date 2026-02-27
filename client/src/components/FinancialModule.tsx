@@ -174,9 +174,11 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync from server data
+  // Sync from server data (guard with isSyncing to prevent save loop)
+  const isSyncing = useRef(false);
   useEffect(() => {
     if (data) {
+      isSyncing.current = true;
       setTax2025(data.delinquentTax2025);
       setTax2024(data.delinquentTax2024);
       setTax2023(data.delinquentTax2023);
@@ -203,7 +205,10 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
       setTaxLien(data.taxLien === 1);
       setCodeTaxNotes(data.codeTaxNotes || "");
       setDeedHistory(safeParseJsonDeeds(data.deedHistory));
-      isInitialLoad.current = false;
+      queueMicrotask(() => {
+        isSyncing.current = false;
+        isInitialLoad.current = false;
+      });
     }
   }, [data]);
 
@@ -256,7 +261,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
         deedHistory: JSON.stringify(vals.deedHistory),
       });
       setSaveStatus("saved");
-      utils.deepSearch.getFinancial.invalidate({ propertyId });
+      // Don't invalidate getFinancial to avoid re-fetch loop
       if (savedTimer.current) clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -266,14 +271,14 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   }, [propertyId, updateMutation, utils]);
 
   const triggerAutoSave = useCallback((vals: Parameters<typeof performSave>[0]) => {
-    if (isInitialLoad.current) return;
+    if (isInitialLoad.current || isSyncing.current) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setSaveStatus("saving");
     autoSaveTimer.current = setTimeout(() => performSave(vals), 800);
   }, [performSave]);
 
   const markDirty = useCallback(() => {
-    if (isInitialLoad.current) return;
+    if (isInitialLoad.current || isSyncing.current) return;
     triggerAutoSave({
       tax2025, tax2024, tax2023, tax2022, tax2021, tax2020, taxNotes, needsRepairs,
       repairCategories, estimatedRepairCost, repairNotes, mortgage, mortgageNotes,
