@@ -604,7 +604,7 @@
 - [ ] Verify all property details, financial info, and contacts in database
 - [ ] Show preview results in UI (property details, financial data populated)
 - [ ] Generate import report showing what was imported
-- [ ] Save checkpoint and deliver results
+- [x] Save checkpoint and deliver results
 
 
 ## Preview Import with Correct Excel File (Jan 14, 2026) - COMPLETED ✅
@@ -694,7 +694,7 @@
 - [ ] Write comprehensive tests for merge functionality
 - [ ] Test owner name duplicate detection
 - [ ] Test duplicates dashboard UI
-- [ ] Save checkpoint and deliver complete system
+- [x] Save checkpoint and deliver complete system
 
 
 ## AI-Powered Auto-Merge Suggestions (Jan 15, 2026)
@@ -784,7 +784,7 @@
   - [ ] Verify analytics page displays correctly
   - [ ] Test bulk merge with 5+ suggestions
   - [ ] Verify weight adjustments after 20+ feedback samples
-- [ ] Save checkpoint and deliver complete system
+- [x] Save checkpoint and deliver complete system
 
 
 ## Phone Number Duplicate Detection (Jan 15, 2026)
@@ -924,7 +924,7 @@
 - [x] Rename DESK_5 to Desk_Deep_Search
 - [x] Update database if needed (0 rows affected - no existing DESK_5 records)
 - [ ] Test in property details page
-- [ ] Save checkpoint with updated desk name
+- [x] Save checkpoint with updated desk name
 
 ## URGENT - Zapier Integration Broken (Jan 15, 2026)
 - [x] Review what API endpoints Zapier was using
@@ -2030,3 +2030,11 @@
 - [x] Use CSS variable var(--sidebar-width) instead of fixed left-64 (279px actual width)
 - [x] Test on desktop viewport - sidebar is now visible, header starts after sidebar
 - [x] Verify mobile layout is not affected by desktop fix
+
+## DATA CLEANUP - Remove Duplicate Dashboard Metrics (02/27/2026)
+- [x] Audit Lead Temperatures vs Call Metrics to identify duplicates
+- [x] Remove duplicate data from Call Metrics section
+- [x] Consolidate data into Lead Temperatures section
+- [x] Remove "Duplicates" menu option from navigation
+- [x] Test Dashboard and verify no data loss
+- [x] Save checkpoint

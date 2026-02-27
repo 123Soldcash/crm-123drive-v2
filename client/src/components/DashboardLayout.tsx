@@ -33,7 +33,6 @@ const menuItems = [
   { icon: Workflow, label: "Pipeline", path: "/pipeline" },
   { icon: MapPin, label: "Map View", path: "/map" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks/kanban" },
-  { icon: GitMerge, label: "Duplicates", path: "/duplicates" },
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
