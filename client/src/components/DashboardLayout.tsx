@@ -56,6 +56,7 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -141,7 +142,8 @@ export default function DashboardLayout({
     <SidebarProvider
       style={{
         // Only apply custom width on desktop; mobile uses its own Sheet width
-        "--sidebar-width": `${sidebarWidth}px`,
+        // Check both the hook and window.innerWidth to handle initial render
+        ...((isMobile || (typeof window !== 'undefined' && window.innerWidth < 768)) ? {} : { "--sidebar-width": `${sidebarWidth}px` }),
       } as unknown as CSSProperties}
     >
       <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>

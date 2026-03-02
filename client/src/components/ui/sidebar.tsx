@@ -202,7 +202,7 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-full w-full flex-col overflow-hidden">{children}</div>
         </SheetContent>
       </Sheet>
     );
@@ -377,16 +377,18 @@ function SidebarSeparator({
   );
 }
 
-function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
+function SidebarContent({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto overflow-x-hidden group-data-[collapsible=icon]:overflow-hidden",
         className
-      )}
-      {...props}
+      )}   {...props}
     />
   );
 }
@@ -476,7 +478,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
     <li
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
+      className={cn("group/menu-item relative overflow-hidden", className)}
       {...props}
     />
   );

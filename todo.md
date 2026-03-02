@@ -2108,3 +2108,6 @@
 ## BUG FIX - Mobile Navigation Menu Overflow
 - [x] Fix mobile nav buttons leaking outside the Navigation frame
 - [x] Ensure all nav items are contained within the sidebar/drawer
+
+## BUG FIX - Mobile Nav Buttons Overflow Container
+- [x] Fix menu buttons extending beyond the white navigation container on mobile
