@@ -2104,3 +2104,7 @@
 - [ ] Wrap filter chips section to prevent horizontal overflow
 - [x] Fix card text truncation with ellipsis (address, owner name, stage)
 - [ ] Ensure all card text uses dynamic sizing and does not break layout
+
+## BUG FIX - Mobile Navigation Menu Overflow
+- [x] Fix mobile nav buttons leaking outside the Navigation frame
+- [x] Ensure all nav items are contained within the sidebar/drawer

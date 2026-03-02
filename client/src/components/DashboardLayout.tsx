@@ -140,6 +140,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider
       style={{
+        // Only apply custom width on desktop; mobile uses its own Sheet width
         "--sidebar-width": `${sidebarWidth}px`,
       } as unknown as CSSProperties}
     >
