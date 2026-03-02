@@ -2092,3 +2092,9 @@
 - [ ] Fix Automated Follow-ups header (title + New Follow-up crowded)
 - [ ] Audit and fix all other CollapsibleSection headers with crowded controls
 - [ ] Ensure no horizontal scroll bars in any section on mobile
+
+## MOBILE - Properties List as Cards
+- [x] Convert Properties table rows to cards on mobile (no horizontal scroll)
+- [x] Keep table layout on desktop unchanged
+- [x] Ensure all key info visible in card: address, temp, value, owner, status
+- [x] Card tap navigates to property detail

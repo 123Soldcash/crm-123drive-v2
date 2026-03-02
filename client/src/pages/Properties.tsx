@@ -775,7 +775,95 @@ export default function Properties() {
               No properties match your filters
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-4 md:mx-0">
+            <>
+            {/* ── MOBILE CARDS (hidden on md+) ── */}
+            <div className="flex flex-col gap-3 md:hidden">
+              {filteredProperties?.map((property) => {
+                const stageConfig = property.dealStage ? STAGE_CONFIGS.find((s) => s.id === property.dealStage) : null;
+                const tempEmoji = property.leadTemperature === "SUPER HOT" ? "🔥🔥" : property.leadTemperature === "HOT" ? "🔥" : property.leadTemperature === "WARM" ? "🌡️" : property.leadTemperature === "DEAD" ? "☠️" : "❄️";
+                return (
+                  <Link key={property.id} href={`/properties/${property.id}`}>
+                    <div className={`rounded-xl border p-4 cursor-pointer active:scale-[0.99] transition-all shadow-sm hover:shadow-md ${
+                      property.ownerVerified === 1 ? "bg-blue-50 border-blue-200" : "bg-card border-border"
+                    }`}>
+                      {/* Row 1: Address + Temp badge */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-base leading-tight truncate">{property.addressLine1}</div>
+                          <div className="text-sm text-muted-foreground mt-0.5">{property.city}, {property.state}</div>
+                        </div>
+                        <Badge className="bg-blue-600 text-white border-0 font-bold px-2 py-1 text-xs shrink-0">
+                          {tempEmoji} {property.leadTemperature || "COLD"}
+                        </Badge>
+                      </div>
+
+                      {/* Row 2: Stage + Desk */}
+                      {(stageConfig || property.deskName) && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {stageConfig && (
+                            <Badge className={`${stageConfig.bgColor} ${stageConfig.color} border-0 text-xs px-2 py-0.5`}>
+                              {stageConfig.icon} {stageConfig.shortLabel}
+                            </Badge>
+                          )}
+                          {property.deskName && property.deskName !== 'BIN' && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              property.deskName === 'DESK_CHRIS' ? 'bg-orange-100 text-orange-800' :
+                              property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-100 text-purple-800' :
+                              property.deskName === 'DESK_1' ? 'bg-sky-100 text-sky-800' :
+                              property.deskName === 'DESK_2' ? 'bg-emerald-100 text-emerald-800' :
+                              property.deskName === 'DESK_3' ? 'bg-pink-100 text-pink-800' :
+                              property.deskName === 'DESK_4' ? 'bg-blue-600 text-white' :
+                              property.deskName === 'DESK_5' ? 'bg-amber-100 text-amber-800' :
+                              property.deskName === 'ARCHIVED' ? 'bg-gray-800 text-white' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {property.deskName === 'DESK_CHRIS' ? '👤 Chris' :
+                               property.deskName === 'DESK_DEEP_SEARCH' ? '🔍 Deep Search' :
+                               property.deskName === 'ARCHIVED' ? '✅ Archived' :
+                               `📋 ${property.deskName.replace('DESK_', '')}`}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Row 3: Key stats grid */}
+                      <div className="grid grid-cols-3 gap-2 text-sm mb-2">
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase tracking-wide">Owner</div>
+                          <div className="font-medium truncate">{property.owner1Name || property.owner2Name || "Unknown"}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase tracking-wide">Value</div>
+                          <div className="font-medium">${property.estimatedValue?.toLocaleString() || "N/A"}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground uppercase tracking-wide">Equity</div>
+                          <div className="font-medium">{property.equityPercent ? `${property.equityPercent.toFixed(0)}%` : "N/A"}</div>
+                        </div>
+                      </div>
+
+                      {/* Row 4: Status tags + date */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-1">
+                          {property.status?.split(", ").slice(0, 2).map((tag: string, i: number) => (
+                            <Badge key={i} variant="secondary" className="text-xs px-1.5 py-0">{tag}</Badge>
+                          ))}
+                          {property.propertyFlags?.slice(0, 1).map((flag: string, i: number) => (
+                            <Badge key={i} variant="outline" className="text-xs px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">{flag}</Badge>
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* ── DESKTOP TABLE (hidden on mobile) ── */}
+            <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -994,6 +1082,7 @@ export default function Properties() {
               </TableBody>
             </Table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
