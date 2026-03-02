@@ -13,6 +13,7 @@ interface PropertyImageProps {
   state: string;
   zipcode: string;
   compact?: boolean;
+  hero?: boolean; // Full-size hero mode for the main property header
 }
 
 export function PropertyImage({
@@ -23,6 +24,7 @@ export function PropertyImage({
   state,
   zipcode,
   compact = false,
+  hero = false,
 }: PropertyImageProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
@@ -93,19 +95,26 @@ export function PropertyImage({
   const streetViewBase64 = streetViewData?.imageBase64 ?? null;
   const displayUrl = propertyImage || streetViewBase64;
 
-  const imageSize = compact
+  const imageSize = hero
+    ? "w-full h-full"
+    : compact
     ? "w-16 h-16 sm:w-20 sm:h-20"
     : "w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32";
 
   return (
     <>
-      <div className={cn("relative group shrink-0", imageSize)}>
+      <div className={cn(
+        "relative group",
+        hero ? "w-full h-full" : "shrink-0",
+        imageSize
+      )}>
         {displayUrl ? (
           <img
             src={displayUrl}
             alt={`${address}, ${city}`}
             className={cn(
-              "w-full h-full object-cover rounded-lg border-2 border-slate-200 shadow-sm cursor-pointer transition-all hover:border-blue-400 hover:shadow-md",
+              "w-full h-full object-cover cursor-pointer transition-all",
+              hero ? "rounded-none" : "rounded-lg border-2 border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-md",
               compact && "rounded-md"
             )}
             onClick={() => setShowFullImage(true)}

@@ -2003,7 +2003,7 @@
 - [ ] Fix Notes table/list layout on mobile
 - [ ] Fix Activities table/list layout on mobile
 - [ ] Verify responsive design for both sections
-- [ ] Test on desktop and mobile viewports
+- [x] Test on desktop and mobile viewports
 
 
 ## BUG FIX - Notes and Activities Layout Issues (02/26/2026)
@@ -2075,3 +2075,9 @@
 - [ ] Update property header UI with image display
 - [ ] Add upload button to replace image manually
 - [ ] Fallback logic: custom image > Street View > placeholder
+
+## REDESIGN - Property Header Hero Image
+- [x] Redesign property header with large hero image
+- [x] Maintain coherence with sticky header on scroll
+- [x] Ensure all property info remains visible
+- [x] Test on desktop and mobile viewports
