@@ -403,6 +403,93 @@ export function StickyPropertyHeader({
           </div>
         </div>
       </div>
+
+      {/* ─── DATA TABLE: Property / Financial / Identifiers / Owner ─── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-slate-50/50 rounded-xl border border-slate-100 p-2 sm:p-3">
+        {/* Property Info */}
+        <div className="space-y-1 sm:space-y-1.5 p-1.5 sm:p-2 bg-white rounded-lg border border-slate-100">
+          <h3 className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Property</h3>
+          <div className="grid grid-cols-2 gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Type</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 truncate max-w-[70px]">{property.propertyType || "N/A"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Year</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{yearBuilt}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Bed/Bath</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{beds}/{baths}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Sqft</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{sqft}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Info */}
+        <div className="space-y-1 sm:space-y-1.5 p-1.5 sm:p-2 bg-white rounded-lg border border-slate-100">
+          <h3 className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Financial</h3>
+          <div className="grid grid-cols-2 gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Value</span>
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-600">{formatCurrency(property.estimatedValue)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Equity</span>
+              <span className="text-[10px] sm:text-xs font-bold text-blue-600">{formatCurrency(property.equityAmount || property.equity)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Mortgage</span>
+              <span className="text-[10px] sm:text-xs font-bold text-rose-600">{formatCurrency(property.mortgageBalance || property.mortgageAmount)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Taxes</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{formatCurrency(property.taxAmount || property.estimatedTaxes)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Identifiers */}
+        <div className="space-y-1 sm:space-y-1.5 p-1.5 sm:p-2 bg-white rounded-lg border border-slate-100">
+          <h3 className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Identifiers</h3>
+          <div className="space-y-1 sm:space-y-1.5">
+            <div className="flex justify-between items-center gap-1 sm:gap-2">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase shrink-0">APN</span>
+              <span className="text-[10px] sm:text-xs font-bold text-purple-600 font-mono text-right break-all">{property.apnParcelId || property.parcelNumber || property.apn || "N/A"}</span>
+            </div>
+            <div className="flex justify-between items-center gap-1 sm:gap-2">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase shrink-0">Prop ID</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600 font-mono text-right break-all">{property.propertyId || property.id || "N/A"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Status</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 truncate max-w-[80px]">{property.trackingStatus || "N/A"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Owner Info */}
+        <div className="space-y-1 sm:space-y-1.5 p-1.5 sm:p-2 bg-white rounded-lg border border-slate-100">
+          <h3 className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Owner</h3>
+          <div className="space-y-1 sm:space-y-1.5">
+            <div className="flex justify-between items-start gap-1 sm:gap-2">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase shrink-0">Name</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 text-right break-words">{ownerName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Location</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{location}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase">Equity %</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700">{property.equityPercent || "0"}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

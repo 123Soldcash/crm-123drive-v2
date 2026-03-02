@@ -2081,3 +2081,8 @@
 - [x] Maintain coherence with sticky header on scroll
 - [x] Ensure all property info remains visible
 - [x] Test on desktop and mobile viewports
+
+## LAYOUT - Restore Data Table Below Hero Card
+- [x] Restore Property/Financial/Identifiers/Owner data table below hero card
+- [x] Keep sticky header compact on scroll
+- [x] Ensure 4-column desktop, 2-column mobile responsive grid
