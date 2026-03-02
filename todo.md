@@ -2086,3 +2086,9 @@
 - [x] Restore Property/Financial/Identifiers/Owner data table below hero card
 - [x] Keep sticky header compact on scroll
 - [x] Ensure 4-column desktop, 2-column mobile responsive grid
+
+## MOBILE - Fix Crowded Section Headers
+- [ ] Fix Tasks header (title + Show Hidden + New Task crowded on one line)
+- [ ] Fix Automated Follow-ups header (title + New Follow-up crowded)
+- [ ] Audit and fix all other CollapsibleSection headers with crowded controls
+- [ ] Ensure no horizontal scroll bars in any section on mobile

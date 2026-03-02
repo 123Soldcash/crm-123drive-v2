@@ -163,9 +163,9 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       action={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="outline" className="h-8 text-xs border-blue-200 text-blue-700 hover:bg-blue-50">
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              New Follow-up
+            <Button size="sm" variant="outline" className="h-8 px-2 text-xs border-blue-200 text-blue-700 hover:bg-blue-50 min-w-0">
+              <Plus className="h-3.5 w-3.5 sm:mr-1" />
+              <span className="hidden sm:inline">New Follow-up</span>
             </Button>
           </DialogTrigger>
           <DialogContent>

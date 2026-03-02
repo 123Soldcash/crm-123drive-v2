@@ -222,14 +222,14 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
 
   return (
     <Card className="border-l-4 border-l-blue-500">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <Phone className="w-5 h-5" />
           Contacts ({contacts?.length || 0})
         </CardTitle>
         <Dialog open={isAddingContact} onOpenChange={setIsAddingContact}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => resetForm()}>
+            <Button size="sm" onClick={() => resetForm()} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>

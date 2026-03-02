@@ -87,24 +87,24 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
           </Badge>
         ) : null}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-[11px] text-slate-500 hover:text-slate-900"
+              className="h-8 px-2 text-[11px] text-slate-500 hover:text-slate-900 min-w-0"
               onClick={() => setShowHidden(!showHidden)}
             >
-              {showHidden ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
-              {showHidden ? "Hide" : "Show Hidden"}
+              {showHidden ? <EyeOff className="h-3.5 w-3.5 sm:mr-1.5" /> : <Eye className="h-3.5 w-3.5 sm:mr-1.5" />}
+              <span className="hidden sm:inline">{showHidden ? "Hide" : "Show Hidden"}</span>
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs border-pink-200 text-pink-700 hover:bg-pink-50"
+              className="h-8 px-2 text-xs border-pink-200 text-pink-700 hover:bg-pink-50 min-w-0"
               onClick={() => setCreateDialogOpen(true)}
             >
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              New Task
+              <Plus className="h-3.5 w-3.5 sm:mr-1" />
+              <span className="hidden sm:inline">New Task</span>
             </Button>
           </div>
         }

@@ -120,19 +120,19 @@ export function PhotoGallery({ propertyId }: PhotoGalleryProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1"
+            className="h-7 px-2 text-xs gap-1 min-w-0"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
           >
             {isUploading ? (
               <>
-                <Upload className="h-3 w-3 animate-spin" />
-                Uploading...
+                <Upload className="h-3 w-3 animate-spin sm:mr-1" />
+                <span className="hidden sm:inline">Uploading...</span>
               </>
             ) : (
               <>
-                <Plus className="h-3 w-3" />
-                Add Photo
+                <Plus className="h-3 w-3 sm:mr-0" />
+                <span className="hidden sm:inline">Add Photo</span>
               </>
             )}
           </Button>

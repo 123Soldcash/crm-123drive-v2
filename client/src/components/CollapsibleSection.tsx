@@ -45,36 +45,56 @@ export function CollapsibleSection({
     <Card className={cn("overflow-hidden border shadow-sm bg-white transition-all duration-200", accentStyles[accentColor], className)}>
       <CardHeader 
         className={cn(
-          "py-3 px-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-slate-50/50 transition-colors",
+          "py-3 px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between space-y-0 cursor-pointer hover:bg-slate-50/50 transition-colors",
           headerClassName
         )}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "p-1.5 rounded-md flex items-center justify-center",
-            accentColor === "blue" && "bg-blue-50 text-blue-600",
-            accentColor === "yellow" && "bg-yellow-50 text-yellow-600",
-            accentColor === "pink" && "bg-pink-50 text-pink-600",
-            accentColor === "purple" && "bg-purple-50 text-purple-600",
-            accentColor === "green" && "bg-green-50 text-green-600",
-            accentColor === "orange" && "bg-orange-50 text-orange-600",
-            accentColor === "gray" && "bg-slate-100 text-slate-600",
-          )}>
-            {typeof Icon === 'string' ? (
-              <span className="text-sm leading-none">{Icon}</span>
-            ) : (
-              <Icon className="h-4 w-4" />
-            )}
+        {/* Row 1: Icon + Title + Collapse toggle */}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn(
+              "p-1.5 rounded-md flex items-center justify-center shrink-0",
+              accentColor === "blue" && "bg-blue-50 text-blue-600",
+              accentColor === "yellow" && "bg-yellow-50 text-yellow-600",
+              accentColor === "pink" && "bg-pink-50 text-pink-600",
+              accentColor === "purple" && "bg-purple-50 text-purple-600",
+              accentColor === "green" && "bg-green-50 text-green-600",
+              accentColor === "orange" && "bg-orange-50 text-orange-600",
+              accentColor === "gray" && "bg-slate-100 text-slate-600",
+            )}>
+              {typeof Icon === 'string' ? (
+                <span className="text-sm leading-none">{Icon}</span>
+              ) : (
+                <Icon className="h-4 w-4" />
+              )}
+            </div>
+            <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2 truncate">
+              {title}
+              {badge}
+            </CardTitle>
           </div>
-          <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            {title}
-            {badge}
-          </CardTitle>
+          {/* Collapse toggle — always visible on the right of title row */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            className="h-8 w-8 p-0 text-slate-500 shrink-0 sm:hidden"
+          >
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
         </div>
-        
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {action}
+
+        {/* Row 2 (mobile) / same row (desktop): Action buttons + collapse toggle */}
+        {action && (
+          <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+            {action}
+          </div>
+        )}
+
+        {/* Collapse toggle for desktop only */}
+        <div className="hidden sm:flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {!action && null}
           <Button 
             variant="ghost" 
             size="sm" 
