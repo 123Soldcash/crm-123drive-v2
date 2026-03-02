@@ -2098,3 +2098,9 @@
 - [x] Keep table layout on desktop unchanged
 - [x] Ensure all key info visible in card: address, temp, value, owner, status
 - [x] Card tap navigates to property detail
+
+## BUG FIX - Filter Menus & Card Text Overflow (Mobile)
+- [ ] Fix filter dropdowns overflowing/overlapping screen on mobile
+- [ ] Wrap filter chips section to prevent horizontal overflow
+- [x] Fix card text truncation with ellipsis (address, owner name, stage)
+- [ ] Ensure all card text uses dynamic sizing and does not break layout

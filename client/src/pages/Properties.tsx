@@ -356,20 +356,21 @@ export default function Properties() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold">Properties</h1>
           <p className="text-muted-foreground">
             Browse and filter your property leads ({filteredProperties?.length || 0} properties)
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <AddPropertyDialog />
           <Link href="/map">
             <Button variant="outline">
               <MapPin className="mr-2 h-4 w-4" />
-              Map View
+              <span className="hidden sm:inline">Map View</span>
+              <span className="sm:hidden">Map</span>
             </Button>
           </Link>
         </div>
@@ -377,15 +378,15 @@ export default function Properties() {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <CardTitle>Filters</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {/* Save Search Button */}
               <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Search
+                    <Save className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Save Search</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -424,8 +425,8 @@ export default function Properties() {
               <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    Load Search
+                    <FolderOpen className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Load Search</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -477,8 +478,9 @@ export default function Properties() {
 
               {activeFilterCount > 0 && (
                 <Button variant="outline" size="sm" onClick={clearAllFilters}>
-                  <X className="mr-2 h-4 w-4" />
-                  Clear All ({activeFilterCount})
+                  <X className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Clear All ({activeFilterCount})</span>
+                  <span className="sm:hidden">({activeFilterCount})</span>
                 </Button>
               )}
             </div>
@@ -486,7 +488,7 @@ export default function Properties() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Basic Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -532,7 +534,7 @@ export default function Properties() {
                 setFilters((prev) => ({ ...prev, marketStatus: value }))
               }
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Market Status" />
               </SelectTrigger>
               <SelectContent>
@@ -582,7 +584,7 @@ export default function Properties() {
                 setFilters((prev) => ({ ...prev, leadTemperature: value }))
               }
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Lead Temperature" />
               </SelectTrigger>
               <SelectContent>
@@ -607,7 +609,7 @@ export default function Properties() {
                   }))
                 }
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Filter by Agent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -632,7 +634,7 @@ export default function Properties() {
                 }))
               }
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pipeline Stage" />
               </SelectTrigger>
               <SelectContent>
@@ -788,11 +790,11 @@ export default function Properties() {
                     }`}>
                       {/* Row 1: Address + Temp badge */}
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-base leading-tight truncate">{property.addressLine1}</div>
-                          <div className="text-sm text-muted-foreground mt-0.5">{property.city}, {property.state}</div>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="font-semibold text-base leading-tight truncate max-w-full">{property.addressLine1}</div>
+                          <div className="text-sm text-muted-foreground mt-0.5 truncate">{property.city}, {property.state}</div>
                         </div>
-                        <Badge className="bg-blue-600 text-white border-0 font-bold px-2 py-1 text-xs shrink-0">
+                        <Badge className="bg-blue-600 text-white border-0 font-bold px-2 py-1 text-xs shrink-0 whitespace-nowrap">
                           {tempEmoji} {property.leadTemperature || "COLD"}
                         </Badge>
                       </div>
@@ -828,31 +830,31 @@ export default function Properties() {
 
                       {/* Row 3: Key stats grid */}
                       <div className="grid grid-cols-3 gap-2 text-sm mb-2">
-                        <div>
+                        <div className="min-w-0 overflow-hidden">
                           <div className="text-xs text-muted-foreground uppercase tracking-wide">Owner</div>
-                          <div className="font-medium truncate">{property.owner1Name || property.owner2Name || "Unknown"}</div>
+                          <div className="font-medium truncate text-sm">{property.owner1Name || property.owner2Name || "Unknown"}</div>
                         </div>
-                        <div>
+                        <div className="min-w-0 overflow-hidden">
                           <div className="text-xs text-muted-foreground uppercase tracking-wide">Value</div>
-                          <div className="font-medium">${property.estimatedValue?.toLocaleString() || "N/A"}</div>
+                          <div className="font-medium truncate text-sm">${property.estimatedValue?.toLocaleString() || "N/A"}</div>
                         </div>
-                        <div>
+                        <div className="min-w-0 overflow-hidden">
                           <div className="text-xs text-muted-foreground uppercase tracking-wide">Equity</div>
-                          <div className="font-medium">{property.equityPercent ? `${property.equityPercent.toFixed(0)}%` : "N/A"}</div>
+                          <div className="font-medium text-sm">{property.equityPercent ? `${property.equityPercent.toFixed(0)}%` : "N/A"}</div>
                         </div>
                       </div>
 
                       {/* Row 4: Status tags + date */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-wrap gap-1">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex flex-wrap gap-1 min-w-0 flex-1">
                           {property.status?.split(", ").slice(0, 2).map((tag: string, i: number) => (
-                            <Badge key={i} variant="secondary" className="text-xs px-1.5 py-0">{tag}</Badge>
+                            <Badge key={i} variant="secondary" className="text-xs px-1.5 py-0 truncate max-w-[120px]">{tag}</Badge>
                           ))}
                           {property.propertyFlags?.slice(0, 1).map((flag: string, i: number) => (
-                            <Badge key={i} variant="outline" className="text-xs px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">{flag}</Badge>
+                            <Badge key={i} variant="outline" className="text-xs px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300 truncate max-w-[120px]">{flag}</Badge>
                           ))}
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">
                           {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : ''}
                         </span>
                       </div>
