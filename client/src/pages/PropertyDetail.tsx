@@ -428,9 +428,11 @@ export default function PropertyDetail() {
       {/* Call Tracking */}
       <CallTrackingTable propertyId={propertyId} />
       
-      {/* Middle Sections: Tasks and Follow-ups */}
-      <PropertyTasks propertyId={propertyId} />
-      <AutomatedFollowUps propertyId={propertyId} />
+      {/* Middle Sections: Tasks and Follow-ups - Side by side on desktop, stacked on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <PropertyTasks propertyId={propertyId} />
+        <AutomatedFollowUps propertyId={propertyId} />
+      </div>
       
       {/* Collapsible Sections */}
       <CollapsibleSection title="Comparables & Renovation Calculator" icon="📊" isOpen={showComparables} onToggle={() => setShowComparables(!showComparables)} accentColor="blue">

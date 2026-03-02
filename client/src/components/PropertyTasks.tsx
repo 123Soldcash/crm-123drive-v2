@@ -119,7 +119,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors"
+                className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors"
               >
                 <button
                   onClick={() => toggleTaskStatus(task.id, task.status)}
@@ -129,7 +129,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                 </button>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 flex-wrap">
                     <Link href={`/tasks/kanban`}>
                       <h4 className="font-medium text-sm text-slate-900 hover:text-blue-600 cursor-pointer truncate">
                         {task.title}
@@ -146,7 +146,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                     </p>
                   )}
                   
-                  <div className="flex items-center gap-3 text-[10px] text-gray-500">
+                  <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-gray-500 flex-wrap">
                     <span className="flex items-center gap-1">
                       <Badge variant="secondary" className="text-[9px] h-3.5 px-1 bg-slate-100 text-slate-500 border-none">
                         {task.taskType}

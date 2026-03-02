@@ -226,17 +226,17 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
       ) : (
         <div className="space-y-2">
           {followUps.map((fu) => (
-            <div key={fu.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors">
-              <div className="flex items-center gap-3">
+            <div key={fu.id} className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="p-2 rounded-full bg-white border border-slate-100 shadow-sm">
                   {fu.status === "Active" ? <Clock className="h-3.5 w-3.5 text-blue-500" /> : 
                    fu.status === "Paused" ? <AlertCircle className="h-3.5 w-3.5 text-amber-500" /> : 
                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">{fu.trigger}</span>
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-slate-900 truncate">{fu.trigger}</span>
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold shrink-0">
                       {fu.action}
                     </Badge>
                   </div>
