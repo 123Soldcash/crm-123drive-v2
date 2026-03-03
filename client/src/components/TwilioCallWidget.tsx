@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CallModal } from "./CallModal";
+import { NoTwilioPhoneDialog } from "./NoTwilioPhoneDialog";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface TwilioCallWidgetProps {
   phoneNumber: string;
@@ -29,17 +31,28 @@ function formatE164(phone: string): string {
 
 export function TwilioCallWidget({ phoneNumber, contactName, contactId, propertyId }: TwilioCallWidgetProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [guardOpen, setGuardOpen] = useState(false);
+  const { user } = useAuth();
+
+  function handleCallClick() {
+    // Block the action if the current user has no Twilio phone configured
+    if (!user?.twilioPhone) {
+      setGuardOpen(true);
+      return;
+    }
+    setModalOpen(true);
+  }
 
   return (
     <>
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setModalOpen(true)}
+        onClick={handleCallClick}
         className="h-7 w-7 p-0 hover:bg-green-50 rounded-full"
-        title={`Call ${contactName}`}
+        title={user?.twilioPhone ? `Call ${contactName}` : "No Twilio number configured — click for details"}
       >
-        <Phone className="h-3.5 w-3.5 text-green-600" />
+        <Phone className={`h-3.5 w-3.5 ${user?.twilioPhone ? "text-green-600" : "text-gray-400"}`} />
       </Button>
 
       {modalOpen && (
@@ -52,6 +65,12 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
           propertyId={propertyId ?? 0}
         />
       )}
+
+      <NoTwilioPhoneDialog
+        open={guardOpen}
+        onOpenChange={setGuardOpen}
+        action="call"
+      />
     </>
   );
 }

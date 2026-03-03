@@ -2137,3 +2137,11 @@
 - [x] Create SMSInbox page (/sms) with conversation list and last message preview
 - [x] Add SMS Inbox to navigation menu (MessageSquare icon)
 - [x] 18 passing Vitest tests for SMS functionality
+
+## FEATURE - Twilio Phone Number Validation Guard
+- [x] Create useTwilioPhone hook to check if current user has a Twilio number configured
+- [x] Create NoTwilioPhoneDialog component with friendly warning message
+- [x] Block call action in TwilioCallWidget if no Twilio number configured
+- [x] Block SMS action in SMSChatButton if no Twilio number configured
+- [x] Show clear message: "Configure your Twilio phone number in your profile to make calls/send SMS"
+- [x] Add tests for the validation logic (14 tests passing)

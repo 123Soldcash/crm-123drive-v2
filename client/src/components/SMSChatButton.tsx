@@ -21,6 +21,8 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, Send, RefreshCw, Phone, X, CheckCheck, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { NoTwilioPhoneDialog } from "./NoTwilioPhoneDialog";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Sheet,
   SheetContent,
@@ -94,6 +96,8 @@ export function SMSChatButton({
   iconOnly = true,
 }: SMSChatButtonProps) {
   const [open, setOpen] = useState(false);
+  const [guardOpen, setGuardOpen] = useState(false);
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -161,18 +165,33 @@ export function SMSChatButton({
 
   const displayName = contactName || formatPhoneDisplay(normalizedPhone);
 
+  function handleSmsClick() {
+    if (!user?.twilioPhone) {
+      setGuardOpen(true);
+      return;
+    }
+    setOpen(true);
+  }
+
   return (
     <>
       {/* Trigger button */}
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setOpen(true)}
+        onClick={handleSmsClick}
         className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full flex-shrink-0"
-        title={`Enviar SMS para ${displayName}`}
+        title={user?.twilioPhone ? `Send SMS to ${displayName}` : "No Twilio number configured — click for details"}
       >
-        <MessageSquare className="h-3.5 w-3.5 text-blue-600" />
+        <MessageSquare className={`h-3.5 w-3.5 ${user?.twilioPhone ? "text-blue-600" : "text-gray-400"}`} />
       </Button>
+
+      {/* Guard dialog — shown when no Twilio phone is configured */}
+      <NoTwilioPhoneDialog
+        open={guardOpen}
+        onOpenChange={setGuardOpen}
+        action="sms"
+      />
 
       {/* Chat drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
