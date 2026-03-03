@@ -16,6 +16,11 @@ export interface CreateFollowUpInput {
   action: FollowUpAction;
   actionDetails: Record<string, any>;
   nextRunAt: Date;
+  // SMS template fields (optional)
+  templateId?: number | null;
+  templateBody?: string;
+  createdByUserId?: number;
+  createdByName?: string;
 }
 
 export interface FollowUpWithProperty {
@@ -53,6 +58,10 @@ export async function createAutomatedFollowUp(input: CreateFollowUpInput) {
       actionDetails: JSON.stringify(input.actionDetails),
       status: "Active",
       nextRunAt: input.nextRunAt,
+      ...(input.templateId != null ? { templateId: input.templateId } : {}),
+      ...(input.templateBody ? { templateBody: input.templateBody } : {}),
+      ...(input.createdByUserId != null ? { createdByUserId: input.createdByUserId } : {}),
+      ...(input.createdByName ? { createdByName: input.createdByName } : {}),
     });
 
     return {

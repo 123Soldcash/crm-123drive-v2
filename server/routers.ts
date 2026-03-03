@@ -3299,11 +3299,18 @@ export const appRouter = router({
           action: z.enum(["Create Task", "Send Email", "Send SMS", "Change Stage"]),
           actionDetails: z.record(z.string(), z.any()),
           nextRunAt: z.date(),
+          // SMS template fields (optional)
+          templateId: z.number().int().optional(),
+          templateBody: z.string().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const { createAutomatedFollowUp } = await import("./db-automated-followups");
-        return await createAutomatedFollowUp(input);
+        return await createAutomatedFollowUp({
+          ...input,
+          createdByUserId: ctx.user!.id,
+          createdByName: ctx.user!.name ?? undefined,
+        });
       }),
 
     getByProperty: protectedProcedure
@@ -3666,6 +3673,131 @@ export const appRouter = router({
           .from(smsTable)
           .groupBy(smsTable.contactPhone)
           .orderBy(desc(sqlFn`MAX(${smsTable.createdAt})`));
+        return rows;
+      }),
+  }),
+
+  /**
+   * SMS Templates — CRUD for reusable follow-up message templates.
+   */
+  smsTemplates: router({
+    /** List all templates, ordered by category then sortOrder */
+    list: protectedProcedure.query(async () => {
+      const { smsTemplates: tbl } = await import("../drizzle/schema");
+      const { asc } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      return db.select().from(tbl).orderBy(asc(tbl.category), asc(tbl.sortOrder), asc(tbl.name));
+    }),
+
+    /** Create a new template */
+    create: protectedProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(255),
+          category: z.string().min(1).max(100).default("Custom"),
+          body: z.string().min(1),
+          sortOrder: z.number().int().default(0),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { smsTemplates: tbl } = await import("../drizzle/schema");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const result = await db.insert(tbl).values({
+          name: input.name,
+          category: input.category,
+          body: input.body,
+          sortOrder: input.sortOrder,
+          createdByUserId: ctx.user!.id,
+          createdByName: ctx.user!.name ?? undefined,
+        });
+        return { id: (result as any)[0]?.insertId as number };
+      }),
+
+    /** Update an existing template */
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number().int(),
+          name: z.string().min(1).max(255).optional(),
+          category: z.string().min(1).max(100).optional(),
+          body: z.string().min(1).optional(),
+          sortOrder: z.number().int().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { smsTemplates: tbl } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const { id, ...fields } = input;
+        await db.update(tbl).set({ ...fields, updatedAt: new Date() }).where(eq(tbl.id, id));
+        return { success: true };
+      }),
+
+    /**
+     * Delete a template.
+     * If the template is referenced by active follow-ups, returns
+     * { success: false, usageCount, usages } so the UI can warn the user.
+     * Pass force=true to delete anyway (follow-ups keep their templateBody snapshot).
+     */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number().int(), force: z.boolean().default(false) }))
+      .mutation(async ({ input }) => {
+        const { smsTemplates: tbl, automatedFollowUps } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Check active usage
+        const usages = await db
+          .select({
+            id: automatedFollowUps.id,
+            propertyId: automatedFollowUps.propertyId,
+            trigger: automatedFollowUps.trigger,
+            status: automatedFollowUps.status,
+          })
+          .from(automatedFollowUps)
+          .where(eq(automatedFollowUps.templateId, input.id));
+
+        const activeUsages = usages.filter(u => u.status === "Active");
+
+        if (activeUsages.length > 0 && !input.force) {
+          return { success: false as const, usageCount: activeUsages.length, usages: activeUsages };
+        }
+
+        // Nullify templateId on follow-ups that reference this template (keep snapshot)
+        await db.update(automatedFollowUps).set({ templateId: null }).where(eq(automatedFollowUps.templateId, input.id));
+        await db.delete(tbl).where(eq(tbl.id, input.id));
+        return { success: true as const, usageCount: 0, usages: [] as typeof usages };
+      }),
+
+    /**
+     * Get all automated follow-ups that reference a specific template,
+     * joined with property address for display.
+     */
+    getUsage: protectedProcedure
+      .input(z.object({ templateId: z.number().int() }))
+      .query(async ({ input }) => {
+        const { automatedFollowUps, properties: propsTable } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const rows = await db
+          .select({
+            followUpId: automatedFollowUps.id,
+            propertyId: automatedFollowUps.propertyId,
+            trigger: automatedFollowUps.trigger,
+            status: automatedFollowUps.status,
+            nextRunAt: automatedFollowUps.nextRunAt,
+            address: propsTable.addressLine1,
+            city: propsTable.city,
+            state: propsTable.state,
+          })
+          .from(automatedFollowUps)
+          .leftJoin(propsTable, eq(automatedFollowUps.propertyId, propsTable.id))
+          .where(eq(automatedFollowUps.templateId, input.templateId));
         return rows;
       }),
   }),

@@ -819,6 +819,12 @@ export const automatedFollowUps = mysqlTable("automatedFollowUps", {
   
   // Action details
   actionDetails: text("actionDetails"), // JSON string with task details, email template ID, etc.
+  // SMS template reference (when action = "Send SMS")
+  templateId: int("templateId"), // FK to smsTemplates.id (nullable — allows free-text SMS too)
+  templateBody: text("templateBody"), // Snapshot of template body at creation time
+  // Who created this follow-up (used to pick the correct Twilio number when executing)
+  createdByUserId: int("createdByUserId"),
+  createdByName: varchar("createdByName", { length: 255 }),
   
   // Status and tracking
   status: mysqlEnum("status", ["Active", "Paused", "Completed"]).default("Active").notNull(),
@@ -832,6 +838,30 @@ export const automatedFollowUps = mysqlTable("automatedFollowUps", {
 
 export type AutomatedFollowUp = typeof automatedFollowUps.$inferSelect;
 export type InsertAutomatedFollowUp = typeof automatedFollowUps.$inferInsert;
+
+/**
+ * SMS Templates table - reusable message templates for Automated Follow-Ups.
+ * Supports {{name}}, {{address}}, {{agent}} variable placeholders.
+ * Templates can be picked when creating a "Send SMS" follow-up action.
+ */
+export const smsTemplates = mysqlTable("smsTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  // Display name shown in the template picker
+  name: varchar("name", { length: 255 }).notNull(),
+  // Category for grouping (Follow-Up, Introduction, Closing, Custom)
+  category: varchar("category", { length: 100 }).default("Custom").notNull(),
+  // Message body — supports {{name}}, {{address}}, {{agent}} placeholders
+  body: text("body").notNull(),
+  // Sort order for display
+  sortOrder: int("sortOrder").default(0),
+  // Who created this template
+  createdByUserId: int("createdByUserId"),
+  createdByName: varchar("createdByName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SmsTemplate = typeof smsTemplates.$inferSelect;
+export type InsertSmsTemplate = typeof smsTemplates.$inferInsert;
 
 // Note templates for quick-insert in Log Call dialog
 export const noteTemplates = mysqlTable("noteTemplates", {
@@ -1399,3 +1429,4 @@ export const smsMessages = mysqlTable("smsMessages", {
 
 export type SmsMessage = typeof smsMessages.$inferSelect;
 export type InsertSmsMessage = typeof smsMessages.$inferInsert;
+

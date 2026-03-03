@@ -2145,3 +2145,19 @@
 - [x] Block SMS action in SMSChatButton if no Twilio number configured
 - [x] Show clear message: "Configure your Twilio phone number in your profile to make calls/send SMS"
 - [x] Add tests for the validation logic (14 tests passing)
+
+
+## FEATURE - SMS Templates for Automated Follow-Ups
+- [x] Add smsTemplates table to schema (id, name, category, body, variables, createdByUserId, createdByName, createdAt, updatedAt)
+- [x] Add templateId + templateBody fields to automatedFollowUps table
+- [x] Run pnpm db:push migration
+- [x] tRPC smsTemplates.list endpoint
+- [x] tRPC smsTemplates.create endpoint (protected)
+- [x] tRPC smsTemplates.update endpoint (protected)
+- [x] tRPC smsTemplates.delete endpoint (block if template is in use)
+- [x] tRPC smsTemplates.getUsage endpoint (returns which follow-ups + properties use a template)
+- [x] Create /sms/templates page with full CRUD UI
+- [x] Add "SMS Templates" nav item under SMS Inbox in sidebar
+- [x] Update AutomatedFollowUps: when action=Send SMS, show template picker dropdown
+- [x] Use creator's twilioPhone when executing SMS follow-up
+- [x] Add tests for template CRUD and usage check (20 tests passing)

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle, Zap } from "lucide-react";
+import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle, Zap, FileText, ExternalLink } from "lucide-react";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { CollapsibleSection } from "./CollapsibleSection";
 
@@ -26,7 +27,12 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   const [selectedAction, setSelectedAction] = useState<FollowUpAction>("Create Task");
   const [trigger, setTrigger] = useState("");
   const [actionDetails, setActionDetails] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, navigate] = useLocation();
+
+  // Load SMS templates for the picker
+  const { data: smsTemplates = [] } = trpc.smsTemplates.list.useQuery();
 
   const utils = trpc.useUtils();
   const { data: followUps = [], isLoading } = trpc.followups.getByProperty.useQuery({ propertyId });
@@ -58,8 +64,11 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
           template: "default_followup",
         };
       } else if (selectedAction === "Send SMS") {
+        const selectedTemplate = smsTemplates.find(t => t.id === selectedTemplateId);
         actionDetailsObj = {
-          message: actionDetails || `Hi! Following up about the property. ${trigger}`,
+          message: selectedTemplate?.body || actionDetails || `Hi! Following up about the property. ${trigger}`,
+          templateId: selectedTemplateId,
+          templateName: selectedTemplate?.name,
         };
       } else if (selectedAction === "Change Stage") {
         actionDetailsObj = {
@@ -78,6 +87,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         nextRunAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
       }
 
+      const selectedTemplate = smsTemplates.find(t => t.id === selectedTemplateId);
       await createMutation.mutateAsync({
         propertyId,
         type: selectedType,
@@ -85,12 +95,17 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         action: selectedAction,
         actionDetails: actionDetailsObj,
         nextRunAt,
+        ...(selectedAction === "Send SMS" && selectedTemplateId ? {
+          templateId: selectedTemplateId,
+          templateBody: selectedTemplate?.body,
+        } : {}),
       });
 
       followUpNotifications.followUpCreated(trigger);
       setIsDialogOpen(false);
       setTrigger("");
       setActionDetails("");
+      setSelectedTemplateId(null);
       utils.followups.getByProperty.invalidate({ propertyId });
     } catch (error) {
       toast.error("Error creating follow-up");
@@ -197,7 +212,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">Action to Execute</label>
-                <Select value={selectedAction} onValueChange={(value) => setSelectedAction(value as FollowUpAction)}>
+                <Select value={selectedAction} onValueChange={(value) => { setSelectedAction(value as FollowUpAction); setSelectedTemplateId(null); setActionDetails(""); }}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Create Task">Create Task</SelectItem>
@@ -207,6 +222,70 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* SMS Template Picker — shown only when Send SMS is selected */}
+              {selectedAction === "Send SMS" && (
+                <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-blue-500" />
+                      Message Template
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/sms/templates")}
+                      className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5"
+                    >
+                      Manage Templates <ExternalLink className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+
+                  {smsTemplates.length === 0 ? (
+                    <div className="text-xs text-slate-500 text-center py-2">
+                      No templates yet.{" "}
+                      <button type="button" onClick={() => navigate("/sms/templates")} className="text-blue-500 hover:underline">Create one</button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={selectedTemplateId ? String(selectedTemplateId) : "__free__"}
+                      onValueChange={(v) => setSelectedTemplateId(v === "__free__" ? null : Number(v))}
+                    >
+                      <SelectTrigger className="h-9 text-sm bg-white">
+                        <SelectValue placeholder="Select a template or write free text" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__free__">-- Write custom message --</SelectItem>
+                        {smsTemplates.map((t) => (
+                          <SelectItem key={t.id} value={String(t.id)}>
+                            <span className="font-medium">{t.name}</span>
+                            <span className="ml-2 text-xs text-slate-400">[{t.category}]</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {/* Preview selected template body */}
+                  {selectedTemplateId && (() => {
+                    const t = smsTemplates.find(x => x.id === selectedTemplateId);
+                    return t ? (
+                      <div className="text-xs font-mono text-slate-600 bg-white rounded border border-slate-200 p-2 leading-relaxed max-h-20 overflow-y-auto">
+                        {t.body}
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* Free-text fallback when no template selected */}
+                  {!selectedTemplateId && (
+                    <Textarea
+                      placeholder="Write your SMS message here..."
+                      value={actionDetails}
+                      onChange={(e) => setActionDetails(e.target.value)}
+                      className="min-h-16 text-sm bg-white"
+                    />
+                  )}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
