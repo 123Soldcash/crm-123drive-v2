@@ -23,6 +23,7 @@ import ImportDealMachine from "./pages/ImportDealMachine";
 import { DuplicatesDashboard } from "./pages/DuplicatesDashboard";
 import PipelineKanban from "./pages/PipelineKanban";
 import InviteAccept from "./pages/InviteAccept";
+import SMSInbox from "./pages/SMSInbox";
 
 // Named wrapper components to prevent React from unmounting/remounting
 // on every render (inline arrow functions create new references each time)
@@ -77,6 +78,9 @@ function DuplicatesDashboardPage() {
 function PipelineKanbanPage() {
   return <DashboardLayout><PipelineKanban /></DashboardLayout>;
 }
+function SMSInboxPage() {
+  return <DashboardLayout><SMSInbox /></DashboardLayout>;
+}
 
 function Router() {
   return (
@@ -100,6 +104,7 @@ function Router() {
       <Route path="/tasks/calendar" component={TasksCalendarPage} />
       <Route path="/duplicates" component={DuplicatesDashboardPage} />
       <Route path="/pipeline" component={PipelineKanbanPage} />
+      <Route path="/sms" component={SMSInboxPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -2111,3 +2111,29 @@
 
 ## BUG FIX - Mobile Nav Buttons Overflow Container
 - [x] Fix menu buttons extending beyond the white navigation container on mobile
+
+## FEATURE - Twilio SMS Chat Integration (COMPLETED)
+- [x] Create smsMessages database table (contactPhone, direction, body, twilioSid, status, contactId, propertyId)
+- [x] Implement tRPC sms.send endpoint (send SMS via Twilio REST API, save to DB)
+- [x] Implement tRPC sms.getConversation endpoint (fetch conversation thread by phone)
+- [x] Implement tRPC sms.getConversationList endpoint (list all conversations)
+- [x] Add inbound SMS webhook at /api/twilio/sms/incoming (saves inbound messages, deduplicates by SID)
+- [x] Build SMSChatButton component (icon button + Sheet drawer with full chat UI)
+- [x] Integrate SMS button next to call button in ContactsSection
+- [x] Integrate SMS button next to call button in CallTrackingTable
+- [x] Create SMSInbox page (/sms) with conversation list and last message preview
+- [x] Add SMS Inbox to navigation menu (MessageSquare icon)
+- [x] 18 passing Vitest tests for SMS functionality
+
+## FEATURE - Twilio SMS Chat Integration (COMPLETED)
+- [x] Create smsMessages database table (contactPhone, direction, body, twilioSid, status, contactId, propertyId)
+- [x] Implement tRPC sms.send endpoint (send SMS via Twilio REST API, save to DB)
+- [x] Implement tRPC sms.getConversation endpoint (fetch conversation thread by phone)
+- [x] Implement tRPC sms.getConversationList endpoint (list all conversations)
+- [x] Add inbound SMS webhook at /api/twilio/sms/incoming (saves inbound messages, deduplicates by SID)
+- [x] Build SMSChatButton component (icon button + Sheet drawer with full chat UI)
+- [x] Integrate SMS button next to call button in ContactsSection
+- [x] Integrate SMS button next to call button in CallTrackingTable
+- [x] Create SMSInbox page (/sms) with conversation list and last message preview
+- [x] Add SMS Inbox to navigation menu (MessageSquare icon)
+- [x] 18 passing Vitest tests for SMS functionality

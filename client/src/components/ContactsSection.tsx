@@ -20,6 +20,7 @@ import {
 import { Phone, Mail, Plus, Edit2, Trash2, Eye, EyeOff, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
+import { SMSChatButton } from "./SMSChatButton";
 
 interface ContactsSectionProps {
   propertyId: number;
@@ -390,6 +391,12 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                               )}
                             </button>
                             <TwilioBrowserCallButton
+                              phoneNumber={primaryPhone.phoneNumber}
+                              contactName={contact.name}
+                              contactId={contact.id}
+                              propertyId={propertyId}
+                            />
+                            <SMSChatButton
                               phoneNumber={primaryPhone.phoneNumber}
                               contactName={contact.name}
                               contactId={contact.id}

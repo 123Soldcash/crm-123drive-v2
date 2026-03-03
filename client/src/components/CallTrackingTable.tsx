@@ -41,6 +41,7 @@ import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus,
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TwilioCallWidget } from "./TwilioCallWidget";
+import { SMSChatButton } from "./SMSChatButton";
 import { ContactEditModal } from "./ContactEditModal";
 import { ContactNotesDialog } from "./ContactNotesDialog";
 
@@ -978,6 +979,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
                               <TwilioCallWidget
+                                phoneNumber={phone.phoneNumber}
+                                contactName={contact.name}
+                                contactId={contact.id}
+                                propertyId={propertyId}
+                              />
+                              <SMSChatButton
                                 phoneNumber={phone.phoneNumber}
                                 contactName={contact.name}
                                 contactId={contact.id}

@@ -1365,3 +1365,37 @@ export const emailWhitelist = mysqlTable("email_whitelist", {
 });
 export type EmailWhitelist = typeof emailWhitelist.$inferSelect;
 export type InsertEmailWhitelist = typeof emailWhitelist.$inferInsert;
+
+/**
+ * SMS Messages table - stores all SMS conversations between the CRM and contacts.
+ * Each row is one message (inbound or outbound).
+ * Grouped by "to" phone number to form a conversation thread.
+ */
+export const smsMessages = mysqlTable("smsMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  // The contact's phone number (E.164 format, e.g. +15551234567)
+  contactPhone: varchar("contactPhone", { length: 20 }).notNull(),
+  // The Twilio number used (so we can support multiple Twilio numbers per agent)
+  twilioPhone: varchar("twilioPhone", { length: 20 }).notNull(),
+  // Direction: outbound = CRM sent, inbound = contact replied
+  direction: mysqlEnum("direction", ["outbound", "inbound"]).notNull(),
+  // The message body
+  body: text("body").notNull(),
+  // Twilio message SID for deduplication
+  twilioSid: varchar("twilioSid", { length: 64 }),
+  // Delivery status from Twilio
+  status: mysqlEnum("status", ["queued", "sent", "delivered", "failed", "received", "undelivered"]).default("queued"),
+  // Optional links to CRM records
+  contactId: int("contactId"),
+  propertyId: int("propertyId"),
+  // Which CRM user sent the message (null for inbound)
+  sentByUserId: int("sentByUserId"),
+  sentByName: varchar("sentByName", { length: 255 }),
+  // Error info if delivery failed
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SmsMessage = typeof smsMessages.$inferSelect;
+export type InsertSmsMessage = typeof smsMessages.$inferInsert;

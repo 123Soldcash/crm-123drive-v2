@@ -107,5 +107,60 @@ export function registerTwilioWebhooks(app: Express) {
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
   });
 
+  // ─── Inbound SMS Webhook ────────────────────────────────────────────────────────
+  // Twilio sends POST to this URL when a contact replies to a message.
+  // Configure this URL in Twilio Console > Phone Numbers > Messaging > Webhook.
+  // URL: https://{your-domain}/api/twilio/sms/incoming
+  app.post("/api/twilio/sms/incoming", async (req, res) => {
+    try {
+      const from: string = req.body?.From || "";
+      const to: string = req.body?.To || "";
+      const body: string = req.body?.Body || "";
+      const messageSid: string = req.body?.MessageSid || req.body?.SmsSid || "";
+      console.log("[Twilio SMS Inbound] From:", from, "To:", to, "Body:", body.substring(0, 50));
+      if (from && body) {
+        const { smsMessages } = await import("../drizzle/schema");
+        const { getDb } = await import("./db");
+        const database = await getDb();
+        if (!database) {
+          res.set("Content-Type", "text/xml");
+          res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+          return;
+        }
+        // Check for duplicate (Twilio may retry webhooks)
+        if (messageSid) {
+          const { eq } = await import("drizzle-orm");
+          const existing = await database
+            .select({ id: smsMessages.id })
+            .from(smsMessages)
+            .where(eq(smsMessages.twilioSid, messageSid))
+            .limit(1);
+          if (existing.length > 0) {
+            console.log("[Twilio SMS Inbound] Duplicate SID, skipping:", messageSid);
+            res.set("Content-Type", "text/xml");
+            res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+            return;
+          }
+        }
+        await database.insert(smsMessages).values({
+          contactPhone: from,
+          twilioPhone: to,
+          direction: "inbound",
+          body,
+          twilioSid: messageSid || undefined,
+          status: "received",
+        });
+        console.log("[Twilio SMS Inbound] Saved inbound message from", from);
+      }
+      // Return empty TwiML so Twilio doesn’t auto-reply
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+    } catch (error) {
+      console.error("[Twilio SMS Inbound] Error:", error);
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+    }
+  });
+
   console.log("[Twilio] Webhook routes registered at /api/twilio/*");
 }

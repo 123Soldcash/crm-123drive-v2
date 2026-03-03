@@ -3568,5 +3568,106 @@ export const appRouter = router({
         return await db.deletePropertyDocument(input.id);
       }),
   }),
+
+  // ─── Twilio SMS Chat ────────────────────────────────────────────────────────
+  sms: router({
+    /**
+     * Send an SMS to a contact phone number via Twilio REST API.
+     * Saves the message to the smsMessages table.
+     */
+    send: protectedProcedure
+      .input(z.object({
+        to: z.string().min(7, "Phone number required"),
+        body: z.string().min(1, "Message body required").max(1600),
+        contactId: z.number().optional(),
+        propertyId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const twilio = await import("twilio");
+        const client = twilio.default(ENV.twilioAccountSid, ENV.twilioAuthToken);
+        const fromPhone = ctx.user.twilioPhone || ENV.twilioPhoneNumber;
+        if (!fromPhone) throw new Error("No Twilio phone number configured for your account.");
+        // Format to E.164
+        const rawDigits = input.to.replace(/\D/g, "");
+        const toPhone = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.to.startsWith("+") ? input.to : `+1${rawDigits}`;
+        let twilioSid: string | undefined;
+        let msgStatus: "queued" | "sent" | "delivered" | "failed" | "received" | "undelivered" = "queued";
+        let errorMessage: string | undefined;
+        try {
+          const msg = await client.messages.create({ to: toPhone, from: fromPhone, body: input.body });
+          twilioSid = msg.sid;
+          msgStatus = "sent";
+        } catch (err: any) {
+          errorMessage = err?.message || "Unknown error";
+          msgStatus = "failed";
+        }
+        // Save to DB regardless of success/failure
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        await database.insert(smsTable).values({
+          contactPhone: toPhone,
+          twilioPhone: fromPhone,
+          direction: "outbound",
+          body: input.body,
+          twilioSid,
+          status: msgStatus,
+          contactId: input.contactId,
+          propertyId: input.propertyId,
+          sentByUserId: ctx.user.id,
+          sentByName: ctx.user.name || ctx.user.email || "Agent",
+          errorMessage,
+        });
+        if (msgStatus === "failed") throw new Error(`SMS failed: ${errorMessage}`);
+        return { success: true, twilioSid, status: msgStatus };
+      }),
+
+    /**
+     * Get the full SMS conversation thread for a given phone number.
+     * Returns messages ordered oldest-first.
+     */
+    getConversation: protectedProcedure
+      .input(z.object({
+        contactPhone: z.string(),
+        limit: z.number().min(1).max(200).default(100),
+      }))
+      .query(async ({ input }) => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const { desc } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Normalize phone to E.164
+        const rawDigits = input.contactPhone.replace(/\D/g, "");
+        const normalized = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.contactPhone.startsWith("+") ? input.contactPhone : `+1${rawDigits}`;
+        const messages = await database
+          .select()
+          .from(smsTable)
+          .where(eq(smsTable.contactPhone, normalized))
+          .orderBy(desc(smsTable.createdAt))
+          .limit(input.limit);
+        return messages.reverse(); // Return oldest-first for chat display
+      }),
+
+    /**
+     * Get list of all conversations (unique phone numbers) with last message preview.
+     */
+    getConversationList: protectedProcedure
+      .query(async () => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const { desc, sql: sqlFn } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Get last message per contact phone
+        const rows = await database
+          .select({
+            contactPhone: smsTable.contactPhone,
+            lastMessage: sqlFn<string>`MAX(${smsTable.createdAt})`,
+          })
+          .from(smsTable)
+          .groupBy(smsTable.contactPhone)
+          .orderBy(desc(sqlFn`MAX(${smsTable.createdAt})`));
+        return rows;
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;;
