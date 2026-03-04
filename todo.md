@@ -2175,3 +2175,6 @@
 
 ## FIX - Sticky Header Image Click → Lightbox
 - [x] In the sticky scroll header of PropertyDetail, clicking the thumbnail should open a lightbox (expanded image) instead of triggering the upload action
+
+## FIX - Lightbox image cut off / not centered
+- [x] Fix lightbox modal so image is perfectly centered on screen and close button is always accessible (not hidden behind sticky header)

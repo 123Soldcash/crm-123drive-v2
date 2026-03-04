@@ -226,26 +226,32 @@ export function PropertyImage({
         />
       </div>
 
-      {/* Full image modal */}
+      {/* Full image modal — z-[9999] to sit above sticky header (z-40) */}
       {showFullImage && displayUrl && (
         <div
-          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center cursor-pointer"
+          style={{ padding: "60px 16px 16px" }}
           onClick={() => setShowFullImage(false)}
         >
-          <div className="relative max-w-3xl max-h-[80vh]">
+          {/* Close button fixed to top-right of viewport, always accessible */}
+          <button
+            className="fixed top-3 right-4 z-[10000] bg-black/60 hover:bg-black/80 text-white rounded-full h-9 w-9 flex items-center justify-center transition-colors"
+            onClick={(e) => { e.stopPropagation(); setShowFullImage(false); }}
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div
+            className="relative flex items-center justify-center w-full h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={displayUrl}
               alt={`${address}, ${city}`}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              style={{ maxHeight: "calc(100vh - 120px)", maxWidth: "min(90vw, 1200px)" }}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70 h-8 w-8"
-              onClick={() => setShowFullImage(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
             <div className="absolute bottom-2 left-2 flex gap-2">
               <Button
                 size="sm"
