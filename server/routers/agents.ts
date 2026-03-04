@@ -1,6 +1,7 @@
 import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
+import { inArray } from "drizzle-orm";
 import {
   users,
   leadAssignments,
@@ -60,7 +61,7 @@ export const agentsRouter = router({
         lastSignedIn: users.lastSignedIn,
       })
       .from(users)
-      .where(eq(users.role, "agent"));
+      .where(inArray(users.role, ["agent", "admin"]));
   }),
 
   /** List all users (agents + admins) — admin only */

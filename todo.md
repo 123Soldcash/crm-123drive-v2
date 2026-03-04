@@ -2187,3 +2187,6 @@
 
 ## FIX - Manage Agents dialog: show Admin users too
 - [x] Update the getAgents/listUsers query to return both role=agent AND role=admin users in the Manage Agents dialog
+
+## BUG - Manage Agents still not showing Admin users
+- [x] Investigate which exact query/endpoint the Manage Agents dialog uses and fix it — the dialog uses agents.listAll from server/routers/agents.ts (not db.ts listAgents), updated to inArray(['agent','admin'])
