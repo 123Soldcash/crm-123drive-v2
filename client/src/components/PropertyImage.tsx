@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Upload, X, MapPin, Loader2 } from "lucide-react";
+import { Upload, X, MapPin, Loader2, Expand } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +138,7 @@ export function PropertyImage({
           </div>
         )}
 
-        {/* Upload overlay on hover */}
+        {/* Hover overlay: compact = expand icon only; full = upload + remove */}
         {!isUploading && (
           <div
             className={cn(
@@ -146,37 +146,50 @@ export function PropertyImage({
               compact && "rounded-md"
             )}
           >
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "text-white hover:bg-white/20",
-                compact ? "h-6 w-6" : "h-8 w-8"
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              title="Upload image"
-            >
-              <Upload className={compact ? "h-3 w-3" : "h-4 w-4"} />
-            </Button>
-            {propertyImage && (
+            {compact ? (
+              /* In compact (sticky header) mode: clicking opens the lightbox */
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn(
-                  "text-white hover:bg-red-500/50",
-                  compact ? "h-6 w-6" : "h-8 w-8"
-                )}
+                className="text-white hover:bg-white/20 h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation();
-                  removeMutation.mutate({ propertyId });
+                  if (displayUrl) setShowFullImage(true);
                 }}
-                title="Remove custom image (show Street View)"
+                title="View full image"
               >
-                <X className={compact ? "h-3 w-3" : "h-4 w-4"} />
+                <Expand className="h-3.5 w-3.5" />
               </Button>
+            ) : (
+              /* In normal / hero mode: show upload + remove buttons */
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  title="Upload image"
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
+                {propertyImage && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-red-500/50 h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeMutation.mutate({ propertyId });
+                    }}
+                    title="Remove custom image (show Street View)"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
             )}
           </div>
         )}

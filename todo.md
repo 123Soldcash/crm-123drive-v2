@@ -2172,3 +2172,6 @@
 - [x] Rename sidebar nav item from "SMS Templates" to "Message Templates"
 - [x] Update route from /sms/templates to /message-templates
 - [x] Add tests for universal template logic (32 tests passing)
+
+## FIX - Sticky Header Image Click → Lightbox
+- [x] In the sticky scroll header of PropertyDetail, clicking the thumbnail should open a lightbox (expanded image) instead of triggering the upload action
