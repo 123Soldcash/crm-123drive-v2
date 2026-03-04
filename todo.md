@@ -2181,3 +2181,6 @@
 
 ## FIX - Lightbox trapped inside sticky header container
 - [x] Use React createPortal to render lightbox modal directly into document.body so it escapes the sticky header's stacking context
+
+## FIX - Deep Search Notes: keep only Probate Notes
+- [x] Remove General Notes and Internal Notes tabs from Deep Search Notes section, keep only Probate Notes

@@ -561,29 +561,11 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
       <SectionCard title="Notes" icon={<FileText className="w-4 h-4" />} accentColor="blue">
         <div className="space-y-4">
           <div>
-            <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">General Notes</label>
-            <Textarea
-              value={generalNotes}
-              onChange={(e) => { setGeneralNotes(e.target.value); }}
-              placeholder="General observations, research findings..."
-              className="text-xs sm:text-sm h-20 sm:h-24 w-full"
-            />
-          </div>
-          <div>
             <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">Probate Notes</label>
             <Textarea
               value={probateNotes}
               onChange={(e) => { setProbateNotes(e.target.value); }}
               placeholder="Probate-specific notes, case numbers..."
-              className="text-xs sm:text-sm h-20 sm:h-24 w-full"
-            />
-          </div>
-          <div>
-            <label className="text-xs sm:text-sm font-medium text-gray-600 mb-2 block">Internal Notes</label>
-            <Textarea
-              value={internalNotes}
-              onChange={(e) => { setInternalNotes(e.target.value); }}
-              placeholder="Internal team notes, strategy..."
               className="text-xs sm:text-sm h-20 sm:h-24 w-full"
             />
           </div>
