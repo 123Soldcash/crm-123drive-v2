@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Upload, X, MapPin, Loader2, Expand } from "lucide-react";
@@ -13,9 +14,141 @@ interface PropertyImageProps {
   state: string;
   zipcode: string;
   compact?: boolean;
-  hero?: boolean; // Full-size hero mode for the main property header
+  hero?: boolean;
 }
 
+/* ── Lightbox rendered via Portal into document.body ── */
+function ImageLightbox({
+  displayUrl,
+  address,
+  city,
+  propertyImage,
+  onClose,
+  onReplace,
+  onRemove,
+}: {
+  displayUrl: string;
+  address: string;
+  city: string;
+  propertyImage: string | null;
+  onClose: () => void;
+  onReplace: () => void;
+  onRemove: () => void;
+}) {
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    // Prevent body scroll while lightbox is open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+        backgroundColor: "rgba(0,0,0,0.88)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+        cursor: "pointer",
+      }}
+      onClick={onClose}
+    >
+      {/* Close button — always top-right */}
+      <button
+        style={{
+          position: "fixed",
+          top: 12,
+          right: 16,
+          zIndex: 100000,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          border: "none",
+          borderRadius: "50%",
+          width: 40,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "white",
+          transition: "background-color 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.85)")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)")}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        title="Close"
+      >
+        <X style={{ width: 22, height: 22 }} />
+      </button>
+
+      {/* Image container */}
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          maxWidth: "90vw",
+          maxHeight: "85vh",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={displayUrl}
+          alt={`${address}, ${city}`}
+          style={{
+            maxWidth: "90vw",
+            maxHeight: "85vh",
+            objectFit: "contain",
+            borderRadius: 8,
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+          }}
+        />
+        <div style={{ position: "absolute", bottom: 8, left: 8, display: "flex", gap: 8 }}>
+          <Button
+            size="sm"
+            className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReplace();
+            }}
+          >
+            <Upload className="h-3 w-3 mr-1" /> Replace
+          </Button>
+          {propertyImage && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs bg-white/90 hover:bg-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              <X className="h-3 w-3 mr-1" /> Remove
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ── Main PropertyImage component ── */
 export function PropertyImage({
   propertyId,
   propertyImage,
@@ -31,12 +164,11 @@ export function PropertyImage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
 
-  // Fetch Street View image from server (uses backend API key)
   const { data: streetViewData } = trpc.properties.getStreetViewImage.useQuery(
     { address, city, state, zipcode },
     {
-      enabled: !propertyImage, // Only fetch if no custom image
-      staleTime: 1000 * 60 * 60, // Cache for 1 hour
+      enabled: !propertyImage,
+      staleTime: 1000 * 60 * 60,
       gcTime: 1000 * 60 * 60 * 2,
       retry: false,
     }
@@ -147,7 +279,6 @@ export function PropertyImage({
             )}
           >
             {compact ? (
-              /* In compact (sticky header) mode: clicking opens the lightbox */
               <Button
                 variant="ghost"
                 size="icon"
@@ -161,7 +292,6 @@ export function PropertyImage({
                 <Expand className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              /* In normal / hero mode: show upload + remove buttons */
               <>
                 <Button
                   variant="ghost"
@@ -226,60 +356,20 @@ export function PropertyImage({
         />
       </div>
 
-      {/* Full image modal — z-[9999] to sit above sticky header (z-40) */}
+      {/* Lightbox — rendered via Portal into document.body to escape all stacking contexts */}
       {showFullImage && displayUrl && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/85 flex items-center justify-center cursor-pointer"
-          style={{ padding: "60px 16px 16px" }}
-          onClick={() => setShowFullImage(false)}
-        >
-          {/* Close button fixed to top-right of viewport, always accessible */}
-          <button
-            className="fixed top-3 right-4 z-[10000] bg-black/60 hover:bg-black/80 text-white rounded-full h-9 w-9 flex items-center justify-center transition-colors"
-            onClick={(e) => { e.stopPropagation(); setShowFullImage(false); }}
-            title="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-
-          <div
-            className="relative flex items-center justify-center w-full h-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={displayUrl}
-              alt={`${address}, ${city}`}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              style={{ maxHeight: "calc(100vh - 120px)", maxWidth: "min(90vw, 1200px)" }}
-            />
-            <div className="absolute bottom-2 left-2 flex gap-2">
-              <Button
-                size="sm"
-                className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-              >
-                <Upload className="h-3 w-3 mr-1" /> Replace
-              </Button>
-              {propertyImage && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs bg-white/90 hover:bg-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeMutation.mutate({ propertyId });
-                    setShowFullImage(false);
-                  }}
-                >
-                  <X className="h-3 w-3 mr-1" /> Remove
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        <ImageLightbox
+          displayUrl={displayUrl}
+          address={address}
+          city={city}
+          propertyImage={propertyImage}
+          onClose={() => setShowFullImage(false)}
+          onReplace={() => fileInputRef.current?.click()}
+          onRemove={() => {
+            removeMutation.mutate({ propertyId });
+            setShowFullImage(false);
+          }}
+        />
       )}
     </>
   );

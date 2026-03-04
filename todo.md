@@ -2178,3 +2178,6 @@
 
 ## FIX - Lightbox image cut off / not centered
 - [x] Fix lightbox modal so image is perfectly centered on screen and close button is always accessible (not hidden behind sticky header)
+
+## FIX - Lightbox trapped inside sticky header container
+- [x] Use React createPortal to render lightbox modal directly into document.body so it escapes the sticky header's stacking context
