@@ -1,4 +1,4 @@
-import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne } from "drizzle-orm";
+import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -115,7 +115,7 @@ export async function listAgents() {
       lastSignedIn: users.lastSignedIn,
     })
     .from(users)
-    .where(ne(users.role, 'admin'))
+    .where(inArray(users.role, ['agent', 'admin']))
     .orderBy(users.name);
 
   return result;

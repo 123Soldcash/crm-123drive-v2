@@ -2184,3 +2184,6 @@
 
 ## FIX - Deep Search Notes: keep only Probate Notes
 - [x] Remove General Notes and Internal Notes tabs from Deep Search Notes section, keep only Probate Notes
+
+## FIX - Manage Agents dialog: show Admin users too
+- [x] Update the getAgents/listUsers query to return both role=agent AND role=admin users in the Manage Agents dialog
