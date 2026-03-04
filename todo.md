@@ -2161,3 +2161,14 @@
 - [x] Update AutomatedFollowUps: when action=Send SMS, show template picker dropdown
 - [x] Use creator's twilioPhone when executing SMS follow-up
 - [x] Add tests for template CRUD and usage check (20 tests passing)
+
+## FEATURE - Universal Message Templates (SMS + Email)
+- [x] Add channel field to smsTemplates table (sms/email/both) with default 'both'
+- [x] Add emailSubject field to smsTemplates table for email-compatible templates
+- [x] Update tRPC smsTemplates endpoints to support channel filter
+- [x] Rename SMS Templates page to Message Templates with channel filter tabs
+- [x] Add channel selector (SMS, Email, Both) when creating/editing templates
+- [x] Update AutomatedFollowUps: show template picker for Send Email action too
+- [x] Rename sidebar nav item from "SMS Templates" to "Message Templates"
+- [x] Update route from /sms/templates to /message-templates
+- [x] Add tests for universal template logic (32 tests passing)

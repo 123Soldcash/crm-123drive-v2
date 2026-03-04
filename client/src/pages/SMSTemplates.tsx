@@ -1,11 +1,12 @@
 /**
- * SMS Templates Management Page
+ * Message Templates Management Page
  *
- * Allows users to create, view, edit, and delete SMS message templates
- * used in Automated Follow-Ups. Shows which properties/follow-ups are
+ * Universal templates used for both SMS and Email in Automated Follow-Ups.
+ * Users can create, view, edit, delete templates and assign them to a channel
+ * (SMS only, Email only, or Both). Shows which properties/follow-ups are
  * currently using each template before allowing deletion.
  *
- * Route: /sms/templates
+ * Route: /message-templates
  */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -39,22 +40,27 @@ import {
   Pencil,
   Trash2,
   MessageSquare,
+  Mail,
   Eye,
   ChevronRight,
   AlertTriangle,
   CheckCircle,
   Clock,
   Layers,
+  FileText,
+  MessagesSquare,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-type SmsTemplate = {
+type MessageTemplate = {
   id: number;
   name: string;
   category: string;
+  channel: string;
   body: string;
+  emailSubject: string | null;
   sortOrder: number | null;
   createdByName: string | null;
   createdAt: Date | string;
@@ -73,6 +79,18 @@ type UsageRow = {
 };
 
 const CATEGORIES = ["Introduction", "Follow-Up", "Closing", "Reminder", "Custom"];
+const CHANNELS = [
+  { value: "both", label: "SMS & Email", icon: MessagesSquare, color: "bg-purple-100 text-purple-700 border-purple-200" },
+  { value: "sms", label: "SMS Only", icon: MessageSquare, color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "email", label: "Email Only", icon: Mail, color: "bg-amber-100 text-amber-700 border-amber-200" },
+];
+
+const CHANNEL_FILTERS = [
+  { value: "all", label: "All Channels" },
+  { value: "sms", label: "SMS" },
+  { value: "email", label: "Email" },
+  { value: "both", label: "Both" },
+];
 
 // ─── Variable Hint ────────────────────────────────────────────────────────────
 const VARIABLE_HINTS = [
@@ -81,6 +99,18 @@ const VARIABLE_HINTS = [
   { label: "{{agent}}", desc: "Your name" },
   { label: "{{city}}", desc: "Property city" },
 ];
+
+// ─── Channel Badge ───────────────────────────────────────────────────────────
+function ChannelBadge({ channel }: { channel: string }) {
+  const ch = CHANNELS.find(c => c.value === channel) ?? CHANNELS[0];
+  const Icon = ch.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${ch.color}`}>
+      <Icon className="w-3 h-3" />
+      {ch.label}
+    </span>
+  );
+}
 
 // ─── Template Form Dialog ─────────────────────────────────────────────────────
 function TemplateFormDialog({
@@ -91,12 +121,14 @@ function TemplateFormDialog({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  initial?: SmsTemplate | null;
+  initial?: MessageTemplate | null;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [category, setCategory] = useState(initial?.category ?? "Custom");
+  const [channel, setChannel] = useState(initial?.channel ?? "both");
   const [body, setBody] = useState(initial?.body ?? "");
+  const [emailSubject, setEmailSubject] = useState(initial?.emailSubject ?? "");
   const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0);
 
   const utils = trpc.useUtils();
@@ -126,7 +158,9 @@ function TemplateFormDialog({
     if (v) {
       setName(initial?.name ?? "");
       setCategory(initial?.category ?? "Custom");
+      setChannel(initial?.channel ?? "both");
       setBody(initial?.body ?? "");
+      setEmailSubject(initial?.emailSubject ?? "");
       setSortOrder(initial?.sortOrder ?? 0);
     }
     onOpenChange(v);
@@ -135,25 +169,44 @@ function TemplateFormDialog({
   const handleSave = () => {
     if (!name.trim()) { toast.error("Template name is required"); return; }
     if (!body.trim()) { toast.error("Message body is required"); return; }
+    if ((channel === "email" || channel === "both") && !emailSubject.trim()) {
+      toast.error("Email subject is required for email-compatible templates");
+      return;
+    }
+
+    const payload = {
+      name: name.trim(),
+      category,
+      channel: channel as "sms" | "email" | "both",
+      body: body.trim(),
+      emailSubject: (channel === "email" || channel === "both") ? emailSubject.trim() : undefined,
+      sortOrder,
+    };
 
     if (initial) {
-      updateMutation.mutate({ id: initial.id, name: name.trim(), category, body: body.trim(), sortOrder });
+      updateMutation.mutate({ id: initial.id, ...payload });
     } else {
-      createMutation.mutate({ name: name.trim(), category, body: body.trim(), sortOrder });
+      createMutation.mutate(payload);
     }
   };
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const showEmailSubject = channel === "email" || channel === "both";
 
-  const insertVariable = (v: string) => setBody((prev) => prev + v);
+  const insertVariable = (target: "body" | "subject", v: string) => {
+    if (target === "body") setBody((prev) => prev + v);
+    else setEmailSubject((prev) => prev + v);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit Template" : "New SMS Template"}</DialogTitle>
+          <DialogTitle>{initial ? "Edit Template" : "New Message Template"}</DialogTitle>
           <DialogDescription>
-            {initial ? "Update this reusable message template." : "Create a reusable SMS message for Automated Follow-Ups."}
+            {initial
+              ? "Update this reusable message template."
+              : "Create a reusable template for SMS and/or Email follow-ups."}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,6 +221,39 @@ function TemplateFormDialog({
             />
           </div>
 
+          {/* Channel */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700">Channel *</label>
+            <div className="grid grid-cols-3 gap-2">
+              {CHANNELS.map((ch) => {
+                const Icon = ch.icon;
+                const isSelected = channel === ch.value;
+                return (
+                  <button
+                    key={ch.value}
+                    type="button"
+                    onClick={() => setChannel(ch.value)}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                      isSelected
+                        ? `${ch.color} ring-2 ring-offset-1 ring-current`
+                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {ch.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-400">
+              {channel === "both"
+                ? "This template will appear in both SMS and Email follow-up pickers."
+                : channel === "sms"
+                ? "This template will only appear when creating SMS follow-ups."
+                : "This template will only appear when creating Email follow-ups."}
+            </p>
+          </div>
+
           {/* Category */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700">Category</label>
@@ -180,6 +266,34 @@ function TemplateFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Email Subject — shown when channel includes email */}
+          {showEmailSubject && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-amber-500" />
+                Email Subject *
+              </label>
+              <Input
+                placeholder="e.g. Following up about {{address}}"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+              />
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {VARIABLE_HINTS.map((v) => (
+                  <button
+                    key={v.label}
+                    type="button"
+                    title={v.desc}
+                    onClick={() => insertVariable("subject", v.label)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors font-mono"
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Body */}
           <div className="space-y-1.5">
@@ -197,7 +311,7 @@ function TemplateFormDialog({
                   key={v.label}
                   type="button"
                   title={v.desc}
-                  onClick={() => insertVariable(v.label)}
+                  onClick={() => insertVariable("body", v.label)}
                   className="text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors font-mono"
                 >
                   {v.label}
@@ -238,7 +352,7 @@ function UsageDialog({
   open,
   onOpenChange,
 }: {
-  template: SmsTemplate | null;
+  template: MessageTemplate | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -290,130 +404,86 @@ function UsageDialog({
                 {u.nextRunAt && (
                   <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                     <Clock className="w-3 h-3" />
-                    Next run: {format(new Date(u.nextRunAt), "MMM d, yyyy")}
+                    Next run: {format(new Date(u.nextRunAt as unknown as string), "MMM d, yyyy")}
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor(u.status)}`}>
-                  {u.status}
-                </span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge className={`text-[10px] ${statusColor(u.status as string)}`}>{u.status}</Badge>
+                <ChevronRight className="w-4 h-4 text-slate-300" />
               </div>
             </div>
           ))}
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── Delete Confirmation Dialog ───────────────────────────────────────────────
+// ─── Delete Confirm Dialog ───────────────────────────────────────────────────
 function DeleteConfirmDialog({
   template,
   open,
   onOpenChange,
   onDeleted,
 }: {
-  template: SmsTemplate | null;
+  template: MessageTemplate | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onDeleted: () => void;
 }) {
   const utils = trpc.useUtils();
-  const [step, setStep] = useState<"check" | "warn" | "confirm">("check");
-  const [usages, setUsages] = useState<UsageRow[]>([]);
+  const { data: usages = [] } = trpc.smsTemplates.getUsage.useQuery(
+    { templateId: template?.id ?? 0 },
+    { enabled: open && !!template }
+  );
+
+  const activeUsages = usages.filter((u: any) => u.status === "Active");
 
   const deleteMutation = trpc.smsTemplates.delete.useMutation({
     onSuccess: (result) => {
-      if (!result.success) {
-        // Template is in use — show warning
-        setUsages(result.usages as unknown as UsageRow[]);
-        setStep("warn");
-        return;
+      if (result.success) {
+        toast.success("Template deleted");
+        utils.smsTemplates.list.invalidate();
+        onDeleted();
+        onOpenChange(false);
+      } else {
+        toast.error(`Cannot delete — ${result.usageCount} active follow-up(s) are using this template.`);
       }
-      toast.success("Template deleted");
-      utils.smsTemplates.list.invalidate();
-      onDeleted();
-      onOpenChange(false);
-      setStep("check");
     },
     onError: (e) => toast.error("Failed to delete template", { description: e.message }),
   });
 
-  const handleInitialDelete = () => {
-    if (!template) return;
-    deleteMutation.mutate({ id: template.id, force: false });
-  };
-
-  const handleForceDelete = () => {
-    if (!template) return;
-    deleteMutation.mutate({ id: template.id, force: true });
-  };
-
-  const handleClose = () => {
-    onOpenChange(false);
-    setStep("check");
-    setUsages([]);
-  };
-
-  if (step === "warn") {
-    return (
-      <AlertDialog open={open} onOpenChange={handleClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-              </div>
-              <AlertDialogTitle>Template Is In Use</AlertDialogTitle>
-            </div>
-            <AlertDialogDescription className="space-y-2">
-              <p>
-                <strong>{template?.name}</strong> is currently used by{" "}
-                <strong>{usages.length} active follow-up{usages.length !== 1 ? "s" : ""}</strong>.
-              </p>
-              <p className="text-slate-500 text-xs">
-                If you delete it, those follow-ups will keep their saved message snapshot but lose the link to this template. You can still edit them individually.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleForceDelete}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Anyway"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
-
   return (
-    <AlertDialog open={open} onOpenChange={handleClose}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Template?</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            {activeUsages.length > 0 ? (
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+            ) : (
+              <Trash2 className="w-5 h-5 text-red-500" />
+            )}
+            Delete "{template?.name}"?
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{template?.name}</strong>? This action cannot be undone.
+            {activeUsages.length > 0 ? (
+              <>
+                This template is used by <strong>{activeUsages.length}</strong> active follow-up(s).
+                Deleting it will remove the template link from those follow-ups (they keep a snapshot of the message body).
+              </>
+            ) : (
+              "This action cannot be undone. The template will be permanently removed."
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleClose}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleInitialDelete}
-            className="bg-rose-500 hover:bg-rose-600 text-white"
-            disabled={deleteMutation.isPending}
+            className="bg-red-600 hover:bg-red-700"
+            onClick={() => template && deleteMutation.mutate({ id: template.id, force: activeUsages.length > 0 })}
           >
-            {deleteMutation.isPending ? "Checking..." : "Delete"}
+            {activeUsages.length > 0 ? "Delete Anyway" : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -421,81 +491,59 @@ function DeleteConfirmDialog({
   );
 }
 
-// ─── Template Card ────────────────────────────────────────────────────────────
+// ─── Template Card ───────────────────────────────────────────────────────────
 function TemplateCard({
   template,
   onEdit,
   onDelete,
   onViewUsage,
 }: {
-  template: SmsTemplate;
-  onEdit: (t: SmsTemplate) => void;
-  onDelete: (t: SmsTemplate) => void;
-  onViewUsage: (t: SmsTemplate) => void;
+  template: MessageTemplate;
+  onEdit: (t: MessageTemplate) => void;
+  onDelete: (t: MessageTemplate) => void;
+  onViewUsage: (t: MessageTemplate) => void;
 }) {
-  const { data: usages = [] } = trpc.smsTemplates.getUsage.useQuery({ templateId: template.id });
-  const activeCount = usages.filter((u) => u.status === "Active").length;
-
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="group hover:shadow-md transition-shadow border-slate-200">
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <CardTitle className="text-sm font-semibold text-slate-800 truncate">{template.name}</CardTitle>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold">
-                {template.category}
-              </Badge>
-              {activeCount > 0 && (
-                <button
-                  onClick={() => onViewUsage(template)}
-                  className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                >
-                  <Layers className="w-3 h-3" />
-                  Used in {activeCount} follow-up{activeCount !== 1 ? "s" : ""}
-                </button>
-              )}
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-slate-200 text-slate-500">{template.category}</Badge>
+              <ChannelBadge channel={template.channel} />
             </div>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600"
-              title="View usage"
-              onClick={() => onViewUsage(template)}
-            >
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+            <button onClick={() => onViewUsage(template)} title="View usage" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
               <Eye className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-amber-600"
-              title="Edit template"
-              onClick={() => onEdit(template)}
-            >
+            </button>
+            <button onClick={() => onEdit(template)} title="Edit" className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
               <Pencil className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600"
-              title="Delete template"
-              onClick={() => onDelete(template)}
-            >
+            </button>
+            <button onClick={() => onDelete(template)} title="Delete" className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors">
               <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <p className="text-xs text-slate-600 font-mono leading-relaxed line-clamp-3 bg-slate-50 rounded p-2 border border-slate-100">
+      <CardContent className="px-4 pb-4 pt-1">
+        {/* Email subject preview */}
+        {template.emailSubject && (template.channel === "email" || template.channel === "both") && (
+          <div className="text-[11px] text-amber-600 font-medium mb-1.5 flex items-center gap-1">
+            <Mail className="w-3 h-3" />
+            Subject: {template.emailSubject}
+          </div>
+        )}
+        {/* Body preview */}
+        <div className="text-xs text-slate-600 font-mono leading-relaxed bg-slate-50 rounded-md p-2.5 border border-slate-100 max-h-20 overflow-y-auto">
           {template.body}
-        </p>
-        <p className="text-[10px] text-slate-400 mt-2">
-          {template.createdByName ? `Created by ${template.createdByName}` : "System template"} ·{" "}
-          {format(new Date(template.updatedAt), "MMM d, yyyy")}
-        </p>
+        </div>
+        {/* Meta */}
+        <div className="flex items-center justify-between mt-2.5 text-[10px] text-slate-400">
+          <span>{template.createdByName ? `By ${template.createdByName}` : ""}</span>
+          <span>{format(new Date(template.updatedAt as string), "MMM d, yyyy")}</span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -506,28 +554,30 @@ export default function SMSTemplates() {
   const { data: templates = [], isLoading } = trpc.smsTemplates.list.useQuery();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<SmsTemplate | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<SmsTemplate | null>(null);
+  const [editTarget, setEditTarget] = useState<MessageTemplate | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [usageTarget, setUsageTarget] = useState<SmsTemplate | null>(null);
+  const [usageTarget, setUsageTarget] = useState<MessageTemplate | null>(null);
   const [usageOpen, setUsageOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
+  const [filterChannel, setFilterChannel] = useState("all");
 
-  const handleEdit = (t: SmsTemplate) => { setEditTarget(t); setFormOpen(true); };
-  const handleDelete = (t: SmsTemplate) => { setDeleteTarget(t); setDeleteOpen(true); };
-  const handleViewUsage = (t: SmsTemplate) => { setUsageTarget(t); setUsageOpen(true); };
+  const handleEdit = (t: MessageTemplate) => { setEditTarget(t); setFormOpen(true); };
+  const handleDelete = (t: MessageTemplate) => { setDeleteTarget(t); setDeleteOpen(true); };
+  const handleViewUsage = (t: MessageTemplate) => { setUsageTarget(t); setUsageOpen(true); };
   const handleNew = () => { setEditTarget(null); setFormOpen(true); };
 
   // Filter
   const filtered = templates.filter((t) => {
     const matchSearch = !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.body.toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCategory === "All" || t.category === filterCategory;
-    return matchSearch && matchCat;
+    const matchChannel = filterChannel === "all" || t.channel === filterChannel || t.channel === "both";
+    return matchSearch && matchCat && matchChannel;
   });
 
   // Group by category
-  const grouped = CATEGORIES.reduce<Record<string, SmsTemplate[]>>((acc, cat) => {
+  const grouped = CATEGORIES.reduce<Record<string, MessageTemplate[]>>((acc, cat) => {
     const items = filtered.filter((t) => t.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
@@ -539,17 +589,22 @@ export default function SMSTemplates() {
     }
   });
 
+  // Stats
+  const smsCount = templates.filter(t => t.channel === "sms" || t.channel === "both").length;
+  const emailCount = templates.filter(t => t.channel === "email" || t.channel === "both").length;
+  const bothCount = templates.filter(t => t.channel === "both").length;
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-blue-500" />
-            SMS Templates
+            <FileText className="w-5 h-5 text-purple-500" />
+            Message Templates
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Reusable message templates for Automated Follow-Ups. Supports{" "}
+            Reusable templates for SMS and Email follow-ups. Supports{" "}
             <code className="text-xs bg-slate-100 px-1 rounded">{"{{name}}"}</code>,{" "}
             <code className="text-xs bg-slate-100 px-1 rounded">{"{{address}}"}</code>,{" "}
             <code className="text-xs bg-slate-100 px-1 rounded">{"{{agent}}"}</code> variables.
@@ -559,6 +614,31 @@ export default function SMSTemplates() {
           <Plus className="w-4 h-4 mr-1.5" />
           New Template
         </Button>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100">
+          <MessageSquare className="w-4 h-4 text-blue-500" />
+          <div>
+            <p className="text-lg font-bold text-blue-700">{smsCount}</p>
+            <p className="text-[10px] text-blue-500 font-medium">SMS Compatible</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
+          <Mail className="w-4 h-4 text-amber-500" />
+          <div>
+            <p className="text-lg font-bold text-amber-700">{emailCount}</p>
+            <p className="text-[10px] text-amber-500 font-medium">Email Compatible</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-purple-50 border border-purple-100">
+          <MessagesSquare className="w-4 h-4 text-purple-500" />
+          <div>
+            <p className="text-lg font-bold text-purple-700">{bothCount}</p>
+            <p className="text-[10px] text-purple-500 font-medium">Both Channels</p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -576,6 +656,12 @@ export default function SMSTemplates() {
             {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={filterChannel} onValueChange={setFilterChannel}>
+          <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {CHANNEL_FILTERS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <span className="text-xs text-slate-400">{filtered.length} template{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
@@ -591,9 +677,9 @@ export default function SMSTemplates() {
       {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
         <div className="text-center py-16">
-          <MessageSquare className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+          <FileText className="w-12 h-12 text-slate-200 mx-auto mb-3" />
           <p className="text-slate-500 font-medium">No templates yet</p>
-          <p className="text-sm text-slate-400 mt-1">Create your first SMS template to use in Automated Follow-Ups.</p>
+          <p className="text-sm text-slate-400 mt-1">Create your first message template to use in SMS and Email follow-ups.</p>
           <Button onClick={handleNew} className="mt-4">
             <Plus className="w-4 h-4 mr-1.5" />
             Create First Template

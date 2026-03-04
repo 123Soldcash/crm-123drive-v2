@@ -3681,14 +3681,22 @@ export const appRouter = router({
    * SMS Templates — CRUD for reusable follow-up message templates.
    */
   smsTemplates: router({
-    /** List all templates, ordered by category then sortOrder */
-    list: protectedProcedure.query(async () => {
-      const { smsTemplates: tbl } = await import("../drizzle/schema");
-      const { asc } = await import("drizzle-orm");
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-      return db.select().from(tbl).orderBy(asc(tbl.category), asc(tbl.sortOrder), asc(tbl.name));
-    }),
+    /** List all templates, optionally filtered by channel. */
+    list: protectedProcedure
+      .input(z.object({ channel: z.enum(["sms", "email", "both", "all"]).default("all") }).optional())
+      .query(async ({ input }) => {
+        const { smsTemplates: tbl } = await import("../drizzle/schema");
+        const { asc, eq, or, inArray } = await import("drizzle-orm");
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const ch = input?.channel ?? "all";
+        if (ch === "all") {
+          return db.select().from(tbl).orderBy(asc(tbl.category), asc(tbl.sortOrder), asc(tbl.name));
+        }
+        // "sms" matches channel='sms' or 'both'; "email" matches channel='email' or 'both'
+        const matchChannels = ch === "both" ? ["both"] : [ch, "both"];
+        return db.select().from(tbl).where(inArray(tbl.channel, matchChannels)).orderBy(asc(tbl.category), asc(tbl.sortOrder), asc(tbl.name));
+      }),
 
     /** Create a new template */
     create: protectedProcedure
@@ -3696,7 +3704,9 @@ export const appRouter = router({
         z.object({
           name: z.string().min(1).max(255),
           category: z.string().min(1).max(100).default("Custom"),
+          channel: z.enum(["sms", "email", "both"]).default("both"),
           body: z.string().min(1),
+          emailSubject: z.string().max(500).optional(),
           sortOrder: z.number().int().default(0),
         })
       )
@@ -3707,7 +3717,9 @@ export const appRouter = router({
         const result = await db.insert(tbl).values({
           name: input.name,
           category: input.category,
+          channel: input.channel,
           body: input.body,
+          emailSubject: input.emailSubject ?? null,
           sortOrder: input.sortOrder,
           createdByUserId: ctx.user!.id,
           createdByName: ctx.user!.name ?? undefined,
@@ -3722,7 +3734,9 @@ export const appRouter = router({
           id: z.number().int(),
           name: z.string().min(1).max(255).optional(),
           category: z.string().min(1).max(100).optional(),
+          channel: z.enum(["sms", "email", "both"]).optional(),
           body: z.string().min(1).optional(),
+          emailSubject: z.string().max(500).nullish(),
           sortOrder: z.number().int().optional(),
         })
       )

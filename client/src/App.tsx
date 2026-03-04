@@ -109,7 +109,7 @@ function Router() {
       <Route path="/duplicates" component={DuplicatesDashboardPage} />
       <Route path="/pipeline" component={PipelineKanbanPage} />
       <Route path="/sms" component={SMSInboxPage} />
-      <Route path="/sms/templates" component={SMSTemplatesPage} />
+      <Route path="/message-templates" component={SMSTemplatesPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -34,7 +34,7 @@ const menuItems = [
   { icon: MapPin, label: "Map View", path: "/map" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks/kanban" },
   { icon: MessageSquare, label: "SMS Inbox", path: "/sms" },
-  { icon: FileText, label: "SMS Templates", path: "/sms/templates" },
+  { icon: FileText, label: "Message Templates", path: "/message-templates" },
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },

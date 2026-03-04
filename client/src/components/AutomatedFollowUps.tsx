@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle, Zap, FileText, ExternalLink } from "lucide-react";
+import { Plus, Pause, Play, Trash2, Clock, CheckCircle, AlertCircle, Zap, FileText, ExternalLink, Mail, MessageSquare } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -31,8 +31,15 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, navigate] = useLocation();
 
-  // Load SMS templates for the picker
-  const { data: smsTemplates = [] } = trpc.smsTemplates.list.useQuery();
+  // Load all message templates (used for both SMS and Email pickers)
+  const { data: allTemplates = [] } = trpc.smsTemplates.list.useQuery();
+
+  // Filter templates by channel based on selected action
+  const filteredTemplates = allTemplates.filter(t => {
+    if (selectedAction === "Send SMS") return t.channel === "sms" || t.channel === "both";
+    if (selectedAction === "Send Email") return t.channel === "email" || t.channel === "both";
+    return false;
+  });
 
   const utils = trpc.useUtils();
   const { data: followUps = [], isLoading } = trpc.followups.getByProperty.useQuery({ propertyId });
@@ -59,12 +66,16 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
           priority: "Medium",
         };
       } else if (selectedAction === "Send Email") {
+        const selectedTemplate = allTemplates.find(t => t.id === selectedTemplateId);
         actionDetailsObj = {
-          subject: `Follow-up: ${trigger}`,
-          template: "default_followup",
+          subject: selectedTemplate?.emailSubject || actionDetails || `Follow-up: ${trigger}`,
+          body: selectedTemplate?.body || actionDetails || `Hi! Following up about the property. ${trigger}`,
+          template: selectedTemplateId ? undefined : "default_followup",
+          templateId: selectedTemplateId,
+          templateName: selectedTemplate?.name,
         };
       } else if (selectedAction === "Send SMS") {
-        const selectedTemplate = smsTemplates.find(t => t.id === selectedTemplateId);
+        const selectedTemplate = allTemplates.find(t => t.id === selectedTemplateId);
         actionDetailsObj = {
           message: selectedTemplate?.body || actionDetails || `Hi! Following up about the property. ${trigger}`,
           templateId: selectedTemplateId,
@@ -87,7 +98,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         nextRunAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
       }
 
-      const selectedTemplate = smsTemplates.find(t => t.id === selectedTemplateId);
+      const selectedTemplate = allTemplates.find(t => t.id === selectedTemplateId);
       await createMutation.mutateAsync({
         propertyId,
         type: selectedType,
@@ -95,7 +106,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         action: selectedAction,
         actionDetails: actionDetailsObj,
         nextRunAt,
-        ...(selectedAction === "Send SMS" && selectedTemplateId ? {
+        ...((selectedAction === "Send SMS" || selectedAction === "Send Email") && selectedTemplateId ? {
           templateId: selectedTemplateId,
           templateBody: selectedTemplate?.body,
         } : {}),
@@ -223,27 +234,36 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                 </Select>
               </div>
 
-              {/* SMS Template Picker — shown only when Send SMS is selected */}
-              {selectedAction === "Send SMS" && (
-                <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
+              {/* Template Picker — shown for Send SMS and Send Email */}
+              {(selectedAction === "Send SMS" || selectedAction === "Send Email") && (
+                <div className={`space-y-2 rounded-lg border p-3 ${
+                  selectedAction === "Send SMS" 
+                    ? "border-blue-100 bg-blue-50/50" 
+                    : "border-amber-100 bg-amber-50/50"
+                }`}>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-blue-500" />
+                      {selectedAction === "Send SMS" 
+                        ? <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                        : <Mail className="w-3.5 h-3.5 text-amber-500" />
+                      }
                       Message Template
                     </label>
                     <button
                       type="button"
-                      onClick={() => navigate("/sms/templates")}
-                      className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5"
+                      onClick={() => navigate("/message-templates")}
+                      className={`text-[10px] hover:underline flex items-center gap-0.5 ${
+                        selectedAction === "Send SMS" ? "text-blue-500" : "text-amber-600"
+                      }`}
                     >
                       Manage Templates <ExternalLink className="w-2.5 h-2.5" />
                     </button>
                   </div>
 
-                  {smsTemplates.length === 0 ? (
+                  {filteredTemplates.length === 0 ? (
                     <div className="text-xs text-slate-500 text-center py-2">
-                      No templates yet.{" "}
-                      <button type="button" onClick={() => navigate("/sms/templates")} className="text-blue-500 hover:underline">Create one</button>
+                      No {selectedAction === "Send SMS" ? "SMS" : "Email"} templates yet.{" "}
+                      <button type="button" onClick={() => navigate("/message-templates")} className="text-blue-500 hover:underline">Create one</button>
                     </div>
                   ) : (
                     <Select
@@ -255,7 +275,7 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__free__">-- Write custom message --</SelectItem>
-                        {smsTemplates.map((t) => (
+                        {filteredTemplates.map((t) => (
                           <SelectItem key={t.id} value={String(t.id)}>
                             <span className="font-medium">{t.name}</span>
                             <span className="ml-2 text-xs text-slate-400">[{t.category}]</span>
@@ -265,20 +285,30 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
                     </Select>
                   )}
 
-                  {/* Preview selected template body */}
+                  {/* Preview selected template */}
                   {selectedTemplateId && (() => {
-                    const t = smsTemplates.find(x => x.id === selectedTemplateId);
-                    return t ? (
-                      <div className="text-xs font-mono text-slate-600 bg-white rounded border border-slate-200 p-2 leading-relaxed max-h-20 overflow-y-auto">
-                        {t.body}
+                    const t = allTemplates.find(x => x.id === selectedTemplateId);
+                    if (!t) return null;
+                    return (
+                      <div className="space-y-1">
+                        {/* Email subject preview */}
+                        {selectedAction === "Send Email" && t.emailSubject && (
+                          <div className="text-[11px] text-amber-600 font-medium flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            Subject: {t.emailSubject}
+                          </div>
+                        )}
+                        <div className="text-xs font-mono text-slate-600 bg-white rounded border border-slate-200 p-2 leading-relaxed max-h-20 overflow-y-auto">
+                          {t.body}
+                        </div>
                       </div>
-                    ) : null;
+                    );
                   })()}
 
                   {/* Free-text fallback when no template selected */}
                   {!selectedTemplateId && (
                     <Textarea
-                      placeholder="Write your SMS message here..."
+                      placeholder={selectedAction === "Send SMS" ? "Write your SMS message here..." : "Write your email body here..."}
                       value={actionDetails}
                       onChange={(e) => setActionDetails(e.target.value)}
                       className="min-h-16 text-sm bg-white"

@@ -840,9 +840,10 @@ export type AutomatedFollowUp = typeof automatedFollowUps.$inferSelect;
 export type InsertAutomatedFollowUp = typeof automatedFollowUps.$inferInsert;
 
 /**
- * SMS Templates table - reusable message templates for Automated Follow-Ups.
- * Supports {{name}}, {{address}}, {{agent}} variable placeholders.
- * Templates can be picked when creating a "Send SMS" follow-up action.
+ * Message Templates table - reusable templates for Automated Follow-Ups.
+ * Supports {{name}}, {{address}}, {{agent}}, {{city}} variable placeholders.
+ * Templates can be used for both SMS and Email follow-up actions.
+ * The `channel` field controls where the template appears: sms, email, or both.
  */
 export const smsTemplates = mysqlTable("smsTemplates", {
   id: int("id").autoincrement().primaryKey(),
@@ -850,8 +851,12 @@ export const smsTemplates = mysqlTable("smsTemplates", {
   name: varchar("name", { length: 255 }).notNull(),
   // Category for grouping (Follow-Up, Introduction, Closing, Custom)
   category: varchar("category", { length: 100 }).default("Custom").notNull(),
-  // Message body — supports {{name}}, {{address}}, {{agent}} placeholders
+  // Channel: sms, email, or both — controls where the template appears
+  channel: varchar("channel", { length: 20 }).default("both").notNull(),
+  // Message body — supports {{name}}, {{address}}, {{agent}}, {{city}} placeholders
   body: text("body").notNull(),
+  // Email subject line (used only when channel includes email)
+  emailSubject: varchar("emailSubject", { length: 500 }),
   // Sort order for display
   sortOrder: int("sortOrder").default(0),
   // Who created this template

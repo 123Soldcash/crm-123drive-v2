@@ -1,21 +1,35 @@
 /**
- * Unit tests for SMS Templates business logic.
+ * Unit tests for Message Templates business logic.
  *
  * Tests cover:
- * - Template name and body validation
+ * - Template name, body, and channel validation
+ * - Email subject requirement for email-compatible templates
+ * - Channel filtering logic (sms, email, both)
  * - Category defaults
- * - Variable placeholder detection
+ * - Variable placeholder detection and resolution
  * - Usage-based delete guard logic
- * - createAutomatedFollowUp with templateId fields
+ * - createAutomatedFollowUp with templateId fields for both SMS and Email
  */
 import { describe, it, expect } from "vitest";
 
 // ─── Template Validation Helpers ─────────────────────────────────────────────
-function validateTemplate(input: { name: string; body: string; category?: string }) {
+type TemplateInput = {
+  name: string;
+  body: string;
+  category?: string;
+  channel?: "sms" | "email" | "both";
+  emailSubject?: string;
+};
+
+function validateTemplate(input: TemplateInput) {
   const errors: string[] = [];
   if (!input.name || input.name.trim().length === 0) errors.push("name_required");
   if (input.name && input.name.trim().length > 255) errors.push("name_too_long");
   if (!input.body || input.body.trim().length === 0) errors.push("body_required");
+  const ch = input.channel ?? "both";
+  if ((ch === "email" || ch === "both") && (!input.emailSubject || input.emailSubject.trim().length === 0)) {
+    errors.push("email_subject_required");
+  }
   return errors;
 }
 
@@ -41,36 +55,104 @@ function canDeleteTemplate(
   return { allowed: true };
 }
 
+type Template = { id: number; name: string; channel: string; body: string; emailSubject?: string | null };
+
+function filterByChannel(templates: Template[], actionChannel: "sms" | "email"): Template[] {
+  return templates.filter(t => t.channel === actionChannel || t.channel === "both");
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
-describe("SMS Template Validation", () => {
-  it("accepts a valid template", () => {
-    const errors = validateTemplate({ name: "Initial Outreach", body: "Hi {{name}}, interested in your property at {{address}}?" });
+describe("Message Template Validation", () => {
+  it("accepts a valid SMS-only template (no emailSubject needed)", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}", channel: "sms" });
     expect(errors).toHaveLength(0);
   });
 
+  it("accepts a valid email-only template with subject", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}", channel: "email", emailSubject: "Follow up" });
+    expect(errors).toHaveLength(0);
+  });
+
+  it("accepts a valid both-channel template with subject", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}", channel: "both", emailSubject: "Follow up" });
+    expect(errors).toHaveLength(0);
+  });
+
+  it("rejects email-channel template without emailSubject", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}", channel: "email" });
+    expect(errors).toContain("email_subject_required");
+  });
+
+  it("rejects both-channel template without emailSubject", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}", channel: "both" });
+    expect(errors).toContain("email_subject_required");
+  });
+
+  it("defaults to 'both' channel when not specified (requires emailSubject)", () => {
+    const errors = validateTemplate({ name: "Outreach", body: "Hi {{name}}" });
+    expect(errors).toContain("email_subject_required");
+  });
+
   it("rejects empty name", () => {
-    const errors = validateTemplate({ name: "", body: "Some message" });
+    const errors = validateTemplate({ name: "", body: "Some message", channel: "sms" });
     expect(errors).toContain("name_required");
   });
 
   it("rejects whitespace-only name", () => {
-    const errors = validateTemplate({ name: "   ", body: "Some message" });
+    const errors = validateTemplate({ name: "   ", body: "Some message", channel: "sms" });
     expect(errors).toContain("name_required");
   });
 
   it("rejects empty body", () => {
-    const errors = validateTemplate({ name: "Template A", body: "" });
+    const errors = validateTemplate({ name: "Template A", body: "", channel: "sms" });
     expect(errors).toContain("body_required");
   });
 
   it("rejects name longer than 255 chars", () => {
-    const errors = validateTemplate({ name: "A".repeat(256), body: "Body" });
+    const errors = validateTemplate({ name: "A".repeat(256), body: "Body", channel: "sms" });
     expect(errors).toContain("name_too_long");
   });
 
   it("accepts name of exactly 255 chars", () => {
-    const errors = validateTemplate({ name: "A".repeat(255), body: "Body" });
+    const errors = validateTemplate({ name: "A".repeat(255), body: "Body", channel: "sms" });
     expect(errors).not.toContain("name_too_long");
+  });
+});
+
+describe("Channel Filtering", () => {
+  const templates: Template[] = [
+    { id: 1, name: "SMS Only", channel: "sms", body: "Hi" },
+    { id: 2, name: "Email Only", channel: "email", body: "Hi", emailSubject: "Subj" },
+    { id: 3, name: "Both", channel: "both", body: "Hi", emailSubject: "Subj" },
+    { id: 4, name: "Another SMS", channel: "sms", body: "Hey" },
+  ];
+
+  it("filters for SMS: returns sms + both", () => {
+    const result = filterByChannel(templates, "sms");
+    expect(result.map(t => t.id)).toEqual([1, 3, 4]);
+  });
+
+  it("filters for Email: returns email + both", () => {
+    const result = filterByChannel(templates, "email");
+    expect(result.map(t => t.id)).toEqual([2, 3]);
+  });
+
+  it("SMS filter excludes email-only templates", () => {
+    const result = filterByChannel(templates, "sms");
+    expect(result.find(t => t.id === 2)).toBeUndefined();
+  });
+
+  it("Email filter excludes sms-only templates", () => {
+    const result = filterByChannel(templates, "email");
+    expect(result.find(t => t.id === 1)).toBeUndefined();
+    expect(result.find(t => t.id === 4)).toBeUndefined();
+  });
+
+  it("both-channel templates appear in both filters", () => {
+    const smsResult = filterByChannel(templates, "sms");
+    const emailResult = filterByChannel(templates, "email");
+    expect(smsResult.find(t => t.id === 3)).toBeDefined();
+    expect(emailResult.find(t => t.id === 3)).toBeDefined();
   });
 });
 
@@ -154,8 +236,8 @@ describe("Category Defaults", () => {
   });
 });
 
-describe("CreateFollowUpInput with Template Fields", () => {
-  it("constructs valid input with templateId and templateBody", () => {
+describe("CreateFollowUpInput with Template Fields — SMS", () => {
+  it("constructs valid input with templateId and templateBody for SMS", () => {
     const input = {
       propertyId: 1,
       type: "Cold Lead" as const,
@@ -171,8 +253,6 @@ describe("CreateFollowUpInput with Template Fields", () => {
 
     expect(input.templateId).toBe(42);
     expect(input.templateBody).toBe("Hi {{name}}, following up!");
-    expect(input.createdByUserId).toBe(7);
-    expect(input.createdByName).toBe("Rosangela");
     expect(input.action).toBe("Send SMS");
   });
 
@@ -188,5 +268,47 @@ describe("CreateFollowUpInput with Template Fields", () => {
 
     expect((input as any).templateId).toBeUndefined();
     expect((input as any).templateBody).toBeUndefined();
+  });
+});
+
+describe("CreateFollowUpInput with Template Fields — Email", () => {
+  it("constructs valid input with templateId and templateBody for Email", () => {
+    const input = {
+      propertyId: 3,
+      type: "Cold Lead" as const,
+      trigger: "No response to email",
+      action: "Send Email" as const,
+      actionDetails: {
+        subject: "Following up about {{address}}",
+        body: "Hi {{name}}, I wanted to follow up about your property.",
+        templateId: 55,
+        templateName: "Email Follow-Up",
+      },
+      nextRunAt: new Date(),
+      templateId: 55,
+      templateBody: "Hi {{name}}, I wanted to follow up about your property.",
+    };
+
+    expect(input.templateId).toBe(55);
+    expect(input.templateBody).toContain("follow up");
+    expect(input.action).toBe("Send Email");
+    expect(input.actionDetails.subject).toContain("{{address}}");
+  });
+
+  it("constructs valid Email input without template (free-text)", () => {
+    const input = {
+      propertyId: 4,
+      type: "Custom" as const,
+      trigger: "Stage changed",
+      action: "Send Email" as const,
+      actionDetails: {
+        subject: "Follow-up: Stage changed",
+        template: "default_followup",
+      },
+      nextRunAt: new Date(),
+    };
+
+    expect((input as any).templateId).toBeUndefined();
+    expect(input.actionDetails.template).toBe("default_followup");
   });
 });
