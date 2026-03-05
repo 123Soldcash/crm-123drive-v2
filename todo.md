@@ -2193,3 +2193,6 @@
 
 ## FIX - BIN dropdown clipped by overflow:hidden container
 - [x] Fix BIN dropdown in PropertyDetail header so it overlays/overflows the card container instead of being clipped — used React Portal + getBoundingClientRect positioning
+
+## FIX - Property hero card image: add border-radius to match container
+- [x] Add rounded-xl (or rounded-l-xl for left side only) to the property image in the hero card so corners match the card container

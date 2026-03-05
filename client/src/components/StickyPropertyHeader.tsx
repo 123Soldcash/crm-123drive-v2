@@ -239,7 +239,7 @@ export function StickyPropertyHeader({
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-3">
         <div className="flex flex-col sm:flex-row">
           {/* Large Hero Image */}
-          <div className="relative sm:w-72 md:w-80 lg:w-96 shrink-0 h-48 sm:h-auto min-h-[180px]">
+          <div className="relative sm:w-72 md:w-80 lg:w-96 shrink-0 h-48 sm:h-auto min-h-[180px] overflow-hidden rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none">
             <PropertyImage
               propertyId={property.id}
               propertyImage={propertyImage}
