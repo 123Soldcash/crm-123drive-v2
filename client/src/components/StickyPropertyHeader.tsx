@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -73,8 +74,18 @@ export function StickyPropertyHeader({
 }: StickyPropertyHeaderProps) {
   const [isSticky, setIsSticky] = useState(false);
   const [deskDropdownOpen, setDeskDropdownOpen] = useState(false);
+  const [deskDropdownPos, setDeskDropdownPos] = useState({ top: 0, left: 0 });
+  const deskButtonRef = useRef<HTMLButtonElement>(null);
 
   const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || DESK_OPTIONS[0];
+
+  const openDeskDropdown = useCallback(() => {
+    if (deskButtonRef.current) {
+      const rect = deskButtonRef.current.getBoundingClientRect();
+      setDeskDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+    }
+    setDeskDropdownOpen(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -225,7 +236,7 @@ export function StickyPropertyHeader({
       </div>
 
       {/* Hero Card: Image + Info side by side */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-3">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-3">
         <div className="flex flex-col sm:flex-row">
           {/* Large Hero Image */}
           <div className="relative sm:w-72 md:w-80 lg:w-96 shrink-0 h-48 sm:h-auto min-h-[180px]">
@@ -358,16 +369,24 @@ export function StickyPropertyHeader({
               {/* Desk Selector */}
               <div className="relative">
                 <Button
+                  ref={deskButtonRef}
                   variant="outline"
                   size="sm"
                   className={cn("h-7 text-[10px] font-bold border-2 min-h-0 min-w-0 px-2", currentDesk.color)}
-                  onClick={() => setDeskDropdownOpen(!deskDropdownOpen)}
+                  onClick={() => deskDropdownOpen ? setDeskDropdownOpen(false) : openDeskDropdown()}
                 >
                   {currentDesk.label}
                   <ChevronRight className={cn("h-3 w-3 ml-0.5 transition-transform", deskDropdownOpen && "rotate-90")} />
                 </Button>
-                {deskDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg p-1 min-w-[140px]">
+              </div>
+              {deskDropdownOpen && createPortal(
+                <>
+                  {/* Backdrop to close on outside click */}
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setDeskDropdownOpen(false)} />
+                  <div
+                    className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-xl p-1 min-w-[150px]"
+                    style={{ top: deskDropdownPos.top, left: deskDropdownPos.left }}
+                  >
                     {DESK_OPTIONS.map((desk) => (
                       <button
                         key={desk.value}
@@ -381,8 +400,9 @@ export function StickyPropertyHeader({
                       </button>
                     ))}
                   </div>
-                )}
-              </div>
+                </>,
+                document.body
+              )}
 
               {/* Deep Search Button */}
               <Button

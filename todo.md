@@ -2190,3 +2190,6 @@
 
 ## BUG - Manage Agents still not showing Admin users
 - [x] Investigate which exact query/endpoint the Manage Agents dialog uses and fix it — the dialog uses agents.listAll from server/routers/agents.ts (not db.ts listAgents), updated to inArray(['agent','admin'])
+
+## FIX - BIN dropdown clipped by overflow:hidden container
+- [x] Fix BIN dropdown in PropertyDetail header so it overlays/overflows the card container instead of being clipped — used React Portal + getBoundingClientRect positioning
