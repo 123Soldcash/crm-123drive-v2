@@ -18,7 +18,7 @@
  * to pick up new replies.
  */
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, RefreshCw, Phone, X, CheckCheck, AlertCircle, Clock } from "lucide-react";
+import { MessageSquare, Send, RefreshCw, Phone, CheckCheck, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NoTwilioPhoneDialog } from "./NoTwilioPhoneDialog";
@@ -218,25 +218,15 @@ export function SMSChatButton({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <Button
+              <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => refetch()}
-                  className="h-7 w-7 p-0"
+                  className="h-7 w-7 p-0 flex-shrink-0"
                   title="Refresh messages"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setOpen(false)}
-                  className="h-7 w-7 p-0"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
             </div>
             {/* SMS badge */}
             <div className="flex items-center gap-2 mt-1">

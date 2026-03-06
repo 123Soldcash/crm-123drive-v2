@@ -2209,3 +2209,6 @@
 - [x] Translate all Portuguese text in SMS Inbox page to English
 - [x] Update Twilio webhook setup instructions to the correct path in Twilio Console
 - [x] Add clear in-app guide showing exact steps to configure the webhook
+
+## SMS Chat Drawer - Duplicate Close Button Fix
+- [x] Remove the extra manual X close button from the SMS chat drawer header (Sheet already provides one)
