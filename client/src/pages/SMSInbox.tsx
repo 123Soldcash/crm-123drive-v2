@@ -6,7 +6,7 @@
  * Auto-refreshes every 15 seconds to show new inbound messages.
  */
 import { useState } from "react";
-import { MessageSquare, RefreshCw, Phone, Search, Inbox } from "lucide-react";
+import { MessageSquare, RefreshCw, Phone, Search, Inbox, ExternalLink } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -35,11 +35,11 @@ function formatRelativeTime(date: Date | string): string {
   const diffHr = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHr / 24);
 
-  if (diffMin < 1) return "agora";
-  if (diffMin < 60) return `${diffMin}m atrás`;
-  if (diffHr < 24) return `${diffHr}h atrás`;
-  if (diffDay < 7) return `${diffDay}d atrás`;
-  return d.toLocaleDateString("pt-BR", { month: "short", day: "numeric" });
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export default function SMSInbox() {
@@ -51,8 +51,6 @@ export default function SMSInbox() {
     { refetchInterval: 15_000 }
   );
 
-  // Get last message for each conversation to show preview
-  // We'll fetch conversations individually using a combined approach
   const filteredConversations = conversations.filter((conv: any) =>
     conv.contactPhone.includes(search.replace(/\D/g, "")) ||
     formatPhoneDisplay(conv.contactPhone).includes(search)
@@ -69,7 +67,7 @@ export default function SMSInbox() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">SMS Inbox</h1>
             <p className="text-sm text-gray-500">
-              {conversations.length} conversa{conversations.length !== 1 ? "s" : ""}
+              {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
@@ -80,7 +78,7 @@ export default function SMSInbox() {
           className="gap-2"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          Atualizar
+          Refresh
         </Button>
       </div>
 
@@ -90,17 +88,35 @@ export default function SMSInbox() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por número..."
+          placeholder="Search by phone number..."
           className="pl-9"
         />
       </div>
 
       {/* Webhook setup notice */}
-      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-        <strong>Para receber respostas:</strong> Configure o webhook no Twilio Console → Phone Numbers → Messaging → Webhook URL:{" "}
-        <code className="bg-amber-100 px-1 rounded text-xs">
+      <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 space-y-2">
+        <p className="font-semibold">To receive inbound SMS replies, configure the Twilio webhook:</p>
+        <ol className="list-decimal list-inside space-y-1 text-amber-800">
+          <li>
+            Go to{" "}
+            <a
+              href="https://console.twilio.com/us1/develop/phone-numbers/manage/incoming"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-medium inline-flex items-center gap-0.5"
+            >
+              Twilio Console → Phone Numbers → Manage → Active Numbers
+              <ExternalLink className="w-3 h-3 ml-0.5" />
+            </a>
+          </li>
+          <li>Click on your phone number</li>
+          <li>Scroll down to the <strong>Messaging Configuration</strong> section</li>
+          <li>Under <strong>"A message comes in"</strong>, select <strong>Webhook</strong> and paste:</li>
+        </ol>
+        <code className="block bg-amber-100 border border-amber-300 px-3 py-1.5 rounded text-xs font-mono text-amber-900 select-all">
           https://crmv3.manus.space/api/twilio/sms/incoming
         </code>
+        <p className="text-xs text-amber-700">Make sure the HTTP method is set to <strong>HTTP POST</strong>, then click Save.</p>
       </div>
 
       {/* Conversation list */}
@@ -114,12 +130,12 @@ export default function SMSInbox() {
         <div className="flex flex-col items-center justify-center h-48 text-center">
           <Inbox className="w-12 h-12 text-gray-300 mb-3" />
           <p className="text-gray-500 font-medium">
-            {search ? "Nenhuma conversa encontrada" : "Nenhuma mensagem ainda"}
+            {search ? "No conversations found" : "No messages yet"}
           </p>
           <p className="text-sm text-gray-400 mt-1">
             {search
-              ? "Tente buscar com outro número"
-              : "Clique no ícone de mensagem ao lado de um telefone para iniciar uma conversa"}
+              ? "Try searching with a different number"
+              : "Click the message icon next to a phone number to start a conversation"}
           </p>
         </div>
       )}
@@ -141,7 +157,6 @@ function ConversationRow({
   contactPhone: string;
   lastMessageTime: string;
 }) {
-  // Fetch last message for preview
   const { data: messages = [] } = trpc.sms.getConversation.useQuery(
     { contactPhone, limit: 1 },
     { staleTime: 10_000 }
@@ -170,17 +185,17 @@ function ConversationRow({
         <div className="flex items-center gap-1.5 mt-0.5">
           {isInbound && (
             <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-green-50 text-green-700 border-green-200">
-              Recebida
+              Received
             </Badge>
           )}
           <p className="text-xs text-gray-500 truncate">
             {lastMsg ? (
               <>
-                {!isInbound && <span className="text-gray-400">Você: </span>}
+                {!isInbound && <span className="text-gray-400">You: </span>}
                 {lastMsg.body}
               </>
             ) : (
-              <span className="italic text-gray-400">Sem mensagens</span>
+              <span className="italic text-gray-400">No messages</span>
             )}
           </p>
         </div>

@@ -2204,3 +2204,8 @@
 - [x] Adicionar indicador visual de "paste ativo" na área de notas
 - [x] Suporte a arrastar e soltar imagens (drag & drop) na área de notas
 - [x] Mostrar spinner de carregamento enquanto processa a imagem colada
+
+## SMS Inbox - English Translation & Twilio Webhook Fix
+- [x] Translate all Portuguese text in SMS Inbox page to English
+- [x] Update Twilio webhook setup instructions to the correct path in Twilio Console
+- [x] Add clear in-app guide showing exact steps to configure the webhook

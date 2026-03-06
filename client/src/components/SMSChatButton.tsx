@@ -124,7 +124,7 @@ export function SMSChatButton({
       }, 200);
     },
     onError: (err) => {
-      toast.error("Falha ao enviar SMS", { description: err.message });
+      toast.error("Failed to send SMS", { description: err.message });
     },
   });
 
@@ -224,7 +224,7 @@ export function SMSChatButton({
                   size="sm"
                   onClick={() => refetch()}
                   className="h-7 w-7 p-0"
-                  title="Atualizar mensagens"
+                  title="Refresh messages"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
                 </Button>
@@ -245,7 +245,7 @@ export function SMSChatButton({
                 SMS
               </Badge>
               <span className="text-xs text-gray-400">
-                {messages.length} mensagem{messages.length !== 1 ? "s" : ""}
+                {messages.length} message{messages.length !== 1 ? "s" : ""}
               </span>
             </div>
           </SheetHeader>
@@ -261,9 +261,9 @@ export function SMSChatButton({
             {!isLoading && messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-40 text-center">
                 <MessageSquare className="w-10 h-10 text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500 font-medium">Nenhuma mensagem ainda</p>
+                <p className="text-sm text-gray-500 font-medium">No messages yet</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Envie uma mensagem para iniciar a conversa
+                  Send a message to start the conversation
                 </p>
               </div>
             )}
@@ -316,7 +316,7 @@ export function SMSChatButton({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Digite uma mensagem... (Enter para enviar)"
+                placeholder="Type a message... (Enter to send)"
                 className="flex-1 min-h-[44px] max-h-32 resize-none text-sm"
                 rows={1}
                 disabled={sendMutation.isPending}
@@ -326,7 +326,7 @@ export function SMSChatButton({
                 disabled={!message.trim() || sendMutation.isPending}
                 size="sm"
                 className="h-[44px] w-[44px] p-0 bg-blue-600 hover:bg-blue-700 flex-shrink-0"
-                title="Enviar mensagem"
+                title="Send message"
               >
                 {sendMutation.isPending ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -336,7 +336,7 @@ export function SMSChatButton({
               </Button>
             </div>
             <p className="text-xs text-gray-400 mt-1.5">
-              Enter para enviar · Shift+Enter para nova linha · Atualiza a cada 10s
+              Enter to send · Shift+Enter for new line · Auto-refreshes every 10s
             </p>
           </div>
         </SheetContent>
