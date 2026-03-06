@@ -2196,3 +2196,11 @@
 
 ## FIX - Property hero card image: add border-radius to match container
 - [x] Add rounded-xl (or rounded-l-xl for left side only) to the property image in the hero card so corners match the card container
+
+## General Notes - Paste de Screenshots (Melhoria de Robustez)
+- [x] Corrigir listener de paste: usar evento global no document (não só no textarea) para capturar paste em qualquer momento
+- [x] Corrigir bug: useEffect com ref null quando seção está recolhida no mount
+- [x] Adicionar tratamento de erro no FileReader com mensagem clara
+- [x] Adicionar indicador visual de "paste ativo" na área de notas
+- [x] Suporte a arrastar e soltar imagens (drag & drop) na área de notas
+- [x] Mostrar spinner de carregamento enquanto processa a imagem colada

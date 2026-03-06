@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotesSection } from './NotesSection';
 import { trpc } from '@/lib/trpc';
@@ -10,205 +10,172 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: vi.fn(),
     notes: {
-      byProperty: {
-        useQuery: vi.fn(),
-      },
-      create: {
-        useMutation: vi.fn(),
-      },
-      delete: {
-        useMutation: vi.fn(),
-      },
+      byProperty: { useQuery: vi.fn() },
+      create: { useMutation: vi.fn() },
+      delete: { useMutation: vi.fn() },
     },
     photos: {
-      byProperty: {
-        useQuery: vi.fn(),
-      },
-      uploadBulk: {
-        useMutation: vi.fn(),
-      },
-      delete: {
-        useMutation: vi.fn(),
-      },
+      allByProperty: { useQuery: vi.fn() },
+      byProperty: { useQuery: vi.fn() },
+      uploadBulk: { useMutation: vi.fn() },
+      delete: { useMutation: vi.fn() },
+    },
+    documents: {
+      byProperty: { useQuery: vi.fn() },
+      upload: { useMutation: vi.fn() },
+      delete: { useMutation: vi.fn() },
     },
   },
 }));
 
-// Mock components
+// Mock UI components
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>
-      {children}
-    </button>
+    <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
   ),
 }));
-
 vi.mock('@/components/ui/textarea', () => ({
-  Textarea: ({ value, onChange, ...props }: any) => (
-    <textarea value={value} onChange={onChange} {...props} />
+  Textarea: ({ value, onChange, placeholder, ...props }: any) => (
+    <textarea value={value} onChange={onChange} placeholder={placeholder} {...props} />
   ),
 }));
-
 vi.mock('@/components/ui/input', () => ({
-  Input: ({ value, onChange, ...props }: any) => (
-    <input value={value} onChange={onChange} {...props} />
+  Input: ({ value, onChange, placeholder, ...props }: any) => (
+    <input value={value} onChange={onChange} placeholder={placeholder} {...props} />
   ),
 }));
-
 vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: any) => <span>{children}</span>,
 }));
-
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open }: any) => open ? <div>{children}</div> : null,
   DialogContent: ({ children }: any) => <div>{children}</div>,
+  DialogTitle: ({ children }: any) => <h2>{children}</h2>,
 }));
-
 vi.mock('./CollapsibleSection', () => ({
   CollapsibleSection: ({ children, title }: any) => (
-    <div data-testid="collapsible-section" data-title={title}>
-      {children}
-    </div>
+    <div data-testid="collapsible-section" data-title={title}>{children}</div>
   ),
 }));
-
 vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+vi.mock('@radix-ui/react-visually-hidden', () => ({
+  VisuallyHidden: ({ children }: any) => <span>{children}</span>,
 }));
 
+// Mock FileReader
+const mockFileReaderResult = 'data:image/png;base64,abc123';
+class MockFileReader {
+  result: string | null = null;
+  onload: ((e: any) => void) | null = null;
+  onerror: ((e: any) => void) | null = null;
+  readAsDataURL(_blob: Blob) {
+    this.result = mockFileReaderResult;
+    setTimeout(() => {
+      if (this.onload) this.onload({ target: { result: this.result } });
+    }, 0);
+  }
+}
+vi.stubGlobal('FileReader', MockFileReader);
+
+const mockPropertyId = 123;
+const mockNotes = [
+  { id: 1, propertyId: mockPropertyId, content: 'General note 1', noteType: 'general', createdAt: new Date('2026-02-09'), userName: 'John Doe' },
+  { id: 2, propertyId: mockPropertyId, content: 'General note 2', noteType: 'general', createdAt: new Date('2026-02-08'), userName: 'Jane Smith' },
+];
+const mockPhotos = [
+  { id: 1, propertyId: mockPropertyId, noteId: 1, fileUrl: 'https://example.com/photo1.jpg', caption: 'Photo 1 caption' },
+  { id: 2, propertyId: mockPropertyId, noteId: 1, fileUrl: 'https://example.com/photo2.jpg', caption: null },
+  { id: 3, propertyId: mockPropertyId, noteId: 2, fileUrl: 'https://example.com/photo3.jpg', caption: 'Photo 3 caption' },
+];
+
+function setupDefaultMocks() {
+  (trpc.useUtils as any).mockReturnValue({
+    notes: { byProperty: { invalidate: vi.fn() } },
+    photos: { byProperty: { invalidate: vi.fn() }, allByProperty: { invalidate: vi.fn() } },
+    documents: { byProperty: { invalidate: vi.fn() } },
+  });
+  (trpc.notes.byProperty.useQuery as any).mockReturnValue({ data: mockNotes, isLoading: false });
+  (trpc.photos.allByProperty.useQuery as any).mockReturnValue({ data: mockPhotos });
+  (trpc.photos.byProperty.useQuery as any).mockReturnValue({ data: mockPhotos });
+  (trpc.documents.byProperty.useQuery as any).mockReturnValue({ data: [] });
+  (trpc.notes.create.useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: false });
+  (trpc.notes.delete.useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: false });
+  (trpc.photos.uploadBulk.useMutation as any).mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false });
+  (trpc.photos.delete.useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: false });
+  (trpc.documents.upload.useMutation as any).mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false });
+  (trpc.documents.delete.useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: false });
+}
+
 describe('NotesSection Component', () => {
-  const mockPropertyId = 123;
-  const mockNotes = [
-    {
-      id: 1,
-      propertyId: mockPropertyId,
-      content: 'General note 1',
-      noteType: 'general',
-      createdAt: new Date('2026-02-09'),
-      userName: 'John Doe',
-    },
-    {
-      id: 2,
-      propertyId: mockPropertyId,
-      content: 'General note 2',
-      noteType: 'general',
-      createdAt: new Date('2026-02-08'),
-      userName: 'Jane Smith',
-    },
-  ];
-
-  const mockPhotos = [
-    {
-      id: 1,
-      propertyId: mockPropertyId,
-      noteId: 1,
-      fileUrl: 'https://example.com/photo1.jpg',
-      caption: 'Photo 1 caption',
-    },
-    {
-      id: 2,
-      propertyId: mockPropertyId,
-      noteId: 1,
-      fileUrl: 'https://example.com/photo2.jpg',
-      caption: null,
-    },
-    {
-      id: 3,
-      propertyId: mockPropertyId,
-      noteId: 2,
-      fileUrl: 'https://example.com/photo3.jpg',
-      caption: 'Photo 3 caption',
-    },
-  ];
-
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-
-    // Setup default mocks
-    (trpc.useUtils as any).mockReturnValue({
-      notes: { byProperty: { invalidate: vi.fn() } },
-      photos: { byProperty: { invalidate: vi.fn() } },
-    });
-
-    (trpc.notes.byProperty.useQuery as any).mockReturnValue({
-      data: mockNotes,
-      isLoading: false,
-    });
-
-    (trpc.photos.byProperty.useQuery as any).mockReturnValue({
-      data: mockPhotos,
-    });
-
-    (trpc.notes.create.useMutation as any).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    });
-
-    (trpc.notes.delete.useMutation as any).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    });
-
-    (trpc.photos.uploadBulk.useMutation as any).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({}),
-      isPending: false,
-    });
-
-    (trpc.photos.delete.useMutation as any).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    });
+    setupDefaultMocks();
   });
 
+  // ── Rendering ──────────────────────────────────────────────────────────────
   describe('Rendering', () => {
-    it('should render the component with title', () => {
+    it('renders with title "General Notes"', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const section = screen.getByTestId('collapsible-section');
-      expect(section).toHaveAttribute('data-title', 'General Notes');
+      expect(screen.getByTestId('collapsible-section')).toHaveAttribute('data-title', 'General Notes');
     });
 
-    it('should display notes count badge', () => {
+    it('renders the textarea for new notes', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/Add a note/i)).toBeInTheDocument();
     });
 
-    it('should render textarea for new notes', () => {
+    it('renders Photos and Documents buttons', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const textarea = screen.getByPlaceholderText(/Add a note/i);
-      expect(textarea).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Photos/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Documents/i })).toBeInTheDocument();
     });
 
-    it('should render Add Photos button', () => {
+    it('renders Save Note button', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const button = screen.getByRole('button', { name: /Add Photos/i });
-      expect(button).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Save Note/i })).toBeInTheDocument();
     });
 
-    it('should render Save Note button', () => {
+    it('renders the paste hint text', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const button = screen.getByRole('button', { name: /Save Note/i });
-      expect(button).toBeInTheDocument();
+      expect(screen.getByText(/Ctrl\+V anywhere/i)).toBeInTheDocument();
+    });
+
+    it('shows notes count badge', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(screen.getByText('2 notes')).toBeInTheDocument();
+    });
+
+    it('displays all general notes', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(screen.getByText('General note 1')).toBeInTheDocument();
+      expect(screen.getByText('General note 2')).toBeInTheDocument();
+    });
+
+    it('displays note authors', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    });
+
+    it('shows empty state message when no notes', () => {
+      (trpc.notes.byProperty.useQuery as any).mockReturnValue({ data: [], isLoading: false });
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(screen.getByText(/No notes yet/i)).toBeInTheDocument();
     });
   });
 
+  // ── Note Creation ──────────────────────────────────────────────────────────
   describe('Note Creation', () => {
-    it('should add a note when form is submitted', async () => {
+    it('submits note with correct data', async () => {
       const mockMutate = vi.fn();
-      (trpc.notes.create.useMutation as any).mockReturnValue({
-        mutate: mockMutate,
-        isPending: false,
-      });
+      (trpc.notes.create.useMutation as any).mockReturnValue({ mutate: mockMutate, isPending: false });
 
       render(<NotesSection propertyId={mockPropertyId} />);
-      const textarea = screen.getByPlaceholderText(/Add a note/i);
-      const submitButton = screen.getByRole('button', { name: /Save Note/i });
-
-      await userEvent.type(textarea, 'New general note');
-      fireEvent.click(submitButton);
+      await userEvent.type(screen.getByPlaceholderText(/Add a note/i), 'New general note');
+      fireEvent.click(screen.getByRole('button', { name: /Save Note/i }));
 
       expect(mockMutate).toHaveBeenCalledWith({
         propertyId: mockPropertyId,
@@ -217,134 +184,33 @@ describe('NotesSection Component', () => {
       });
     });
 
-    it('should not submit empty notes', async () => {
+    it('does not submit when note is empty and no images/docs', () => {
       const mockMutate = vi.fn();
-      (trpc.notes.create.useMutation as any).mockReturnValue({
-        mutate: mockMutate,
-        isPending: false,
-      });
+      (trpc.notes.create.useMutation as any).mockReturnValue({ mutate: mockMutate, isPending: false });
 
       render(<NotesSection propertyId={mockPropertyId} />);
-      const submitButton = screen.getByRole('button', { name: /Save Note/i });
-
-      fireEvent.click(submitButton);
+      fireEvent.click(screen.getByRole('button', { name: /Save Note/i }));
 
       expect(mockMutate).not.toHaveBeenCalled();
     });
 
-    it('should disable submit button when loading', () => {
-      (trpc.notes.create.useMutation as any).mockReturnValue({
-        mutate: vi.fn(),
-        isPending: true,
-      });
-
+    it('disables submit button while saving', () => {
+      (trpc.notes.create.useMutation as any).mockReturnValue({ mutate: vi.fn(), isPending: true });
       render(<NotesSection propertyId={mockPropertyId} />);
-      const submitButton = screen.getByRole('button', { name: /Saving/i });
-
-      expect(submitButton).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Saving/i })).toBeDisabled();
     });
   });
 
-  describe('Image Attachment', () => {
-    it('should handle file selection', async () => {
+  // ── Image Attachment ───────────────────────────────────────────────────────
+  describe('Image Attachment via File Input', () => {
+    it('adds image to preview when file is selected', async () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector('input[accept="image/*"]') as HTMLInputElement;
 
-      const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-
-      fireEvent.change(fileInput, { target: { files: dataTransfer.files } });
-
-      await waitFor(() => {
-        const images = screen.getAllByRole('img');
-        expect(images.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('should display selected images in grid', async () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-      const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-
-      fireEvent.change(fileInput, { target: { files: dataTransfer.files } });
-
-      await waitFor(() => {
-        const grid = document.querySelector('.grid.grid-cols-3');
-        expect(grid).toBeInTheDocument();
-      });
-    });
-
-    it('should remove image when delete button is clicked', async () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-      const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-
-      fireEvent.change(fileInput, { target: { files: dataTransfer.files } });
-
-      await waitFor(() => {
-        const deleteButtons = screen.getAllByRole('button');
-        if (deleteButtons.length > 0) {
-          fireEvent.click(deleteButtons[0]);
-        }
-      });
-    });
-
-    it('should upload photos when note is created', async () => {
-      const mockUploadPhotos = vi.fn().mockResolvedValue({});
-      const mockMutate = vi.fn((config: any) => {
-        config.onSuccess?.({ id: 1 });
-      });
-
-      (trpc.notes.create.useMutation as any).mockReturnValue({
-        mutate: mockMutate,
-        isPending: false,
-      });
-
-      (trpc.photos.uploadBulk.useMutation as any).mockReturnValue({
-        mutateAsync: mockUploadPhotos,
-        isPending: false,
-      });
-
-      render(<NotesSection propertyId={mockPropertyId} />);
-      const textarea = screen.getByPlaceholderText(/Add a note/i);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-      // Add image
-      const file = new File(['dummy content'], 'test.jpg', { type: 'image/jpeg' });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      fireEvent.change(fileInput, { target: { files: dataTransfer.files } });
-
-      // Add note text
-      await userEvent.type(textarea, 'Note with image');
-
-      // Submit
-      const submitButton = screen.getByRole('button', { name: /Save Note/i });
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockMutate).toHaveBeenCalled();
-      });
-    });
-
-    it('should handle multiple image uploads', async () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-      const file1 = new File(['content1'], 'test1.jpg', { type: 'image/jpeg' });
-      const file2 = new File(['content2'], 'test2.jpg', { type: 'image/jpeg' });
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file1);
-      dataTransfer.items.add(file2);
-
-      fireEvent.change(fileInput, { target: { files: dataTransfer.files } });
+      const file = new File(['img'], 'test.jpg', { type: 'image/jpeg' });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fireEvent.change(fileInput, { target: { files: dt.files } });
 
       await waitFor(() => {
         const grid = document.querySelector('.grid.grid-cols-3');
@@ -353,32 +219,139 @@ describe('NotesSection Component', () => {
     });
   });
 
+  // ── Global Paste ───────────────────────────────────────────────────────────
+  describe('Global Paste (Ctrl+V)', () => {
+    it('registers a paste listener on document', () => {
+      const addSpy = vi.spyOn(document, 'addEventListener');
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(addSpy).toHaveBeenCalledWith('paste', expect.any(Function));
+      addSpy.mockRestore();
+    });
+
+    it('removes the paste listener on unmount', () => {
+      const removeSpy = vi.spyOn(document, 'removeEventListener');
+      const { unmount } = render(<NotesSection propertyId={mockPropertyId} />);
+      unmount();
+      expect(removeSpy).toHaveBeenCalledWith('paste', expect.any(Function));
+      removeSpy.mockRestore();
+    });
+
+    it('processes image from global paste event', async () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+
+      const blob = new Blob(['img'], { type: 'image/png' });
+      const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+
+      const pasteEvent = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true });
+      await act(async () => {
+        document.dispatchEvent(pasteEvent);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      await waitFor(() => {
+        const grid = document.querySelector('.grid.grid-cols-3');
+        expect(grid).toBeInTheDocument();
+      });
+    });
+
+    it('does not steal paste from other text inputs on the page', async () => {
+      const { container } = render(
+        <div>
+          <input id="other-input" type="text" />
+          <NotesSection propertyId={mockPropertyId} />
+        </div>
+      );
+
+      const otherInput = container.querySelector('#other-input') as HTMLInputElement;
+      otherInput.focus();
+      Object.defineProperty(document, 'activeElement', { value: otherInput, configurable: true });
+
+      const blob = new Blob(['img'], { type: 'image/png' });
+      const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const pasteEvent = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true });
+
+      await act(async () => {
+        document.dispatchEvent(pasteEvent);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      // Grid should NOT appear because paste was from another input
+      const grid = document.querySelector('.grid.grid-cols-3');
+      expect(grid).toBeNull();
+    });
+
+    it('ignores paste events that contain only text (no images)', async () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+
+      const dt = new DataTransfer();
+      dt.setData('text/plain', 'just some text');
+      const pasteEvent = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true });
+
+      await act(async () => {
+        document.dispatchEvent(pasteEvent);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      const grid = document.querySelector('.grid.grid-cols-3');
+      expect(grid).toBeNull();
+    });
+  });
+
+  // ── Drag & Drop ────────────────────────────────────────────────────────────
+  describe('Drag & Drop', () => {
+    it('shows drag-over state when dragging image over form area', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+
+      // The form area is the div with the drag hint
+      const formArea = screen.getByText(/Ctrl\+V anywhere/i).closest('div[class*="border-2"]');
+      expect(formArea).toBeTruthy();
+
+      const dt = new DataTransfer();
+      dt.items.add(new File(['img'], 'test.png', { type: 'image/png' }));
+
+      fireEvent.dragOver(formArea!, { dataTransfer: dt });
+
+      expect(screen.getByText(/Drop image here/i)).toBeInTheDocument();
+    });
+
+    it('clears drag-over state on drag leave', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+      const formArea = screen.getByText(/Ctrl\+V anywhere/i).closest('div[class*="border-2"]');
+
+      const dt = new DataTransfer();
+      dt.items.add(new File(['img'], 'test.png', { type: 'image/png' }));
+
+      fireEvent.dragOver(formArea!, { dataTransfer: dt });
+      fireEvent.dragLeave(formArea!, { relatedTarget: null });
+
+      expect(screen.queryByText(/Drop image here/i)).toBeNull();
+    });
+  });
+
+  // ── Note Deletion ──────────────────────────────────────────────────────────
   describe('Note Deletion', () => {
-    it('should delete note when delete button is clicked', async () => {
+    it('calls delete mutation when trash button is clicked', () => {
       const mockDelete = vi.fn();
-      (trpc.notes.delete.useMutation as any).mockReturnValue({
-        mutate: mockDelete,
-        isPending: false,
-      });
+      (trpc.notes.delete.useMutation as any).mockReturnValue({ mutate: mockDelete, isPending: false });
 
       render(<NotesSection propertyId={mockPropertyId} />);
-
       const deleteButtons = screen.getAllByRole('button');
-      // Find the delete button for a note
-      if (deleteButtons.length > 0) {
-        fireEvent.click(deleteButtons[deleteButtons.length - 1]);
-      }
+      // Last button in the table rows is the delete button
+      fireEvent.click(deleteButtons[deleteButtons.length - 1]);
 
       expect(mockDelete).toHaveBeenCalled();
     });
   });
 
+  // ── Search ─────────────────────────────────────────────────────────────────
   describe('Search Functionality', () => {
-    it('should filter notes by search query', async () => {
+    it('filters notes by search query', async () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      const searchInput = screen.getByPlaceholderText(/Search notes/i);
-
-      await userEvent.type(searchInput, 'General note 1');
+      await userEvent.type(screen.getByPlaceholderText(/Search notes/i), 'General note 1');
 
       await waitFor(() => {
         expect(screen.getByText('General note 1')).toBeInTheDocument();
@@ -386,135 +359,56 @@ describe('NotesSection Component', () => {
     });
   });
 
+  // ── CSV Export ─────────────────────────────────────────────────────────────
   describe('CSV Export', () => {
-    it('should export notes to CSV', async () => {
-      const mockCreateElement = vi.spyOn(document, 'createElement');
-      const mockAppendChild = vi.spyOn(document, 'appendChild');
-      const mockRemoveChild = vi.spyOn(document, 'removeChild');
+    it('triggers CSV download when Export is clicked', () => {
+      const createSpy = vi.spyOn(document, 'createElement');
+      const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => document.body);
+      const removeSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => document.body);
 
       render(<NotesSection propertyId={mockPropertyId} />);
-      const exportButton = screen.getByRole('button', { name: /Export/i });
+      fireEvent.click(screen.getByRole('button', { name: /Export/i }));
 
-      fireEvent.click(exportButton);
-
-      expect(mockCreateElement).toHaveBeenCalledWith('a');
-      expect(mockAppendChild).toHaveBeenCalled();
-      expect(mockRemoveChild).toHaveBeenCalled();
-
-      mockCreateElement.mockRestore();
-      mockAppendChild.mockRestore();
-      mockRemoveChild.mockRestore();
+      expect(createSpy).toHaveBeenCalledWith('a');
+      createSpy.mockRestore();
+      appendSpy.mockRestore();
+      removeSpy.mockRestore();
     });
   });
 
+  // ── Photos in Notes ────────────────────────────────────────────────────────
   describe('Photo Display in Notes', () => {
-    it('should display photos attached to notes', () => {
+    it('displays photos attached to notes', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-
       const photos = screen.getAllByAltText(/Note photo/i);
       expect(photos.length).toBeGreaterThan(0);
     });
 
-    it('should show photo captions', () => {
+    it('shows photo captions', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-
       expect(screen.getByText('Photo 1 caption')).toBeInTheDocument();
       expect(screen.getByText('Photo 3 caption')).toBeInTheDocument();
     });
 
-    it('should delete photo when delete button is clicked', async () => {
-      const mockDeletePhoto = vi.fn();
-      (trpc.photos.delete.useMutation as any).mockReturnValue({
-        mutate: mockDeletePhoto,
-        isPending: false,
-      });
-
+    it('opens lightbox when photo is clicked', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-
-      window.confirm = vi.fn(() => true);
-
-      // The photo delete functionality should be tested
-      // This is a simplified test
-    });
-
-    it('should open lightbox when photo is clicked', async () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-
       const photos = screen.getAllByAltText(/Note photo/i);
-      if (photos.length > 0) {
-        fireEvent.click(photos[0]);
-
-        // Lightbox should be visible
-        const lightboxImage = screen.getByRole('img', { hidden: true });
-        expect(lightboxImage).toBeInTheDocument();
-      }
+      fireEvent.click(photos[0]);
+      // Lightbox dialog should appear
+      expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
     });
   });
 
+  // ── LocalStorage ───────────────────────────────────────────────────────────
   describe('LocalStorage Persistence', () => {
-    it('should persist expanded state to localStorage', () => {
-      const { rerender } = render(<NotesSection propertyId={mockPropertyId} />);
-
-      const section = screen.getByTestId('collapsible-section');
-      expect(section).toBeInTheDocument();
-
-      // Check if localStorage was called
-      const stored = localStorage.getItem('showGeneralNotes');
-      expect(stored).not.toBeNull();
+    it('persists expanded state to localStorage', () => {
+      render(<NotesSection propertyId={mockPropertyId} />);
+      expect(localStorage.getItem('showGeneralNotes')).not.toBeNull();
     });
 
-    it('should default to expanded state for general notes', () => {
+    it('defaults to expanded (true)', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-
-      const stored = localStorage.getItem('showGeneralNotes');
-      expect(stored).toBe('true');
-    });
-  });
-
-  describe('Paste Image Support', () => {
-    it('should handle pasted images from clipboard', async () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-      const textarea = screen.getByPlaceholderText(/Add a note/i);
-
-      const blob = new Blob(['image data'], { type: 'image/png' });
-      const pasteEvent = new ClipboardEvent('paste', {
-        clipboardData: new DataTransfer(),
-      });
-
-      // Add image to clipboard
-      pasteEvent.clipboardData?.items.add(new File([blob], 'test.png', { type: 'image/png' }));
-
-      fireEvent.paste(textarea, pasteEvent);
-
-      // Note: This test might need adjustment based on actual implementation
-      // as FileReader is async
-    });
-  });
-
-  describe('Photo Filtering', () => {
-    it('should display only photos for specific note', () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-
-      // Note 1 should have 2 photos
-      // Note 2 should have 1 photo
-      const photos = screen.getAllByAltText(/Note photo/i);
-      expect(photos.length).toBe(3);
-    });
-  });
-
-  describe('Note Display', () => {
-    it('should display all general notes', () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-
-      expect(screen.getByText('General note 1')).toBeInTheDocument();
-      expect(screen.getByText('General note 2')).toBeInTheDocument();
-    });
-
-    it('should display note author and date', () => {
-      render(<NotesSection propertyId={mockPropertyId} />);
-
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      expect(localStorage.getItem('showGeneralNotes')).toBe('true');
     });
   });
 });

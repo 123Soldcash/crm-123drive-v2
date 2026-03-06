@@ -11,23 +11,23 @@
  * - Note deletion (user can only delete own notes)
  * - Search functionality
  * - CSV export
- * - Paste images (Ctrl+V)
+ * - Paste images (Ctrl+V) - GLOBAL listener (works without clicking textarea first)
+ * - Drag & Drop images onto the note form
  * - Document upload (PDF, DOC, DOCX, XLS, XLSX, TXT, etc.)
  * - Document list with download/delete
  * 
- * LAST MODIFIED: 2026-02-16
+ * LAST MODIFIED: 2026-03-06
  * ============================================================================
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive } from "lucide-react";
+import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive, ClipboardPaste, ImagePlus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
@@ -69,65 +69,149 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Read a Blob/File as a base64 data URL */
+function readBlobAsDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Failed to read image data"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Read a File as a base64 data URL (alias kept for doc uploads) */
+function readFileAsBase64(file: globalThis.File): Promise<string> {
+  return readBlobAsDataURL(file);
+}
+
+/** Extract image blobs from a DataTransfer/ClipboardData items list */
+function extractImageBlobs(items: DataTransferItemList): Blob[] {
+  const blobs: Blob[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      const blob = item.getAsFile();
+      if (blob) blobs.push(blob);
+    }
+  }
+  return blobs;
+}
+
 export function NotesSection({ propertyId }: NotesSectionProps) {
   const [noteText, setNoteText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string } | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDocs, setSelectedDocs] = useState<{ file: globalThis.File; description: string }[]>([]);
   const [showDocuments, setShowDocuments] = useState(true);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isPastingImage, setIsPastingImage] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formAreaRef = useRef<HTMLDivElement>(null);
 
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem('showGeneralNotes');
     return saved ? JSON.parse(saved) : true;
   });
-  
+
   useEffect(() => {
     localStorage.setItem('showGeneralNotes', JSON.stringify(isExpanded));
   }, [isExpanded]);
 
+  // ─── Process image blobs into base64 previews ───────────────────────────────
+  const processImageBlobs = useCallback(async (blobs: Blob[]) => {
+    if (blobs.length === 0) return;
+    setIsPastingImage(true);
+    try {
+      const dataUrls = await Promise.all(blobs.map(readBlobAsDataURL));
+      setSelectedImages((prev) => [...prev, ...dataUrls]);
+      // Expand section if collapsed so user can see the pasted image
+      setIsExpanded(true);
+      toast.success(blobs.length === 1 ? "Screenshot pasted! Add a note and click Save." : `${blobs.length} images pasted!`);
+    } catch (err) {
+      console.error("Image paste error:", err);
+      toast.error("Failed to read pasted image. Please try again.");
+    } finally {
+      setIsPastingImage(false);
+    }
+  }, []);
+
+  // ─── GLOBAL paste listener (works even without textarea focus) ───────────────
   useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
+    const handleGlobalPaste = async (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type.indexOf("image") !== -1) {
-          e.preventDefault();
-          const blob = item.getAsFile();
-          if (!blob) continue;
+      const blobs = extractImageBlobs(items);
+      if (blobs.length === 0) return;
 
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const imageData = event.target?.result as string;
-            setSelectedImages((prev) => [...prev, imageData]);
-            toast.success("Screenshot pasted!");
-          };
-          reader.readAsDataURL(blob);
-        }
-      }
+      // Only intercept if the active element is not an input/textarea
+      // (to avoid stealing paste from other fields on the page)
+      const active = document.activeElement;
+      const isTypingElsewhere =
+        active &&
+        active !== textareaRef.current &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA") &&
+        !formAreaRef.current?.contains(active);
+
+      if (isTypingElsewhere) return;
+
+      e.preventDefault();
+      await processImageBlobs(blobs);
     };
 
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.addEventListener("paste", handlePaste);
-      return () => textarea.removeEventListener("paste", handlePaste);
+    document.addEventListener("paste", handleGlobalPaste);
+    return () => document.removeEventListener("paste", handleGlobalPaste);
+  }, [processImageBlobs]);
+
+  // ─── Drag & Drop handlers ────────────────────────────────────────────────────
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.types.some((t) => t === "Files")) {
+      setIsDraggingOver(true);
     }
-  }, []);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the form area entirely
+    if (!formAreaRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDraggingOver(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+
+    const items = e.dataTransfer.items;
+    if (!items) return;
+
+    const blobs = extractImageBlobs(items);
+    if (blobs.length > 0) {
+      await processImageBlobs(blobs);
+      return;
+    }
+
+    // If no image items, check for image files
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      f.type.startsWith("image/")
+    );
+    if (files.length > 0) {
+      await processImageBlobs(files);
+    }
+  };
 
   const utils = trpc.useUtils();
   const { data: allNotes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
   const notes = allNotes?.filter((note) => note.noteType !== "desk-chris") || [];
   const { data: allPhotos } = trpc.photos.allByProperty.useQuery({ propertyId });
-  const { data: documents, isLoading: docsLoading } = trpc.documents.byProperty.useQuery({ propertyId });
-  
+  const { data: documents } = trpc.documents.byProperty.useQuery({ propertyId });
+
   const noteUsers = Array.from(new Set(notes.map(note => note.userName).filter(Boolean))) as string[];
 
   const filteredNotes = notes.filter((note) => {
@@ -142,25 +226,18 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
 
   const createNoteMutation = trpc.notes.create.useMutation({
     onSuccess: async (note) => {
-      // Upload photos if any
       if (selectedImages.length > 0) {
         const photos = selectedImages.map((img, idx) => ({
           fileData: img,
           caption: photoCaptions[idx] || undefined,
         }));
-
         try {
-          await uploadPhotosMutation.mutateAsync({
-            propertyId,
-            noteId: note.id,
-            photos,
-          });
-        } catch (error) {
+          await uploadPhotosMutation.mutateAsync({ propertyId, noteId: note.id, photos });
+        } catch {
           toast.error("Note created but photos failed to upload");
         }
       }
 
-      // Upload documents if any
       if (selectedDocs.length > 0) {
         for (const doc of selectedDocs) {
           try {
@@ -174,7 +251,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               mimeType: doc.file.type || "application/octet-stream",
               description: doc.description || undefined,
             });
-          } catch (error) {
+          } catch {
             toast.error(`Failed to upload ${doc.file.name}`);
           }
         }
@@ -245,7 +322,6 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     },
   });
 
-  // Standalone document upload (not attached to a note)
   const handleStandaloneDocUpload = async (files: FileList) => {
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_SIZE) {
@@ -262,7 +338,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           mimeType: file.type || "application/octet-stream",
         });
         toast.success(`${file.name} uploaded`);
-      } catch (error) {
+      } catch {
         toast.error(`Failed to upload ${file.name}`);
       }
     }
@@ -294,7 +370,6 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
       newDocs.push({ file, description: "" });
     });
     setSelectedDocs((prev) => [...prev, ...newDocs]);
-    // Reset input so same file can be selected again
     event.target.value = "";
   };
 
@@ -367,11 +442,36 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
       }
     >
       <div className="space-y-4">
-        {/* Note Input Form */}
-        <div className="space-y-3 p-4 border rounded-lg bg-gray-50/50">
+        {/* Note Input Form — also the drop target */}
+        <div
+          ref={formAreaRef}
+          className={`space-y-3 p-4 border-2 rounded-lg transition-colors ${
+            isDraggingOver
+              ? "border-blue-400 bg-blue-50/60 border-dashed"
+              : "border-gray-200 bg-gray-50/50"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {/* Paste / drag hint bar */}
+          <div className="flex items-center gap-2 text-[11px] text-slate-400 select-none">
+            <ClipboardPaste className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              {isDraggingOver
+                ? "Drop image here to attach it to this note"
+                : isPastingImage
+                ? "Processing image…"
+                : "Ctrl+V anywhere on this page to paste a screenshot · or drag an image here"}
+            </span>
+            {isPastingImage && (
+              <span className="ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+            )}
+          </div>
+
           <Textarea
             ref={textareaRef}
-            placeholder="Add a note... (Ctrl+V to paste screenshots)"
+            placeholder="Add a note… (optional when attaching images)"
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             rows={3}
@@ -400,18 +500,37 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             {selectedImages.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {selectedImages.map((img, idx) => (
-                  <div key={idx} className="relative">
-                    <img src={img} className="w-full h-20 object-cover rounded-md border border-gray-200" />
+                  <div key={idx} className="relative group">
+                    <img
+                      src={img}
+                      className="w-full h-24 object-cover rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setLightboxPhoto({ url: img })}
+                    />
                     <Button
                       variant="destructive"
                       size="icon"
-                      className="absolute top-1 right-1 h-5 w-5"
+                      className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => removeImage(idx)}
                     >
                       <X className="h-3 w-3" />
                     </Button>
+                    <div
+                      className="absolute top-1 left-1 h-5 w-5 bg-slate-900/60 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => setLightboxPhoto({ url: img })}
+                    >
+                      <ZoomIn className="h-3 w-3 text-white" />
+                    </div>
                   </div>
                 ))}
+                {/* Add more images slot */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-24 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors"
+                >
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-[10px]">Add more</span>
+                </button>
               </div>
             )}
 
@@ -490,7 +609,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                 Upload
               </Button>
             </div>
-            
+
             {showDocuments && (
               <div className="border border-gray-200 rounded-lg overflow-hidden bg-white divide-y divide-slate-100">
                 {documents.map((doc) => (
@@ -542,7 +661,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </div>
         )}
 
-        {/* Empty state for documents when no documents exist */}
+        {/* Empty state for documents */}
         {(!documents || documents.length === 0) && (
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-slate-300 hover:bg-gray-50/50 transition-colors"
@@ -609,6 +728,13 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               </tr>
             </thead>
             <tbody>
+              {filteredNotes.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-sm text-gray-400">
+                    No notes yet. Add one above or paste a screenshot with Ctrl+V.
+                  </td>
+                </tr>
+              )}
               {filteredNotes.map((note) => {
                 const noteDocuments = documents?.filter(d => d.noteId === note.id) || [];
                 return (
@@ -625,14 +751,14 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                     </td>
                     <td className="p-3 text-sm text-slate-600 align-top">
                       <p className="whitespace-pre-wrap">{note.content}</p>
-                      
+
                       {/* Photos attached to this note */}
                       {(allPhotos?.filter(photo => photo.noteId === note.id)?.length ?? 0) > 0 && (
                         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {allPhotos?.filter(photo => photo.noteId === note.id).map((photo) => (
                             <div key={photo.id} className="relative group">
-                              <img 
-                                src={photo.fileUrl} 
+                              <img
+                                src={photo.fileUrl}
                                 alt={photo.caption || "Note photo"}
                                 className="w-full h-24 object-cover rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
@@ -650,7 +776,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                               >
                                 <X className="h-3 w-3" />
                               </Button>
-                              <div 
+                              <div
                                 className="absolute top-1 left-1 h-6 w-6 bg-slate-900/60 hover:bg-slate-900/80 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                                 onClick={() => setLightboxPhoto({ url: photo.fileUrl, caption: photo.caption || undefined })}
                               >
@@ -724,8 +850,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
         <VisuallyHidden><DialogTitle>Photo Preview</DialogTitle></VisuallyHidden>
         {lightboxPhoto && (
           <div className="relative">
-            <img 
-              src={lightboxPhoto.url} 
+            <img
+              src={lightboxPhoto.url}
               alt={lightboxPhoto.caption || "Photo"}
               className="w-full h-auto max-h-[80vh] object-contain"
             />
@@ -740,13 +866,4 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     </Dialog>
     </>
   );
-}
-
-function readFileAsBase64(file: globalThis.File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
