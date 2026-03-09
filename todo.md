@@ -2243,3 +2243,10 @@
 - [x] Verify import results and data integrity (887 total properties)
 - [x] Add tag, lead source, and campaign name filtering to Properties page
 - [ ] Import notes from second file (pending user upload)
+
+## REsimple - Update 192 Duplicate Properties
+- [x] Build update script to match skipped properties by address and update their data from CSV
+- [x] Add "Recimple" tag to all existing properties (71 updated + 568 new = 639 total with Recimple tag)
+- [x] Update lead source, campaign name, and other fields from CSV data
+- [x] Verify all properties updated correctly (639 with Recimple tag, 639 with Lead Source, 636 with Campaign Name)
+- [x] 12 rows with severely malformed addresses could not be matched (data quality issue in CSV)
