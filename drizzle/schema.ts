@@ -237,6 +237,9 @@ export const properties = mysqlTable("properties", {
   // Lead Source (references leadSources.name for flexibility)
   leadSource: varchar("leadSource", { length: 255 }),
 
+  // Campaign Name (references campaignNames.name for flexibility)
+  campaignName: varchar("campaignName", { length: 255 }),
+
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -1454,3 +1457,19 @@ export const leadSources = mysqlTable("leadSources", {
 
 export type LeadSource = typeof leadSources.$inferSelect;
 export type InsertLeadSource = typeof leadSources.$inferInsert;
+
+/**
+ * Campaign Names table - stores all available campaign name options.
+ * Pre-seeded with 22 standard campaigns; admins can add custom ones.
+ */
+export const campaignNames = mysqlTable("campaignNames", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  isDefault: int("isDefault").default(0).notNull(), // 1 = pre-loaded default, 0 = custom
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CampaignName = typeof campaignNames.$inferSelect;
+export type InsertCampaignName = typeof campaignNames.$inferInsert;

@@ -3845,5 +3845,35 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  campaignName: router({
+    /** Seed defaults + return all campaign names */
+    list: protectedProcedure.query(async () => {
+      return db.getCampaignNames();
+    }),
+
+    /** Add a custom campaign name */
+    addCustom: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(255) }))
+      .mutation(async ({ input }) => {
+        return db.addCustomCampaignName(input.name.trim());
+      }),
+
+    /** Delete a custom (non-default) campaign name */
+    deleteCustom: adminProcedure
+      .input(z.object({ id: z.number().int() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCustomCampaignName(input.id);
+        return { success: true };
+      }),
+
+    /** Set the campaign name for a property */
+    setForProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number().int(), campaignName: z.string().nullable() }))
+      .mutation(async ({ input }) => {
+        await db.setPropertyCampaignName(input.propertyId, input.campaignName);
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;;

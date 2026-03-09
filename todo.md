@@ -2223,3 +2223,14 @@
 - [x] Add server procedures: getLeadSources, setPropertyLeadSource, addCustomLeadSource
 - [x] Add Lead Source selector in property detail page (with search + add custom)
 - [ ] Show Lead Source in property list/cards (future improvement)
+
+## Lead Source - Save Bug Fix
+- [x] Fix Lead Source not saving when selecting a value from the dropdown (leadSource was missing from getPropertyById select columns)
+
+## Campaign Name Feature
+- [x] Add campaignName column to properties table
+- [x] Create campaignNames table for custom/pre-loaded values
+- [x] Seed 22 default campaign names
+- [x] Add server procedures: list, addCustom, deleteCustom, setForProperty
+- [x] Create CampaignNameSelector component next to Lead Source
+- [x] Support adding and removing custom campaign names

@@ -169,6 +169,13 @@
       "when": 1773090911459,
       "tag": "0023_reflective_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1773091554622,
+      "tag": "0024_milky_metal_master",
+      "breakpoints": true
     }
   ]
 }

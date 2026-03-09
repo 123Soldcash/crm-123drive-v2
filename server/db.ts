@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -314,6 +314,8 @@ export async function getPropertyById(id: number) {
     deskStatus: properties.deskStatus,
     dealStage: properties.dealStage,
     stageChangedAt: properties.stageChangedAt,
+    leadSource: properties.leadSource,
+    campaignName: properties.campaignName,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.leadId, id)).limit(1);
   
@@ -353,6 +355,8 @@ export async function getPropertyById(id: number) {
     deskStatus: properties.deskStatus,
     dealStage: properties.dealStage,
     stageChangedAt: properties.stageChangedAt,
+    leadSource: properties.leadSource,
+    campaignName: properties.campaignName,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.id, id)).limit(1);
   }
@@ -2538,4 +2542,71 @@ export async function setPropertyLeadSource(propertyId: number, leadSource: stri
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(properties).set({ leadSource, updatedAt: new Date() }).where(eq(properties.id, propertyId));
+}
+
+// ─── Campaign Names ──────────────────────────────────────────────────────────
+
+const DEFAULT_CAMPAIGN_NAMES = [
+  "Company Data",
+  "AVA",
+  "Deep Search-no contacted yet",
+  "DoorNock",
+  "LeadUP|KAGAN",
+  "419_Google Ads",
+  "409_PostCard_click2mail",
+  "5668_Deep_Search",
+  "219_TV39_Mat",
+  "215_Post_Card_PrintGinie",
+  "1-209_CR",
+  "1444_Web",
+  "PropertyLeads",
+  "Criative_Leads_RESimple#",
+  "Portugues",
+  "561_BacthDilaer",
+  "321_ORA",
+  "782_5005_Deal_Machine",
+  "ProbateData - instantly-emarketing",
+  "01 - ProbateData Jan012021-Dec312021",
+  "561-778-1156-AutoCalls",
+  "Other",
+];
+
+export async function seedDefaultCampaignNames(): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  for (let i = 0; i < DEFAULT_CAMPAIGN_NAMES.length; i++) {
+    const name = DEFAULT_CAMPAIGN_NAMES[i];
+    try {
+      await db.insert(campaignNames).ignore().values({ name, isDefault: 1, sortOrder: i });
+    } catch {
+      // already exists — skip
+    }
+  }
+}
+
+export async function getCampaignNames() {
+  const db = await getDb();
+  if (!db) return [];
+  await seedDefaultCampaignNames();
+  const rows = await db.select().from(campaignNames).orderBy(campaignNames.sortOrder, campaignNames.name);
+  return rows;
+}
+
+export async function addCustomCampaignName(name: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(campaignNames).values({ name, isDefault: 0, sortOrder: 999 });
+  return { id: (result as any).insertId, name };
+}
+
+export async function deleteCustomCampaignName(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(campaignNames).where(and(eq(campaignNames.id, id), eq(campaignNames.isDefault, 0)));
+}
+
+export async function setPropertyCampaignName(propertyId: number, campaignName: string | null): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(properties).set({ campaignName, updatedAt: new Date() }).where(eq(properties.id, propertyId));
 }

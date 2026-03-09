@@ -44,6 +44,7 @@ import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
 import { PropertyTagsManager } from "@/components/PropertyTagsManager";
 import { LeadSourceSelector } from "@/components/LeadSourceSelector";
+import { CampaignNameSelector } from "@/components/CampaignNameSelector";
 
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -426,11 +427,16 @@ export default function PropertyDetail() {
       {/* Tags Manager */}
       <PropertyTagsManager propertyId={propertyId} />
 
-      {/* Lead Source */}
-      <div className="px-1">
+      {/* Lead Source & Campaign Name */}
+      <div className="px-1 flex flex-col sm:flex-row gap-3">
         <LeadSourceSelector
           propertyId={propertyId}
           currentLeadSource={(property as any)?.leadSource}
+        />
+        <div className="hidden sm:block w-px bg-slate-200" />
+        <CampaignNameSelector
+          propertyId={propertyId}
+          currentCampaignName={(property as any)?.campaignName}
         />
       </div>
 
