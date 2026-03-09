@@ -2212,3 +2212,6 @@
 
 ## SMS Chat Drawer - Duplicate Close Button Fix
 - [x] Remove the extra manual X close button from the SMS chat drawer header (Sheet already provides one)
+
+## SMS Chat Drawer - Refresh Button Overlap Fix
+- [x] Fix refresh button overlapping the Sheet close button in the SMS chat drawer header

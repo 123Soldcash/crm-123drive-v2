@@ -199,34 +199,32 @@ export function SMSChatButton({
           side="right"
           className="w-full sm:w-[420px] p-0 flex flex-col"
         >
-          {/* Header */}
-          <SheetHeader className="px-4 py-3 border-b bg-white flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-700 font-semibold text-sm">
-                    {(contactName || "?").charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <SheetTitle className="text-sm font-semibold truncate">
-                    {displayName}
-                  </SheetTitle>
-                  <p className="text-xs text-gray-500 font-mono">
-                    {formatPhoneDisplay(normalizedPhone)}
-                  </p>
-                </div>
+          {/* Header — pr-10 reserves space for Sheet's built-in close button */}
+          <SheetHeader className="px-4 pr-10 py-3 border-b bg-white flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Avatar */}
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-blue-700 font-semibold text-sm">
+                  {(contactName || "?").charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="text-sm font-semibold truncate">
+                  {displayName}
+                </SheetTitle>
+                <p className="text-xs text-gray-500 font-mono">
+                  {formatPhoneDisplay(normalizedPhone)}
+                </p>
               </div>
               <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => refetch()}
-                  className="h-7 w-7 p-0 flex-shrink-0"
-                  title="Refresh messages"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                </Button>
+                variant="ghost"
+                size="sm"
+                onClick={() => refetch()}
+                className="h-7 w-7 p-0 flex-shrink-0"
+                title="Refresh messages"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              </Button>
             </div>
             {/* SMS badge */}
             <div className="flex items-center gap-2 mt-1">
