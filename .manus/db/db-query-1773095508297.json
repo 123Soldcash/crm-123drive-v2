@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, email FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Rosangela Russo",
+      "email": "mrsqny5w9r@privaterelay.appleid.com"
+    },
+    {
+      "id": "11880520",
+      "name": "Drtaylor office33",
+      "email": "drtaylor1050@gmail.com"
+    },
+    {
+      "id": "12030020",
+      "name": "Robert Donald",
+      "email": "robert.33021@gmail.com"
+    },
+    {
+      "id": "12030025",
+      "name": "103_Zack Jones",
+      "email": "jackjones15103@gmail.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\n1\tRosangela Russo\tmrsqny5w9r@privaterelay.appleid.com\n11880520\tDrtaylor office33\tdrtaylor1050@gmail.com\n12030020\tRobert Donald\trobert.33021@gmail.com\n12030025\t103_Zack Jones\tjackjones15103@gmail.com\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

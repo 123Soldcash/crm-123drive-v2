@@ -89,6 +89,9 @@ export const appRouter = router({
             leadTemperature: z.enum(["SUPER HOT", "HOT", "WARM", "COLD", "DEAD"]).optional(),
             ownerVerified: z.boolean().optional(),
             visited: z.boolean().optional(),
+            tag: z.string().optional(),
+            leadSource: z.string().optional(),
+            campaignName: z.string().optional(),
           })
           .optional()
       )

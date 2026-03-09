@@ -76,6 +76,9 @@ interface FilterState {
   assignedAgentId: number | null;
   deskName: string;
   dealStage: string;
+  tag: string;
+  leadSource: string;
+  campaignName: string;
 }
 
 const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
@@ -99,6 +102,9 @@ export default function Properties() {
       assignedAgentId: null,
       deskName: "",
       dealStage: "",
+      tag: params.get('tag') || "",
+      leadSource: "",
+      campaignName: "",
     };
   });
 
@@ -176,10 +182,22 @@ export default function Properties() {
     leadTemperature: (filters.leadTemperature && filters.leadTemperature !== "all" ? filters.leadTemperature as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" : undefined),
     ownerVerified: filters.ownerVerified || undefined,
     visited: filters.visited || undefined,
+    tag: (filters.tag && filters.tag !== "all" ? filters.tag : undefined),
+    leadSource: (filters.leadSource && filters.leadSource !== "all" ? filters.leadSource : undefined),
+    campaignName: (filters.campaignName && filters.campaignName !== "all" ? filters.campaignName : undefined),
   }) as { data: any[] | undefined; isLoading: boolean };
 
   // Fetch status counts
   const { data: statusCounts = {} } = trpc.properties.statusCounts.useQuery();
+
+  // Fetch all unique tags for filter dropdown
+  const { data: allTags = [] } = trpc.properties.getAllTags.useQuery();
+
+  // Fetch lead sources for filter dropdown
+  const { data: allLeadSources = [] } = trpc.leadSource.list.useQuery();
+
+  // Fetch campaign names for filter dropdown
+  const { data: allCampaignNames = [] } = trpc.campaignName.list.useQuery();
 
   // Fetch saved searches
   const { data: savedSearches = [] } = trpc.savedSearches.list.useQuery();
@@ -321,6 +339,9 @@ export default function Properties() {
       assignedAgentId: null,
       deskName: "",
       dealStage: "",
+      tag: "",
+      leadSource: "",
+      campaignName: "",
     });
   };
 
@@ -330,6 +351,9 @@ export default function Properties() {
     (filters.minEquity > 0 ? 1 : 0) +
     (filters.marketStatus ? 1 : 0) +
     (filters.deskName ? 1 : 0) +
+    (filters.tag ? 1 : 0) +
+    (filters.leadSource ? 1 : 0) +
+    (filters.campaignName ? 1 : 0) +
     filters.statusTags.length;
 
   const handleSaveSearch = () => {
@@ -645,6 +669,66 @@ export default function Properties() {
                       <span>{stage.icon}</span>
                       <span>{stage.shortLabel}</span>
                     </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Tag Filter */}
+            <Select
+              value={filters.tag || "all"}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, tag: value === "all" ? "" : value }))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by Tag" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tags</SelectItem>
+                {allTags.map((t: any) => (
+                  <SelectItem key={t.tag} value={t.tag}>
+                    {t.tag} ({t.count})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Lead Source Filter */}
+            <Select
+              value={filters.leadSource || "all"}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, leadSource: value === "all" ? "" : value }))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Lead Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Lead Sources</SelectItem>
+                {allLeadSources.map((s: any) => (
+                  <SelectItem key={s.id} value={s.name}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Campaign Name Filter */}
+            <Select
+              value={filters.campaignName || "all"}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, campaignName: value === "all" ? "" : value }))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Campaign Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campaigns</SelectItem>
+                {allCampaignNames.map((c: any) => (
+                  <SelectItem key={c.id} value={c.name}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>

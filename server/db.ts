@@ -133,6 +133,9 @@ export async function getProperties(filters?: {
   visited?: boolean;
   userId?: number;
   userRole?: string;
+  tag?: string;
+  leadSource?: string;
+  campaignName?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -248,6 +251,27 @@ export async function getProperties(filters?: {
     conditions.push(sql`${properties.id} IN (${sql.join(searchPropertyIds.map(id => sql`${id}`), sql`, `)})`);
   }
 
+  // Filter by tag (requires subquery on propertyTags)
+  if (filters?.tag) {
+    const tagMatches = await db
+      .select({ propertyId: propertyTags.propertyId })
+      .from(propertyTags)
+      .where(eq(propertyTags.tag, filters.tag));
+    const tagPropertyIds = tagMatches.map(t => t.propertyId);
+    if (tagPropertyIds.length === 0) return [];
+    conditions.push(sql`${properties.id} IN (${sql.join(tagPropertyIds.map(id => sql`${id}`), sql`, `)})`);
+  }
+
+  // Filter by leadSource
+  if (filters?.leadSource) {
+    conditions.push(eq(properties.leadSource, filters.leadSource));
+  }
+
+  // Filter by campaignName
+  if (filters?.campaignName) {
+    conditions.push(eq(properties.campaignName, filters.campaignName));
+  }
+
   if (conditions.length > 0) {
     query = query.where(and(...conditions)) as typeof query;
   }
@@ -269,6 +293,9 @@ export async function getPropertiesWithAgents(filters?: {
   visited?: boolean;
   userId?: number;
   userRole?: string;
+  tag?: string;
+  leadSource?: string;
+  campaignName?: string;
 }) {
   // Simply call getProperties - the agent filtering logic is already there
   return await getProperties(filters);

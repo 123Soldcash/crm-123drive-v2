@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, role FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, role FROM users LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Rosangela Russo",
+      "role": "admin"
+    },
+    {
+      "id": "11880520",
+      "name": "Drtaylor office33",
+      "role": "agent"
+    },
+    {
+      "id": "12030020",
+      "name": "Robert Donald",
+      "role": "admin"
+    },
+    {
+      "id": "12030025",
+      "name": "103_Zack Jones",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\n1\tRosangela Russo\tadmin\n11880520\tDrtaylor office33\tagent\n12030020\tRobert Donald\tadmin\n12030025\t103_Zack Jones\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 105
+}

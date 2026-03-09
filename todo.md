@@ -2234,3 +2234,12 @@
 - [x] Add server procedures: list, addCustom, deleteCustom, setForProperty
 - [x] Create CampaignNameSelector component next to Lead Source
 - [x] Support adding and removing custom campaign names
+
+## REsimple Lead Migration
+- [x] Analyze CSV structure and map columns to CRM properties schema
+- [x] Build migration script to import ~760 leads from REsimple CSV (568 imported, 192 skipped duplicates)
+- [x] Add "Recimple" tag to all imported leads
+- [x] Map campaign name and lead source fields from CSV
+- [x] Verify import results and data integrity (887 total properties)
+- [x] Add tag, lead source, and campaign name filtering to Properties page
+- [ ] Import notes from second file (pending user upload)

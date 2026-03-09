@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Rosangela Russo"
+    },
+    {
+      "id": "11880520",
+      "name": "Drtaylor office33"
+    },
+    {
+      "id": "12030020",
+      "name": "Robert Donald"
+    },
+    {
+      "id": "12030025",
+      "name": "103_Zack Jones"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tRosangela Russo\n11880520\tDrtaylor office33\n12030020\tRobert Donald\n12030025\t103_Zack Jones\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
