@@ -234,6 +234,9 @@ export const properties = mysqlTable("properties", {
   // Property Image (custom upload URL from S3, overrides Street View)
   propertyImage: text("propertyImage"),
 
+  // Lead Source (references leadSources.name for flexibility)
+  leadSource: varchar("leadSource", { length: 255 }),
+
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -1435,3 +1438,19 @@ export const smsMessages = mysqlTable("smsMessages", {
 export type SmsMessage = typeof smsMessages.$inferSelect;
 export type InsertSmsMessage = typeof smsMessages.$inferInsert;
 
+
+/**
+ * Lead Sources table - stores all available lead source options.
+ * Pre-seeded with 30 standard sources; admins can add custom ones.
+ */
+export const leadSources = mysqlTable("leadSources", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  isDefault: int("isDefault").default(0).notNull(), // 1 = pre-loaded default, 0 = custom
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadSource = typeof leadSources.$inferSelect;
+export type InsertLeadSource = typeof leadSources.$inferInsert;

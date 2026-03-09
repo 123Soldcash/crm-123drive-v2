@@ -2215,3 +2215,11 @@
 
 ## SMS Chat Drawer - Refresh Button Overlap Fix
 - [x] Fix refresh button overlapping the Sheet close button in the SMS chat drawer header
+
+## Lead Source Feature
+- [x] Add leadSource column to properties table in schema
+- [x] Create leadSources table for custom/pre-loaded sources
+- [x] Seed 30 default lead sources on first run
+- [x] Add server procedures: getLeadSources, setPropertyLeadSource, addCustomLeadSource
+- [x] Add Lead Source selector in property detail page (with search + add custom)
+- [ ] Show Lead Source in property list/cards (future improvement)

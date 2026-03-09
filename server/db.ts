@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2463,4 +2463,79 @@ export async function updateNote(noteId: number, userId: number, content: string
     .update(notes)
     .set({ content, updatedAt: new Date() })
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
+}
+
+
+// ─── Lead Sources ─────────────────────────────────────────────────────────────
+
+const DEFAULT_LEAD_SOURCES = [
+  "Bandit Signs",
+  "Billboard",
+  "Cold Calling",
+  "Craigslist",
+  "Direct Mail",
+  "Door Knocking",
+  "Driving for Dollars",
+  "Email Marketing",
+  "Facebook Marketing",
+  "For Sale by Owner (FSBO)",
+  "Foreclosure Auction",
+  "Google Adwords/PPC",
+  "HVA (High Value Area)",
+  "Internet Marketing (SEO)",
+  "MLS (Multiple Listing Service)",
+  "Magnetic Signs",
+  "Newspaper",
+  "Online Auction",
+  "Other",
+  "Other Wholesalers",
+  "Pay Per Lead",
+  "Radio Ads",
+  "Real Estate Agent",
+  "Referrals",
+  "Ringless Voicemails",
+  "SMS Blast",
+  "ThreeDoors",
+  "TV Ads",
+  "Website",
+  "YouTube",
+];
+
+export async function ensureDefaultLeadSources(): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  for (let i = 0; i < DEFAULT_LEAD_SOURCES.length; i++) {
+    const name = DEFAULT_LEAD_SOURCES[i];
+    try {
+      await db.insert(leadSources).ignore().values({ name, isDefault: 1, sortOrder: i });
+    } catch {
+      // already exists — skip
+    }
+  }
+}
+
+export async function getLeadSources(): Promise<{ id: number; name: string; isDefault: number; sortOrder: number }[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(leadSources).orderBy(leadSources.sortOrder, leadSources.name);
+  return rows;
+}
+
+export async function addCustomLeadSource(name: string): Promise<{ id: number; name: string }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(leadSources).values({ name, isDefault: 0, sortOrder: 999 });
+  return { id: (result as any).insertId, name };
+}
+
+export async function deleteCustomLeadSource(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(leadSources).where(and(eq(leadSources.id, id), eq(leadSources.isDefault, 0)));
+}
+
+export async function setPropertyLeadSource(propertyId: number, leadSource: string | null): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(properties).set({ leadSource, updatedAt: new Date() }).where(eq(properties.id, propertyId));
 }

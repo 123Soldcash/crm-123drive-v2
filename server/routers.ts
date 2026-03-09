@@ -3815,5 +3815,35 @@ export const appRouter = router({
         return rows;
       }),
   }),
+  leadSource: router({
+    /** Seed defaults + return all sources */
+    list: protectedProcedure.query(async () => {
+      await db.ensureDefaultLeadSources();
+      return db.getLeadSources();
+    }),
+
+    /** Add a custom lead source */
+    addCustom: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(255) }))
+      .mutation(async ({ input }) => {
+        return db.addCustomLeadSource(input.name.trim());
+      }),
+
+    /** Delete a custom (non-default) lead source */
+    deleteCustom: adminProcedure
+      .input(z.object({ id: z.number().int() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCustomLeadSource(input.id);
+        return { success: true };
+      }),
+
+    /** Set the lead source for a property */
+    setForProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number().int(), leadSource: z.string().nullable() }))
+      .mutation(async ({ input }) => {
+        await db.setPropertyLeadSource(input.propertyId, input.leadSource);
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;;

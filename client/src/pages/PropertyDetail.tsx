@@ -43,6 +43,7 @@ import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
 import { PropertyTagsManager } from "@/components/PropertyTagsManager";
+import { LeadSourceSelector } from "@/components/LeadSourceSelector";
 
 import BuyerMatching from "@/components/BuyerMatching";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -424,6 +425,14 @@ export default function PropertyDetail() {
 
       {/* Tags Manager */}
       <PropertyTagsManager propertyId={propertyId} />
+
+      {/* Lead Source */}
+      <div className="px-1">
+        <LeadSourceSelector
+          propertyId={propertyId}
+          currentLeadSource={(property as any)?.leadSource}
+        />
+      </div>
 
       {/* Call Tracking */}
       <CallTrackingTable propertyId={propertyId} />
