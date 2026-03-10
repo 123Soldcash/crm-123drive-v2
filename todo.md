@@ -2250,3 +2250,10 @@
 - [x] Update lead source, campaign name, and other fields from CSV data
 - [x] Verify all properties updated correctly (639 with Recimple tag, 639 with Lead Source, 636 with Campaign Name)
 - [x] 12 rows with severely malformed addresses could not be matched (data quality issue in CSV)
+
+## REsimple - Import Notes into General Notes
+- [x] Rollback incorrectly imported notes (address-matched)
+- [x] Analyze REsimple Property ID mapping between leads CSV and notes CSV
+- [x] Investigated ID structure: no linked-list pattern found (all 2,382 IDs unique, no cross-references)
+- [x] Built clean import script matching by Property ID only for CRM leads
+- [x] Imported 2,920 notes for 528 properties (0 errors, 0 orphans)
