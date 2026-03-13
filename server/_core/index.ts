@@ -102,14 +102,42 @@ async function startServer() {
   // Uses /api/oauth/ prefix because the Manus deployment platform only
   // forwards /api/oauth/* and /api/trpc/* to Express.
 
+  // Token validation middleware for Zapier webhooks
+  const validateZapierToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const { ENV } = require("./env");
+    const token = ENV.zapierWebhookToken;
+    
+    // If no token is configured, skip validation (dev mode)
+    if (!token) {
+      return next();
+    }
+
+    // Check Authorization header (Bearer token)
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+    // Check query parameter (?token=xxx)
+    const queryToken = req.query.token as string | undefined;
+
+    if (headerToken === token || queryToken === token) {
+      return next();
+    }
+
+    console.warn(`[Zapier Webhook] Unauthorized request from ${req.ip} - invalid or missing token`);
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: Invalid or missing API token. Include your token as 'Authorization: Bearer <token>' header or '?token=<token>' query parameter.",
+    });
+  };
+
   // Keep legacy endpoint working (redirects to step1)
-  app.post("/api/oauth/webhook/zapier", async (req, res, next) => {
+  app.post("/api/oauth/webhook/zapier", validateZapierToken, async (req, res, next) => {
     req.url = "/api/oauth/webhook/zapier/step1";
     next();
   });
 
   // ─── STEP 1: Create property with address + phone + email ─────────────
-  app.post("/api/oauth/webhook/zapier/step1", async (req, res) => {
+  app.post("/api/oauth/webhook/zapier/step1", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
       const { properties, contacts, contactPhones, contactEmails, propertyTags } = await import("../../drizzle/schema");
@@ -236,7 +264,7 @@ async function startServer() {
   });
 
   // ─── STEP 2: Find property by phone and update with detailed data ─────
-  app.post("/api/oauth/webhook/zapier/step2", async (req, res) => {
+  app.post("/api/oauth/webhook/zapier/step2", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
       const { properties, contacts, contactPhones, contactEmails, notes } = await import("../../drizzle/schema");

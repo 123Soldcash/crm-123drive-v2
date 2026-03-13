@@ -191,6 +191,68 @@ describe("Phone normalization for matching", () => {
   });
 });
 
+// ─── Token Validation / Security ─────────────────────────────────────────────
+
+describe("API Token Security", () => {
+  it("defines a validateZapierToken middleware function", () => {
+    expect(indexSrc).toContain("validateZapierToken");
+  });
+
+  it("reads token from ZAPIER_WEBHOOK_TOKEN env via ENV", () => {
+    expect(indexSrc).toContain("ENV.zapierWebhookToken");
+  });
+
+  it("supports Bearer token in Authorization header", () => {
+    expect(indexSrc).toContain('startsWith("Bearer ")');
+    expect(indexSrc).toContain("authHeader");
+  });
+
+  it("supports token as query parameter (?token=)", () => {
+    expect(indexSrc).toContain("req.query.token");
+  });
+
+  it("returns 401 Unauthorized when token is missing or invalid", () => {
+    expect(indexSrc).toContain("res.status(401).json");
+    expect(indexSrc).toContain("Unauthorized");
+  });
+
+  it("skips validation when no token is configured (dev mode)", () => {
+    expect(indexSrc).toContain("If no token is configured, skip validation");
+  });
+
+  it("applies validateZapierToken to Step 1 endpoint", () => {
+    const step1WithToken = indexSrc.match(/app\.post\(["']\/api\/oauth\/webhook\/zapier\/step1["'],\s*validateZapierToken/);
+    expect(step1WithToken).not.toBeNull();
+  });
+
+  it("applies validateZapierToken to Step 2 endpoint", () => {
+    const step2WithToken = indexSrc.match(/app\.post\(["']\/api\/oauth\/webhook\/zapier\/step2["'],\s*validateZapierToken/);
+    expect(step2WithToken).not.toBeNull();
+  });
+
+  it("applies validateZapierToken to legacy endpoint", () => {
+    const legacyWithToken = indexSrc.match(/app\.post\(["']\/api\/oauth\/webhook\/zapier["'],\s*validateZapierToken/);
+    expect(legacyWithToken).not.toBeNull();
+  });
+
+  it("logs unauthorized attempts with IP address", () => {
+    expect(indexSrc).toContain("[Zapier Webhook] Unauthorized request from");
+    expect(indexSrc).toContain("req.ip");
+  });
+});
+
+// ─── ENV Configuration ──────────────────────────────────────────────────────
+
+describe("ENV configuration for Zapier token", () => {
+  const envPath = path.resolve(__dirname, "./_core/env.ts");
+  const envSrc = fs.readFileSync(envPath, "utf-8");
+
+  it("registers ZAPIER_WEBHOOK_TOKEN in ENV", () => {
+    expect(envSrc).toContain("zapierWebhookToken");
+    expect(envSrc).toContain("ZAPIER_WEBHOOK_TOKEN");
+  });
+});
+
 // ─── Error Handling ──────────────────────────────────────────────────────────
 
 describe("Error handling", () => {

@@ -2274,3 +2274,11 @@
 - [x] Store Step 2 extra fields in General Notes as structured data
 - [x] Write tests for both steps — 31 tests passing
 - [x] Provide Zapier setup instructions for both steps
+
+## Zapier Webhook Security - API Token
+- [x] Add ZAPIER_WEBHOOK_TOKEN env variable for fixed API token
+- [x] Add token validation middleware to both Step 1 and Step 2 endpoints
+- [x] Return 401 Unauthorized when token is missing or invalid
+- [x] Support token via Authorization header (Bearer) or query param (?token=)
+- [x] Update tests for token validation — 42 tests passing
+- [x] Update Zapier setup instructions with token usage
