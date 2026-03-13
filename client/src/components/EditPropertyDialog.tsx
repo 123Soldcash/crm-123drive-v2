@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload, FileText, Users, ChevronDown, ChevronUp, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, FileText, Users, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 
 
 interface EditPropertyDialogProps {
@@ -55,6 +67,10 @@ export function EditPropertyDialog({
   onOpenChange,
   onSuccess,
 }: EditPropertyDialogProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const [, setLocation] = useLocation();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: property.addressLine1 || "",
     city: property.city || "",
@@ -124,6 +140,24 @@ export function EditPropertyDialog({
       toast.error(`Error: ${error.message}`);
     },
   });
+
+  const deletePropertyMutation = trpc.properties.deleteProperty.useMutation({
+    onSuccess: () => {
+      toast.success("Property deleted successfully!");
+      onOpenChange(false);
+      utils.properties.list.invalidate();
+      // Navigate back to properties list
+      setLocation("/properties");
+    },
+    onError: (error) => {
+      toast.error(`Delete failed: ${error.message}`);
+    },
+  });
+
+  const handleDeleteProperty = () => {
+    deletePropertyMutation.mutate({ propertyId: property.id });
+    setDeleteConfirmOpen(false);
+  };
 
   const updateFromCSVMutation = trpc.properties.updateFromDealMachineCSV.useMutation({
     onSuccess: (result) => {
@@ -639,22 +673,61 @@ export function EditPropertyDialog({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={updatePropertyMutation.isPending}
-            >
-              {updatePropertyMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2">
+            <div>
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="gap-1.5"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Property
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updatePropertyMutation.isPending}
+              >
+                {updatePropertyMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the property at{" "}
+                <strong>{property.addressLine1}, {property.city}, {property.state} {property.zipcode}</strong>{" "}
+                and all associated data including contacts, notes, photos, tasks, and documents.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteProperty}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletePropertyMutation.isPending ? "Deleting..." : "Yes, Delete Property"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

@@ -2282,3 +2282,9 @@
 - [x] Support token via Authorization header (Bearer) or query param (?token=)
 - [x] Update tests for token validation — 42 tests passing
 - [x] Update Zapier setup instructions with token usage
+
+## Delete Lead Feature
+- [x] Add server-side delete procedure with cascading deletes (contacts, phones, emails, notes, tags, etc.)
+- [x] Add Delete button with confirmation dialog to property Edit page
+- [x] Redirect to Properties list after successful deletion
+- [x] Write tests for delete procedure — 20 tests passing
