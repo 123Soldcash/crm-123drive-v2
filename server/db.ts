@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2397,6 +2397,38 @@ export async function getPendingTransfersForAgent(agentId: number) {
 export async function deleteProperty(propertyId: number): Promise<{ success: boolean }> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+
+  // 1. Get all contacts for this property
+  const propertyContacts = await db
+    .select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.propertyId, propertyId));
+  const contactIds = propertyContacts.map(c => c.id);
+
+  // 2. Delete contact-related records (phones, emails, addresses, social media)
+  if (contactIds.length > 0) {
+    for (const contactId of contactIds) {
+      await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
+      await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
+      await db.delete(contactAddresses).where(eq(contactAddresses.contactId, contactId));
+      await db.delete(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
+    }
+  }
+
+  // 3. Delete contacts
+  await db.delete(contacts).where(eq(contacts.propertyId, propertyId));
+
+  // 4. Delete other property-related records
+  await db.delete(notes).where(eq(notes.propertyId, propertyId));
+  await db.delete(propertyTags).where(eq(propertyTags.propertyId, propertyId));
+  await db.delete(photos).where(eq(photos.propertyId, propertyId));
+  await db.delete(tasks).where(eq(tasks.propertyId, propertyId));
+  await db.delete(visits).where(eq(visits.propertyId, propertyId));
+  await db.delete(propertyDocuments).where(eq(propertyDocuments.propertyId, propertyId));
+  await db.delete(familyMembers).where(eq(familyMembers.propertyId, propertyId));
+  await db.delete(propertyAgents).where(eq(propertyAgents.propertyId, propertyId));
+
+  // 5. Delete the property itself
   await db.delete(properties).where(eq(properties.id, propertyId));
   return { success: true };
 }

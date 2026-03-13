@@ -46,7 +46,7 @@ describe("Delete Property – backend procedure", () => {
   });
 });
 
-describe("Delete Property – db helper", () => {
+describe("Delete Property – db helper (cascading delete)", () => {
   const dbContent = readFileSync(resolve(__dirname, "db.ts"), "utf-8");
 
   it("exports deleteProperty function", () => {
@@ -59,7 +59,7 @@ describe("Delete Property – db helper", () => {
     const fnStart = dbContent.indexOf(
       "export async function deleteProperty(propertyId: number)"
     );
-    const fnSection = dbContent.slice(fnStart, fnStart + 300);
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
     expect(fnSection).toContain("return { success: true }");
   });
 
@@ -67,9 +67,122 @@ describe("Delete Property – db helper", () => {
     const fnStart = dbContent.indexOf(
       "export async function deleteProperty(propertyId: number)"
     );
-    const fnSection = dbContent.slice(fnStart, fnStart + 300);
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
     expect(fnSection).toContain("db.delete(properties)");
     expect(fnSection).toContain("eq(properties.id, propertyId)");
+  });
+
+  it("fetches contacts for the property before deleting", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("contacts.propertyId");
+    expect(fnSection).toContain("contactIds");
+  });
+
+  it("deletes contactPhones for each contact", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(contactPhones)");
+  });
+
+  it("deletes contactEmails for each contact", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(contactEmails)");
+  });
+
+  it("deletes contactAddresses for each contact", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(contactAddresses)");
+  });
+
+  it("deletes contactSocialMedia for each contact", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(contactSocialMedia)");
+  });
+
+  it("deletes contacts for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(contacts)");
+  });
+
+  it("deletes notes for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(notes)");
+  });
+
+  it("deletes propertyTags for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(propertyTags)");
+  });
+
+  it("deletes photos for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(photos)");
+  });
+
+  it("deletes tasks for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(tasks)");
+  });
+
+  it("deletes visits for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(visits)");
+  });
+
+  it("deletes propertyDocuments for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(propertyDocuments)");
+  });
+
+  it("deletes familyMembers for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(familyMembers)");
+  });
+
+  it("deletes propertyAgents for the property", () => {
+    const fnStart = dbContent.indexOf(
+      "export async function deleteProperty(propertyId: number)"
+    );
+    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
+    expect(fnSection).toContain("db.delete(propertyAgents)");
   });
 });
 

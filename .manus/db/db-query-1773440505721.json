@@ -1,0 +1,120 @@
+{
+  "query": "SELECT id, addressLine1, city, state, owner1Name, status, leadSource, deskName, createdAt FROM properties ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, city, state, owner1Name, status, leadSource, deskName, createdAt FROM properties ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "2130568",
+      "addressLine1": "10382 Sw 212th St Apt 102",
+      "city": "Miami",
+      "state": "FL",
+      "owner1Name": "RobertLewis",
+      "status": "NULL",
+      "leadSource": "Google Adwords/PPC",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130567",
+      "addressLine1": "100 Nw 204 St Apartment G5",
+      "city": "North Miami Beach",
+      "state": "FL",
+      "owner1Name": "Clyde sampson",
+      "status": "NULL",
+      "leadSource": "Google Adwords/PPC",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130566",
+      "addressLine1": "150 E 1st Ave # 711",
+      "city": "Hialeah",
+      "state": "FL",
+      "owner1Name": "Belkis Maria",
+      "status": "NULL",
+      "leadSource": "Website",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130565",
+      "addressLine1": "3304 Aruba Way Apt A2",
+      "city": "Coconut Creek",
+      "state": "FL",
+      "owner1Name": "LORALEE",
+      "status": "NULL",
+      "leadSource": "Other",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130564",
+      "addressLine1": "501 Blue Heron Dr # 202-A",
+      "city": "Hallandale Beach",
+      "state": "FL",
+      "owner1Name": "Maria Delia",
+      "status": "NULL",
+      "leadSource": "Pay Per Lead",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130563",
+      "addressLine1": "1337 W 49th Pl Apt 321",
+      "city": "Miami",
+      "state": "FL",
+      "owner1Name": "Manuel",
+      "status": "NULL",
+      "leadSource": "Google Adwords/PPC",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130562",
+      "addressLine1": "15100 Front Beach Rd Unit 731",
+      "city": "Panama City Beach",
+      "state": "FL",
+      "owner1Name": "Brian Mu",
+      "status": "NULL",
+      "leadSource": "Website",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130561",
+      "addressLine1": "1717 Homewood Blvd Unit 146",
+      "city": "Delray Beach",
+      "state": "FL",
+      "owner1Name": "Julie A",
+      "status": "NULL",
+      "leadSource": "Email Marketing",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130560",
+      "addressLine1": "6313 Bay Club Dr Apt 2",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "owner1Name": "Rocco Viola",
+      "status": "NULL",
+      "leadSource": "Cold Calling",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    },
+    {
+      "id": "2130559",
+      "addressLine1": "10605 S Jog Rd Unit 210",
+      "city": "Boynton Beach",
+      "state": "FL",
+      "owner1Name": "Lawrence Sloan",
+      "status": "NULL",
+      "leadSource": "Email Marketing",
+      "deskName": "NULL",
+      "createdAt": "2026-03-09 22:35:38"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\tcity\tstate\towner1Name\tstatus\tleadSource\tdeskName\tcreatedAt\n2130568\t10382 Sw 212th St Apt 102\tMiami\tFL\tRobertLewis\tNULL\tGoogle Adwords/PPC\tNULL\t2026-03-09 22:35:38\n2130567\t100 Nw 204 St Apartment G5\tNorth Miami Beach\tFL\tClyde sampson\tNULL\tGoogle Adwords/PPC\tNULL\t2026-03-09 22:35:38\n2130566\t150 E 1st Ave # 711\tHialeah\tFL\tBelkis Maria\tNULL\tWebsite\tNULL\t2026-03-09 22:35:38\n2130565\t3304 Aruba Way Apt A2\tCoconut Creek\tFL\tLORALEE\tNULL\tOther\tNULL\t2026-03-09 22:35:38\n2130564\t501 Blue Heron Dr # 202-A\tHallandale Beach\tFL\tMaria Delia\tNULL\tPay Per Lead\tNULL\t2026-03-09 22:35:38\n2130563\t1337 W 49th Pl Apt 321\tMiami\tFL\tManuel\tNULL\tGoogle Adwords/PPC\tNULL\t2026-03-09 22:35:38\n2130562\t15100 Front Beach Rd Unit 731\tPanama City Beach\tFL\tBrian Mu\tNULL\tWebsite\tNULL\t2026-03-09 22:35:38\n2130561\t1717 Homewood Blvd Unit 146\tDelray Beach\tFL\tJulie A\tNULL\tEmail Marketing\tNULL\t2026-03-09 22:35:38\n2130560\t6313 Bay Club Dr Apt 2\tFort Lauderdale\tFL\tRocco Viola\tNULL\tCold Calling\tNULL\t2026-03-09 22:35:38\n2130559\t10605 S Jog Rd Unit 210\tBoynton Beach\tFL\tLawrence Sloan\tNULL\tEmail Marketing\tNULL\t2026-03-09 22:35:38\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

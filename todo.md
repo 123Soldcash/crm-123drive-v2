@@ -2302,3 +2302,10 @@
 - [x] Fix 4: Entry Date column now toggleable via Columns dropdown
 - [x] Fixed require() error in validateZapierToken middleware (changed to dynamic import)
 - [x] Updated tests — 43 zapier webhook tests passing
+
+## BUG: Delete Property leaves orphaned contacts/phones/emails
+- [x] Fix deleteProperty to cascade delete contactPhones, contactEmails, contactAddresses, contactSocialMedia for all contacts
+- [x] Also cascade delete: contacts, notes, propertyTags, photos, tasks, visits, propertyDocuments, familyMembers, propertyAgents
+- [x] Clean up existing orphaned records in database (100+ orphaned contacts removed)
+- [x] Verify webhook duplicate detection works after proper deletion — confirmed working
+- [x] Updated tests — 34 delete-property tests passing
