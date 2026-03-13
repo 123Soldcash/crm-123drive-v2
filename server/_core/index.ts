@@ -368,7 +368,6 @@ async function startServer() {
         { key: "sell_fast", label: "Want to Sell Fast", aliases: ["sellFast", "sell fast", "SellFast"] },
         { key: "lowest_price", label: "Lowest Acceptable Price", aliases: ["lowestPrice", "lowest price", "LowestPrice", "lowest_price"] },
         { key: "time_call", label: "Best Time to Call", aliases: ["timeCall", "time call", "TimeCall", "time_call"] },
-        { key: "accept", label: "Accepted Terms", aliases: ["Accept"] },
       ];
 
       const noteLines: string[] = [];

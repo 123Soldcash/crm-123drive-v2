@@ -2288,3 +2288,7 @@
 - [x] Add Delete button with confirmation dialog to property Edit page
 - [x] Redirect to Properties list after successful deletion
 - [x] Write tests for delete procedure — 20 tests passing
+
+## Zapier Step 2 - Remove Accept Field
+- [x] Remove 'accept' field from Step 2 webhook input schema and processing
+- [x] Update tests to reflect removal — 42 tests still passing

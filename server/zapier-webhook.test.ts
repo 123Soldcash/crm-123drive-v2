@@ -139,7 +139,6 @@ describe("Step 2: Qualifying questions saved as General Note", () => {
       "Want to Sell Fast",
       "Lowest Acceptable Price",
       "Best Time to Call",
-      "Accepted Terms",
     ];
     for (const field of fields) {
       expect(indexSrc).toContain(field);
