@@ -98,93 +98,296 @@ async function startServer() {
   // /api/oauth/callback path, not nested paths under /api/oauth/.
   registerTwilioWebhooks(app);
 
-  // REST webhook endpoint for Zapier
+  // ─── Zapier 2-Step Webhook ──────────────────────────────────────────────
   // Uses /api/oauth/ prefix because the Manus deployment platform only
   // forwards /api/oauth/* and /api/trpc/* to Express.
-  app.post("/api/oauth/webhook/zapier", async (req, res) => {
+
+  // Keep legacy endpoint working (redirects to step1)
+  app.post("/api/oauth/webhook/zapier", async (req, res, next) => {
+    req.url = "/api/oauth/webhook/zapier/step1";
+    next();
+  });
+
+  // ─── STEP 1: Create property with address + phone + email ─────────────
+  app.post("/api/oauth/webhook/zapier/step1", async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts, contactPhones, contactEmails } = await import("../../drizzle/schema");
-      
+      const { properties, contacts, contactPhones, contactEmails, propertyTags } = await import("../../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+
       const database = await getDb();
       if (!database) {
         return res.status(500).json({ success: false, message: "Database not available" });
       }
 
-      // Map Zapier field names (capitalized) to our schema
       const data = req.body;
-      const ownerName = data.OwnerName || data.FullName || data.Name || `${data.FirstName || ""} ${data.LastName || ""}`.trim() || "Unknown";
-      const addressLine1 = data.Address || data.AddressLine1 || "";
-      const city = data.City || "Unknown";
-      const state = data.State || "";
-      const zipcode = data.Zipcode || data.Zip || "";
+      console.log("[Zapier Step 1] Received:", JSON.stringify(data));
 
-      // Insert the new property
-      const result = await database.insert(properties).values({
-        addressLine1,
-        city,
-        state,
-        zipcode,
-        owner1Name: ownerName,
-        propertyType: data.PropertyType || "Unknown",
-        totalBedrooms: data.Bedrooms ? parseInt(data.Bedrooms) : undefined,
-        totalBaths: data.Bathrooms ? parseInt(data.Bathrooms) : undefined,
-        buildingSquareFeet: data.SquareFeet ? parseInt(data.SquareFeet) : undefined,
-        estimatedValue: data.EstimatedValue ? parseInt(data.EstimatedValue) : undefined,
-        trackingStatus: "Not Visited",
-        leadTemperature: "TBD",
-        deskName: "BIN",
-        deskStatus: "BIN",
-        status: "Zapier Import",
-      });
+      const phone = String(data.Phone || data.phone || "").trim();
+      const email = String(data.Email || data.email || "").trim();
+      const address = String(data.Address || data.address || data.AddressLine1 || "").trim();
 
-      // If contact info provided, add contact with relational data
-      if (data.Email || data.Phone) {
-        const propertyId = (result as any).insertId || (result as any)[0]?.id;
-        if (propertyId) {
-          // Insert contact into contacts table
-          const contactResult = await database.insert(contacts).values({
-            propertyId,
-            name: ownerName,
-            relationship: "Owner",
+      if (!phone && !email) {
+        return res.status(400).json({ success: false, message: "Phone or Email is required" });
+      }
+
+      // Check for duplicate by phone number
+      if (phone) {
+        const existingPhones = await database
+          .select({ contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
+          .from(contactPhones);
+        
+        const normalizedPhone = phone.replace(/[^\d+]/g, "");
+        const duplicate = existingPhones.find((p: any) => 
+          p.phoneNumber.replace(/[^\d+]/g, "") === normalizedPhone
+        );
+        
+        if (duplicate) {
+          // Find the property linked to this contact
+          const contact = await database
+            .select({ propertyId: contacts.propertyId })
+            .from(contacts)
+            .where(eq(contacts.id, duplicate.contactId))
+            .limit(1);
+          
+          return res.status(200).json({
+            success: true,
+            message: "Lead already exists in CRM (matched by phone)",
+            duplicate: true,
+            propertyId: contact[0]?.propertyId || null,
+            phone: normalizedPhone,
           });
-          
-          const contactId = (contactResult as any).insertId || (contactResult as any)[0]?.id;
-          
-          if (contactId) {
-            // Insert phone if provided
-            if (data.Phone && String(data.Phone).trim()) {
-              await database.insert(contactPhones).values({
-                contactId,
-                phoneNumber: String(data.Phone).trim(),
-                phoneType: "Mobile",
-                isPrimary: 1,
-              });
-            }
-            
-            // Insert email if provided
-            if (data.Email && String(data.Email).trim()) {
-              await database.insert(contactEmails).values({
-                contactId,
-                email: String(data.Email).trim(),
-                isPrimary: 1,
-              });
-            }
-          }
         }
       }
 
+      // Insert new property
+      const result = await database.insert(properties).values({
+        addressLine1: address,
+        city: "TBD",
+        state: "",
+        zipcode: "",
+        owner1Name: "Website Lead",
+        propertyType: "Unknown",
+        trackingStatus: "Not Visited",
+        leadTemperature: "TBD",
+        leadSource: "Website",
+        deskName: "BIN",
+        deskStatus: "BIN",
+        status: "Website Lead - Step 1",
+      });
+
+      const propertyId = (result as any)[0]?.insertId;
+      if (!propertyId) {
+        return res.status(500).json({ success: false, message: "Failed to create property" });
+      }
+
+      // Create contact with phone and email
+      const contactResult = await database.insert(contacts).values({
+        propertyId,
+        name: "Website Lead",
+        relationship: "Owner",
+      });
+
+      const contactId = (contactResult as any)[0]?.insertId;
+
+      if (contactId) {
+        if (phone) {
+          await database.insert(contactPhones).values({
+            contactId,
+            phoneNumber: phone,
+            phoneType: "Mobile",
+            isPrimary: 1,
+          });
+        }
+        if (email) {
+          await database.insert(contactEmails).values({
+            contactId,
+            email,
+            isPrimary: 1,
+          });
+        }
+      }
+
+      // Add "Website Lead" tag
+      await database.insert(propertyTags).values({
+        propertyId,
+        tag: "Website Lead",
+        createdBy: 1,
+      }).onDuplicateKeyUpdate({ set: { tag: "Website Lead" } });
+
+      console.log(`[Zapier Step 1] Created property #${propertyId} with phone: ${phone}`);
+
       return res.status(200).json({
         success: true,
-        message: "Lead successfully added to CRM",
-        ownerName,
-        address: addressLine1,
+        message: "Lead created in CRM (Step 1)",
+        propertyId,
+        phone,
+        email,
+        address,
       });
     } catch (error) {
-      console.error("Zapier webhook error:", error);
+      console.error("[Zapier Step 1] Error:", error);
       return res.status(500).json({
         success: false,
-        message: "Error adding lead to CRM",
+        message: "Error creating lead in CRM",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // ─── STEP 2: Find property by phone and update with detailed data ─────
+  app.post("/api/oauth/webhook/zapier/step2", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { properties, contacts, contactPhones, contactEmails, notes } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const database = await getDb();
+      if (!database) {
+        return res.status(500).json({ success: false, message: "Database not available" });
+      }
+
+      const data = req.body;
+      console.log("[Zapier Step 2] Received:", JSON.stringify(data));
+
+      const phone = String(data.Phone || data.phone || "").trim();
+      if (!phone) {
+        return res.status(400).json({ success: false, message: "Phone is required to match the lead" });
+      }
+
+      // Find the property by phone number
+      const allPhones = await database
+        .select({ contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
+        .from(contactPhones);
+
+      const normalizedPhone = phone.replace(/[^\d+]/g, "");
+      const matchedPhone = allPhones.find((p: any) =>
+        p.phoneNumber.replace(/[^\d+]/g, "") === normalizedPhone
+      );
+
+      if (!matchedPhone) {
+        return res.status(404).json({
+          success: false,
+          message: `No lead found with phone: ${phone}. Make sure Step 1 ran first.`,
+        });
+      }
+
+      // Get the property ID from the contact
+      const contact = await database
+        .select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name })
+        .from(contacts)
+        .where(eq(contacts.id, matchedPhone.contactId))
+        .limit(1);
+
+      if (!contact.length) {
+        return res.status(404).json({ success: false, message: "Contact found but no linked property" });
+      }
+
+      const propertyId = contact[0].propertyId;
+
+      // Update property with detailed address info
+      const address = String(data.Address || data.address || "").trim();
+      const city = String(data.City || data.city || "").trim();
+      const state = String(data.State || data.state || "").trim();
+      const zipcode = String(data.Zipcode || data.zipcode || data.Zip || data.zip || data["ZIP Code"] || data.zip_code || "").trim();
+      const firstName = String(data.FirstName || data.firstName || data.first_name || data["First name"] || "").trim();
+      const lastName = String(data.LastName || data.lastName || data.last_name || data["Last name"] || "").trim();
+      const email = String(data.Email || data.email || "").trim();
+      const ownerName = `${firstName} ${lastName}`.trim() || contact[0].name || "Website Lead";
+
+      // Build update object — only update fields that have values
+      const updateFields: Record<string, any> = {
+        status: "Website Lead - Complete",
+      };
+      if (address) updateFields.addressLine1 = address;
+      if (city) updateFields.city = city;
+      if (state) updateFields.state = state.substring(0, 2).toUpperCase();
+      if (zipcode) updateFields.zipcode = zipcode;
+      if (ownerName && ownerName !== "Website Lead") updateFields.owner1Name = ownerName;
+
+      await database.update(properties).set(updateFields).where(eq(properties.id, propertyId));
+
+      // Update contact name if we have first/last name
+      if (ownerName && ownerName !== "Website Lead") {
+        await database.update(contacts).set({ name: ownerName }).where(eq(contacts.id, contact[0].id));
+      }
+
+      // Update email if provided and different
+      if (email) {
+        const existingEmails = await database
+          .select({ id: contactEmails.id })
+          .from(contactEmails)
+          .where(eq(contactEmails.contactId, contact[0].id));
+        
+        if (existingEmails.length > 0) {
+          await database.update(contactEmails).set({ email }).where(eq(contactEmails.id, existingEmails[0].id));
+        } else {
+          await database.insert(contactEmails).values({
+            contactId: contact[0].id,
+            email,
+            isPrimary: 1,
+          });
+        }
+      }
+
+      // Build qualifying questions note from Step 2 extra fields
+      const qualifyingFields = [
+        { key: "owned_property", label: "Owned Property", aliases: ["ownedProperty", "owned property", "OwnedProperty"] },
+        { key: "condition_property", label: "Property Condition", aliases: ["conditionProperty", "condition property", "ConditionProperty", "condition"] },
+        { key: "repairs_need", label: "Repairs Needed", aliases: ["repairsNeed", "repairs need", "RepairsNeed", "repairs"] },
+        { key: "living_house", label: "Living in House", aliases: ["livingHouse", "living house", "LivingHouse", "living"] },
+        { key: "listed_realtor", label: "Listed with Realtor", aliases: ["listedRealtor", "listed realtor", "ListedRealtor", "listed"] },
+        { key: "sell_fast", label: "Want to Sell Fast", aliases: ["sellFast", "sell fast", "SellFast"] },
+        { key: "lowest_price", label: "Lowest Acceptable Price", aliases: ["lowestPrice", "lowest price", "LowestPrice", "lowest_price"] },
+        { key: "time_call", label: "Best Time to Call", aliases: ["timeCall", "time call", "TimeCall", "time_call"] },
+        { key: "accept", label: "Accepted Terms", aliases: ["Accept"] },
+      ];
+
+      const noteLines: string[] = [];
+      noteLines.push("=== Website Form - Step 2 (Qualifying Questions) ===");
+      noteLines.push(`Date: ${new Date().toLocaleDateString("en-US")}`);
+      noteLines.push(`Name: ${ownerName}`);
+      if (address) noteLines.push(`Address: ${address}, ${city}, ${state} ${zipcode}`);
+      noteLines.push("");
+
+      for (const field of qualifyingFields) {
+        let value = data[field.key];
+        if (!value) {
+          for (const alias of field.aliases) {
+            if (data[alias]) { value = data[alias]; break; }
+          }
+        }
+        if (value) {
+          noteLines.push(`${field.label}: ${value}`);
+        }
+      }
+
+      // Only insert note if we have qualifying data
+      if (noteLines.length > 4) {
+        await database.insert(notes).values({
+          propertyId,
+          userId: 1, // System user
+          content: noteLines.join("\n"),
+          noteType: "general",
+        });
+      }
+
+      console.log(`[Zapier Step 2] Updated property #${propertyId} with detailed data for phone: ${phone}`);
+
+      return res.status(200).json({
+        success: true,
+        message: "Lead updated with detailed data (Step 2)",
+        propertyId,
+        ownerName,
+        address: `${address}, ${city}, ${state} ${zipcode}`.trim(),
+        fieldsUpdated: Object.keys(updateFields),
+        qualifyingDataSaved: noteLines.length > 4,
+      });
+    } catch (error) {
+      console.error("[Zapier Step 2] Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error updating lead in CRM",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

@@ -2257,3 +2257,20 @@
 - [x] Investigated ID structure: no linked-list pattern found (all 2,382 IDs unique, no cross-references)
 - [x] Built clean import script matching by Property ID only for CRM leads
 - [x] Imported 2,920 notes for 528 properties (0 errors, 0 orphans)
+
+## Zapier Webhook Integration - V2
+- [ ] Create public webhook endpoint POST /api/webhook/lead for Zapier
+- [ ] Map incoming lead fields to CRM properties schema
+- [ ] Add API key authentication for webhook security
+- [ ] Auto-generate leadId and set defaults for new properties
+- [ ] Add webhook management page in CRM (API key, URL, field mapping docs)
+- [ ] Write tests for webhook endpoint
+- [ ] Provide Zapier setup instructions
+
+## Zapier 2-Step Webhook
+- [x] Step 1 endpoint: POST /api/oauth/webhook/zapier/step1 — creates property with address, phone, email
+- [x] Step 2 endpoint: POST /api/oauth/webhook/zapier/step2 — finds property by phone and updates with detailed data
+- [x] Step 2 fields: address, state, city, zip, firstName, lastName, email, phone, ownedProperty, conditionProperty, repairsNeed, livingHouse, listedRealtor, sellFast, lowestPrice, timeCall, accept
+- [x] Store Step 2 extra fields in General Notes as structured data
+- [x] Write tests for both steps — 31 tests passing
+- [x] Provide Zapier setup instructions for both steps
