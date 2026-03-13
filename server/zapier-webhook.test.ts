@@ -53,9 +53,15 @@ describe("Step 1: Create property with basic data", () => {
     expect(indexSrc).toContain("duplicate");
   });
 
-  it("creates property with 'Website Lead' defaults", () => {
-    expect(indexSrc).toContain('owner1Name: "Website Lead"');
+  it("creates property with contactName from FirstName/LastName", () => {
+    expect(indexSrc).toContain('owner1Name: contactName');
     expect(indexSrc).toContain('status: "Website Lead - Step 1"');
+  });
+
+  it("extracts FirstName and LastName from webhook data", () => {
+    expect(indexSrc).toContain('firstName');
+    expect(indexSrc).toContain('lastName');
+    expect(indexSrc).toContain('contactName');
   });
 
   it("sets leadSource to 'Website' for new leads", () => {

@@ -2292,3 +2292,13 @@
 ## Zapier Step 2 - Remove Accept Field
 - [x] Remove 'accept' field from Step 2 webhook input schema and processing
 - [x] Update tests to reflect removal — 42 tests still passing
+
+## BUG: Webhook leads not appearing in Properties list
+- [x] Investigate why "Teste Rodolfo" webhook lead doesn't show in Properties list
+- [x] Root cause: leads were at the bottom of list (sorted by value DESC) and owner name was generic "Website Lead"
+- [x] Fix 1: Step 1 webhook now uses FirstName + LastName as owner1Name and contact name
+- [x] Fix 2: Added sort options (Newest First, Oldest First, Highest Value, Address A-Z) to Properties list
+- [x] Fix 3: Default sort changed to "Newest First" so new webhook leads appear at the top
+- [x] Fix 4: Entry Date column now toggleable via Columns dropdown
+- [x] Fixed require() error in validateZapierToken middleware (changed to dynamic import)
+- [x] Updated tests — 43 zapier webhook tests passing

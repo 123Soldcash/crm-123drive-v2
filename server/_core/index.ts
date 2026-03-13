@@ -103,8 +103,8 @@ async function startServer() {
   // forwards /api/oauth/* and /api/trpc/* to Express.
 
   // Token validation middleware for Zapier webhooks
+  const { ENV } = await import("./env");
   const validateZapierToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const { ENV } = require("./env");
     const token = ENV.zapierWebhookToken;
     
     // If no token is configured, skip validation (dev mode)
@@ -154,6 +154,9 @@ async function startServer() {
       const phone = String(data.Phone || data.phone || "").trim();
       const email = String(data.Email || data.email || "").trim();
       const address = String(data.Address || data.address || data.AddressLine1 || "").trim();
+      const firstName = String(data.FirstName || data.firstName || data.first_name || data["First name"] || "").trim();
+      const lastName = String(data.LastName || data.lastName || data.last_name || data["Last name"] || "").trim();
+      const contactName = `${firstName} ${lastName}`.trim() || "Website Lead";
 
       if (!phone && !email) {
         return res.status(400).json({ success: false, message: "Phone or Email is required" });
@@ -194,7 +197,7 @@ async function startServer() {
         city: "TBD",
         state: "",
         zipcode: "",
-        owner1Name: "Website Lead",
+        owner1Name: contactName,
         propertyType: "Unknown",
         trackingStatus: "Not Visited",
         leadTemperature: "TBD",
@@ -212,7 +215,7 @@ async function startServer() {
       // Create contact with phone and email
       const contactResult = await database.insert(contacts).values({
         propertyId,
-        name: "Website Lead",
+        name: contactName,
         relationship: "Owner",
       });
 

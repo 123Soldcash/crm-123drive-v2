@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { ColumnSelector, ColumnVisibility } from "@/components/ColumnSelector";
+import { ColumnSelector, ColumnVisibility, SortOption } from "@/components/ColumnSelector";
 import { DeskDialog } from "@/components/DeskDialog";
 import { AddressAutocompleteWithCRM, type AddressDetails } from "@/components/AddressAutocompleteWithCRM";
 import { DuplicateDetectionAlert } from "@/components/DuplicateDetectionAlert";
@@ -123,6 +123,7 @@ export default function Properties() {
     agents: false,
     value: false,
     equity: false,
+    entryDate: true,
   };
 
   // Load columns from localStorage or use defaults
@@ -144,6 +145,25 @@ export default function Properties() {
       console.error('Failed to save column preferences:', e);
     }
   };
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortOption>(() => {
+    try {
+      const saved = localStorage.getItem('propertySortBy');
+      return (saved as SortOption) || "newest";
+    } catch {
+      return "newest";
+    }
+  });
+
+  const handleSortChange = (sort: SortOption) => {
+    setSortBy(sort);
+    try {
+      localStorage.setItem('propertySortBy', sort);
+    } catch (e) {
+      console.error('Failed to save sort preference:', e);
+    }
+  };
+
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedPropertyForDesk, setSelectedPropertyForDesk] = useState<any>(null);
 
@@ -306,8 +326,33 @@ export default function Properties() {
       filtered = filtered.filter((p) => p.dealStage === filters.dealStage);
     }
 
-    return filtered;
-  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName, filters.dealStage]);
+    // Sort
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case "newest":
+        sorted.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+        break;
+      case "oldest":
+        sorted.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateA - dateB;
+        });
+        break;
+      case "value_desc":
+        sorted.sort((a, b) => (b.estimatedValue || 0) - (a.estimatedValue || 0));
+        break;
+      case "address_asc":
+        sorted.sort((a, b) => (a.addressLine1 || "").localeCompare(b.addressLine1 || ""));
+        break;
+    }
+
+    return sorted;
+  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName, filters.dealStage, sortBy]);
 
   // Store property IDs in localStorage for next/previous navigation
   useEffect(() => {
@@ -443,7 +488,7 @@ export default function Properties() {
               </Dialog>
 
               {/* Column Selector */}
-              <ColumnSelector columns={columns} onColumnChange={handleColumnChange} />
+              <ColumnSelector columns={columns} onColumnChange={handleColumnChange} sortBy={sortBy} onSortChange={handleSortChange} />
 
               {/* Load Saved Search Button */}
               <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
@@ -977,7 +1022,7 @@ export default function Properties() {
                   {columns.agents && <TableHead>Agents</TableHead>}
                   {columns.value && <TableHead className="text-right">Value</TableHead>}
                   {columns.equity && <TableHead className="text-right">Equity %</TableHead>}
-                  <TableHead className="w-32">Entry Date</TableHead>
+                  {columns.entryDate && <TableHead className="w-32">Entry Date</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1160,9 +1205,11 @@ export default function Properties() {
                       {property.equityPercent ? `${property.equityPercent.toFixed(2)}%` : "N/A"}
                     </TableCell>
                   )}
+                  {columns.entryDate && (
                   <TableCell className="text-sm text-muted-foreground">
                     {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : 'N/A'}
                   </TableCell>
+                  )}
                   </TableRow>
                 ))}
               </TableBody>

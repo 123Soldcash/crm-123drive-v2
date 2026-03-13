@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, addressLine1, owner1Name, status, leadTemperature, deskName FROM properties ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, owner1Name, status, leadTemperature, deskName FROM properties ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "2130568",
+      "addressLine1": "10382 Sw 212th St Apt 102",
+      "owner1Name": "RobertLewis",
+      "status": "NULL",
+      "leadTemperature": "TBD",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130567",
+      "addressLine1": "100 Nw 204 St Apartment G5",
+      "owner1Name": "Clyde sampson",
+      "status": "NULL",
+      "leadTemperature": "TBD",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130566",
+      "addressLine1": "150 E 1st Ave # 711",
+      "owner1Name": "Belkis Maria",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130565",
+      "addressLine1": "3304 Aruba Way Apt A2",
+      "owner1Name": "LORALEE",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130564",
+      "addressLine1": "501 Blue Heron Dr # 202-A",
+      "owner1Name": "Maria Delia",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130563",
+      "addressLine1": "1337 W 49th Pl Apt 321",
+      "owner1Name": "Manuel",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130562",
+      "addressLine1": "15100 Front Beach Rd Unit 731",
+      "owner1Name": "Brian Mu",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130561",
+      "addressLine1": "1717 Homewood Blvd Unit 146",
+      "owner1Name": "Julie A",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130560",
+      "addressLine1": "6313 Bay Club Dr Apt 2",
+      "owner1Name": "Rocco Viola",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    },
+    {
+      "id": "2130559",
+      "addressLine1": "10605 S Jog Rd Unit 210",
+      "owner1Name": "Lawrence Sloan",
+      "status": "NULL",
+      "leadTemperature": "WARM",
+      "deskName": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\taddressLine1\towner1Name\tstatus\tleadTemperature\tdeskName\n2130568\t10382 Sw 212th St Apt 102\tRobertLewis\tNULL\tTBD\tNULL\n2130567\t100 Nw 204 St Apartment G5\tClyde sampson\tNULL\tTBD\tNULL\n2130566\t150 E 1st Ave # 711\tBelkis Maria\tNULL\tWARM\tNULL\n2130565\t3304 Aruba Way Apt A2\tLORALEE\tNULL\tWARM\tNULL\n2130564\t501 Blue Heron Dr # 202-A\tMaria Delia\tNULL\tWARM\tNULL\n2130563\t1337 W 49th Pl Apt 321\tManuel\tNULL\tWARM\tNULL\n2130562\t15100 Front Beach Rd Unit 731\tBrian Mu\tNULL\tWARM\tNULL\n2130561\t1717 Homewood Blvd Unit 146\tJulie A\tNULL\tWARM\tNULL\n2130560\t6313 Bay Club Dr Apt 2\tRocco Viola\tNULL\tWARM\tNULL\n2130559\t10605 S Jog Rd Unit 210\tLawrence Sloan\tNULL\tWARM\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

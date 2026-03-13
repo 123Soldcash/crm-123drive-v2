@@ -20,14 +20,19 @@ export interface ColumnVisibility {
   agents: boolean;
   value: boolean;
   equity: boolean;
+  entryDate: boolean;
 }
+
+export type SortOption = "value_desc" | "newest" | "oldest" | "address_asc";
 
 interface ColumnSelectorProps {
   columns: ColumnVisibility;
   onColumnChange: (columns: ColumnVisibility) => void;
+  sortBy?: SortOption;
+  onSortChange?: (sort: SortOption) => void;
 }
 
-export function ColumnSelector({ columns, onColumnChange }: ColumnSelectorProps) {
+export function ColumnSelector({ columns, onColumnChange, sortBy, onSortChange }: ColumnSelectorProps) {
   const columnOptions = [
     { key: "leadId" as const, label: "Lead ID" },
     { key: "address" as const, label: "Address" },
@@ -39,6 +44,14 @@ export function ColumnSelector({ columns, onColumnChange }: ColumnSelectorProps)
     { key: "agents" as const, label: "Agents" },
     { key: "value" as const, label: "Property Value" },
     { key: "equity" as const, label: "Equity %" },
+    { key: "entryDate" as const, label: "Entry Date" },
+  ];
+
+  const sortOptions: { value: SortOption; label: string }[] = [
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "value_desc", label: "Highest Value" },
+    { value: "address_asc", label: "Address A-Z" },
   ];
 
   const toggleColumn = (key: keyof ColumnVisibility) => {
@@ -54,6 +67,29 @@ export function ColumnSelector({ columns, onColumnChange }: ColumnSelectorProps)
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        {sortBy !== undefined && onSortChange && (
+          <>
+            <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+            <div className="space-y-1 p-2">
+              {sortOptions.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`sort-${option.value}`}
+                    checked={sortBy === option.value}
+                    onCheckedChange={() => onSortChange(option.value)}
+                  />
+                  <label
+                    htmlFor={`sort-${option.value}`}
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuLabel>Visible Columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="space-y-2 p-2">

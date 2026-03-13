@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, addressLine1, city, state, zipcode, owner1Name, status, leadTemperature, deskName, createdAt FROM properties WHERE owner1Name LIKE '%Rodolfo%' OR addressLine1 LIKE '%Rodolfo%' OR status LIKE '%Website%' ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, addressLine1, city, state, zipcode, owner1Name, status, leadTemperature, deskName, createdAt FROM properties WHERE owner1Name LIKE '%Rodolfo%' OR addressLine1 LIKE '%Rodolfo%' OR status LIKE '%Website%' ORDER BY id DESC LIMIT 20;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 151
+}
