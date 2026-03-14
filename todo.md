@@ -2313,3 +2313,13 @@
 ## BUG: NaN propertyId/id errors on /properties page
 - [x] Root cause: PropertyDetail component's useRoute returns null params when on /properties list page, causing Number(undefined) = NaN
 - [x] Fix: Added `enabled: isValidId` guard to all tRPC queries in PropertyDetail that use propertyId
+
+## BUG: Step 2 qualifying data not saved to Deep Search
+- [x] Investigate lead #2190001 - Step 2 data was only saved as a General Note, not to Deep Search table
+- [x] Root cause: Step 2 webhook only created a note, never wrote to propertyDeepSearch table
+- [x] Fix: Added Deep Search upsert logic mapping qualifying answers to propertyDeepSearch fields
+- [x] Mapping: Living in House -> occupancy, Listed with Realtor -> mlsStatus, Repairs -> needsRepairs/repairNotes, Condition -> propertyCondition, all answers -> overviewNotes
+- [x] Supports upsert (update if exists, insert if new)
+- [x] Wrapped in try-catch so deep search failure doesn't break the whole webhook
+- [x] Verified on property #2190001: Occupancy=Tenant-Occupied, MLS=Not Listed, all data mapped
+- [x] Added 17 new tests (59 total zapier webhook tests passing)

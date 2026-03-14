@@ -270,7 +270,7 @@ async function startServer() {
   app.post("/api/oauth/webhook/zapier/step2", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts, contactPhones, contactEmails, notes } = await import("../../drizzle/schema");
+      const { properties, contacts, contactPhones, contactEmails, notes, propertyDeepSearch } = await import("../../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
       const database = await getDb();
@@ -400,6 +400,117 @@ async function startServer() {
           content: noteLines.join("\n"),
           noteType: "general",
         });
+      }
+
+      // ─── Map qualifying answers to Deep Search fields ─────
+      try {
+        // Helper to get a qualifying field value
+        const getFieldValue = (key: string, aliases: string[]): string => {
+          let value = data[key];
+          if (!value) {
+            for (const alias of aliases) {
+              if (data[alias]) { value = data[alias]; break; }
+            }
+          }
+          return String(value || "").trim();
+        };
+
+        const livingInHouse = getFieldValue("living_house", ["livingHouse", "living house", "LivingHouse", "living"]);
+        const conditionProperty = getFieldValue("condition_property", ["conditionProperty", "condition property", "ConditionProperty", "condition"]);
+        const repairsNeeded = getFieldValue("repairs_need", ["repairsNeed", "repairs need", "RepairsNeed", "repairs"]);
+        const listedRealtor = getFieldValue("listed_realtor", ["listedRealtor", "listed realtor", "ListedRealtor", "listed"]);
+        const sellFast = getFieldValue("sell_fast", ["sellFast", "sell fast", "SellFast"]);
+        const lowestPrice = getFieldValue("lowest_price", ["lowestPrice", "lowest price", "LowestPrice", "lowest_price"]);
+        const ownedProperty = getFieldValue("owned_property", ["ownedProperty", "owned property", "OwnedProperty"]);
+        const bestTimeToCall = getFieldValue("time_call", ["timeCall", "time call", "TimeCall", "time_call"]);
+
+        // Map "Living in House" answer to occupancy enum
+        let occupancy: "Owner-Occupied" | "Tenant-Occupied" | "Vacant" | "Abandoned" | null = null;
+        const livingLower = livingInHouse.toLowerCase();
+        if (livingLower.includes("tenant")) {
+          occupancy = "Tenant-Occupied";
+        } else if (livingLower.includes("yes") && !livingLower.includes("tenant")) {
+          occupancy = "Owner-Occupied";
+        } else if (livingLower.includes("no") || livingLower.includes("vacant")) {
+          occupancy = "Vacant";
+        } else if (livingLower.includes("abandon")) {
+          occupancy = "Abandoned";
+        }
+
+        // Map "Listed with Realtor" to MLS status
+        let mlsStatus: "Listed" | "Not Listed" | null = null;
+        const listedLower = listedRealtor.toLowerCase();
+        if (listedLower.includes("yes")) {
+          mlsStatus = "Listed";
+        } else if (listedLower.includes("no")) {
+          mlsStatus = "Not Listed";
+        }
+
+        // Map repairs needed
+        const hasRepairs = repairsNeeded.length > 0 && !repairsNeeded.toLowerCase().includes("no") && !repairsNeeded.toLowerCase().includes("none");
+
+        // Build overview notes from all qualifying answers
+        const overviewParts: string[] = [];
+        overviewParts.push(`[Website Form - ${new Date().toLocaleDateString("en-US")}]`);
+        if (ownedProperty) overviewParts.push(`Owned since: ${ownedProperty}`);
+        if (conditionProperty) overviewParts.push(`Condition: ${conditionProperty}`);
+        if (repairsNeeded) overviewParts.push(`Repairs: ${repairsNeeded}`);
+        if (livingInHouse) overviewParts.push(`Living in house: ${livingInHouse}`);
+        if (listedRealtor) overviewParts.push(`Listed with realtor: ${listedRealtor}`);
+        if (sellFast) overviewParts.push(`Wants to sell fast: ${sellFast}`);
+        if (lowestPrice) overviewParts.push(`Lowest acceptable price: ${lowestPrice}`);
+        if (bestTimeToCall) overviewParts.push(`Best time to call: ${bestTimeToCall}`);
+
+        // Build the deep search record
+        const deepSearchData: Record<string, any> = {
+          propertyId,
+        };
+        if (occupancy) deepSearchData.occupancy = occupancy;
+        if (mlsStatus) deepSearchData.mlsStatus = mlsStatus;
+        if (hasRepairs) {
+          deepSearchData.needsRepairs = 1;
+          deepSearchData.repairNotes = repairsNeeded;
+        }
+        if (conditionProperty) {
+          deepSearchData.propertyCondition = JSON.stringify({ rating: conditionProperty, tags: [] });
+        }
+        if (overviewParts.length > 1) {
+          deepSearchData.overviewNotes = overviewParts.join("\n");
+        }
+
+        // Check if deep search record already exists
+        const existingDeepSearch = await database
+          .select({ id: propertyDeepSearch.id })
+          .from(propertyDeepSearch)
+          .where(eq(propertyDeepSearch.propertyId, propertyId))
+          .limit(1);
+
+        if (existingDeepSearch.length > 0) {
+          // Update existing record — append to overviewNotes
+          const existing = await database
+            .select({ overviewNotes: propertyDeepSearch.overviewNotes })
+            .from(propertyDeepSearch)
+            .where(eq(propertyDeepSearch.propertyId, propertyId))
+            .limit(1);
+          
+          const existingNotes = existing[0]?.overviewNotes || "";
+          if (existingNotes && deepSearchData.overviewNotes) {
+            deepSearchData.overviewNotes = existingNotes + "\n\n" + deepSearchData.overviewNotes;
+          }
+          
+          delete deepSearchData.propertyId; // Don't update the unique key
+          await database.update(propertyDeepSearch)
+            .set(deepSearchData)
+            .where(eq(propertyDeepSearch.propertyId, propertyId));
+          console.log(`[Zapier Step 2] Updated deep search for property #${propertyId}`);
+        } else {
+          // Insert new record
+          await database.insert(propertyDeepSearch).values(deepSearchData as any);
+          console.log(`[Zapier Step 2] Created deep search for property #${propertyId}`);
+        }
+      } catch (deepSearchError) {
+        // Don't fail the whole request if deep search update fails
+        console.error(`[Zapier Step 2] Deep search update failed for property #${propertyId}:`, deepSearchError);
       }
 
       console.log(`[Zapier Step 2] Updated property #${propertyId} with detailed data for phone: ${phone}`);

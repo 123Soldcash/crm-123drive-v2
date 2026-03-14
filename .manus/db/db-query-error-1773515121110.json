@@ -1,0 +1,22 @@
+{
+  "query": "SELECT content FROM notes WHERE propertyId = 2190001 AND noteType = 'general'; SELECT id, propertyId, LEFT(ownerInfo, 200) as ownerInfo, LEFT(propertyDetails, 200) as propertyDetails, LEFT(financialInfo, 200) as financialInfo FROM deep_searches WHERE propertyId = 2190001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT content FROM notes WHERE propertyId = 2190001 AND noteType = 'general'; SELECT id, propertyId, LEFT(ownerInfo, 200) as ownerInfo, LEFT(propertyDetails, 200) as propertyDetails, LEFT(financialInfo, 200) as financialInfo FROM deep_searches WHERE propertyId = 2190001;",
+  "returncode": 1,
+  "logs": [
+    "content",
+    "=== Website Form - Step 2 (Qualifying Questions) ===",
+    "Date: 3/14/2026",
+    "Name: Brian Murphy",
+    "Address: 210 Randolph ct, Lake Worth Beach, FL 33461",
+    "",
+    "Owned Property: 2019",
+    "Property Condition: Good",
+    "Repairs Needed: Paint mostly house was completely remodeled in 2020",
+    "Living in House: Yes - Tenant Occupied",
+    "Listed with Realtor: No",
+    "Want to Sell Fast: No",
+    "Lowest Acceptable Price: I would counter that with what's the highest price you're willing to pay",
+    "Best Time to Call: Anytime",
+    "ERROR 1146 (42S02) at line 1: Table 'rdbafwhqbdqo37pina3pdu.deep_searches' doesn't exist"
+  ]
+}

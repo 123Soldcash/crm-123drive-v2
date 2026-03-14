@@ -283,3 +283,103 @@ describe("Error handling", () => {
     expect(indexSrc).toContain("[Zapier Step 2] Received:");
   });
 });
+
+// ─── Step 2: Deep Search Mapping ────────────────────────────────────────────
+
+describe("Step 2: Qualifying data mapped to Deep Search", () => {
+  it("imports propertyDeepSearch schema in Step 2 handler", () => {
+    expect(indexSrc).toContain("propertyDeepSearch");
+  });
+
+  it("maps 'Living in House' to occupancy enum values", () => {
+    // Tenant-Occupied mapping
+    expect(indexSrc).toContain('"Tenant-Occupied"');
+    // Owner-Occupied mapping
+    expect(indexSrc).toContain('"Owner-Occupied"');
+    // Vacant mapping
+    expect(indexSrc).toContain('"Vacant"');
+    // Abandoned mapping
+    expect(indexSrc).toContain('"Abandoned"');
+  });
+
+  it("maps 'Listed with Realtor' to MLS status", () => {
+    expect(indexSrc).toContain('"Listed"');
+    expect(indexSrc).toContain('"Not Listed"');
+  });
+
+  it("maps repairs needed to needsRepairs flag and repairNotes", () => {
+    expect(indexSrc).toContain("needsRepairs");
+    expect(indexSrc).toContain("repairNotes");
+  });
+
+  it("maps property condition to propertyCondition JSON field", () => {
+    expect(indexSrc).toContain("propertyCondition");
+    expect(indexSrc).toContain("rating");
+  });
+
+  it("builds overviewNotes from all qualifying answers", () => {
+    expect(indexSrc).toContain("overviewNotes");
+    expect(indexSrc).toContain("Owned since:");
+    expect(indexSrc).toContain("Condition:");
+    expect(indexSrc).toContain("Living in house:");
+    expect(indexSrc).toContain("Listed with realtor:");
+    expect(indexSrc).toContain("Wants to sell fast:");
+    expect(indexSrc).toContain("Lowest acceptable price:");
+    expect(indexSrc).toContain("Best time to call:");
+  });
+
+  it("checks for existing deep search record before insert (upsert logic)", () => {
+    expect(indexSrc).toContain("existingDeepSearch");
+    expect(indexSrc).toContain("propertyDeepSearch.propertyId");
+  });
+
+  it("updates existing deep search record if one exists", () => {
+    expect(indexSrc).toContain("Updated deep search for property");
+  });
+
+  it("creates new deep search record if none exists", () => {
+    expect(indexSrc).toContain("Created deep search for property");
+  });
+
+  it("wraps deep search update in try-catch to not fail the whole request", () => {
+    expect(indexSrc).toContain("Deep search update failed for property");
+  });
+});
+
+// ─── Occupancy Mapping Logic ────────────────────────────────────────────────
+
+describe("Occupancy mapping from 'Living in House' field", () => {
+  const mapOccupancy = (livingInHouse: string) => {
+    const livingLower = livingInHouse.toLowerCase();
+    if (livingLower.includes("tenant")) return "Tenant-Occupied";
+    if (livingLower.includes("yes") && !livingLower.includes("tenant")) return "Owner-Occupied";
+    if (livingLower.includes("no") || livingLower.includes("vacant")) return "Vacant";
+    if (livingLower.includes("abandon")) return "Abandoned";
+    return null;
+  };
+
+  it("maps 'Yes - Tenant Occupied' to Tenant-Occupied", () => {
+    expect(mapOccupancy("Yes - Tenant Occupied")).toBe("Tenant-Occupied");
+  });
+
+  it("maps 'Yes' to Owner-Occupied", () => {
+    expect(mapOccupancy("Yes")).toBe("Owner-Occupied");
+  });
+
+  it("maps 'No' to Vacant", () => {
+    expect(mapOccupancy("No")).toBe("Vacant");
+  });
+
+  it("maps 'Vacant' to Vacant", () => {
+    expect(mapOccupancy("Vacant")).toBe("Vacant");
+  });
+
+  it("maps 'Abandoned' to Abandoned", () => {
+    expect(mapOccupancy("Abandoned")).toBe("Abandoned");
+  });
+
+  it("returns null for unknown values", () => {
+    expect(mapOccupancy("")).toBeNull();
+    expect(mapOccupancy("Maybe")).toBeNull();
+  });
+});

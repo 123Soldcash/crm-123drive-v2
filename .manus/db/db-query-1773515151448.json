@@ -1,0 +1,46 @@
+{
+  "query": "SELECT content FROM notes WHERE propertyId = 2190001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT content FROM notes WHERE propertyId = 2190001;",
+  "rows": [
+    {
+      "content": "=== Website Form - Step 2 (Qualifying Questions) ==="
+    },
+    {
+      "content": "Date: 3/14/2026"
+    },
+    {
+      "content": "Name: Brian Murphy"
+    },
+    {
+      "content": "Address: 210 Randolph ct, Lake Worth Beach, FL 33461"
+    },
+    {
+      "content": "Owned Property: 2019"
+    },
+    {
+      "content": "Property Condition: Good"
+    },
+    {
+      "content": "Repairs Needed: Paint mostly house was completely remodeled in 2020"
+    },
+    {
+      "content": "Living in House: Yes - Tenant Occupied"
+    },
+    {
+      "content": "Listed with Realtor: No"
+    },
+    {
+      "content": "Want to Sell Fast: No"
+    },
+    {
+      "content": "Lowest Acceptable Price: I would counter that with what's the highest price you're willing to pay"
+    },
+    {
+      "content": "Best Time to Call: Anytime"
+    }
+  ],
+  "messages": [],
+  "stdout": "content\n=== Website Form - Step 2 (Qualifying Questions) ===\nDate: 3/14/2026\nName: Brian Murphy\nAddress: 210 Randolph ct, Lake Worth Beach, FL 33461\n\nOwned Property: 2019\nProperty Condition: Good\nRepairs Needed: Paint mostly house was completely remodeled in 2020\nLiving in House: Yes - Tenant Occupied\nListed with Realtor: No\nWant to Sell Fast: No\nLowest Acceptable Price: I would counter that with what's the highest price you're willing to pay\nBest Time to Call: Anytime\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

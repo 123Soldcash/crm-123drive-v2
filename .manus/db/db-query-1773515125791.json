@@ -1,0 +1,28 @@
+{
+  "query": "SHOW TABLES LIKE '%deep%'; SHOW TABLES LIKE '%search%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SHOW TABLES LIKE '%deep%'; SHOW TABLES LIKE '%search%';",
+  "rows": [
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "deepSearchOverview"
+    },
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "propertyDeepSearch"
+    },
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "Tables_in_RDbAfwHQBDqo37pina3pDu (%search%)"
+    },
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "deepSearchOverview"
+    },
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "propertyDeepSearch"
+    },
+    {
+      "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)": "savedSearches"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_RDbAfwHQBDqo37pina3pDu (%deep%)\ndeepSearchOverview\npropertyDeepSearch\nTables_in_RDbAfwHQBDqo37pina3pDu (%search%)\ndeepSearchOverview\npropertyDeepSearch\nsavedSearches\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}
