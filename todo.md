@@ -2323,3 +2323,12 @@
 - [x] Wrapped in try-catch so deep search failure doesn't break the whole webhook
 - [x] Verified on property #2190001: Occupancy=Tenant-Occupied, MLS=Not Listed, all data mapped
 - [x] Added 17 new tests (59 total zapier webhook tests passing)
+
+## BUG: Deep Search UI not displaying webhook Step 2 data
+- [x] Root cause: Two separate tables — propertyDeepSearch (hyphenated values) and deepSearchOverview (space-separated values)
+- [x] The Overview UI reads from deepSearchOverview table, but webhook only wrote to propertyDeepSearch
+- [x] Fix: Step 2 webhook now writes to BOTH tables with correct enum values for each
+- [x] deepSearchOverview: occupancy="Tenant Occupied", conditionRating="Good", generalNotes with all qualifying answers
+- [x] Moved field extraction outside try blocks so both deep search updates share the same variables
+- [x] Verified on property #2190001: Overview UI now shows Occupancy and Condition correctly
+- [x] Added 13 new tests (72 total zapier webhook tests passing)

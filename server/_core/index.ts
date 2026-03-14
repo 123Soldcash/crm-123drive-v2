@@ -270,7 +270,7 @@ async function startServer() {
   app.post("/api/oauth/webhook/zapier/step2", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts, contactPhones, contactEmails, notes, propertyDeepSearch } = await import("../../drizzle/schema");
+      const { properties, contacts, contactPhones, contactEmails, notes, propertyDeepSearch, deepSearchOverview } = await import("../../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
       const database = await getDb();
@@ -402,28 +402,28 @@ async function startServer() {
         });
       }
 
+      // ─── Extract qualifying field values (shared by both deep search tables) ─────
+      const getFieldValue = (key: string, aliases: string[]): string => {
+        let value = data[key];
+        if (!value) {
+          for (const alias of aliases) {
+            if (data[alias]) { value = data[alias]; break; }
+          }
+        }
+        return String(value || "").trim();
+      };
+
+      const livingInHouse = getFieldValue("living_house", ["livingHouse", "living house", "LivingHouse", "living"]);
+      const conditionProperty = getFieldValue("condition_property", ["conditionProperty", "condition property", "ConditionProperty", "condition"]);
+      const repairsNeeded = getFieldValue("repairs_need", ["repairsNeed", "repairs need", "RepairsNeed", "repairs"]);
+      const listedRealtor = getFieldValue("listed_realtor", ["listedRealtor", "listed realtor", "ListedRealtor", "listed"]);
+      const sellFast = getFieldValue("sell_fast", ["sellFast", "sell fast", "SellFast"]);
+      const lowestPrice = getFieldValue("lowest_price", ["lowestPrice", "lowest price", "LowestPrice", "lowest_price"]);
+      const ownedProperty = getFieldValue("owned_property", ["ownedProperty", "owned property", "OwnedProperty"]);
+      const bestTimeToCall = getFieldValue("time_call", ["timeCall", "time call", "TimeCall", "time_call"]);
+
       // ─── Map qualifying answers to Deep Search fields ─────
       try {
-        // Helper to get a qualifying field value
-        const getFieldValue = (key: string, aliases: string[]): string => {
-          let value = data[key];
-          if (!value) {
-            for (const alias of aliases) {
-              if (data[alias]) { value = data[alias]; break; }
-            }
-          }
-          return String(value || "").trim();
-        };
-
-        const livingInHouse = getFieldValue("living_house", ["livingHouse", "living house", "LivingHouse", "living"]);
-        const conditionProperty = getFieldValue("condition_property", ["conditionProperty", "condition property", "ConditionProperty", "condition"]);
-        const repairsNeeded = getFieldValue("repairs_need", ["repairsNeed", "repairs need", "RepairsNeed", "repairs"]);
-        const listedRealtor = getFieldValue("listed_realtor", ["listedRealtor", "listed realtor", "ListedRealtor", "listed"]);
-        const sellFast = getFieldValue("sell_fast", ["sellFast", "sell fast", "SellFast"]);
-        const lowestPrice = getFieldValue("lowest_price", ["lowestPrice", "lowest price", "LowestPrice", "lowest_price"]);
-        const ownedProperty = getFieldValue("owned_property", ["ownedProperty", "owned property", "OwnedProperty"]);
-        const bestTimeToCall = getFieldValue("time_call", ["timeCall", "time call", "TimeCall", "time_call"]);
-
         // Map "Living in House" answer to occupancy enum
         let occupancy: "Owner-Occupied" | "Tenant-Occupied" | "Vacant" | "Abandoned" | null = null;
         const livingLower = livingInHouse.toLowerCase();
@@ -511,6 +511,80 @@ async function startServer() {
       } catch (deepSearchError) {
         // Don't fail the whole request if deep search update fails
         console.error(`[Zapier Step 2] Deep search update failed for property #${propertyId}:`, deepSearchError);
+      }
+
+      // ── Also update deepSearchOverview table (used by the Overview UI tab) ──
+      try {
+        // Map occupancy to Overview enum values (spaces instead of hyphens)
+        let overviewOccupancy: "Vacant" | "Owner Occupied" | "Tenant Occupied" | "Squatter Occupied" | "Unknown" | null = null;
+        if (livingInHouse) {
+          const ll = livingInHouse.toLowerCase();
+          if (ll.includes("tenant")) overviewOccupancy = "Tenant Occupied";
+          else if (ll.includes("yes") && !ll.includes("tenant")) overviewOccupancy = "Owner Occupied";
+          else if (ll.includes("no") || ll.includes("vacant")) overviewOccupancy = "Vacant";
+          else if (ll.includes("squatter")) overviewOccupancy = "Squatter Occupied";
+          else overviewOccupancy = "Unknown";
+        }
+
+        // Map condition to overview conditionRating enum
+        let overviewCondition: "Excellent" | "Good" | "Fair" | "Average" | "Poor" | null = null;
+        if (conditionProperty) {
+          const cl = conditionProperty.toLowerCase();
+          if (cl.includes("excellent")) overviewCondition = "Excellent";
+          else if (cl.includes("good")) overviewCondition = "Good";
+          else if (cl.includes("fair")) overviewCondition = "Fair";
+          else if (cl.includes("average")) overviewCondition = "Average";
+          else if (cl.includes("poor") || cl.includes("bad")) overviewCondition = "Poor";
+        }
+
+        // Build overview data
+        const overviewData: Record<string, any> = { propertyId };
+        if (overviewOccupancy) overviewData.occupancy = overviewOccupancy;
+        if (overviewCondition) overviewData.conditionRating = overviewCondition;
+
+        // Build general notes for overview
+        const overviewNotesParts: string[] = [];
+        overviewNotesParts.push(`[Website Form - ${new Date().toLocaleDateString("en-US")}]`);
+        if (ownedProperty) overviewNotesParts.push(`Owned since: ${ownedProperty}`);
+        if (conditionProperty) overviewNotesParts.push(`Condition: ${conditionProperty}`);
+        if (repairsNeeded) overviewNotesParts.push(`Repairs: ${repairsNeeded}`);
+        if (livingInHouse) overviewNotesParts.push(`Living in house: ${livingInHouse}`);
+        if (listedRealtor) overviewNotesParts.push(`Listed with realtor: ${listedRealtor}`);
+        if (sellFast) overviewNotesParts.push(`Wants to sell fast: ${sellFast}`);
+        if (lowestPrice) overviewNotesParts.push(`Lowest acceptable price: ${lowestPrice}`);
+        if (bestTimeToCall) overviewNotesParts.push(`Best time to call: ${bestTimeToCall}`);
+        if (overviewNotesParts.length > 1) {
+          overviewData.generalNotes = overviewNotesParts.join("\n");
+        }
+
+        // Check if overview record exists
+        const existingOverview = await database
+          .select({ id: deepSearchOverview.id })
+          .from(deepSearchOverview)
+          .where(eq(deepSearchOverview.propertyId, propertyId))
+          .limit(1);
+
+        if (existingOverview.length > 0) {
+          const existingOv = await database
+            .select({ generalNotes: deepSearchOverview.generalNotes })
+            .from(deepSearchOverview)
+            .where(eq(deepSearchOverview.propertyId, propertyId))
+            .limit(1);
+          const existingGN = existingOv[0]?.generalNotes || "";
+          if (existingGN && overviewData.generalNotes) {
+            overviewData.generalNotes = existingGN + "\n\n" + overviewData.generalNotes;
+          }
+          delete overviewData.propertyId;
+          await database.update(deepSearchOverview)
+            .set(overviewData)
+            .where(eq(deepSearchOverview.propertyId, propertyId));
+          console.log(`[Zapier Step 2] Updated deep search overview for property #${propertyId}`);
+        } else {
+          await database.insert(deepSearchOverview).values(overviewData as any);
+          console.log(`[Zapier Step 2] Created deep search overview for property #${propertyId}`);
+        }
+      } catch (overviewError) {
+        console.error(`[Zapier Step 2] Deep search overview update failed for property #${propertyId}:`, overviewError);
       }
 
       console.log(`[Zapier Step 2] Updated property #${propertyId} with detailed data for phone: ${phone}`);

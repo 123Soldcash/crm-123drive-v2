@@ -383,3 +383,80 @@ describe("Occupancy mapping from 'Living in House' field", () => {
     expect(mapOccupancy("Maybe")).toBeNull();
   });
 });
+
+// ─── Step 2: Deep Search Overview Mapping ───────────────────────────────────
+
+describe("Step 2: Qualifying data also mapped to deepSearchOverview table", () => {
+  it("imports deepSearchOverview schema in Step 2 handler", () => {
+    expect(indexSrc).toContain("deepSearchOverview");
+  });
+
+  it("maps occupancy with space-separated values for Overview UI", () => {
+    expect(indexSrc).toContain('"Tenant Occupied"');
+    expect(indexSrc).toContain('"Owner Occupied"');
+    expect(indexSrc).toContain('"Squatter Occupied"');
+    expect(indexSrc).toContain('"Unknown"');
+  });
+
+  it("maps condition to conditionRating enum for Overview UI", () => {
+    expect(indexSrc).toContain('"Excellent"');
+    expect(indexSrc).toContain('"Good"');
+    expect(indexSrc).toContain('"Fair"');
+    expect(indexSrc).toContain('"Average"');
+    expect(indexSrc).toContain('"Poor"');
+  });
+
+  it("builds generalNotes for overview from qualifying answers", () => {
+    expect(indexSrc).toContain("overviewData.generalNotes");
+  });
+
+  it("checks for existing overview record before insert (upsert logic)", () => {
+    expect(indexSrc).toContain("existingOverview");
+    expect(indexSrc).toContain("deepSearchOverview.propertyId");
+  });
+
+  it("updates existing overview record if one exists", () => {
+    expect(indexSrc).toContain("Updated deep search overview for property");
+  });
+
+  it("creates new overview record if none exists", () => {
+    expect(indexSrc).toContain("Created deep search overview for property");
+  });
+
+  it("wraps overview update in try-catch to not fail the whole request", () => {
+    expect(indexSrc).toContain("Deep search overview update failed for property");
+  });
+});
+
+// ─── Overview Occupancy Mapping Logic ───────────────────────────────────────
+
+describe("Overview occupancy mapping (space-separated values)", () => {
+  const mapOverviewOccupancy = (livingInHouse: string) => {
+    const ll = livingInHouse.toLowerCase();
+    if (ll.includes("tenant")) return "Tenant Occupied";
+    if (ll.includes("yes") && !ll.includes("tenant")) return "Owner Occupied";
+    if (ll.includes("no") || ll.includes("vacant")) return "Vacant";
+    if (ll.includes("squatter")) return "Squatter Occupied";
+    return "Unknown";
+  };
+
+  it("maps 'Yes - Tenant Occupied' to 'Tenant Occupied'", () => {
+    expect(mapOverviewOccupancy("Yes - Tenant Occupied")).toBe("Tenant Occupied");
+  });
+
+  it("maps 'Yes' to 'Owner Occupied'", () => {
+    expect(mapOverviewOccupancy("Yes")).toBe("Owner Occupied");
+  });
+
+  it("maps 'No' to 'Vacant'", () => {
+    expect(mapOverviewOccupancy("No")).toBe("Vacant");
+  });
+
+  it("maps 'Squatter' to 'Squatter Occupied'", () => {
+    expect(mapOverviewOccupancy("Squatter")).toBe("Squatter Occupied");
+  });
+
+  it("maps unknown values to 'Unknown'", () => {
+    expect(mapOverviewOccupancy("Maybe")).toBe("Unknown");
+  });
+});

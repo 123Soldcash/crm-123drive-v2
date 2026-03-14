@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, propertyId, ds_occupancy, ds_conditionRating, ds_generalNotes FROM deepSearchOverview WHERE propertyId = 2190001",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, propertyId, ds_occupancy, ds_conditionRating, ds_generalNotes FROM deepSearchOverview WHERE propertyId = 2190001",
+  "rows": [
+    {
+      "id": "90001",
+      "propertyId": "2190001",
+      "ds_occupancy": "Tenant Occupied",
+      "ds_conditionRating": "Good",
+      "ds_generalNotes": "[Website Form - 3/14/2026]"
+    }
+  ],
+  "messages": [
+    "Owned since: 2019",
+    "Condition: Good",
+    "Repairs: Paint mostly house was completely remodeled in 2020",
+    "Living in house: Yes - Tenant Occupied",
+    "Listed with realtor: No",
+    "Wants to sell fast: No",
+    "Lowest acceptable price: I would counter that with whats the highest price youre willing to pay",
+    "Best time to call: Anytime"
+  ],
+  "stdout": "id\tpropertyId\tds_occupancy\tds_conditionRating\tds_generalNotes\n90001\t2190001\tTenant Occupied\tGood\t[Website Form - 3/14/2026]\nOwned since: 2019\nCondition: Good\nRepairs: Paint mostly house was completely remodeled in 2020\nLiving in house: Yes - Tenant Occupied\nListed with realtor: No\nWants to sell fast: No\nLowest acceptable price: I would counter that with whats the highest price youre willing to pay\nBest time to call: Anytime\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

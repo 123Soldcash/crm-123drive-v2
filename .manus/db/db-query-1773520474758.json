@@ -1,0 +1,19 @@
+{
+  "query": "SELECT * FROM propertyDeepSearch WHERE propertyId = 2190001",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT * FROM propertyDeepSearch WHERE propertyId = 2190001",
+  "rows": [],
+  "messages": [
+    "420001\t2190001\tNot Listed\tTenant-Occupied\tNULL\tNULL\tNULL\t[Website Form - 3/14/2026]",
+    "Owned since: 2019",
+    "Condition: Good",
+    "Repairs: Paint mostly house was completely remodeled in 2020",
+    "Living in house: Yes - Tenant Occupied",
+    "Listed with realtor: No",
+    "Wants to sell fast: No",
+    "Lowest acceptable price: I would counter that with whats the highest price youre willing to pay",
+    "Best time to call: Anytime\tNULL\t{\"rating\":\"Good\",\"tags\":[]}\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0\tNULL\tNULL\tNULL\t1\tNULL\tNULL\tPaint mostly house was completely remodeled in 2020\t0\tNULL\t0\tNULL\tNULL\tNULL\tNULL\tNULL\t2026-03-14 19:08:53\t2026-03-14 19:08:53\tNULL"
+  ],
+  "stdout": "id\tpropertyId\tmlsStatus\toccupancy\tannualRent\tmonthlyRent\tleaseType\toverviewNotes\tissues\tpropertyCondition\tpropertyType\tprobateFinds\tprobateNotes\tfamilyTree\tfamilyTreeNotes\tzillowEstimate\tdealMachineEstimate\tourEstimate\testimateNotes\trecordsChecked\trecordsCheckedNotes\trecordDetails\trecordDetailsFindings\tdeedType\tdelinquentTax2025\tdelinquentTax2024\tdelinquentTax2023\tdelinquentTax2022\tdelinquentTax2021\tdelinquentTax2020\tdelinquentTaxTotal\thasMortgage\tmortgageAmount\tequityPercent\tmortgageNotes\tneedsRepairs\trepairTypes\testimatedRepairCost\trepairNotes\thasCodeViolation\tcodeViolationNotes\thasLiens\tliensNotes\tskiptracingDone\tskiptracingNotes\toutreachDone\ttasks\tcreatedAt\tupdatedAt\ttaxesNotes\n420001\t2190001\tNot Listed\tTenant-Occupied\tNULL\tNULL\tNULL\t[Website Form - 3/14/2026]\nOwned since: 2019\nCondition: Good\nRepairs: Paint mostly house was completely remodeled in 2020\nLiving in house: Yes - Tenant Occupied\nListed with realtor: No\nWants to sell fast: No\nLowest acceptable price: I would counter that with whats the highest price youre willing to pay\nBest time to call: Anytime\tNULL\t{\"rating\":\"Good\",\"tags\":[]}\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0\tNULL\tNULL\tNULL\t1\tNULL\tNULL\tPaint mostly house was completely remodeled in 2020\t0\tNULL\t0\tNULL\tNULL\tNULL\tNULL\tNULL\t2026-03-14 19:08:53\t2026-03-14 19:08:53\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 163
+}
