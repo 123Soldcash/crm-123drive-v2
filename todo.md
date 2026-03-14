@@ -2309,3 +2309,7 @@
 - [x] Clean up existing orphaned records in database (100+ orphaned contacts removed)
 - [x] Verify webhook duplicate detection works after proper deletion — confirmed working
 - [x] Updated tests — 34 delete-property tests passing
+
+## BUG: NaN propertyId/id errors on /properties page
+- [x] Root cause: PropertyDetail component's useRoute returns null params when on /properties list page, causing Number(undefined) = NaN
+- [x] Fix: Added `enabled: isValidId` guard to all tRPC queries in PropertyDetail that use propertyId

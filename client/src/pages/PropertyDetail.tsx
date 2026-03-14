@@ -56,6 +56,7 @@ export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
   const [, setLocation] = useLocation();
   const propertyId = Number(params?.id);
+  const isValidId = !isNaN(propertyId) && propertyId > 0;
   const [noteContent, setNoteContent] = useState("");
 
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
@@ -130,12 +131,12 @@ export default function PropertyDetail() {
     }
   };
 
-  const { data: property, isLoading, error } = trpc.properties.getById.useQuery({ id: propertyId });
-  const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId });
-  const { data: tags } = trpc.properties.getTags.useQuery({ propertyId });
+  const { data: property, isLoading, error } = trpc.properties.getById.useQuery({ id: propertyId }, { enabled: isValidId });
+  const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId }, { enabled: isValidId });
+  const { data: tags } = trpc.properties.getTags.useQuery({ propertyId }, { enabled: isValidId });
   const { data: agentsList } = trpc.agents.listAll.useQuery();
-  const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId });
-  const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId });
+  const { data: assignedAgents } = trpc.properties.getAssignedAgents.useQuery({ propertyId }, { enabled: isValidId });
+  const { data: transferHistory } = trpc.properties.getTransferHistory.useQuery({ propertyId }, { enabled: isValidId });
 
   const zillowUrl = property
     ? `https://www.zillow.com/homes/${property.addressLine1.replace(/[^a-zA-Z0-9]/g, "-")}-${property.city.replace(/[^a-zA-Z0-9]/g, "-")}-${property.state}-${property.zipcode}_rb/`
