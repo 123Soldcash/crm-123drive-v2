@@ -127,10 +127,9 @@ describe('NotesSection Component', () => {
       expect(screen.getByPlaceholderText(/Add a note/i)).toBeInTheDocument();
     });
 
-    it('renders Photos and Documents buttons', () => {
+    it('renders Attach Files button', () => {
       render(<NotesSection propertyId={mockPropertyId} />);
-      expect(screen.getByRole('button', { name: /Photos/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Documents/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Attach Files/i })).toBeInTheDocument();
     });
 
     it('renders Save Note button', () => {

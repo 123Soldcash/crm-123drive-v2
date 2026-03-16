@@ -230,12 +230,12 @@ describe("NotesSection Document Upload UI", () => {
     expect(content).toContain("trpc.documents.delete.useMutation");
   });
 
-  it("should have a Documents button in the form area", () => {
+  it("should have an Attach Files button in the form area", () => {
     const componentPath = path.join(__dirname, "../client/src/components/NotesSection.tsx");
     const content = fs.readFileSync(componentPath, "utf-8");
     
-    expect(content).toContain("Documents");
-    expect(content).toContain("docInputRef.current?.click()");
+    expect(content).toContain("Attach Files");
+    expect(content).toContain("image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip");
   });
 
   it("should display document list with file icons and metadata", () => {
@@ -256,12 +256,12 @@ describe("NotesSection Document Upload UI", () => {
     expect(content).toContain("d.noteId === note.id");
   });
 
-  it("should have standalone document upload area", () => {
+  it("should support drag and drop for all file types", () => {
     const componentPath = path.join(__dirname, "../client/src/components/NotesSection.tsx");
     const content = fs.readFileSync(componentPath, "utf-8");
     
-    expect(content).toContain("handleStandaloneDocUpload");
-    expect(content).toContain("Click to upload documents");
+    expect(content).toContain("handleDrop");
+    expect(content).toContain("drag & drop any files here");
   });
 
   it("should enforce 10MB file size limit", () => {

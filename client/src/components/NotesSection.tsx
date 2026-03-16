@@ -184,25 +184,41 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     }
   };
 
-  const handleDrop = async (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingOver(false);
 
     const items = e.dataTransfer.items;
-    if (!items) return;
+    const droppedFiles = Array.from(e.dataTransfer.files);
 
-    const blobs = extractImageBlobs(items);
-    if (blobs.length > 0) {
-      await processImageBlobs(blobs);
-      return;
+    // Separate images from documents
+    const imageFiles = droppedFiles.filter((f) => f.type.startsWith("image/"));
+    const docFiles = droppedFiles.filter((f) => !f.type.startsWith("image/"));
+
+    // Process images via blobs first (for paste support)
+    if (items) {
+      const blobs = extractImageBlobs(items);
+      if (blobs.length > 0) {
+        await processImageBlobs(blobs);
+      }
     }
 
-    // If no image items, check for image files
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      f.type.startsWith("image/")
-    );
-    if (files.length > 0) {
-      await processImageBlobs(files);
+    // Process remaining image files
+    if (imageFiles.length > 0) {
+      await processImageBlobs(imageFiles);
+    }
+
+    // Process document files
+    if (docFiles.length > 0) {
+      const newDocs: { file: globalThis.File; description: string }[] = [];
+      docFiles.forEach((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name} is too large (max 10MB)`);
+          return;
+        }
+        newDocs.push({ file, description: "" });
+      });
+      setSelectedDocs((prev) => [...prev, ...newDocs]);
     }
   };
 
@@ -459,10 +475,10 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             <ClipboardPaste className="h-3.5 w-3.5 shrink-0" />
             <span>
               {isDraggingOver
-                ? "Drop image here to attach it to this note"
+                ? "Drop files here to attach them to this note"
                 : isPastingImage
                 ? "Processing image…"
-                : "Ctrl+V anywhere on this page to paste a screenshot · or drag an image here"}
+                : "Ctrl+V to paste a screenshot · or drag & drop any files here (images, PDF, DOC, XLS, etc.)"}
             </span>
             {isPastingImage && (
               <span className="ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
@@ -557,14 +573,50 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               </div>
             )}
 
-            <div className="flex gap-2">
-              <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" className="border-gray-200">
-                <Camera className="mr-2 h-3 w-3" />
-                Photos
-              </Button>
-              <Button onClick={() => docInputRef.current?.click()} variant="outline" size="sm" className="border-gray-200">
-                <Paperclip className="mr-2 h-3 w-3" />
-                Documents
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gray-200"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.multiple = true;
+                  input.accept = "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip";
+                  input.onchange = (e) => {
+                    const files = (e.target as HTMLInputElement).files;
+                    if (!files) return;
+                    const imageFiles: File[] = [];
+                    const docFiles: { file: globalThis.File; description: string }[] = [];
+                    Array.from(files).forEach((file) => {
+                      if (file.type.startsWith("image/")) {
+                        imageFiles.push(file);
+                      } else {
+                        if (file.size > MAX_FILE_SIZE) {
+                          toast.error(`${file.name} is too large (max 10MB)`);
+                          return;
+                        }
+                        docFiles.push({ file, description: "" });
+                      }
+                    });
+                    if (imageFiles.length > 0) {
+                      imageFiles.forEach((file) => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setSelectedImages((prev) => [...prev, ev.target?.result as string]);
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    }
+                    if (docFiles.length > 0) {
+                      setSelectedDocs((prev) => [...prev, ...docFiles]);
+                    }
+                  };
+                  input.click();
+                }}
+              >
+                <Upload className="mr-2 h-3 w-3" />
+                Attach Files
               </Button>
               <Button
                 onClick={handleSubmit}
@@ -661,26 +713,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           </div>
         )}
 
-        {/* Empty state for documents */}
-        {(!documents || documents.length === 0) && (
-          <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-slate-300 hover:bg-gray-50/50 transition-colors"
-            onClick={() => {
-              const input = document.createElement("input");
-              input.type = "file";
-              input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip";
-              input.multiple = true;
-              input.onchange = (e) => {
-                const files = (e.target as HTMLInputElement).files;
-                if (files) handleStandaloneDocUpload(files);
-              };
-              input.click();
-            }}
-          >
-            <Paperclip className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-            <p className="text-xs text-gray-500">Click to upload documents (PDF, DOC, XLS, etc.)</p>
-          </div>
-        )}
+
 
         {/* Search and Filter Bar */}
         <div className="flex items-center gap-2 flex-wrap">

@@ -2341,3 +2341,11 @@
 - [x] Fixed deskName filter: selecting "All Desks" now clears filter instead of filtering by literal "all"
 - [x] Fixed marketStatus filter: selecting "All Statuses" now clears filter instead of filtering by literal "all"
 - [x] Verified: Corporate Owner filter now correctly shows 60 properties when clicked
+
+## Simplify General Notes upload area
+- [x] Remove separate "Photos" and "Documents" buttons from General Notes
+- [x] Added unified "Attach Files" button that accepts all file types (images, PDF, DOC, XLS, etc.)
+- [x] Updated drag & drop to accept all file types (not just images)
+- [x] Removed separate empty-state document upload zone below the form
+- [x] Updated hint text to reflect unified upload capability
+- [x] Updated tests to match new UI
