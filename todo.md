@@ -2364,3 +2364,8 @@
 - [x] TasksList (table view) property column now clickable with blue link to /properties/:id
 - [x] TasksCalendar property address now clickable with blue link to /properties/:id
 - [x] All 106 related tests passing
+
+## Reorder PropertyDetail sections
+- [x] Reorder sections: Contacts (static top), 1. General Notes, 2. Comparables, 3. Deep Search, 4. Field Visit, 5. Property Photos, 6. Activity Timeline, 7. Potential Cash Buyers
+- [x] Verified in browser: all sections in correct order
+- [x] Mobile responsive: grid stacks on small screens, collapsible sections work

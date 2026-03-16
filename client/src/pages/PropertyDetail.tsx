@@ -450,9 +450,12 @@ export default function PropertyDetail() {
         <AutomatedFollowUps propertyId={propertyId} />
       </div>
       
+      {/* === SECTION ORDER: 1. General Notes, 2. Comparables, 3. Deep Search, 4. Field Visit, 5. Photos, 6. Activity Timeline, 7. Buyers === */}
+
+      {/* 1. General Notes */}
       <NotesSection propertyId={propertyId} />
 
-      {/* Collapsible Sections */}
+      {/* 2. Comparables & Renovation Calculator */}
       <CollapsibleSection title="Comparables & Renovation Calculator" icon="📊" isOpen={showComparables} onToggle={() => setShowComparables(!showComparables)} accentColor="blue">
         <Comparables
           propertyId={propertyId}
@@ -462,6 +465,7 @@ export default function PropertyDetail() {
         />
       </CollapsibleSection>
 
+      {/* 3. Deep Search Overview */}
       {isAdmin && (
         <CollapsibleSection title="Deep Search Overview" icon="🔍" isOpen={showDeepSearch} onToggle={() => setShowDeepSearch(!showDeepSearch)} accentColor="orange">
           <div className="space-y-6">
@@ -474,8 +478,7 @@ export default function PropertyDetail() {
         </CollapsibleSection>
       )}
 
-      {/* Family Tree is now inside Deep Search > Probate section */}
-
+      {/* 4. Field Visit Check-In */}
       <CollapsibleSection title="Field Visit Check-In (Birddog)" icon="📍" isOpen={showFieldVisit} onToggle={() => setShowFieldVisit(!showFieldVisit)} accentColor="pink">
         <div className="grid gap-6 md:grid-cols-2">
           <PropertyCheckIn propertyId={propertyId} />
@@ -483,8 +486,13 @@ export default function PropertyDetail() {
         </div>
       </CollapsibleSection>
 
+      {/* 5. Property Photos */}
       <PhotoGallery propertyId={propertyId} />
+
+      {/* 6. Activity Timeline */}
       {isAdmin && <ActivityTimeline propertyId={propertyId} />}
+
+      {/* 7. Potential Cash Buyers */}
       {isAdmin && <BuyerMatching propertyId={propertyId} />}
     </div>
   );
