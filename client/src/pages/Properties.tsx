@@ -291,6 +291,23 @@ export default function Properties() {
     },
   });
 
+  // Helper: extract property flags from dealMachineRawData
+  const getPropertyFlags = (property: any): string[] => {
+    if (!property.dealMachineRawData) return [];
+    try {
+      const rawData = JSON.parse(property.dealMachineRawData);
+      if (rawData.property_flags) {
+        return rawData.property_flags
+          .split(',')
+          .map((flag: string) => flag.trim())
+          .filter((flag: string) => flag.length > 0);
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    return [];
+  };
+
   // Filter properties by status tags and agent on the client side
   const filteredProperties = useMemo(() => {
     if (!properties) return [];
@@ -312,12 +329,13 @@ export default function Properties() {
       filtered = filtered.filter((p) => p.deskName === filters.deskName);
     }
 
-    // Filter by property flags (from dealMachineRawData)
+    // Filter by property flags (parsed from dealMachineRawData)
     if (filters.statusTags.length > 0) {
       filtered = filtered.filter((property) => {
-        if (!property.propertyFlags || property.propertyFlags.length === 0) return false;
+        const flags = getPropertyFlags(property);
+        if (flags.length === 0) return false;
         // Property must have ALL selected tags
-        return filters.statusTags.every((tag) => property.propertyFlags.includes(tag));
+        return filters.statusTags.every((tag) => flags.includes(tag));
       });
     }
 
@@ -600,7 +618,7 @@ export default function Properties() {
             <Select
               value={filters.marketStatus}
               onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, marketStatus: value }))
+                setFilters((prev) => ({ ...prev, marketStatus: value === "all" ? "" : value }))
               }
             >
               <SelectTrigger className="w-full">
@@ -619,7 +637,7 @@ export default function Properties() {
             <Select
               value={filters.deskName}
               onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, deskName: value }))
+                setFilters((prev) => ({ ...prev, deskName: value === "all" ? "" : value }))
               }
             >
               <SelectTrigger>
@@ -979,7 +997,7 @@ export default function Properties() {
                           {property.status?.split(", ").slice(0, 2).map((tag: string, i: number) => (
                             <Badge key={i} variant="secondary" className="text-xs px-1.5 py-0 truncate max-w-[120px]">{tag}</Badge>
                           ))}
-                          {property.propertyFlags?.slice(0, 1).map((flag: string, i: number) => (
+                          {getPropertyFlags(property).slice(0, 1).map((flag: string, i: number) => (
                             <Badge key={i} variant="outline" className="text-xs px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300 truncate max-w-[120px]">{flag}</Badge>
                           ))}
                         </div>
@@ -1096,20 +1114,24 @@ export default function Properties() {
                       })()}
                       
                       {/* Property Flags from DealMachine */}
-                      {property.propertyFlags && property.propertyFlags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {property.propertyFlags.slice(0, 3).map((flag: string, i: number) => (
-                            <Badge key={i} variant="outline" className="text-xs px-1.5 py-0.5 bg-amber-50 text-amber-700 border-amber-300">
-                              {flag}
-                            </Badge>
-                          ))}
-                          {property.propertyFlags.length > 3 && (
-                            <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600">
-                              +{property.propertyFlags.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                      {(() => {
+                        const flags = getPropertyFlags(property);
+                        if (flags.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {flags.slice(0, 3).map((flag: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-xs px-1.5 py-0.5 bg-amber-50 text-amber-700 border-amber-300">
+                                {flag}
+                              </Badge>
+                            ))}
+                            {flags.length > 3 && (
+                              <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600">
+                                +{flags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </Link>
                     </TableCell>
                   )}

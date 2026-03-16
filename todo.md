@@ -2332,3 +2332,12 @@
 - [x] Moved field extraction outside try blocks so both deep search updates share the same variables
 - [x] Verified on property #2190001: Overview UI now shows Occupancy and Condition correctly
 - [x] Added 13 new tests (72 total zapier webhook tests passing)
+
+## BUG: Properties filters not working properly
+- [x] Corporate Owner filter shows 60 results but clicking it shows no results
+- [x] Root cause: property.propertyFlags was undefined — server returns dealMachineRawData as JSON string but never parses it
+- [x] Fix: Added getPropertyFlags() helper that parses dealMachineRawData client-side for filtering and display
+- [x] Fixed all 3 references to property.propertyFlags in Properties.tsx to use the helper
+- [x] Fixed deskName filter: selecting "All Desks" now clears filter instead of filtering by literal "all"
+- [x] Fixed marketStatus filter: selecting "All Statuses" now clears filter instead of filtering by literal "all"
+- [x] Verified: Corporate Owner filter now correctly shows 60 properties when clicked
