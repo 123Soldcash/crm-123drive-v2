@@ -257,10 +257,10 @@ export function TasksCalendar() {
                         )}
                       </div>
 
-                      {task.propertyAddress && (
-                        <div className="text-xs text-gray-500 mt-2">
+                      {task.propertyAddress && task.propertyId && (
+                        <Link href={`/properties/${task.propertyId}`} className="block text-xs text-blue-600 hover:text-blue-800 hover:underline mt-2">
                           📍 {task.propertyAddress}, {task.propertyCity}
-                        </div>
+                        </Link>
                       )}
                     </div>
                   ))

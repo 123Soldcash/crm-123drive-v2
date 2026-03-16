@@ -2142,6 +2142,7 @@ export async function getTasks(filters?: {
   assignedToId?: number;
   propertyId?: number;
   hidden?: number;
+  userId?: number;
 }): Promise<any[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -2164,13 +2165,35 @@ export async function getTasks(filters?: {
     conditions.push(eq(tasks.hidden, filters.hidden));
   }
   
-  let query = db.select().from(tasks);
+  const rows = await db
+    .select({
+      id: tasks.id,
+      title: tasks.title,
+      description: tasks.description,
+      taskType: tasks.taskType,
+      priority: tasks.priority,
+      status: tasks.status,
+      hidden: tasks.hidden,
+      assignedToId: tasks.assignedToId,
+      createdById: tasks.createdById,
+      propertyId: tasks.propertyId,
+      dueDate: tasks.dueDate,
+      dueTime: tasks.dueTime,
+      completedDate: tasks.completedDate,
+      repeatTask: tasks.repeatTask,
+      checklist: tasks.checklist,
+      createdAt: tasks.createdAt,
+      updatedAt: tasks.updatedAt,
+      propertyAddress: properties.addressLine1,
+      propertyCity: properties.city,
+      propertyState: properties.state,
+    })
+    .from(tasks)
+    .leftJoin(properties, eq(tasks.propertyId, properties.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(tasks.createdAt));
   
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  
-  return await query.orderBy(desc(tasks.createdAt));
+  return rows;
 }
 
 export async function getTaskById(taskId: number): Promise<any | null> {

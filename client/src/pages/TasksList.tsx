@@ -386,10 +386,14 @@ export function TasksList() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {task.propertyAddress ? (
-                      <span className="text-gray-600 text-sm">
-                        {task.propertyAddress}, {task.propertyCity}
-                      </span>
+                    {task.propertyId && task.propertyAddress ? (
+                      <Link href={`/properties/${task.propertyId}`} className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium">
+                        {task.propertyAddress}{task.propertyCity ? `, ${task.propertyCity}` : ''}
+                      </Link>
+                    ) : task.propertyId ? (
+                      <Link href={`/properties/${task.propertyId}`} className="text-blue-600 hover:text-blue-800 hover:underline text-sm">
+                        Property #{task.propertyId}
+                      </Link>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}

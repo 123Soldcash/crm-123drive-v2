@@ -2357,3 +2357,10 @@
 - [x] Remove VALUE, EQUITY, BED/BATH, SQFT stats grid from header (already shown in Data Table below)
 - [x] Remove Owner Name, Location badge, Year Built, APN from header tags (already in Data Table)
 - [x] Header now shows: photo, address, action buttons, temperature selector, verified, desk, deep search
+
+## Tasks: Show property info and link to property
+- [x] Updated getTasks backend query to JOIN with properties table for address data
+- [x] TaskCard (Kanban view) already had property link — now receives data correctly
+- [x] TasksList (table view) property column now clickable with blue link to /properties/:id
+- [x] TasksCalendar property address now clickable with blue link to /properties/:id
+- [x] All 106 related tests passing
