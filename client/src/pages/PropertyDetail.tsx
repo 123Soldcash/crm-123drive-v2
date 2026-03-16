@@ -450,6 +450,8 @@ export default function PropertyDetail() {
         <AutomatedFollowUps propertyId={propertyId} />
       </div>
       
+      <NotesSection propertyId={propertyId} />
+
       {/* Collapsible Sections */}
       <CollapsibleSection title="Comparables & Renovation Calculator" icon="📊" isOpen={showComparables} onToggle={() => setShowComparables(!showComparables)} accentColor="blue">
         <Comparables
@@ -482,7 +484,6 @@ export default function PropertyDetail() {
       </CollapsibleSection>
 
       <PhotoGallery propertyId={propertyId} />
-      <NotesSection propertyId={propertyId} />
       {isAdmin && <ActivityTimeline propertyId={propertyId} />}
       {isAdmin && <BuyerMatching propertyId={propertyId} />}
     </div>

@@ -2349,3 +2349,6 @@
 - [x] Removed separate empty-state document upload zone below the form
 - [x] Updated hint text to reflect unified upload capability
 - [x] Updated tests to match new UI
+
+## Move General Notes above Comparables
+- [x] Reorder sections in PropertyDetail so General Notes appears before Comparables
