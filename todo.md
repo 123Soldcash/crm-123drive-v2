@@ -2352,3 +2352,8 @@
 
 ## Move General Notes above Comparables
 - [x] Reorder sections in PropertyDetail so General Notes appears before Comparables
+
+## Remove duplicated info from PropertyDetail header
+- [x] Remove VALUE, EQUITY, BED/BATH, SQFT stats grid from header (already shown in Data Table below)
+- [x] Remove Owner Name, Location badge, Year Built, APN from header tags (already in Data Table)
+- [x] Header now shows: photo, address, action buttons, temperature selector, verified, desk, deep search

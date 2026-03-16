@@ -298,35 +298,6 @@ export function StickyPropertyHeader({
               </div>
             </div>
 
-            {/* Property Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-              <div className="bg-slate-50 rounded-lg p-2.5">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Value</p>
-                <p className="text-sm font-bold text-emerald-600">{formatCurrency(property.estimatedValue)}</p>
-              </div>
-              <div className="bg-slate-50 rounded-lg p-2.5">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Equity</p>
-                <p className="text-sm font-bold text-blue-600">{formatCurrency(property.equity)}</p>
-              </div>
-              <div className="bg-slate-50 rounded-lg p-2.5">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Bed/Bath</p>
-                <p className="text-sm font-bold text-slate-700">{beds}/{baths}</p>
-              </div>
-              <div className="bg-slate-50 rounded-lg p-2.5">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Sqft</p>
-                <p className="text-sm font-bold text-slate-700">{sqft}</p>
-              </div>
-            </div>
-
-            {/* Owner info row */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-3">
-              <span className="font-semibold text-slate-700">{ownerName}</span>
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{location}</Badge>
-              {yearBuilt !== "N/A" && <span>Built {yearBuilt}</span>}
-              <span className="text-slate-300">|</span>
-              <span>APN: <span className="font-mono text-slate-600">{property.apn || "N/A"}</span></span>
-            </div>
-
             {/* Temperature + Controls row */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Temperature selector */}
