@@ -2387,3 +2387,6 @@
 - [x] Auto-generate title from task type (no manual title needed)
 - [x] Updated all views (TaskCard, TasksList, TasksCalendar, PropertyTasks) with fallback display
 - [x] 35 new tests passing for task dialog update
+
+## Bug Fix - Duplicate Icon in Task Type Selector
+- [x] Fix duplicate phone icon showing in Task Type dropdown trigger

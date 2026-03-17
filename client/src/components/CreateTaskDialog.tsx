@@ -159,10 +159,7 @@ export function CreateTaskDialog({
               </Label>
               <Select value={taskType} onValueChange={setTaskType}>
                 <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-11 text-base">
-                  <div className="flex items-center gap-2">
-                    <SelectedIcon className="w-4 h-4 text-gray-500" />
-                    <SelectValue />
-                  </div>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200 max-h-[300px] overflow-y-auto z-[200]">
                   {taskTypes.map((type) => {
