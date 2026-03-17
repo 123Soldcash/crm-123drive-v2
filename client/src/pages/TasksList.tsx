@@ -231,17 +231,16 @@ export function TasksList() {
               <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
+              <SelectContent className="bg-white border-gray-200 max-h-[300px]">
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="Call">Call</SelectItem>
+                <SelectItem value="Text">Text</SelectItem>
                 <SelectItem value="Email">Email</SelectItem>
-                <SelectItem value="Visit">Visit</SelectItem>
-                <SelectItem value="Research">Research</SelectItem>
-                <SelectItem value="Follow-up">Follow-up</SelectItem>
+                <SelectItem value="Meeting">Meeting</SelectItem>
+                <SelectItem value="Site Visit">Site Visit</SelectItem>
+                <SelectItem value="Follow Up">Follow Up</SelectItem>
                 <SelectItem value="Offer">Offer</SelectItem>
-                <SelectItem value="Negotiation">Negotiation</SelectItem>
                 <SelectItem value="Contract">Contract</SelectItem>
-                <SelectItem value="Inspection">Inspection</SelectItem>
                 <SelectItem value="Closing">Closing</SelectItem>
                 <SelectItem value="Sent Letter">Sent Letter</SelectItem>
                 <SelectItem value="Sent Post Card">Sent Post Card</SelectItem>
@@ -355,7 +354,7 @@ export function TasksList() {
                   </td>
                   <td className="px-4 py-3">
                     <div>
-                      <div className="font-medium text-gray-900">{task.title}</div>
+                      <div className="font-medium text-gray-900">{task.title || task.taskType}</div>
                       {task.description && (
                         <div className="text-sm text-gray-500 line-clamp-1">{task.description}</div>
                       )}

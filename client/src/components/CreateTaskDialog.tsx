@@ -28,21 +28,19 @@ interface CreateTaskDialogProps {
 
 const taskTypes = [
   { value: "Call", label: "Call", icon: Phone },
+  { value: "Text", label: "Text", icon: MessageSquare },
   { value: "Email", label: "Email", icon: Mail },
-  { value: "Visit", label: "Visit", icon: Home },
-  { value: "Research", label: "Research", icon: Search },
-  { value: "Follow-up", label: "Follow-up", icon: MessageSquare },
+  { value: "Meeting", label: "Meeting", icon: Handshake },
+  { value: "Site Visit", label: "Site Visit", icon: Home },
+  { value: "Follow Up", label: "Follow Up", icon: MessageSquare },
   { value: "Offer", label: "Offer", icon: Handshake },
-  { value: "Negotiation", label: "Negotiation", icon: Handshake },
   { value: "Contract", label: "Contract", icon: FileCheck },
-  { value: "Inspection", label: "Inspection", icon: ClipboardCheck },
   { value: "Closing", label: "Closing", icon: FileCheck },
   { value: "Sent Letter", label: "Sent Letter", icon: Send },
   { value: "Sent Post Card", label: "Sent Post Card", icon: Image },
   { value: "Skiptrace", label: "Skiptrace", icon: UserSearch },
   { value: "Take Over Lead", label: "Take Over Lead", icon: UserPlus },
   { value: "Drip Campaign", label: "Drip Campaign", icon: Repeat },
-  { value: "Other", label: "Other", icon: FileText },
 ];
 
 export function CreateTaskDialog({
@@ -53,7 +51,6 @@ export function CreateTaskDialog({
   editingTask,
   onSuccess,
 }: CreateTaskDialogProps) {
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [taskType, setTaskType] = useState<string>("Call");
   const [priority, setPriority] = useState<string>("Medium");
@@ -73,7 +70,6 @@ export function CreateTaskDialog({
   useEffect(() => {
     if (open) {
       if (editingTask) {
-        setTitle(editingTask.title || "");
         setDescription(editingTask.description || "");
         setTaskType(editingTask.taskType || "Call");
         setPriority(editingTask.priority || "Medium");
@@ -88,7 +84,6 @@ export function CreateTaskDialog({
   }, [open, editingTask]);
 
   const resetForm = () => {
-    setTitle("");
     setDescription("");
     setTaskType("Call");
     setPriority("Medium");
@@ -102,16 +97,14 @@ export function CreateTaskDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) {
-      toast.error("Task title is required");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
+      // Auto-generate title from task type
+      const autoTitle = taskType;
+
       const taskData = {
-        title: title.trim(),
+        title: autoTitle,
         description: description.trim() || "",
         taskType,
         priority,
@@ -144,9 +137,13 @@ export function CreateTaskDialog({
     }
   };
 
+  // Get the icon for the currently selected task type
+  const selectedType = taskTypes.find(t => t.value === taskType);
+  const SelectedIcon = selectedType?.icon || FileText;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] flex flex-col w-[95vw] sm:w-auto">
+      <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] flex flex-col w-[95vw] sm:w-auto overflow-visible">
         <DialogHeader>
           <DialogTitle className="text-gray-900 text-xl">
             {editingTask ? "Edit Task" : "Create New Task"}
@@ -155,20 +152,32 @@ export function CreateTaskDialog({
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-1">
           <div className="space-y-4 pr-4">
-            {/* Title */}
+            {/* Task Type - Primary field at the top */}
             <div>
-              <Label htmlFor="title" className="text-gray-700">
-                Task Title *
+              <Label htmlFor="taskType" className="text-gray-700 font-semibold">
+                Task Type *
               </Label>
-              <Input
-                id="title"
-                type="text"
-                placeholder="Enter task title..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-                required
-              />
+              <Select value={taskType} onValueChange={setTaskType}>
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-11 text-base">
+                  <div className="flex items-center gap-2">
+                    <SelectedIcon className="w-4 h-4 text-gray-500" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200 max-h-[300px] overflow-y-auto z-[200]">
+                  {taskTypes.map((type) => {
+                    const TypeIcon = type.icon;
+                    return (
+                      <SelectItem key={type.value} value={type.value} className="text-gray-900 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <TypeIcon className="w-4 h-4 text-gray-500" />
+                          <span>{type.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}
@@ -181,30 +190,12 @@ export function CreateTaskDialog({
                 placeholder="Add task details..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="bg-white border-gray-300 text-gray-900 placeholder-gray-400 resize-none h-24"
+                className="bg-white border-gray-300 text-gray-900 placeholder-gray-400 resize-none h-20"
               />
             </div>
 
-            {/* Task Type & Priority */}
+            {/* Priority & Status */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="taskType" className="text-gray-700">
-                  Task Type *
-                </Label>
-                <Select value={taskType} onValueChange={setTaskType}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    {taskTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value} className="text-gray-900">
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div>
                 <Label htmlFor="priority" className="text-gray-700">
                   Priority *
@@ -213,7 +204,7 @@ export function CreateTaskDialog({
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-white border-gray-200 z-[200]">
                     <SelectItem value="High" className="text-gray-900">
                       High Priority
                     </SelectItem>
@@ -226,10 +217,7 @@ export function CreateTaskDialog({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Status & Due Date */}
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="status" className="text-gray-700">
                   Status *
@@ -238,7 +226,7 @@ export function CreateTaskDialog({
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-white border-gray-200 z-[200]">
                     <SelectItem value="To Do" className="text-gray-900">
                       To Do
                     </SelectItem>
@@ -251,7 +239,10 @@ export function CreateTaskDialog({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
+            {/* Due Date & Time */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="dueDate" className="text-gray-700">
                   Due Date
@@ -261,6 +252,19 @@ export function CreateTaskDialog({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  className="bg-white border-gray-300 text-gray-900"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="dueTime" className="text-gray-700">
+                  Time (Optional)
+                </Label>
+                <Input
+                  id="dueTime"
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => setDueTime(e.target.value)}
                   className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
@@ -295,21 +299,8 @@ export function CreateTaskDialog({
               </div>
             </div>
 
-            {/* Time & Repeat */}
+            {/* Repeat & Assign To */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="dueTime" className="text-gray-700">
-                  Time (Optional)
-                </Label>
-                <Input
-                  id="dueTime"
-                  type="time"
-                  value={dueTime}
-                  onChange={(e) => setDueTime(e.target.value)}
-                  className="bg-white border-gray-300 text-gray-900"
-                />
-              </div>
-
               <div>
                 <Label htmlFor="repeat" className="text-gray-700">
                   Repeat
@@ -318,7 +309,7 @@ export function CreateTaskDialog({
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-white border-gray-200 z-[200]">
                     <SelectItem value="No repeat" className="text-gray-900">
                       No repeat
                     </SelectItem>
@@ -334,31 +325,30 @@ export function CreateTaskDialog({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Assign To */}
-            <div>
-              <Label htmlFor="assignedTo" className="text-gray-700">
-                Assign To
-              </Label>
-              {agentsLoading ? (
-                <div className="text-gray-500 text-sm">Loading agents...</div>
-              ) : agents.length === 0 ? (
-                <div className="text-gray-500 text-sm">No agents available</div>
-              ) : (
-                <Select value={assignedTo} onValueChange={setAssignedTo}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="Select agent..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    {agents.map((agent: any) => (
-                      <SelectItem key={agent.id} value={agent.id.toString()} className="text-gray-900">
-                        {agent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <div>
+                <Label htmlFor="assignedTo" className="text-gray-700">
+                  Assign To
+                </Label>
+                {agentsLoading ? (
+                  <div className="text-gray-500 text-sm py-2">Loading agents...</div>
+                ) : agents.length === 0 ? (
+                  <div className="text-gray-500 text-sm py-2">No agents available</div>
+                ) : (
+                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                      <SelectValue placeholder="Select agent..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200 z-[200]">
+                      {agents.map((agent: any) => (
+                        <SelectItem key={agent.id} value={agent.id.toString()} className="text-gray-900">
+                          {agent.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
           </div>
         </form>
@@ -376,7 +366,7 @@ export function CreateTaskDialog({
           <Button
             type="submit"
             onClick={handleSubmit}
-            disabled={isSubmitting || !title.trim()}
+            disabled={isSubmitting}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isSubmitting ? "Saving..." : editingTask ? "Update Task" : "Create Task"}

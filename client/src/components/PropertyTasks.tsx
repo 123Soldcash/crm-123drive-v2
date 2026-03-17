@@ -132,7 +132,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 flex-wrap">
                     <Link href={`/tasks/kanban`}>
                       <h4 className="font-medium text-sm text-slate-900 hover:text-blue-600 cursor-pointer truncate">
-                        {task.title}
+                        {task.title || task.taskType}
                       </h4>
                     </Link>
                     <Badge variant="outline" className={`text-[10px] h-4 px-1.5 font-bold uppercase tracking-wider ${getPriorityColor(task.priority)}`}>

@@ -2378,3 +2378,12 @@
 - [x] Updated TaskCard icons for Kanban view
 - [x] Updated TasksList type filter dropdown with all task types
 - [x] 1135 tests passing, no new failures from our changes
+
+## Improve Create Task Dialog
+- [x] Remove Title field from Create Task dialog
+- [x] Move Task Type to the top as the primary field
+- [x] Fix dropdown overflow/cutoff issue in the modal
+- [x] Added new task types: Text, Meeting, Site Visit, Follow Up (replacing legacy Visit, Research, Follow-up, Negotiation, Inspection)
+- [x] Auto-generate title from task type (no manual title needed)
+- [x] Updated all views (TaskCard, TasksList, TasksCalendar, PropertyTasks) with fallback display
+- [x] 35 new tests passing for task dialog update

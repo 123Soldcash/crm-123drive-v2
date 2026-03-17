@@ -28,20 +28,25 @@ interface TaskCardProps {
 
 const taskTypeIcons: Record<string, any> = {
   Call: Phone,
+  Text: MessageSquare,
   Email: Mail,
-  Visit: Home,
-  Research: Search,
-  "Follow-up": MessageSquare,
+  Meeting: Handshake,
+  "Site Visit": Home,
+  "Follow Up": MessageSquare,
   Offer: Handshake,
-  Negotiation: Handshake,
   Contract: FileCheck,
-  Inspection: ClipboardCheck,
   Closing: FileCheck,
   "Sent Letter": Send,
   "Sent Post Card": Image,
   Skiptrace: UserSearch,
   "Take Over Lead": UserPlus,
   "Drip Campaign": Repeat,
+  // Legacy types (backward compat)
+  Visit: Home,
+  Research: Search,
+  "Follow-up": MessageSquare,
+  Negotiation: Handshake,
+  Inspection: ClipboardCheck,
   Other: FileText,
 };
 
@@ -88,7 +93,7 @@ export function TaskCard({ task }: TaskCardProps) {
       </div>
 
       {/* Task Title */}
-      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{task.title}</h3>
+      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{task.title || task.taskType}</h3>
 
       {/* Task Description */}
       {task.description && (

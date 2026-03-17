@@ -2551,7 +2551,7 @@ export const appRouter = router({
         z.object({
           title: z.string().optional(),
           description: z.string().optional(),
-          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Other"]),
+          taskType: z.enum(["Call", "Text", "Email", "Meeting", "Site Visit", "Follow Up", "Offer", "Contract", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Visit", "Research", "Follow-up", "Negotiation", "Inspection", "Other"]),
           priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
           status: z.enum(["To Do", "In Progress", "Done"]).default("To Do"),
           assignedToId: z.number().optional(),
@@ -2563,12 +2563,10 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        // Title is optional, but we need at least a type or description
-        if (!input.title && !input.description) {
-          throw new Error('Either title or description is required');
-        }
+        // Auto-generate title from taskType if not provided
+        const autoTitle = input.title || input.taskType;
         const taskData: any = {
-          title: input.title,
+          title: autoTitle,
           description: input.description,
           taskType: input.taskType,
           priority: input.priority,
@@ -2589,7 +2587,7 @@ export const appRouter = router({
           taskId: z.number(),
           title: z.string().optional(),
           description: z.string().optional(),
-          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Other"]).optional(),
+          taskType: z.enum(["Call", "Text", "Email", "Meeting", "Site Visit", "Follow Up", "Offer", "Contract", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Visit", "Research", "Follow-up", "Negotiation", "Inspection", "Other"]).optional(),
           priority: z.enum(["High", "Medium", "Low"]).optional(),
           status: z.enum(["To Do", "In Progress", "Done"]).optional(),
           dueTime: z.string().optional(),
