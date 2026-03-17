@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plus, X, Tag } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -110,19 +109,6 @@ export function LeadSourceSelector({ propertyId, currentLeadSource }: LeadSource
           )}
         </SelectContent>
       </Select>
-
-      {currentLeadSource && (
-        <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border border-blue-200 gap-1">
-          {currentLeadSource}
-          <button
-            onClick={() => setSource.mutate({ propertyId, leadSource: null })}
-            className="hover:text-red-500 transition-colors"
-            title="Clear lead source"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
-      )}
 
       <Button
         variant="ghost"

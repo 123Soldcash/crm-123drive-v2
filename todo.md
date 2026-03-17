@@ -2411,3 +2411,7 @@
 - [x] Card should show number of properties with deskName = NEW_LEAD
 - [x] Clicking the card navigates to Properties page filtered by New Lead desk
 - [x] 9 tests passing for dashboard new lead card
+
+## Remove Lateral Tag Badges from Lead Source / Campaign Selects
+- [x] Remove the tag badges that appear next to Lead Source and Campaign selects on Properties page
+- [x] Keep only the select dropdown with selected value displayed
