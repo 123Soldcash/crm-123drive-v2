@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, User, Phone, Mail, Home, Search, FileText, MessageSquare, Handshake, FileCheck, ClipboardCheck, MoreHorizontal } from "lucide-react";
+import { Calendar, MapPin, User, Phone, Mail, Home, Search, FileText, MessageSquare, Handshake, FileCheck, ClipboardCheck, MoreHorizontal, Send, Image, UserSearch, UserPlus, Repeat } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 
@@ -36,6 +36,12 @@ const taskTypeIcons: Record<string, any> = {
   Negotiation: Handshake,
   Contract: FileCheck,
   Inspection: ClipboardCheck,
+  Closing: FileCheck,
+  "Sent Letter": Send,
+  "Sent Post Card": Image,
+  Skiptrace: UserSearch,
+  "Take Over Lead": UserPlus,
+  "Drip Campaign": Repeat,
   Other: FileText,
 };
 

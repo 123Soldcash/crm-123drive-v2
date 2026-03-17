@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` MODIFY COLUMN `taskType` enum('Call','Email','Visit','Research','Follow-up','Offer','Negotiation','Contract','Inspection','Closing','Sent Letter','Sent Post Card','Skiptrace','Take Over Lead','Drip Campaign','Other') NOT NULL;

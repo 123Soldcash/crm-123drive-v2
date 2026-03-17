@@ -759,6 +759,11 @@ export const tasks = mysqlTable("tasks", {
     "Contract",
     "Inspection",
     "Closing",
+    "Sent Letter",
+    "Sent Post Card",
+    "Skiptrace",
+    "Take Over Lead",
+    "Drip Campaign",
     "Other"
   ]).notNull(),
   

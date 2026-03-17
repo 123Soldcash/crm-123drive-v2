@@ -239,6 +239,16 @@ export function TasksList() {
                 <SelectItem value="Research">Research</SelectItem>
                 <SelectItem value="Follow-up">Follow-up</SelectItem>
                 <SelectItem value="Offer">Offer</SelectItem>
+                <SelectItem value="Negotiation">Negotiation</SelectItem>
+                <SelectItem value="Contract">Contract</SelectItem>
+                <SelectItem value="Inspection">Inspection</SelectItem>
+                <SelectItem value="Closing">Closing</SelectItem>
+                <SelectItem value="Sent Letter">Sent Letter</SelectItem>
+                <SelectItem value="Sent Post Card">Sent Post Card</SelectItem>
+                <SelectItem value="Skiptrace">Skiptrace</SelectItem>
+                <SelectItem value="Take Over Lead">Take Over Lead</SelectItem>
+                <SelectItem value="Drip Campaign">Drip Campaign</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
 

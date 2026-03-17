@@ -176,6 +176,13 @@
       "when": 1773091554622,
       "tag": "0024_milky_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1773778421608,
+      "tag": "0025_remarkable_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

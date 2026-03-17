@@ -2551,7 +2551,7 @@ export const appRouter = router({
         z.object({
           title: z.string().optional(),
           description: z.string().optional(),
-          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Other"]),
+          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Other"]),
           priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
           status: z.enum(["To Do", "In Progress", "Done"]).default("To Do"),
           assignedToId: z.number().optional(),
@@ -2589,7 +2589,7 @@ export const appRouter = router({
           taskId: z.number(),
           title: z.string().optional(),
           description: z.string().optional(),
-          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Other"]).optional(),
+          taskType: z.enum(["Call", "Email", "Visit", "Research", "Follow-up", "Offer", "Negotiation", "Contract", "Inspection", "Closing", "Sent Letter", "Sent Post Card", "Skiptrace", "Take Over Lead", "Drip Campaign", "Other"]).optional(),
           priority: z.enum(["High", "Medium", "Low"]).optional(),
           status: z.enum(["To Do", "In Progress", "Done"]).optional(),
           dueTime: z.string().optional(),

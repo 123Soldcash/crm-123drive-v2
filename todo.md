@@ -2369,3 +2369,12 @@
 - [x] Reorder sections: Contacts (static top), 1. General Notes, 2. Comparables, 3. Deep Search, 4. Field Visit, 5. Property Photos, 6. Activity Timeline, 7. Potential Cash Buyers
 - [x] Verified in browser: all sections in correct order
 - [x] Mobile responsive: grid stacks on small screens, collapsible sections work
+
+## Add new Task Types
+- [x] Add Sent Letter, Sent Post Card, Skiptrace, Take Over Lead, Drip Campaign to task types
+- [x] Updated schema enum in drizzle/schema.ts and ran migration
+- [x] Updated Zod validation enums in routers.ts (create + update procedures)
+- [x] Updated CreateTaskDialog with new types and icons (Send, Image, UserSearch, UserPlus, Repeat)
+- [x] Updated TaskCard icons for Kanban view
+- [x] Updated TasksList type filter dropdown with all task types
+- [x] 1135 tests passing, no new failures from our changes

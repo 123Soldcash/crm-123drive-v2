@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone, Mail, Home, Search, MessageSquare, Handshake, FileCheck, ClipboardCheck, FileText } from "lucide-react";
+import { Phone, Mail, Home, Search, MessageSquare, Handshake, FileCheck, ClipboardCheck, FileText, Send, Image, UserSearch, UserPlus, Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateTaskDialogProps {
@@ -37,6 +37,11 @@ const taskTypes = [
   { value: "Contract", label: "Contract", icon: FileCheck },
   { value: "Inspection", label: "Inspection", icon: ClipboardCheck },
   { value: "Closing", label: "Closing", icon: FileCheck },
+  { value: "Sent Letter", label: "Sent Letter", icon: Send },
+  { value: "Sent Post Card", label: "Sent Post Card", icon: Image },
+  { value: "Skiptrace", label: "Skiptrace", icon: UserSearch },
+  { value: "Take Over Lead", label: "Take Over Lead", icon: UserPlus },
+  { value: "Drip Campaign", label: "Drip Campaign", icon: Repeat },
   { value: "Other", label: "Other", icon: FileText },
 ];
 
