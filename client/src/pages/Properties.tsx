@@ -81,7 +81,40 @@ interface FilterState {
   campaignName: string;
 }
 
-const DESK_OPTIONS = ["BIN", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "ARCHIVED"];
+const DESK_OPTIONS = ["NEW_LEAD", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "BIN", "ARCHIVED"];
+
+// Helper to get desk display label
+const getDeskLabel = (desk: string) => {
+  const labels: Record<string, string> = {
+    NEW_LEAD: "🆕 New Lead",
+    DESK_CHRIS: "🏀 Chris",
+    DESK_DEEP_SEARCH: "🔍 Deep Search",
+    DESK_1: "🟦 Manager",
+    DESK_2: "🟩 Edsel",
+    DESK_3: "🟧 Zach",
+    DESK_4: "🔵 Rodolfo",
+    DESK_5: "🟨 Lucas",
+    BIN: "🗑️ BIN",
+    ARCHIVED: "⬛ Archived",
+  };
+  return labels[desk] || desk;
+};
+
+const getDeskColor = (desk: string | null | undefined) => {
+  const colors: Record<string, string> = {
+    NEW_LEAD: "bg-green-200 text-green-800",
+    DESK_CHRIS: "bg-orange-200 text-orange-800",
+    DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800",
+    DESK_1: "bg-sky-200 text-sky-800",
+    DESK_2: "bg-emerald-200 text-emerald-800",
+    DESK_3: "bg-pink-200 text-pink-800",
+    DESK_4: "bg-blue-600 text-white",
+    DESK_5: "bg-amber-200 text-amber-800",
+    BIN: "bg-gray-200 text-gray-700",
+    ARCHIVED: "bg-gray-800 text-white",
+  };
+  return colors[desk || ""] || "bg-gray-200 text-gray-700";
+};
 
 export default function Properties() {
   const { user } = useAuth();
@@ -645,23 +678,11 @@ export default function Properties() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Desks</SelectItem>
-                {DESK_OPTIONS.map((desk) => {
-                  const deskEmoji = 
-                    desk === "BIN" ? "🗑️" :
-                    desk === "DESK_CHRIS" ? "👤" :
-                    desk === "DESK_DEEP_SEARCH" ? "🔍" :
-                    desk === "DESK_1" ? "📋" :
-                    desk === "DESK_2" ? "📋" :
-                    desk === "DESK_3" ? "📋" :
-                    desk === "DESK_4" ? "📋" :
-                    desk === "DESK_5" ? "📋" :
-                    desk === "ARCHIVED" ? "✅" : "";
-                  return (
-                    <SelectItem key={desk} value={desk}>
-                      {deskEmoji} {desk}
-                    </SelectItem>
-                  );
-                })}
+                {DESK_OPTIONS.map((desk) => (
+                  <SelectItem key={desk} value={desk}>
+                    {getDeskLabel(desk)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -954,22 +975,9 @@ export default function Properties() {
                               {stageConfig.icon} {stageConfig.shortLabel}
                             </Badge>
                           )}
-                          {property.deskName && property.deskName !== 'BIN' && (
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                              property.deskName === 'DESK_CHRIS' ? 'bg-orange-100 text-orange-800' :
-                              property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-100 text-purple-800' :
-                              property.deskName === 'DESK_1' ? 'bg-sky-100 text-sky-800' :
-                              property.deskName === 'DESK_2' ? 'bg-emerald-100 text-emerald-800' :
-                              property.deskName === 'DESK_3' ? 'bg-pink-100 text-pink-800' :
-                              property.deskName === 'DESK_4' ? 'bg-blue-600 text-white' :
-                              property.deskName === 'DESK_5' ? 'bg-amber-100 text-amber-800' :
-                              property.deskName === 'ARCHIVED' ? 'bg-gray-800 text-white' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {property.deskName === 'DESK_CHRIS' ? '👤 Chris' :
-                               property.deskName === 'DESK_DEEP_SEARCH' ? '🔍 Deep Search' :
-                               property.deskName === 'ARCHIVED' ? '✅ Archived' :
-                               `📋 ${property.deskName.replace('DESK_', '')}`}
+                          {property.deskName && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getDeskColor(property.deskName)}`}>
+                              {getDeskLabel(property.deskName)}
                             </span>
                           )}
                         </div>
@@ -1147,24 +1155,9 @@ export default function Properties() {
                           setSelectedPropertyForDesk(property);
                           setDeskDialogOpen(true);
                         }}
-                        className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${
-                          !property.deskName || property.deskName === 'BIN' ? 'bg-gray-200 text-gray-700' :
-                          property.deskName === 'DESK_CHRIS' ? 'bg-orange-200 text-orange-800' :
-                          property.deskName === 'DESK_DEEP_SEARCH' ? 'bg-purple-200 text-purple-800' :
-                          property.deskName === 'DESK_1' ? 'bg-sky-200 text-sky-800' :
-                          property.deskName === 'DESK_2' ? 'bg-emerald-200 text-emerald-800' :
-                          property.deskName === 'DESK_3' ? 'bg-pink-200 text-pink-800' :
-                          property.deskName === 'DESK_4' ? 'bg-blue-600 text-white' :
-                          property.deskName === 'DESK_5' ? 'bg-amber-200 text-amber-800' :
-                          property.deskName === 'ARCHIVED' ? 'bg-gray-800 text-white' :
-                          'bg-gray-200 text-gray-700'
-                        }`}
+                        className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${getDeskColor(property.deskName)}`}
                       >
-                        {!property.deskName || property.deskName === 'BIN' ? '🗑️ BIN' :
-                         property.deskName === 'DESK_CHRIS' ? '👤 Chris' :
-                         property.deskName === 'DESK_DEEP_SEARCH' ? '🔍 Deep Search' :
-                         property.deskName === 'ARCHIVED' ? '✅ Archived' :
-                         `📋 ${property.deskName.replace('DESK_', '')}`}
+                        {getDeskLabel(property.deskName || 'NEW_LEAD')}
                       </button>
                     </TableCell>
                   )}

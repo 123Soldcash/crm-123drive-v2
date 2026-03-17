@@ -122,10 +122,16 @@ export default function BulkAgentAssignment() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All desks</SelectItem>
-                  <SelectItem value="DESK_CHRIS">Desk Chris</SelectItem>
-                  <SelectItem value="DESK_1-5">Desk 1-5</SelectItem>
-                  <SelectItem value="BIN">BIN</SelectItem>
-                  <SelectItem value="ARCHIVED">ARCHIVED</SelectItem>
+                  <SelectItem value="NEW_LEAD">🆕 New Lead</SelectItem>
+                  <SelectItem value="DESK_CHRIS">🏀 Chris</SelectItem>
+                  <SelectItem value="DESK_DEEP_SEARCH">🔍 Deep Search</SelectItem>
+                  <SelectItem value="DESK_1">🟦 Manager</SelectItem>
+                  <SelectItem value="DESK_2">🟩 Edsel</SelectItem>
+                  <SelectItem value="DESK_3">🟧 Zach</SelectItem>
+                  <SelectItem value="DESK_4">🔵 Rodolfo</SelectItem>
+                  <SelectItem value="DESK_5">🟨 Lucas</SelectItem>
+                  <SelectItem value="BIN">🗑️ BIN</SelectItem>
+                  <SelectItem value="ARCHIVED">⬛ Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>

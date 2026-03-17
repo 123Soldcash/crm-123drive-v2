@@ -2393,3 +2393,15 @@
 
 ## Quick Date Presets - Add Today
 - [x] Add "Today" button to Quick Date Presets in Create Task dialog
+
+## Desk Names Update + NEW LEAD Default
+- [x] Rename DESK_1 to MANAGER
+- [x] Rename DESK_2 to EDSEL
+- [x] Rename DESK_3 to ZACH
+- [x] Rename DESK_4 to RODOLFO
+- [x] Rename DESK_5 to LUCAS
+- [x] Add NEW LEAD desk as default for all new leads
+- [x] Set NEW LEAD as default on manual property creation
+- [x] Set NEW LEAD as default on webhook/Zapier property creation (routers.ts + _core/index.ts Step 1)
+- [x] Update all frontend references (DeskDialog, StickyPropertyHeader, Properties, BulkAgentAssignment)
+- [x] 29 tests passing for desk update

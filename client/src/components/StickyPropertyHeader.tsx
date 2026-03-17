@@ -26,14 +26,15 @@ import { PropertyImage } from "@/components/PropertyImage";
 
 // Desk options with colors
 const DESK_OPTIONS = [
-  { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
+  { value: "NEW_LEAD", label: "🆕 New Lead", color: "bg-green-200 text-green-800 border-green-300" },
   { value: "DESK_CHRIS", label: "🏀 Chris", color: "bg-orange-200 text-orange-800 border-orange-300" },
   { value: "DESK_DEEP_SEARCH", label: "🔍 Deep Search", color: "bg-purple-200 text-purple-800 border-purple-300" },
-  { value: "DESK_1", label: "🟦 Desk 1", color: "bg-sky-200 text-sky-800 border-sky-300" },
-  { value: "DESK_2", label: "🟩 Desk 2", color: "bg-emerald-200 text-emerald-800 border-emerald-300" },
-  { value: "DESK_3", label: "🟧 Desk 3", color: "bg-pink-200 text-pink-800 border-pink-300" },
-  { value: "DESK_4", label: "🔵 Desk 4", color: "bg-blue-600 text-white border-blue-700" },
-  { value: "DESK_5", label: "🟨 Desk 5", color: "bg-amber-200 text-amber-800 border-amber-300" },
+  { value: "DESK_1", label: "🟦 Manager", color: "bg-sky-200 text-sky-800 border-sky-300" },
+  { value: "DESK_2", label: "🟩 Edsel", color: "bg-emerald-200 text-emerald-800 border-emerald-300" },
+  { value: "DESK_3", label: "🟧 Zach", color: "bg-pink-200 text-pink-800 border-pink-300" },
+  { value: "DESK_4", label: "🔵 Rodolfo", color: "bg-blue-600 text-white border-blue-700" },
+  { value: "DESK_5", label: "🟨 Lucas", color: "bg-amber-200 text-amber-800 border-amber-300" },
+  { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
   { value: "ARCHIVED", label: "⬛ Archived", color: "bg-gray-800 text-white border-gray-900" },
 ];
 

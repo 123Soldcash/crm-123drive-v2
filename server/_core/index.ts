@@ -202,7 +202,7 @@ async function startServer() {
         trackingStatus: "Not Visited",
         leadTemperature: "TBD",
         leadSource: "Website",
-        deskName: "BIN",
+        deskName: "NEW_LEAD",
         deskStatus: "BIN",
         status: "Website Lead - Step 1",
       });
