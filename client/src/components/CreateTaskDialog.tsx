@@ -272,6 +272,7 @@ export function CreateTaskDialog({
               <Label className="text-gray-700">Quick Date Presets</Label>
               <div className="flex gap-2 flex-wrap">
                 {[
+                  { label: "Today", days: 0 },
                   { label: "Tomorrow", days: 1 },
                   { label: "1 Week", days: 7 },
                   { label: "1 Month", days: 30 },

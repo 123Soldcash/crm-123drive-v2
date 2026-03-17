@@ -2390,3 +2390,6 @@
 
 ## Bug Fix - Duplicate Icon in Task Type Selector
 - [x] Fix duplicate phone icon showing in Task Type dropdown trigger
+
+## Quick Date Presets - Add Today
+- [x] Add "Today" button to Quick Date Presets in Create Task dialog
