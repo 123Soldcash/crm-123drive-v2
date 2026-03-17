@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Flame, ThermometerSun, Snowflake, Check, MapPin } from "lucide-react";
+import { Building2, Flame, ThermometerSun, Snowflake, Check, MapPin, UserPlus } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CallMetricsDashboard } from "@/components/CallMetricsDashboard";
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>("all");
   const [stats, setStats] = useState({
     total: 0,
+    newLeads: 0,
     superHot: 0,
     hot: 0,
     warm: 0,
@@ -40,6 +41,7 @@ export default function Dashboard() {
     if (dashboardStats) {
       setStats({
         total: dashboardStats.total || 0,
+        newLeads: dashboardStats.newLeads || 0,
         superHot: dashboardStats.superHot || 0,
         hot: dashboardStats.hot || 0,
         warm: dashboardStats.warm || 0,
@@ -87,8 +89,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Total Properties Card */}
-      <div className="grid gap-4 md:grid-cols-1">
+      {/* Total Properties + New Leads Cards */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
@@ -101,6 +103,21 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground">Properties in database</p>
           </CardContent>
         </Card>
+
+        <Link href="/properties?desk=NEW_LEAD">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-800 dark:text-green-400">New Leads</CardTitle>
+              <UserPlus className="h-5 w-5 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-700 dark:text-green-400">
+                {statsLoading ? "..." : stats.newLeads}
+              </div>
+              <p className="text-xs text-green-600/70 dark:text-green-500/70 mt-1">Click to view all new leads</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Lead Temperature Cards */}

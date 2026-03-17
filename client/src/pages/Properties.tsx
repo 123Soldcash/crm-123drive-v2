@@ -133,7 +133,7 @@ export default function Properties() {
       ownerVerified: params.get('ownerVerified') === 'true',
       visited: params.get('visited') === 'true',
       assignedAgentId: null,
-      deskName: "",
+      deskName: params.get('desk') || "",
       dealStage: "",
       tag: params.get('tag') || "",
       leadSource: "",

@@ -2405,3 +2405,9 @@
 - [x] Set NEW LEAD as default on webhook/Zapier property creation (routers.ts + _core/index.ts Step 1)
 - [x] Update all frontend references (DeskDialog, StickyPropertyHeader, Properties, BulkAgentAssignment)
 - [x] 29 tests passing for desk update
+
+## Dashboard - New Lead Count Card
+- [x] Add New Lead count card next to Total Properties on Dashboard
+- [x] Card should show number of properties with deskName = NEW_LEAD
+- [x] Clicking the card navigates to Properties page filtered by New Lead desk
+- [x] 9 tests passing for dashboard new lead card
