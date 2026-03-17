@@ -87,6 +87,7 @@ const DESK_OPTIONS = ["NEW_LEAD", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "D
 const getDeskLabel = (desk: string) => {
   const labels: Record<string, string> = {
     NEW_LEAD: "🆕 New Lead",
+    NOT_ASSIGNED: "⚪ Not Assigned",
     DESK_CHRIS: "🏀 Chris",
     DESK_DEEP_SEARCH: "🔍 Deep Search",
     DESK_1: "🟦 Manager",
@@ -103,6 +104,7 @@ const getDeskLabel = (desk: string) => {
 const getDeskColor = (desk: string | null | undefined) => {
   const colors: Record<string, string> = {
     NEW_LEAD: "bg-green-200 text-green-800",
+    NOT_ASSIGNED: "bg-gray-100 text-gray-500",
     DESK_CHRIS: "bg-orange-200 text-orange-800",
     DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800",
     DESK_1: "bg-sky-200 text-sky-800",
@@ -1157,7 +1159,7 @@ export default function Properties() {
                         }}
                         className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${getDeskColor(property.deskName)}`}
                       >
-                        {getDeskLabel(property.deskName || 'NEW_LEAD')}
+                        {getDeskLabel(property.deskName || 'NOT_ASSIGNED')}
                       </button>
                     </TableCell>
                   )}

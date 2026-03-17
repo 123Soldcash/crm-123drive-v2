@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, propertyId, addressLine1, deskName, deskStatus, leadTemperature, source FROM properties WHERE propertyId = '2130557' OR id = 2130557 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, propertyId, addressLine1, deskName, deskStatus, leadTemperature, source FROM properties WHERE propertyId = '2130557' OR id = 2130557 LIMIT 5;",
+  "rows": [
+    {
+      "id": "2130557",
+      "propertyId": "682e39ea12f9ee028fbe2606",
+      "addressLine1": "109 Briarwood Cir # 2-2",
+      "deskName": "NULL",
+      "deskStatus": "BIN",
+      "leadTemperature": "WARM",
+      "source": "CSV"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpropertyId\taddressLine1\tdeskName\tdeskStatus\tleadTemperature\tsource\n2130557\t682e39ea12f9ee028fbe2606\t109 Briarwood Cir # 2-2\tNULL\tBIN\tWARM\tCSV\n",
+  "stderr": "",
+  "execution_time_ms": 72
+}

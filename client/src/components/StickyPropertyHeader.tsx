@@ -25,6 +25,7 @@ import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 import { PropertyImage } from "@/components/PropertyImage";
 
 // Desk options with colors
+const NOT_ASSIGNED_DESK = { value: "NOT_ASSIGNED", label: "⚪ Not Assigned", color: "bg-gray-100 text-gray-500 border-gray-300" };
 const DESK_OPTIONS = [
   { value: "NEW_LEAD", label: "🆕 New Lead", color: "bg-green-200 text-green-800 border-green-300" },
   { value: "DESK_CHRIS", label: "🏀 Chris", color: "bg-orange-200 text-orange-800 border-orange-300" },
@@ -78,7 +79,7 @@ export function StickyPropertyHeader({
   const [deskDropdownPos, setDeskDropdownPos] = useState({ top: 0, left: 0 });
   const deskButtonRef = useRef<HTMLButtonElement>(null);
 
-  const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || DESK_OPTIONS[0];
+  const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || NOT_ASSIGNED_DESK;
 
   const openDeskDropdown = useCallback(() => {
     if (deskButtonRef.current) {

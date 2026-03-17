@@ -2431,3 +2431,10 @@
 - [x] Fixed DealMachine import — was missing deskName: NEW_LEAD
 - [x] Fixed CSV/Bulk import — was missing deskName: NEW_LEAD
 - [x] All 38 related tests passing
+
+## Bug Fix - NULL deskName showing as "New Lead" in UI
+- [x] Fix StickyPropertyHeader: NULL deskName falls back to NOT_ASSIGNED_DESK instead of DESK_OPTIONS[0]
+- [x] Fix Properties page: table view now shows "Not Assigned" for NULL deskName
+- [x] Add "Not Assigned" option to getDeskLabel and getDeskColor
+- [x] Ensure only explicitly set NEW_LEAD counts in Dashboard (confirmed working)
+- [x] 38 tests passing
