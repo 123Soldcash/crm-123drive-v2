@@ -1,0 +1,40 @@
+{
+  "query": "SELECT deskName, deskStatus, COUNT(*) as cnt FROM properties GROUP BY deskName, deskStatus ORDER BY cnt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT deskName, deskStatus, COUNT(*) as cnt FROM properties GROUP BY deskName, deskStatus ORDER BY cnt DESC LIMIT 20;",
+  "rows": [
+    {
+      "deskName": "NULL",
+      "deskStatus": "BIN",
+      "cnt": "726"
+    },
+    {
+      "deskName": "DESK_3",
+      "deskStatus": "ACTIVE",
+      "cnt": "109"
+    },
+    {
+      "deskName": "DESK_CHRIS",
+      "deskStatus": "ACTIVE",
+      "cnt": "31"
+    },
+    {
+      "deskName": "ARCHIVED",
+      "deskStatus": "ARCHIVED",
+      "cnt": "14"
+    },
+    {
+      "deskName": "BIN",
+      "deskStatus": "BIN",
+      "cnt": "10"
+    },
+    {
+      "deskName": "Desk_Deep_Search",
+      "deskStatus": "ACTIVE",
+      "cnt": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "deskName\tdeskStatus\tcnt\nNULL\tBIN\t726\nDESK_3\tACTIVE\t109\nDESK_CHRIS\tACTIVE\t31\nARCHIVED\tARCHIVED\t14\nBIN\tBIN\t10\nDesk_Deep_Search\tACTIVE\t10\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

@@ -60,6 +60,7 @@ export async function importDealMachineProperty(
       owner1Name: mappedProperty.ownerName || null,
       assignedAgentId: assignedAgentId || null,
       leadTemperature: "TBD",
+      deskName: "NEW_LEAD",
       deskStatus: "BIN",
       source: "DealMachine",
       listName: listName || null,

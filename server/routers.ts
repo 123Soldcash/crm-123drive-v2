@@ -1979,6 +1979,8 @@ export const appRouter = router({
               dealMachineLeadId: property.dealMachineLeadId,
               dealMachineRawData: property.dealMachineRawData,
               assignedAgentId: input.assignedAgentId,
+              deskName: "NEW_LEAD",
+              deskStatus: "BIN",
             };
             
             // Insert property

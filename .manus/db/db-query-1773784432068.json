@@ -1,0 +1,34 @@
+{
+  "query": "SELECT deskName, COUNT(*) as cnt FROM properties GROUP BY deskName ORDER BY cnt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT deskName, COUNT(*) as cnt FROM properties GROUP BY deskName ORDER BY cnt DESC LIMIT 20;",
+  "rows": [
+    {
+      "deskName": "NULL",
+      "cnt": "726"
+    },
+    {
+      "deskName": "DESK_3",
+      "cnt": "109"
+    },
+    {
+      "deskName": "DESK_CHRIS",
+      "cnt": "31"
+    },
+    {
+      "deskName": "ARCHIVED",
+      "cnt": "14"
+    },
+    {
+      "deskName": "BIN",
+      "cnt": "10"
+    },
+    {
+      "deskName": "Desk_Deep_Search",
+      "cnt": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "deskName\tcnt\nNULL\t726\nDESK_3\t109\nDESK_CHRIS\t31\nARCHIVED\t14\nBIN\t10\nDesk_Deep_Search\t10\n",
+  "stderr": "",
+  "execution_time_ms": 121
+}

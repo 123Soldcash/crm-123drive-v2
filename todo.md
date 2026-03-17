@@ -2423,3 +2423,11 @@
 - [x] Updated ContactManagement component (full contact cards view)
 - [x] Updated ContactsSection component (compact contact list view)
 - [x] 11 tests passing for duplicate detection logic
+
+## Bug Fix - New Leads Dashboard Count Not Working
+- [x] Fix New Leads count on Dashboard to properly count properties with deskName='NEW_LEAD'
+- [x] Revert any retroactive desk changes — confirmed NO retroactive changes were made
+- [x] Verify the query is correct and returns accurate count
+- [x] Fixed DealMachine import — was missing deskName: NEW_LEAD
+- [x] Fixed CSV/Bulk import — was missing deskName: NEW_LEAD
+- [x] All 38 related tests passing
