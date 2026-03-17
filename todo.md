@@ -2415,3 +2415,11 @@
 ## Remove Lateral Tag Badges from Lead Source / Campaign Selects
 - [x] Remove the tag badges that appear next to Lead Source and Campaign selects on Properties page
 - [x] Keep only the select dropdown with selected value displayed
+
+## Highlight Duplicate Emails and Phones in Contacts
+- [x] Detect duplicate emails across contacts within a property
+- [x] Detect duplicate phone numbers across contacts within a property
+- [x] Visually highlight duplicates with amber/yellow color + "Duplicate" badge (not delete)
+- [x] Updated ContactManagement component (full contact cards view)
+- [x] Updated ContactsSection component (compact contact list view)
+- [x] 11 tests passing for duplicate detection logic

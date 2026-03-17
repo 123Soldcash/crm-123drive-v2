@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,6 +96,33 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
     { propertyId },
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
+
+  // Detect duplicate phones and emails across all contacts in this property
+  const { duplicatePhones, duplicateEmails } = useMemo(() => {
+    const phoneCount: Record<string, number> = {};
+    const emailCount: Record<string, number> = {};
+    if (contacts) {
+      for (const c of contacts as any[]) {
+        if (c.phones) {
+          for (const p of c.phones as any[]) {
+            const normalized = (p.phoneNumber || "").replace(/\D/g, "");
+            if (normalized) phoneCount[normalized] = (phoneCount[normalized] || 0) + 1;
+          }
+        }
+        if (c.emails) {
+          for (const e of c.emails as any[]) {
+            const normalized = (e.email || "").trim().toLowerCase();
+            if (normalized) emailCount[normalized] = (emailCount[normalized] || 0) + 1;
+          }
+        }
+      }
+    }
+    const dupPhones = new Set<string>();
+    const dupEmails = new Set<string>();
+    Object.entries(phoneCount).forEach(([k, v]) => { if (v > 1) dupPhones.add(k); });
+    Object.entries(emailCount).forEach(([k, v]) => { if (v > 1) dupEmails.add(k); });
+    return { duplicatePhones: dupPhones, duplicateEmails: dupEmails };
+  }, [contacts]);
 
   // Mutations
   const createContactMutation = trpc.communication.createContact.useMutation({
@@ -371,45 +398,55 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                       </div>
 
                       <div className="mt-2 space-y-1 text-sm">
-                        {primaryPhone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            <span className={hiddenPhones.has(primaryPhone.phoneNumber) ? "blur-sm" : ""}>
-                              {primaryPhone.phoneNumber}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                togglePhoneVisibility(primaryPhone.phoneNumber);
-                              }}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              {hiddenPhones.has(primaryPhone.phoneNumber) ? (
-                                <Eye className="w-4 h-4" />
-                              ) : (
-                                <EyeOff className="w-4 h-4" />
-                              )}
-                            </button>
-                            <TwilioBrowserCallButton
-                              phoneNumber={primaryPhone.phoneNumber}
-                              contactName={contact.name}
-                              contactId={contact.id}
-                              propertyId={propertyId}
-                            />
-                            <SMSChatButton
-                              phoneNumber={primaryPhone.phoneNumber}
-                              contactName={contact.name}
-                              contactId={contact.id}
-                              propertyId={propertyId}
-                            />
-                          </div>
-                        )}
-                        {primaryEmail && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            <span>{primaryEmail.email}</span>
-                          </div>
-                        )}
+                        {primaryPhone && (() => {
+                          const normalizedPhone = (primaryPhone.phoneNumber || "").replace(/\D/g, "");
+                          const isPhoneDup = duplicatePhones.has(normalizedPhone);
+                          return (
+                            <div className={`flex items-center gap-2 ${isPhoneDup ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
+                              <Phone className={`w-4 h-4 ${isPhoneDup ? 'text-amber-600' : ''}`} />
+                              <span className={`${hiddenPhones.has(primaryPhone.phoneNumber) ? 'blur-sm' : ''} ${isPhoneDup ? 'text-amber-800 font-medium' : ''}`}>
+                                {primaryPhone.phoneNumber}
+                              </span>
+                              {isPhoneDup && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePhoneVisibility(primaryPhone.phoneNumber);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                {hiddenPhones.has(primaryPhone.phoneNumber) ? (
+                                  <Eye className="w-4 h-4" />
+                                ) : (
+                                  <EyeOff className="w-4 h-4" />
+                                )}
+                              </button>
+                              <TwilioBrowserCallButton
+                                phoneNumber={primaryPhone.phoneNumber}
+                                contactName={contact.name}
+                                contactId={contact.id}
+                                propertyId={propertyId}
+                              />
+                              <SMSChatButton
+                                phoneNumber={primaryPhone.phoneNumber}
+                                contactName={contact.name}
+                                contactId={contact.id}
+                                propertyId={propertyId}
+                              />
+                            </div>
+                          );
+                        })()}
+                        {primaryEmail && (() => {
+                          const normalizedEmail = (primaryEmail.email || "").trim().toLowerCase();
+                          const isEmailDup = duplicateEmails.has(normalizedEmail);
+                          return (
+                            <div className={`flex items-center gap-2 ${isEmailDup ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
+                              <Mail className={`w-4 h-4 ${isEmailDup ? 'text-amber-600' : ''}`} />
+                              <span className={isEmailDup ? 'text-amber-800 font-medium' : ''}>{primaryEmail.email}</span>
+                              {isEmailDup && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {contactCalls.length > 0 && (

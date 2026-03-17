@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +54,33 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<any>(null);
   const [showHidden, setShowHidden] = useState(false);
+
+  // Detect duplicate phones and emails across all contacts in this property
+  const { duplicatePhones, duplicateEmails } = useMemo(() => {
+    const phoneCount: Record<string, number> = {};
+    const emailCount: Record<string, number> = {};
+    if (contacts) {
+      for (const c of contacts) {
+        if (c.phones) {
+          for (const p of c.phones as any[]) {
+            const normalized = (p.phoneNumber || "").replace(/\D/g, "");
+            if (normalized) phoneCount[normalized] = (phoneCount[normalized] || 0) + 1;
+          }
+        }
+        if (c.emails) {
+          for (const e of c.emails as any[]) {
+            const normalized = (e.email || "").trim().toLowerCase();
+            if (normalized) emailCount[normalized] = (emailCount[normalized] || 0) + 1;
+          }
+        }
+      }
+    }
+    const dupPhones = new Set<string>();
+    const dupEmails = new Set<string>();
+    Object.entries(phoneCount).forEach(([k, v]) => { if (v > 1) dupPhones.add(k); });
+    Object.entries(emailCount).forEach(([k, v]) => { if (v > 1) dupEmails.add(k); });
+    return { duplicatePhones: dupPhones, duplicateEmails: dupEmails };
+  }, [contacts]);
   
   // Form state with dynamic arrays
   const [formData, setFormData] = useState({
@@ -639,31 +666,41 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                   {/* Phone Numbers - Dynamic Display */}
                   {(contact.phones && contact.phones.length > 0) && (
                     <div className="space-y-1">
-                      {contact.phones.map((phone: any, idx: number) => (
-                        <div key={idx} className={`flex items-center gap-2 text-sm ${
-                          contact.dnc === 1 ? 'font-bold text-red-600' : ''
-                        }`}>
-                          <Phone className={`h-4 w-4 ${
-                            contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
-                          }`} />
-                          <span>{phone.phoneNumber}</span>
-                          <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
-                          {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
-                        </div>
-                      ))}
+                      {contact.phones.map((phone: any, idx: number) => {
+                        const normalizedPhone = (phone.phoneNumber || "").replace(/\D/g, "");
+                        const isDuplicate = duplicatePhones.has(normalizedPhone);
+                        return (
+                          <div key={idx} className={`flex items-center gap-2 text-sm ${
+                            contact.dnc === 1 ? 'font-bold text-red-600' : ''
+                          } ${isDuplicate ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
+                            <Phone className={`h-4 w-4 ${
+                              isDuplicate ? 'text-amber-600' : contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
+                            }`} />
+                            <span className={isDuplicate ? 'text-amber-800 font-medium' : ''}>{phone.phoneNumber}</span>
+                            <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
+                            {isDuplicate && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
+                            {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   
                   {/* Emails - Dynamic Display */}
                   {(contact.emails && contact.emails.length > 0) && (
                     <div className="space-y-1">
-                      {contact.emails.map((email: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{email.email}</span>
-                          <Badge variant="outline" className="text-xs">{email.emailType}</Badge>
-                        </div>
-                      ))}
+                      {contact.emails.map((email: any, idx: number) => {
+                        const normalizedEmail = (email.email || "").trim().toLowerCase();
+                        const isDuplicate = duplicateEmails.has(normalizedEmail);
+                        return (
+                          <div key={idx} className={`flex items-center gap-2 text-sm ${isDuplicate ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
+                            <Mail className={`h-4 w-4 ${isDuplicate ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                            <span className={isDuplicate ? 'text-amber-800 font-medium' : ''}>{email.email}</span>
+                            <Badge variant="outline" className="text-xs">{email.emailType}</Badge>
+                            {isDuplicate && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
