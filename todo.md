@@ -2471,3 +2471,11 @@
 - [x] SMSChatButton has number selector popover with "Change" option in chat
 - [x] Backend sendSMS procedure accepts fromNumber parameter and saves as twilioPhone
 - [x] 21 tests passing for SMS multi-number support
+
+## Tasks Management - Filter by User
+- [x] Add user filter dropdown to Tasks List page
+- [x] Add user filter dropdown to Tasks Calendar page
+- [x] Add user filter dropdown to Tasks Kanban page
+- [x] Filter tasks by assigned user (createdBy or assignedTo)
+- [x] Backend getTasks returns assignedToName and createdByName via aliasedTable joins
+- [x] 8 tests passing for tasks user filter

@@ -2,6 +2,13 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Plus, Filter, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { Link } from "wouter";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths } from "date-fns";
@@ -11,8 +18,17 @@ export function TasksCalendar() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [userFilter, setUserFilter] = useState<string>("all");
 
-  const { data: tasks = [], refetch } = trpc.tasks.list.useQuery();
+  const { data: allTasks = [], refetch } = trpc.tasks.list.useQuery();
+  const { data: allUsers = [] } = trpc.agents.listAllUsers.useQuery();
+
+  // Filter tasks by user
+  const tasks = allTasks.filter((task) => {
+    if (userFilter === "all") return true;
+    const userId = parseInt(userFilter);
+    return task.assignedToId === userId || task.createdById === userId;
+  });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -90,10 +106,25 @@ export function TasksCalendar() {
                 </Link>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="w-[180px] bg-white border-gray-300 text-gray-900">
+                  <SelectValue placeholder="Filter by User" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200 max-h-[300px]">
+                  <SelectItem value="all">All Users</SelectItem>
+                  {allUsers.map((user: any) => (
+                    <SelectItem key={user.id} value={String(user.id)}>
+                      {user.name || user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             <Button onClick={() => setCreateDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
               New Task
             </Button>
+            </div>
           </div>
         </div>
       </div>

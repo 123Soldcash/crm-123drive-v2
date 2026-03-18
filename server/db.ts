@@ -1,4 +1,4 @@
-import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray } from "drizzle-orm";
+import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray, aliasedTable } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -2165,6 +2165,10 @@ export async function getTasks(filters?: {
     conditions.push(eq(tasks.hidden, filters.hidden));
   }
   
+  // Alias for assigned user and creator user joins
+  const assignedUser = aliasedTable(users, 'assignedUser');
+  const creatorUser = aliasedTable(users, 'creatorUser');
+
   const rows = await db
     .select({
       id: tasks.id,
@@ -2187,9 +2191,13 @@ export async function getTasks(filters?: {
       propertyAddress: properties.addressLine1,
       propertyCity: properties.city,
       propertyState: properties.state,
+      assignedToName: assignedUser.name,
+      createdByName: creatorUser.name,
     })
     .from(tasks)
     .leftJoin(properties, eq(tasks.propertyId, properties.id))
+    .leftJoin(assignedUser, eq(tasks.assignedToId, assignedUser.id))
+    .leftJoin(creatorUser, eq(tasks.createdById, creatorUser.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(tasks.createdAt));
   

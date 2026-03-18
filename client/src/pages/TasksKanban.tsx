@@ -6,6 +6,13 @@ import { TaskCard } from "@/components/TaskCard";
 import { DroppableColumn } from "@/components/DroppableColumn";
 import { Button } from "@/components/ui/button";
 import { Plus, Filter, Calendar, List } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { Link } from "wouter";
 
@@ -13,8 +20,17 @@ export function TasksKanban() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [defaultStatus, setDefaultStatus] = useState<"To Do" | "In Progress" | "Done">("To Do");
+  const [userFilter, setUserFilter] = useState<string>("all");
 
-  const { data: tasks = [], refetch } = trpc.tasks.list.useQuery();
+  const { data: allTasks = [], refetch } = trpc.tasks.list.useQuery();
+  const { data: allUsers = [] } = trpc.agents.listAllUsers.useQuery();
+
+  // Filter tasks by user
+  const tasks = allTasks.filter((task) => {
+    if (userFilter === "all") return true;
+    const userId = parseInt(userFilter);
+    return task.assignedToId === userId || task.createdById === userId;
+  });
   const updateTask = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
@@ -98,13 +114,28 @@ export function TasksKanban() {
                 </Link>
               </div>
             </div>
-            <Button
-              onClick={() => handleAddTask("To Do")}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Task
-            </Button>
+            <div className="flex items-center gap-3">
+              <Select value={userFilter} onValueChange={setUserFilter}>
+                <SelectTrigger className="w-[180px] bg-white border-gray-300 text-gray-900">
+                  <SelectValue placeholder="Filter by User" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200 max-h-[300px]">
+                  <SelectItem value="all">All Users</SelectItem>
+                  {allUsers.map((user: any) => (
+                    <SelectItem key={user.id} value={String(user.id)}>
+                      {user.name || user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => handleAddTask("To Do")}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Task
+              </Button>
+            </div>
           </div>
         </div>
       </div>

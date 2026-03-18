@@ -24,8 +24,10 @@ export function TasksList() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
+  const [userFilter, setUserFilter] = useState<string>("all");
 
   const { data: tasks = [], refetch } = trpc.tasks.list.useQuery();
+  const { data: allUsers = [] } = trpc.agents.listAllUsers.useQuery();
   const updateTask = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
@@ -56,6 +58,12 @@ export function TasksList() {
 
     // Type filter
     if (typeFilter !== "all" && task.taskType !== typeFilter) return false;
+
+    // User filter
+    if (userFilter !== "all") {
+      const userId = parseInt(userFilter);
+      if (task.assignedToId !== userId && task.createdById !== userId) return false;
+    }
 
     // Date filter
     if (dateFilter !== "all") {
@@ -186,7 +194,7 @@ export function TasksList() {
       {/* Filters */}
       <div className="border-b border-gray-200 bg-white/80">
         <div className="container mx-auto px-6 py-4">
-          <div className="grid grid-cols-6 gap-4">
+          <div className="grid grid-cols-7 gap-4">
             {/* Search */}
             <div className="col-span-2">
               <div className="relative">
@@ -248,6 +256,21 @@ export function TasksList() {
                 <SelectItem value="Take Over Lead">Take Over Lead</SelectItem>
                 <SelectItem value="Drip Campaign">Drip Campaign</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* User Filter */}
+            <Select value={userFilter} onValueChange={setUserFilter}>
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                <SelectValue placeholder="User" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200 max-h-[300px]">
+                <SelectItem value="all">All Users</SelectItem>
+                {allUsers.map((user: any) => (
+                  <SelectItem key={user.id} value={String(user.id)}>
+                    {user.name || user.email}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
