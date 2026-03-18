@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, name, propertyId FROM contacts WHERE propertyId = 2490001 ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, propertyId FROM contacts WHERE propertyId = 2490001 ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "2250004",
+      "name": "Maria Garcia",
+      "propertyId": "2490001"
+    },
+    {
+      "id": "2250003",
+      "name": "Bob Johnson",
+      "propertyId": "2490001"
+    },
+    {
+      "id": "2250002",
+      "name": "Jane Smith",
+      "propertyId": "2490001"
+    },
+    {
+      "id": "2250001",
+      "name": "Test Contact One",
+      "propertyId": "2490001"
+    },
+    {
+      "id": "2220004",
+      "name": "Larry Gaines",
+      "propertyId": "2490001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tpropertyId\n2250004\tMaria Garcia\t2490001\n2250003\tBob Johnson\t2490001\n2250002\tJane Smith\t2490001\n2250001\tTest Contact One\t2490001\n2220004\tLarry Gaines\t2490001\n",
+  "stderr": "",
+  "execution_time_ms": 133
+}

@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, name FROM contacts WHERE propertyId = 2490001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name FROM contacts WHERE propertyId = 2490001;",
+  "rows": [
+    {
+      "id": "2220004",
+      "name": "Larry Gaines"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n2220004\tLarry Gaines\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

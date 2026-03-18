@@ -44,6 +44,7 @@ import { TwilioCallWidget } from "./TwilioCallWidget";
 import { SMSChatButton } from "./SMSChatButton";
 import { ContactEditModal } from "./ContactEditModal";
 import { ContactNotesDialog } from "./ContactNotesDialog";
+import { BulkContactImport } from "./BulkContactImport";
 
 interface CallTrackingTableProps {
   propertyId: number;
@@ -580,22 +581,25 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               Contacts
             </CardTitle>
             {!showAddContactForm && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddContactForm(true)}
-                className="flex items-center gap-2"
-              >
-                <UserPlus className="h-4 w-4" />
-                Add Contact
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddContactForm(true)}
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add Contact
+                </Button>
+                <BulkContactImport propertyId={propertyId} />
+              </div>
             )}
           </div>
         </CardHeader>
         <CardContent>
           {!showAddContactForm ? (
             <p className="text-muted-foreground">
-              No contacts available. Click "Add Contact" to add one.
+              No contacts available. Click "Add Contact" or "Add Contact List" to add contacts.
             </p>
           ) : (
             <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
@@ -1183,15 +1187,18 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           {/* Add Contact Section */}
           <div className="mt-4 border-t pt-4">
             {!showAddContactForm ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddContactForm(true)}
-                className="flex items-center gap-2"
-              >
-                <UserPlus className="h-4 w-4" />
-                Add Contact
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddContactForm(true)}
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add Contact
+                </Button>
+                <BulkContactImport propertyId={propertyId} />
+              </div>
             ) : (
               <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">

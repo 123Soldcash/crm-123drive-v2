@@ -2479,3 +2479,16 @@
 - [x] Filter tasks by assigned user (createdBy or assignedTo)
 - [x] Backend getTasks returns assignedToName and createdByName via aliasedTable joins
 - [x] 8 tests passing for tasks user filter
+
+## Bulk Contact Import - Add Contact List
+- [x] Create parsing logic to auto-detect name, phone, email from each line
+- [x] Create backend procedure for bulk contact creation
+- [x] Create "Add Contact List" button next to "Add Contact"
+- [x] Create modal with text area, preview table, and import button
+- [x] Show parsed preview before importing (name, phones, emails per line)
+- [x] Fix toast import (switched from useToast to sonner)
+- [x] Fix tRPC path (communication.bulkCreateContacts)
+- [x] Add BulkContactImport to CallTrackingTable (the actual component used in PropertyDetail)
+- [x] Write 21 vitest tests for parsing logic and backend mutation (all passing)
+- [x] Remove test data from database after verification
+- [x] Handle various formats: name + phone, name + email, name + phone + email, mixed order

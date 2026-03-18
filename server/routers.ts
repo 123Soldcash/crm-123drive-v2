@@ -2112,6 +2112,37 @@ export const appRouter = router({
         return { success: true, contactId };
       }),
 
+    bulkCreateContacts: protectedProcedure
+      .input(
+        z.object({
+          propertyId: z.number(),
+          contacts: z.array(
+            z.object({
+              name: z.string(),
+              phones: z.array(z.object({ phoneNumber: z.string(), phoneType: z.string().optional() })).optional(),
+              emails: z.array(z.object({ email: z.string() })).optional(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const results: Array<{ name: string; success: boolean; contactId?: number; error?: string }> = [];
+        for (const contact of input.contacts) {
+          try {
+            const contactId = await communication.createContact({
+              propertyId: input.propertyId,
+              name: contact.name,
+              phones: contact.phones && contact.phones.length > 0 ? contact.phones : undefined,
+              emails: contact.emails && contact.emails.length > 0 ? contact.emails : undefined,
+            });
+            results.push({ name: contact.name, success: true, contactId });
+          } catch (error: any) {
+            results.push({ name: contact.name, success: false, error: error.message });
+          }
+        }
+        return { success: true, imported: results.filter(r => r.success).length, total: results.length, results };
+      }),
+
     updateContact: protectedProcedure
       .input(
         z.object({

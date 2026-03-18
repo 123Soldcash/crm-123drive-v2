@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, Mail, MessageSquare, Facebook, Instagram, Star, AlertTriangle, Scale, Plus, Edit, Trash2, Eye, EyeOff, MapPin } from "lucide-react";
 import { PhoneDuplicateAlert } from "./PhoneDuplicateAlert";
+import { BulkContactImport } from "./BulkContactImport";
 import { toast } from "sonner";
 
 interface ContactManagementProps {
@@ -286,13 +287,14 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                 {showHidden ? "Hide Hidden Contacts" : "Show All Contacts"}
               </Button>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Contact
-                </Button>
-              </DialogTrigger>
+            <div className="flex gap-2">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Contact
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingContact ? "Edit Contact" : "Add New Contact"}</DialogTitle>
@@ -600,6 +602,8 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                 </div>
               </DialogContent>
             </Dialog>
+            <BulkContactImport propertyId={propertyId} />
+          </div>
           </div>
           
           <div className="space-y-3">
@@ -1051,6 +1055,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
               </div>
             </DialogContent>
           </Dialog>
+          <BulkContactImport propertyId={propertyId} />
         </div>
       )}
     </div>
