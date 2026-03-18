@@ -1482,3 +1482,23 @@ export const campaignNames = mysqlTable("campaignNames", {
 
 export type CampaignName = typeof campaignNames.$inferSelect;
 export type InsertCampaignName = typeof campaignNames.$inferInsert;
+
+
+/**
+ * Twilio Numbers table - global registry of Twilio phone numbers.
+ * Each number can be labeled with a campaign/purpose (e.g., "TV Campaign", "WhatsApp").
+ * Used as a shared pool: any agent can select which number to use when making calls or sending SMS.
+ */
+export const twilioNumbers = mysqlTable("twilioNumbers", {
+  id: int("id").autoincrement().primaryKey(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull().unique(), // E.164 format, e.g. +15551234567
+  label: varchar("label", { length: 255 }).notNull(), // Campaign or purpose label
+  description: text("description"), // Optional longer description
+  isActive: int("isActive").default(1).notNull(), // 1 = active, 0 = disabled
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TwilioNumber = typeof twilioNumbers.$inferSelect;
+export type InsertTwilioNumber = typeof twilioNumbers.$inferInsert;

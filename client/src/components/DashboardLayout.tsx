@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -40,6 +40,7 @@ const menuItems = [
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
   { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },
   { icon: Users, label: "User Management", path: "/users", adminOnly: true },
+  { icon: Phone, label: "Twilio Numbers", path: "/twilio-numbers", adminOnly: true },
   { icon: Zap, label: "Bulk Assign Agents", path: "/bulk-assign-agents", adminOnly: true },
 ];
 

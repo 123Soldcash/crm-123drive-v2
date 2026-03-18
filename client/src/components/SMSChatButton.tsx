@@ -1,5 +1,5 @@
 /**
- * SMSChatButton — Inline button that opens a full SMS chat drawer.
+ * SMSChatButton — Inline button that opens a number selector, then a full SMS chat drawer.
  *
  * Usage:
  *   <SMSChatButton
@@ -9,20 +9,14 @@
  *     propertyId={123}
  *   />
  *
- * The button shows a MessageSquare icon (green). Clicking it opens a
- * Sheet drawer on the right side with the full conversation history
- * and a compose box to send new messages.
- *
- * Inbound messages are received via Twilio webhook → /api/twilio/sms/incoming
- * and stored in the smsMessages table. The chat auto-refreshes every 10s
- * to pick up new replies.
+ * The button shows a MessageSquare icon (blue). Clicking it opens a popover
+ * to select which Twilio number to send from, then opens the SMS chat drawer.
  */
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, RefreshCw, Phone, CheckCheck, AlertCircle, Clock } from "lucide-react";
+import { MessageSquare, Send, RefreshCw, Phone, CheckCheck, AlertCircle, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { NoTwilioPhoneDialog } from "./NoTwilioPhoneDialog";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -96,12 +90,16 @@ export function SMSChatButton({
   iconOnly = true,
 }: SMSChatButtonProps) {
   const [open, setOpen] = useState(false);
-  const [guardOpen, setGuardOpen] = useState(false);
-  const { user } = useAuth();
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const normalizedPhone = normalizePhone(phoneNumber);
+
+  // Fetch Twilio numbers when selector opens
+  const numbersQuery = trpc.twilio.listNumbers.useQuery(undefined, {
+    enabled: selectorOpen,
+  });
 
   // Fetch conversation — auto-refresh every 10 seconds when drawer is open
   const { data: messages = [], refetch, isLoading } = trpc.sms.getConversation.useQuery(
@@ -118,7 +116,6 @@ export function SMSChatButton({
     onSuccess: () => {
       setMessage("");
       refetch();
-      // Scroll to bottom after send
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 200);
@@ -156,7 +153,6 @@ export function SMSChatButton({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Send on Enter (without Shift)
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -166,32 +162,61 @@ export function SMSChatButton({
   const displayName = contactName || formatPhoneDisplay(normalizedPhone);
 
   function handleSmsClick() {
-    if (!user?.twilioPhone) {
-      setGuardOpen(true);
-      return;
-    }
+    setSelectorOpen(true);
+  }
+
+  function handleSelectNumber(_phone: string) {
+    setSelectorOpen(false);
     setOpen(true);
   }
 
+  const numbers = numbersQuery.data || [];
+
   return (
     <>
-      {/* Trigger button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleSmsClick}
-        className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full flex-shrink-0"
-        title={user?.twilioPhone ? `Send SMS to ${displayName}` : "No Twilio number configured — click for details"}
-      >
-        <MessageSquare className={`h-3.5 w-3.5 ${user?.twilioPhone ? "text-blue-600" : "text-gray-400"}`} />
-      </Button>
-
-      {/* Guard dialog — shown when no Twilio phone is configured */}
-      <NoTwilioPhoneDialog
-        open={guardOpen}
-        onOpenChange={setGuardOpen}
-        action="sms"
-      />
+      {/* Trigger button with number selector */}
+      <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSmsClick}
+            className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full flex-shrink-0"
+            title={`Send SMS to ${displayName}`}
+          >
+            <MessageSquare className="h-3.5 w-3.5 text-blue-600" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-2" align="start">
+          <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select sender number:</p>
+          {numbersQuery.isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : numbers.length === 0 ? (
+            <div className="text-center py-3 px-2">
+              <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
+              <p className="text-xs text-muted-foreground mt-1">Ask an admin to add numbers in Settings.</p>
+            </div>
+          ) : (
+            <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
+              {numbers.map((num: any) => (
+                <button
+                  key={num.id}
+                  onClick={() => handleSelectNumber(num.phoneNumber)}
+                  className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{num.label}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{num.phoneNumber}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
 
       {/* Chat drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
@@ -270,17 +295,14 @@ export function SMSChatButton({
                         : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm"
                     }`}
                   >
-                    {/* Sender name for outbound */}
                     {isOutbound && msg.sentByName && (
                       <p className="text-xs text-blue-200 mb-0.5 font-medium">
                         {msg.sentByName}
                       </p>
                     )}
-                    {/* Message body */}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {msg.body}
                     </p>
-                    {/* Footer: time + status */}
                     <div className={`flex items-center gap-1 mt-1 ${isOutbound ? "justify-end" : "justify-start"}`}>
                       <span className={`text-xs ${isOutbound ? "text-blue-200" : "text-gray-400"}`}>
                         {formatTime(msg.createdAt)}
@@ -292,7 +314,6 @@ export function SMSChatButton({
               );
             })}
 
-            {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </div>
 

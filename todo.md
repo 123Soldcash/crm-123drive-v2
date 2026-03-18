@@ -2438,3 +2438,14 @@
 - [x] Add "Not Assigned" option to getDeskLabel and getDeskColor
 - [x] Ensure only explicitly set NEW_LEAD counts in Dashboard (confirmed working)
 - [x] 38 tests passing
+
+## Global Twilio Numbers Registry
+- [x] Create twilioNumbers table in schema (phoneNumber, label, description, isActive)
+- [x] Create backend CRUD procedures for twilio numbers (admin only)
+- [x] Create admin page /twilio-numbers to manage Twilio numbers (add, edit, delete, toggle active)
+- [x] Update call flow: add number selector popover in TwilioCallWidget
+- [x] Update SMS flow: add number selector popover in SMSChatButton
+- [x] Update CallModal to accept callerPhone prop
+- [x] Remove per-user Twilio number field from User Management page
+- [x] Add Twilio Numbers link to sidebar navigation (admin only)
+- [x] 20 tests passing for Twilio numbers feature

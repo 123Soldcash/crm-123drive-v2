@@ -25,6 +25,7 @@ import PipelineKanban from "./pages/PipelineKanban";
 import InviteAccept from "./pages/InviteAccept";
 import SMSInbox from "./pages/SMSInbox";
 import SMSTemplates from "./pages/SMSTemplates";
+import TwilioNumbers from "./pages/TwilioNumbers";
 
 // Named wrapper components to prevent React from unmounting/remounting
 // on every render (inline arrow functions create new references each time)
@@ -85,6 +86,9 @@ function SMSInboxPage() {
 function SMSTemplatesPage() {
   return <DashboardLayout><SMSTemplates /></DashboardLayout>;
 }
+function TwilioNumbersPage() {
+  return <DashboardLayout><TwilioNumbers /></DashboardLayout>;
+}
 
 function Router() {
   return (
@@ -110,6 +114,7 @@ function Router() {
       <Route path="/pipeline" component={PipelineKanbanPage} />
       <Route path="/sms" component={SMSInboxPage} />
       <Route path="/message-templates" component={SMSTemplatesPage} />
+      <Route path="/twilio-numbers" component={TwilioNumbersPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

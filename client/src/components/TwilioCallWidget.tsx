@@ -1,15 +1,17 @@
 /**
- * TwilioCallWidget — Small phone button that opens the CallModal
+ * TwilioCallWidget — Small phone button that opens a number selector, then the CallModal
  * 
  * This is the inline button shown next to phone numbers in the contacts table.
- * Clicking it opens the full CallModal with call controls and notes.
+ * Clicking it shows a dropdown to select which Twilio number to call from,
+ * then opens the full CallModal with call controls and notes.
  */
 import { useState } from "react";
-import { Phone } from "lucide-react";
+import { Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CallModal } from "./CallModal";
-import { NoTwilioPhoneDialog } from "./NoTwilioPhoneDialog";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface TwilioCallWidgetProps {
   phoneNumber: string;
@@ -31,29 +33,69 @@ function formatE164(phone: string): string {
 
 export function TwilioCallWidget({ phoneNumber, contactName, contactId, propertyId }: TwilioCallWidgetProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [guardOpen, setGuardOpen] = useState(false);
-  const { user } = useAuth();
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [selectedNumber, setSelectedNumber] = useState<string>("");
 
-  function handleCallClick() {
-    // Block the action if the current user has no Twilio phone configured
-    if (!user?.twilioPhone) {
-      setGuardOpen(true);
-      return;
-    }
+  const numbersQuery = trpc.twilio.listNumbers.useQuery(undefined, {
+    enabled: selectorOpen, // Only fetch when dropdown opens
+  });
+
+  function handleSelectNumber(phone: string) {
+    setSelectedNumber(phone);
+    setSelectorOpen(false);
     setModalOpen(true);
   }
 
+  function handleCallClick() {
+    setSelectorOpen(true);
+  }
+
+  const numbers = numbersQuery.data || [];
+
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleCallClick}
-        className="h-7 w-7 p-0 hover:bg-green-50 rounded-full"
-        title={user?.twilioPhone ? `Call ${contactName}` : "No Twilio number configured — click for details"}
-      >
-        <Phone className={`h-3.5 w-3.5 ${user?.twilioPhone ? "text-green-600" : "text-gray-400"}`} />
-      </Button>
+      <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCallClick}
+            className="h-7 w-7 p-0 hover:bg-green-50 rounded-full"
+            title={`Call ${contactName}`}
+          >
+            <Phone className="h-3.5 w-3.5 text-green-600" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-2" align="start">
+          <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select caller number:</p>
+          {numbersQuery.isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : numbers.length === 0 ? (
+            <div className="text-center py-3 px-2">
+              <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
+              <p className="text-xs text-muted-foreground mt-1">Ask an admin to add numbers in Settings.</p>
+            </div>
+          ) : (
+            <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
+              {numbers.map((num: any) => (
+                <button
+                  key={num.id}
+                  onClick={() => handleSelectNumber(num.phoneNumber)}
+                  className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
+                >
+                  <Phone className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{num.label}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{num.phoneNumber}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
 
       {modalOpen && (
         <CallModal
@@ -63,14 +105,9 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
           contactName={contactName}
           contactId={contactId ?? 0}
           propertyId={propertyId ?? 0}
+          callerPhone={selectedNumber}
         />
       )}
-
-      <NoTwilioPhoneDialog
-        open={guardOpen}
-        onOpenChange={setGuardOpen}
-        action="call"
-      />
     </>
   );
 }

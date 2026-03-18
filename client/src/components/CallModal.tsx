@@ -58,6 +58,7 @@ interface CallModalProps {
   contactName: string;
   contactId: number;
   propertyId: number;
+  callerPhone?: string; // The selected Twilio number to use as Caller ID
 }
 
 const STATUS_CONFIG: Record<CallStatus, { label: string; icon: React.ReactNode }> = {
@@ -124,7 +125,7 @@ function classifyError(error: any): { message: string; isNetworkError: boolean; 
   };
 }
 
-export function CallModal({ open, onOpenChange, phoneNumber, contactName, contactId, propertyId }: CallModalProps) {
+export function CallModal({ open, onOpenChange, phoneNumber, contactName, contactId, propertyId, callerPhone }: CallModalProps) {
   const [callStatus, setCallStatus] = useState<CallStatus>("idle");
   const [isMuted, setIsMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -372,15 +373,15 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       }
 
       // Step 3: Connect via the Twilio Voice SDK
-      // Pass the user's assigned Twilio phone as CallerPhone so the webhook uses it as Caller ID
-      const userCallerPhone = tokenData?.twilioPhone || "";
-      console.log("[CallModal] Calling device.connect() to:", phoneNumber, "callerPhone:", userCallerPhone || "default");
+      // Pass the selected Twilio phone as CallerPhone so the webhook uses it as Caller ID
+      const selectedCallerPhone = callerPhone || tokenData?.twilioPhone || "";
+      console.log("[CallModal] Calling device.connect() to:", phoneNumber, "callerPhone:", selectedCallerPhone || "default");
       const call = await device.connect({
         params: {
           To: phoneNumber,
           ContactId: String(contactId),
           PropertyId: String(propertyId),
-          ...(userCallerPhone ? { CallerPhone: userCallerPhone } : {}),
+          ...(selectedCallerPhone ? { CallerPhone: selectedCallerPhone } : {}),
         },
       });
 

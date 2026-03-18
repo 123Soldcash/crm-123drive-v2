@@ -14,7 +14,7 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers } from "../drizzle/schema";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -3084,6 +3084,76 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getCallStatus } = await import("./twilio");
         return getCallStatus(input.callSid);
+      }),
+
+    // ─── Global Twilio Numbers Registry ────────────────────────────
+    /** List all registered Twilio numbers (active ones for agents, all for admins) */
+    listNumbers: protectedProcedure.query(async ({ ctx }) => {
+      const database = await getDb();
+      if (!database) throw new Error("Database not available");
+      if (ctx.user.role === "admin") {
+        return database.select().from(twilioNumbers).orderBy(twilioNumbers.sortOrder);
+      }
+      return database.select().from(twilioNumbers).where(eq(twilioNumbers.isActive, 1)).orderBy(twilioNumbers.sortOrder);
+    }),
+
+    /** Add a new Twilio number (admin only) */
+    addNumber: adminProcedure
+      .input(z.object({
+        phoneNumber: z.string().min(10, "Phone number is required"),
+        label: z.string().min(1, "Label is required"),
+        description: z.string().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Normalize phone to E.164
+        const rawDigits = input.phoneNumber.replace(/\D/g, "");
+        const phone = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.phoneNumber.startsWith("+") ? input.phoneNumber : `+1${rawDigits}`;
+        const result = await database.insert(twilioNumbers).values({
+          phoneNumber: phone,
+          label: input.label,
+          description: input.description || null,
+          sortOrder: input.sortOrder ?? 0,
+        });
+        return { success: true, id: result[0].insertId };
+      }),
+
+    /** Update a Twilio number (admin only) */
+    updateNumber: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        phoneNumber: z.string().min(10).optional(),
+        label: z.string().min(1).optional(),
+        description: z.string().optional(),
+        isActive: z.number().min(0).max(1).optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const updates: any = {};
+        if (input.phoneNumber !== undefined) {
+          const rawDigits = input.phoneNumber.replace(/\D/g, "");
+          updates.phoneNumber = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.phoneNumber.startsWith("+") ? input.phoneNumber : `+1${rawDigits}`;
+        }
+        if (input.label !== undefined) updates.label = input.label;
+        if (input.description !== undefined) updates.description = input.description;
+        if (input.isActive !== undefined) updates.isActive = input.isActive;
+        if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
+        await database.update(twilioNumbers).set(updates).where(eq(twilioNumbers.id, input.id));
+        return { success: true };
+      }),
+
+    /** Delete a Twilio number (admin only) */
+    deleteNumber: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        await database.delete(twilioNumbers).where(eq(twilioNumbers.id, input.id));
+        return { success: true };
       }),
   }),
 

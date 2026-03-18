@@ -455,7 +455,7 @@ export default function UserManagement() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Twilio #</TableHead>
+
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Active</TableHead>
@@ -465,7 +465,7 @@ export default function UserManagement() {
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     {searchQuery || roleFilter !== "all" || statusFilter !== "all"
                       ? "No users match the current filters."
                       : "No users found. Invite users to get started."}
@@ -484,13 +484,7 @@ export default function UserManagement() {
                     </TableCell>
                     <TableCell className="text-sm">{user.email || "—"}</TableCell>
                     <TableCell className="text-sm">{user.phone || "—"}</TableCell>
-                    <TableCell className="text-sm font-mono">
-                      {user.twilioPhone ? (
-                        <span className="text-green-600" title="Twilio Caller ID">{user.twilioPhone}</span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
+
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -615,19 +609,7 @@ export default function UserManagement() {
                 </Select>
               </div>
             </div>
-            <div>
-              <Label htmlFor="twilioPhone">Twilio Phone Number</Label>
-              <Input
-                id="twilioPhone"
-                type="tel"
-                placeholder="+1XXXXXXXXXX (Twilio Caller ID)"
-                value={editForm.twilioPhone}
-                onChange={(e) => setEditForm({ ...editForm, twilioPhone: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                The Twilio number used as Caller ID when this user makes calls. Must be a verified Twilio number.
-              </p>
-            </div>
+
             <div>
               <Label htmlFor="notes">Notes</Label>
               <Textarea
