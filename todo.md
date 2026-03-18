@@ -2463,3 +2463,11 @@
 - [x] Log inbound calls in communicationLog
 - [x] Provide Twilio configuration instructions to user
 - [x] 19 tests passing for inbound calls feature
+
+## SMS Multi-Number Support (Same as Calls)
+- [x] Update SMS send to allow selecting which Twilio number to send from
+- [x] Update SMS Inbox to show messages from all registered Twilio numbers (already working)
+- [x] Update SMS receive webhook to handle all registered numbers (already working)
+- [x] SMSChatButton has number selector popover with "Change" option in chat
+- [x] Backend sendSMS procedure accepts fromNumber parameter and saves as twilioPhone
+- [x] 21 tests passing for SMS multi-number support

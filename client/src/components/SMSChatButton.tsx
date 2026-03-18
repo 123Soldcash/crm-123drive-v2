@@ -13,7 +13,7 @@
  * to select which Twilio number to send from, then opens the SMS chat drawer.
  */
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, RefreshCw, Phone, CheckCheck, AlertCircle, Clock, Loader2 } from "lucide-react";
+import { MessageSquare, Send, RefreshCw, CheckCheck, AlertCircle, Clock, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -92,6 +92,8 @@ export function SMSChatButton({
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedFromNumber, setSelectedFromNumber] = useState<string | null>(null);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const normalizedPhone = normalizePhone(phoneNumber);
@@ -111,7 +113,7 @@ export function SMSChatButton({
     }
   );
 
-  // Send SMS mutation
+  // Send SMS mutation — now passes fromNumber
   const sendMutation = trpc.sms.send.useMutation({
     onSuccess: () => {
       setMessage("");
@@ -149,6 +151,7 @@ export function SMSChatButton({
       body: trimmed,
       contactId,
       propertyId,
+      fromNumber: selectedFromNumber || undefined,
     });
   };
 
@@ -165,7 +168,9 @@ export function SMSChatButton({
     setSelectorOpen(true);
   }
 
-  function handleSelectNumber(_phone: string) {
+  function handleSelectNumber(phone: string, label: string) {
+    setSelectedFromNumber(phone);
+    setSelectedLabel(label);
     setSelectorOpen(false);
     setOpen(true);
   }
@@ -203,7 +208,7 @@ export function SMSChatButton({
               {numbers.map((num: any) => (
                 <button
                   key={num.id}
-                  onClick={() => handleSelectNumber(num.phoneNumber)}
+                  onClick={() => handleSelectNumber(num.phoneNumber, num.label)}
                   className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
                 >
                   <MessageSquare className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
@@ -251,12 +256,18 @@ export function SMSChatButton({
                 <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
               </Button>
             </div>
-            {/* SMS badge */}
-            <div className="flex items-center gap-2 mt-1">
+            {/* SMS badge + sender number */}
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                 <MessageSquare className="w-3 h-3 mr-1" />
                 SMS
               </Badge>
+              {selectedLabel && (
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                  <Phone className="w-3 h-3 mr-1" />
+                  Sending from: {selectedLabel}
+                </Badge>
+              )}
               <span className="text-xs text-gray-400">
                 {messages.length} message{messages.length !== 1 ? "s" : ""}
               </span>
@@ -300,6 +311,12 @@ export function SMSChatButton({
                         {msg.sentByName}
                       </p>
                     )}
+                    {/* Show which Twilio number was used */}
+                    {msg.twilioPhone && (
+                      <p className={`text-xs mb-0.5 ${isOutbound ? "text-blue-200" : "text-gray-400"}`}>
+                        {isOutbound ? "From" : "To"}: {formatPhoneDisplay(msg.twilioPhone)}
+                      </p>
+                    )}
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {msg.body}
                     </p>
@@ -319,6 +336,45 @@ export function SMSChatButton({
 
           {/* Compose area */}
           <div className="flex-shrink-0 border-t bg-white px-4 py-3">
+            {/* Change number button */}
+            {selectedFromNumber && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-500">
+                  Sending from: <span className="font-mono font-medium">{formatPhoneDisplay(selectedFromNumber)}</span>
+                  {selectedLabel && <span className="text-gray-400"> ({selectedLabel})</span>}
+                </span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-5 text-xs text-blue-600 hover:text-blue-700 px-1">
+                      Change
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2" align="start">
+                    <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select sender number:</p>
+                    <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
+                      {numbers.map((num: any) => (
+                        <button
+                          key={num.id}
+                          onClick={() => {
+                            setSelectedFromNumber(num.phoneNumber);
+                            setSelectedLabel(num.label);
+                          }}
+                          className={`w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2 ${
+                            selectedFromNumber === num.phoneNumber ? "bg-accent" : ""
+                          }`}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{num.label}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{num.phoneNumber}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
               <Textarea
                 ref={textareaRef}

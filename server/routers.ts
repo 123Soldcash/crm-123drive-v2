@@ -3667,12 +3667,13 @@ export const appRouter = router({
         body: z.string().min(1, "Message body required").max(1600),
         contactId: z.number().optional(),
         propertyId: z.number().optional(),
+        fromNumber: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const twilio = await import("twilio");
         const client = twilio.default(ENV.twilioAccountSid, ENV.twilioAuthToken);
-        const fromPhone = ctx.user.twilioPhone || ENV.twilioPhoneNumber;
-        if (!fromPhone) throw new Error("No Twilio phone number configured for your account.");
+        const fromPhone = input.fromNumber || ENV.twilioPhoneNumber;
+        if (!fromPhone) throw new Error("No Twilio phone number configured. Please select a number or ask admin to add one.");
         // Format to E.164
         const rawDigits = input.to.replace(/\D/g, "");
         const toPhone = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.to.startsWith("+") ? input.to : `+1${rawDigits}`;
