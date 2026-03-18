@@ -32,27 +32,117 @@ import type { Express } from "express";
 export function registerTwilioWebhooks(app: Express) {
   // ─── Voice Webhook ──────────────────────────────────────────────────────
   // Called when Twilio needs TwiML instructions for a voice call.
-  // Returns <Dial><Number> to connect to the destination.
+  // Handles BOTH outbound (browser → phone) and inbound (phone → browser) calls.
+  //
+  // OUTBOUND: Device.connect() sends To=+1xxx, Direction=outbound
+  //   → Returns <Dial><Number>+1xxx</Number></Dial>
+  //
+  // INBOUND: External caller dials a registered Twilio number
+  //   → Direction is missing or "inbound", To is the Twilio number
+  //   → Returns <Dial> with <Client> tags to ring all logged-in CRM users
   app.all("/api/twilio/voice", async (req, res) => {
     try {
-      // When the Twilio Device SDK calls device.connect({ params: { To: "+1..." } }),
-      // Twilio sends a POST to this webhook with the 'To' parameter in the body.
-      // The body is application/x-www-form-urlencoded.
       const to = req.body?.To || req.query?.To;
-      // CallerPhone is a custom param passed from device.connect() with the user's assigned Twilio number
+      const from = req.body?.From || req.query?.From;
+      const direction = req.body?.Direction || req.query?.Direction;
       const callerPhone = req.body?.CallerPhone || req.query?.CallerPhone;
-      console.log("[Twilio Voice] Incoming request. Method:", req.method, "Body keys:", Object.keys(req.body || {}));
-      console.log("[Twilio Voice] To:", to, "| From:", req.body?.From, "| CallerPhone:", callerPhone, "| CallSid:", req.body?.CallSid);
+      const callSid = req.body?.CallSid || req.query?.CallSid;
 
-      const { buildTwimlResponse, formatPhoneNumber } = await import("./twilio");
-      // Format the number to E.164 if it's a phone number
-      const formattedTo = to && (to.startsWith("+") || /^\d+$/.test(to))
-        ? formatPhoneNumber(to)
-        : to;
-      const twiml = buildTwimlResponse(formattedTo as string, callerPhone as string | undefined);
-      console.log("[Twilio Voice] Generated TwiML for:", formattedTo, "with callerId:", callerPhone || "default");
-      res.set("Content-Type", "text/xml");
-      res.send(twiml);
+      console.log("[Twilio Voice] Request. Method:", req.method, "Direction:", direction, "To:", to, "From:", from, "CallSid:", callSid);
+
+      const twilio = await import("twilio");
+      const VoiceResponse = twilio.default.twiml.VoiceResponse;
+
+      // Determine if this is an OUTBOUND call (from browser) or INBOUND call (from external caller)
+      // Outbound: The "To" param is a phone number the agent wants to call
+      // Inbound: The "To" param is one of our registered Twilio numbers
+      const isOutbound = callerPhone || (to && !from?.startsWith("client:") && direction === "outbound-api");
+      const isFromBrowserClient = from?.startsWith("client:");
+
+      if (isFromBrowserClient || isOutbound) {
+        // ── OUTBOUND CALL (browser → phone) ──
+        console.log("[Twilio Voice] OUTBOUND call from browser to:", to);
+        const { buildTwimlResponse, formatPhoneNumber } = await import("./twilio");
+        const formattedTo = to && (to.startsWith("+") || /^\d+$/.test(to))
+          ? formatPhoneNumber(to)
+          : to;
+        const twiml = buildTwimlResponse(formattedTo as string, callerPhone as string | undefined);
+        console.log("[Twilio Voice] Generated outbound TwiML for:", formattedTo);
+        res.set("Content-Type", "text/xml");
+        res.send(twiml);
+      } else {
+        // ── INBOUND CALL (external caller → CRM) ──
+        console.log("[Twilio Voice] INBOUND call from:", from, "to Twilio number:", to);
+
+        const response = new VoiceResponse();
+
+        // Get all active CRM users to ring them
+        // We ring all users with identity pattern "crm-user-{id}"
+        try {
+          const { getDb } = await import("./db");
+          const { users: usersTable } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const database = await getDb();
+
+          if (database) {
+            const activeUsers = await database
+              .select({ id: usersTable.id })
+              .from(usersTable)
+              .where(eq(usersTable.status, "Active"));
+
+            if (activeUsers.length > 0) {
+              // Ring all active users simultaneously with a 30-second timeout
+              // The first user to accept gets the call
+              const dial = response.dial({
+                callerId: from, // Show the external caller's number
+                timeout: 30,
+                action: "/api/twilio/inbound-status",
+                method: "POST",
+              });
+
+              for (const user of activeUsers) {
+                dial.client(`crm-user-${user.id}`);
+              }
+
+              console.log(`[Twilio Voice] Ringing ${activeUsers.length} CRM users for inbound call from ${from}`);
+            } else {
+              // No active users — send to voicemail message
+              response.say("Thank you for calling. No agents are currently available. Please try again later.");
+              response.hangup();
+              console.log("[Twilio Voice] No active users found, playing unavailable message");
+            }
+          } else {
+            response.say("System is temporarily unavailable. Please try again later.");
+            response.hangup();
+          }
+        } catch (dbError) {
+          console.error("[Twilio Voice] Error fetching users for inbound call:", dbError);
+          // Fallback: ring a default client identity
+          const dial = response.dial({ callerId: from, timeout: 30 });
+          dial.client("crm-user-1");
+        }
+
+        // Log the inbound call in communication log
+        try {
+          const { getDb } = await import("./db");
+          const { communicationLog } = await import("../drizzle/schema");
+          const database = await getDb();
+          if (database) {
+            await database.insert(communicationLog).values({
+              propertyId: 0, // Unknown property for inbound calls
+              communicationType: "Phone",
+              direction: "Inbound",
+              userId: 1, // System user
+              notes: `Inbound call from ${from} to ${to}. CallSid: ${callSid || "unknown"}`,
+            });
+          }
+        } catch (logError) {
+          console.error("[Twilio Voice] Error logging inbound call:", logError);
+        }
+
+        res.set("Content-Type", "text/xml");
+        res.send(response.toString());
+      }
     } catch (error) {
       console.error("[Twilio Voice] Error:", error);
       res.set("Content-Type", "text/xml");
@@ -105,6 +195,28 @@ export function registerTwilioWebhooks(app: Express) {
     console.log("[Twilio Status]", callStatus, "SID:", callSid);
     res.set("Content-Type", "text/xml");
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+  });
+
+  // ─── Inbound Call Status Callback ─────────────────────────────────────────
+  // Called when an inbound call's <Dial> completes (answered, no-answer, busy, etc.)
+  app.all("/api/twilio/inbound-status", async (req, res) => {
+    const dialCallStatus = req.body?.DialCallStatus || req.query?.DialCallStatus || "unknown";
+    const callSid = req.body?.CallSid || req.query?.CallSid || "unknown";
+    console.log("[Twilio Inbound Status] DialCallStatus:", dialCallStatus, "SID:", callSid);
+
+    const twilio = await import("twilio");
+    const VoiceResponse = twilio.default.twiml.VoiceResponse;
+    const response = new VoiceResponse();
+
+    // If no one answered, play a message
+    if (dialCallStatus === "no-answer" || dialCallStatus === "busy" || dialCallStatus === "failed") {
+      response.say("We're sorry, no agents are available right now. Please try again later.");
+      response.hangup();
+    }
+    // If completed (someone answered and hung up), just end
+
+    res.set("Content-Type", "text/xml");
+    res.send(response.toString());
   });
 
   // ─── Inbound SMS Webhook ────────────────────────────────────────────────────────

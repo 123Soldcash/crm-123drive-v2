@@ -26,6 +26,7 @@ import InviteAccept from "./pages/InviteAccept";
 import SMSInbox from "./pages/SMSInbox";
 import SMSTemplates from "./pages/SMSTemplates";
 import TwilioNumbers from "./pages/TwilioNumbers";
+import { IncomingCallNotification } from "./components/IncomingCallNotification";
 
 // Named wrapper components to prevent React from unmounting/remounting
 // on every render (inline arrow functions create new references each time)
@@ -128,6 +129,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <IncomingCallNotification />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

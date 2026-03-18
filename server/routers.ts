@@ -2947,7 +2947,8 @@ export const appRouter = router({
 
     /**
      * Generate an Access Token for the Twilio Voice JavaScript SDK.
-     * This token allows the browser to make calls using the microphone.
+     * This token allows the browser to make AND RECEIVE calls.
+     * incomingAllow: true enables the Device to receive incoming calls.
      */
     getAccessToken: protectedProcedure.query(async ({ ctx }) => {
       const twilio = await import("twilio");
@@ -2968,7 +2969,7 @@ export const appRouter = router({
 
       const voiceGrant = new VoiceGrant({
         outgoingApplicationSid: ENV.twilioTwimlAppSid,
-        incomingAllow: false,
+        incomingAllow: true, // Enable receiving incoming calls
       });
       token.addGrant(voiceGrant);
 

@@ -2449,3 +2449,17 @@
 - [x] Remove per-user Twilio number field from User Management page
 - [x] Add Twilio Numbers link to sidebar navigation (admin only)
 - [x] 20 tests passing for Twilio numbers feature
+
+## Inbound Call Receiving (PABX Virtual)
+- [x] Research current Twilio webhook setup and outbound call flow
+- [x] Update voice webhook (/api/twilio/voice) to handle both inbound and outbound calls
+- [x] Generate TwiML with <Dial><Client> to route inbound calls to all CRM users
+- [x] Create global IncomingCallNotification component (bottom-right, non-intrusive)
+- [x] Show caller number, Accept/Reject buttons in notification
+- [x] Add Mute/Hangup controls and call duration timer for active calls
+- [x] Enable incomingAllow: true in VoiceGrant for Twilio Device SDK
+- [x] Mount IncomingCallNotification globally in App.tsx
+- [x] Add inbound-status callback endpoint for call completion handling
+- [x] Log inbound calls in communicationLog
+- [x] Provide Twilio configuration instructions to user
+- [x] 19 tests passing for inbound calls feature
