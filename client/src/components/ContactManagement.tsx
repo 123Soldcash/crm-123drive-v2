@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -680,7 +681,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                             <Phone className={`h-4 w-4 ${
                               isDuplicate ? 'text-amber-600' : contact.dnc === 1 ? 'text-red-600' : 'text-muted-foreground'
                             }`} />
-                            <span className={isDuplicate ? 'text-amber-800 font-medium' : ''}>{phone.phoneNumber}</span>
+                            <span className={isDuplicate ? 'text-amber-800 font-medium' : ''}>{formatPhone(phone.phoneNumber)}</span>
                             <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
                             {isDuplicate && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
                             {contact.dnc === 1 && <Badge className="bg-red-600 text-white text-xs">DNC</Badge>}

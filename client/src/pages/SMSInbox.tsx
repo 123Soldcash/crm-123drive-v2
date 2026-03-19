@@ -8,23 +8,13 @@
 import { useState } from "react";
 import { MessageSquare, RefreshCw, Phone, Search, Inbox, ExternalLink } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SMSChatButton } from "@/components/SMSChatButton";
 
-/** Format phone for display */
-function formatPhoneDisplay(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("1")) {
-    const d = digits.slice(1);
-    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-  }
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return phone;
-}
+/** Format phone for display — uses shared utility */
 
 /** Format relative time */
 function formatRelativeTime(date: Date | string): string {
@@ -53,7 +43,7 @@ export default function SMSInbox() {
 
   const filteredConversations = conversations.filter((conv: any) =>
     conv.contactPhone.includes(search.replace(/\D/g, "")) ||
-    formatPhoneDisplay(conv.contactPhone).includes(search)
+    formatPhone(conv.contactPhone).includes(search)
   );
 
   return (
@@ -176,7 +166,7 @@ function ConversationRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className="font-semibold text-sm text-gray-900 font-mono">
-            {formatPhoneDisplay(contactPhone)}
+            {formatPhone(contactPhone)}
           </span>
           <span className="text-xs text-gray-400 flex-shrink-0">
             {lastMessageTime ? formatRelativeTime(lastMessageTime) : ""}

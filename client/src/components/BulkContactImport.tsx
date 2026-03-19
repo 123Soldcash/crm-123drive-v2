@@ -11,6 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { ListPlus, Upload, AlertCircle, CheckCircle2, Phone, Mail, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -244,7 +245,7 @@ Maria Garcia, 3055551234`;
                               {contact.phones.length > 0 ? (
                                 contact.phones.map((p, j) => (
                                   <Badge key={j} variant="secondary" className="text-xs font-mono">
-                                    {p}
+                                    {formatPhone(p)}
                                   </Badge>
                                 ))
                               ) : (

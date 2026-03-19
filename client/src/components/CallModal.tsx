@@ -14,6 +14,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -526,7 +527,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 <User className="h-8 w-8 text-primary/60" />
               </div>
               <h2 className="text-lg font-semibold truncate text-foreground">{contactName}</h2>
-              <p className="text-muted-foreground text-sm mt-1 font-mono">{phoneNumber}</p>
+              <p className="text-muted-foreground text-sm mt-1 font-mono">{formatPhone(phoneNumber)}</p>
             </div>
 
             {/* Call Status */}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,7 +180,7 @@ export default function TwilioNumbers() {
               <TableBody>
                 {numbers.map((num: any) => (
                   <TableRow key={num.id} className={!num.isActive ? "opacity-50" : ""}>
-                    <TableCell className="font-mono font-medium">{num.phoneNumber}</TableCell>
+                    <TableCell className="font-mono font-medium">{formatPhone(num.phoneNumber)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-medium">
                         {num.label}

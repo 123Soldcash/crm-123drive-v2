@@ -2511,3 +2511,14 @@
 - [x] Single scrollable page with: Call Log fields + Notes section all together
 - [x] Property Details section made collapsible to save space
 - [x] Updated vitest tests (14 tests passing)
+
+## Phone Number Display Mask - Format as (555) 444-3332 (COMPLETED)
+- [x] Create shared formatPhone utility function (client/src/lib/formatPhone.ts)
+- [x] Apply mask to CallTrackingTable (phone numbers in contacts table)
+- [x] Apply mask to CallModal (phone number display)
+- [x] Apply mask to PropertyDetail page (ContactsSection, ContactManagement)
+- [x] Apply mask to SMS Inbox / messaging components (SMSInbox, SMSChatButton)
+- [x] Apply mask to Twilio Numbers page
+- [x] Apply mask to all other components (ContactEditModal, TwilioCallWidget, PhoneDuplicateAlert, BulkContactImport, IncomingCallNotification, UserManagement) - 13 files total
+- [x] Display only - no changes to database storage
+- [x] Write vitest tests for formatPhone utility (21 tests passing)

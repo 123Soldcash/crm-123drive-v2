@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -405,7 +406,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                             <div className={`flex items-center gap-2 ${isPhoneDup ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
                               <Phone className={`w-4 h-4 ${isPhoneDup ? 'text-amber-600' : ''}`} />
                               <span className={`${hiddenPhones.has(primaryPhone.phoneNumber) ? 'blur-sm' : ''} ${isPhoneDup ? 'text-amber-800 font-medium' : ''}`}>
-                                {primaryPhone.phoneNumber}
+                                {formatPhone(primaryPhone.phoneNumber)}
                               </span>
                               {isPhoneDup && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
                               <button

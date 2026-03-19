@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -999,7 +1000,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 onClick={() => handlePhoneClick(contact, phone)}
                                 className="text-sm text-blue-600 hover:underline font-medium"
                               >
-                                {hiddenPhones.has(phone.phoneNumber) ? "****" : phone.phoneNumber}
+                                {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
                               </button>
                               <button
                                 onClick={() => handleNoteClick(contact.id, phone.phoneNumber)}
@@ -1328,7 +1329,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <div className="bg-muted p-3 rounded-lg">
                 <p className="text-sm font-medium">{selectedPhone.contactName}</p>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPhone.phoneNumber} ({selectedPhone.phoneType})
+                  {formatPhone(selectedPhone.phoneNumber)} ({selectedPhone.phoneType})
                 </p>
               </div>
             )}

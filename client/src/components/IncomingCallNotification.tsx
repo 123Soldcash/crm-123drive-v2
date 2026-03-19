@@ -15,6 +15,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -250,17 +251,7 @@ export function IncomingCallNotification() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const formatPhoneDisplay = (phone: string) => {
-    // Format +1XXXXXXXXXX to (XXX) XXX-XXXX
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length === 11 && digits.startsWith("1")) {
-      return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-    }
-    if (digits.length === 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-    return phone;
-  };
+  // Use shared formatPhone utility
 
   // Don't render anything if idle
   if (callState === "idle") return null;
@@ -318,7 +309,7 @@ export function IncomingCallNotification() {
             </div>
             <div>
               <p className="text-white font-semibold text-base">
-                {formatPhoneDisplay(callerNumber)}
+                {formatPhone(callerNumber)}
               </p>
               <p className="text-gray-400 text-xs">
                 {callState === "ringing" && "Ringing..."}

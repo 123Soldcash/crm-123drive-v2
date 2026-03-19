@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import {
   Dialog,
   DialogContent,
@@ -388,7 +389,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                 <div className="space-y-2">
                   {phones.map((phone, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border">
-                      <span className="text-sm font-mono flex-1">{phone.phoneNumber}</span>
+                      <span className="text-sm font-mono flex-1">{formatPhone(phone.phoneNumber)}</span>
                       <Badge variant="outline" className="text-xs">{phone.phoneType}</Badge>
                       {phone.dnc === 1 && <Badge variant="destructive" className="text-xs">DNC</Badge>}
                       <Button
@@ -507,7 +508,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                         </span>
                         {comm.phoneNumber && (
                           <Badge variant="outline" className="text-xs font-mono">
-                            {comm.phoneNumber}
+                            {formatPhone(comm.phoneNumber)}
                           </Badge>
                         )}
                       </div>

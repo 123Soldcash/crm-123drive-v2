@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -483,7 +484,7 @@ export default function UserManagement() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">{user.email || "—"}</TableCell>
-                    <TableCell className="text-sm">{user.phone || "—"}</TableCell>
+                    <TableCell className="text-sm">{user.phone ? formatPhone(user.phone) : "—"}</TableCell>
 
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>

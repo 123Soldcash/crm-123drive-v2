@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CallModal } from "./CallModal";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { toast } from "sonner";
 
 interface TwilioCallWidgetProps {
@@ -88,7 +89,7 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
                   <Phone className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{num.label}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{num.phoneNumber}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{formatPhone(num.phoneNumber)}</p>
                   </div>
                 </button>
               ))}

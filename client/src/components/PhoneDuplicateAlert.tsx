@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ExternalLink } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { formatPhone } from "@/lib/formatPhone";
 import { useLocation } from "wouter";
 
 interface PhoneDuplicateAlertProps {
@@ -56,7 +57,7 @@ export function PhoneDuplicateAlert({ phoneNumber, onDismiss }: PhoneDuplicateAl
                     {dup.owner} • {dup.leadTemperature} • {dup.deskStatus}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {dup.phoneType}: {dup.phoneNumber}
+                    {dup.phoneType}: {formatPhone(dup.phoneNumber)}
                   </p>
                 </div>
                 <Button
