@@ -2543,3 +2543,9 @@
 - [x] Write vitest tests for DNC system (24 tests passing)
 - [x] Confirmation dialogs for DNC Geral (mark/unmark)
 - [x] Visual indicators: strikethrough, red text, disabled buttons, red DNC badge
+
+## DNC UI Cleanup (COMPLETED)
+- [x] Translate "DNC Geral" button to English ("DNC General (OFF)" / "DNC General (ON)")
+- [x] Remove DNC checkbox from flags row (📵 DNC checkbox removed)
+- [x] Keep only the DNC General button for global DNC
+- [x] Verify CallModal DNC toggle works for individual phone numbers (DNC ON/OFF next to Disposition)

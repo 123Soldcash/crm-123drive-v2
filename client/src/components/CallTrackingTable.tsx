@@ -827,7 +827,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     }}
                   >
                     {allContactsDNC ? <ShieldAlert className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                    DNC Geral {allContactsDNC ? "(ON)" : "(OFF)"}
+                    DNC General {allContactsDNC ? "(ON)" : "(OFF)"}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -839,13 +839,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             </TooltipProvider>
 
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1 text-sm cursor-pointer">
-                <Checkbox
-                  checked={flagFilters.dnc}
-                  onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, dnc: !!checked }))}
-                />
-                <span>📵 DNC</span>
-              </label>
               <label className="flex items-center gap-1 text-sm cursor-pointer">
                 <Checkbox
                   checked={flagFilters.litigator}
@@ -1788,7 +1781,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 <li><strong>Archive this property</strong> (Desk Status → ARCHIVED)</li>
                 <li>Disable all call and SMS buttons for these contacts</li>
               </ul>
-              <p className="text-sm mt-2">You can undo this later by clicking "DNC Geral (ON)" again.</p>
+              <p className="text-sm mt-2">You can undo this later by clicking "DNC General (ON)" again.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
