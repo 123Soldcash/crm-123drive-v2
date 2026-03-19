@@ -46,7 +46,7 @@ export async function getContactsByProperty(propertyId: number) {
   const dbPropertyId = await resolvePropertyDbId(propertyId);
   if (!dbPropertyId) return [];
   
-  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
+  const contactsData = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship, dnc: contacts.dnc, isLitigator: contacts.isLitigator, isDecisionMaker: contacts.isDecisionMaker, hidden: contacts.hidden }).from(contacts).where(eq(contacts.propertyId, dbPropertyId));
   
   // For each contact, fetch phones, emails, and addresses with error handling for missing tables
   const contactsWithDetails = await Promise.all(
@@ -57,7 +57,7 @@ export async function getContactsByProperty(propertyId: number) {
       
       // Fetch phones - table should exist
       try {
-        phones = await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
+        phones = await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType, dnc: contactPhones.dnc }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
       } catch (e) {
         console.error('Error fetching phones:', e);
       }
@@ -476,4 +476,88 @@ export async function bulkDeleteContacts(contactIds: number[]) {
   
   // Delete all contacts
   await db.delete(contacts).where(inArray(contacts.id, contactIds));
+}
+
+/**
+ * Toggle DNC flag on a specific phone number
+ */
+export async function togglePhoneDNC(phoneId: number, dnc: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(contactPhones)
+    .set({ dnc: dnc ? 1 : 0 })
+    .where(eq(contactPhones.id, phoneId));
+}
+
+/**
+ * Mark ALL contacts and ALL their phones as DNC for a property.
+ * Also updates the property desk status to ARCHIVED.
+ */
+export async function markPropertyDNC(propertyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const dbPropertyId = await resolvePropertyDbId(propertyId);
+  if (!dbPropertyId) throw new Error("Property not found");
+  
+  // Get all contacts for this property
+  const propertyContacts = await db.select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.propertyId, dbPropertyId));
+  
+  if (propertyContacts.length > 0) {
+    const contactIds = propertyContacts.map(c => c.id);
+    
+    // Mark all contacts as DNC
+    await db.update(contacts)
+      .set({ dnc: 1 })
+      .where(inArray(contacts.id, contactIds));
+    
+    // Mark all phones of these contacts as DNC
+    await db.update(contactPhones)
+      .set({ dnc: 1 })
+      .where(inArray(contactPhones.contactId, contactIds));
+  }
+  
+  // Update property desk status to ARCHIVED
+  await db.update(properties)
+    .set({ deskStatus: "ARCHIVED" })
+    .where(eq(properties.id, dbPropertyId));
+}
+
+/**
+ * Unmark DNC for ALL contacts and ALL their phones for a property.
+ * Also updates the property desk status to ACTIVE.
+ */
+export async function unmarkPropertyDNC(propertyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const dbPropertyId = await resolvePropertyDbId(propertyId);
+  if (!dbPropertyId) throw new Error("Property not found");
+  
+  // Get all contacts for this property
+  const propertyContacts = await db.select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.propertyId, dbPropertyId));
+  
+  if (propertyContacts.length > 0) {
+    const contactIds = propertyContacts.map(c => c.id);
+    
+    // Unmark all contacts DNC
+    await db.update(contacts)
+      .set({ dnc: 0 })
+      .where(inArray(contacts.id, contactIds));
+    
+    // Unmark all phones DNC
+    await db.update(contactPhones)
+      .set({ dnc: 0 })
+      .where(inArray(contactPhones.contactId, contactIds));
+  }
+  
+  // Update property desk status to ACTIVE
+  await db.update(properties)
+    .set({ deskStatus: "ACTIVE" })
+    .where(eq(properties.id, dbPropertyId));
 }

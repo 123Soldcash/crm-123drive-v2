@@ -2449,6 +2449,27 @@ export const appRouter = router({
         return { success: true, count: input.contactIds.length };
       }),
 
+    togglePhoneDNC: protectedProcedure
+      .input(z.object({ phoneId: z.number(), dnc: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await communication.togglePhoneDNC(input.phoneId, input.dnc);
+        return { success: true };
+      }),
+
+    markPropertyDNC: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        await communication.markPropertyDNC(input.propertyId);
+        return { success: true };
+      }),
+
+    unmarkPropertyDNC: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        await communication.unmarkPropertyDNC(input.propertyId);
+        return { success: true };
+      }),
+
     bulkDeleteContacts: protectedProcedure
       .input(z.object({ contactIds: z.array(z.number()) }))
       .mutation(async ({ input }) => {

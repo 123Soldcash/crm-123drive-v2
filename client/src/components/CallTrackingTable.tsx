@@ -38,7 +38,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TwilioCallWidget } from "./TwilioCallWidget";
@@ -310,6 +317,42 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     }
     setSelectedContacts(newSelected);
   };
+
+  const [showDNCGeralDialog, setShowDNCGeralDialog] = useState(false);
+  const [showUnmarkDNCGeralDialog, setShowUnmarkDNCGeralDialog] = useState(false);
+
+  // Check if ALL contacts are DNC (for DNC Geral toggle)
+  const allContactsDNC = contacts && contacts.length > 0 && contacts.every((c: any) => !!c.dnc);
+
+  const togglePhoneDNCMutation = trpc.communication.togglePhoneDNC.useMutation({
+    onSuccess: () => {
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      toast.success("Phone DNC status updated");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update DNC: ${error.message}`);
+    },
+  });
+
+  const markPropertyDNCMutation = trpc.communication.markPropertyDNC.useMutation({
+    onSuccess: () => {
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      toast.success("All contacts marked as DNC. Property archived.");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to mark property DNC: ${error.message}`);
+    },
+  });
+
+  const unmarkPropertyDNCMutation = trpc.communication.unmarkPropertyDNC.useMutation({
+    onSuccess: () => {
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      toast.success("All contacts DNC removed. Property set to Active.");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to unmark property DNC: ${error.message}`);
+    },
+  });
 
   const bulkMarkDNCMutation = trpc.communication.bulkMarkDNC.useMutation({
     onSuccess: () => {
@@ -765,6 +808,36 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               ) : null;
             })()}
 
+            {/* DNC Geral Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={allContactsDNC ? "default" : "outline"}
+                    size="sm"
+                    className={allContactsDNC 
+                      ? "bg-red-600 hover:bg-red-700 text-white border-red-600 gap-1.5" 
+                      : "border-red-300 text-red-600 hover:bg-red-50 gap-1.5"}
+                    onClick={() => {
+                      if (allContactsDNC) {
+                        setShowUnmarkDNCGeralDialog(true);
+                      } else {
+                        setShowDNCGeralDialog(true);
+                      }
+                    }}
+                  >
+                    {allContactsDNC ? <ShieldAlert className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                    DNC Geral {allContactsDNC ? "(ON)" : "(OFF)"}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {allContactsDNC 
+                    ? "Click to remove DNC from all contacts and set property to ACTIVE" 
+                    : "Click to mark ALL contacts as DNC and archive this property"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1 text-sm cursor-pointer">
                 <Checkbox
@@ -984,21 +1057,71 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           {/* Phone Number */}
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
-                              <TwilioCallWidget
-                                phoneNumber={phone.phoneNumber}
-                                contactName={contact.name}
-                                contactId={contact.id}
-                                propertyId={propertyId}
-                              />
-                              <SMSChatButton
-                                phoneNumber={phone.phoneNumber}
-                                contactName={contact.name}
-                                contactId={contact.id}
-                                propertyId={propertyId}
-                              />
+                              {/* DNC Toggle per phone */}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={() => togglePhoneDNCMutation.mutate({ phoneId: phone.id, dnc: !phone.dnc })}
+                                      className={`flex-shrink-0 p-0.5 rounded transition-colors ${
+                                        phone.dnc 
+                                          ? "text-red-600 hover:text-red-800" 
+                                          : "text-gray-300 hover:text-red-400"
+                                      }`}
+                                      title={phone.dnc ? "Remove DNC from this number" : "Mark this number as DNC"}
+                                    >
+                                      <PhoneOff className="h-3.5 w-3.5" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    {phone.dnc 
+                                      ? "This number is marked as DNC. Click to remove." 
+                                      : "Click to mark this number as Do Not Call"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+
+                              {/* Call & SMS buttons - disabled if phone is DNC */}
+                              {phone.dnc || contact.dnc ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="inline-flex items-center gap-1 opacity-40 cursor-not-allowed">
+                                        <PhoneOff className="h-4 w-4 text-red-400" />
+                                        <Ban className="h-3 w-3 text-red-400" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="bg-red-50 border-red-200 text-red-800">
+                                      <div className="flex items-center gap-1.5">
+                                        <ShieldAlert className="h-4 w-4" />
+                                        <span>This number is marked as DNC. Calls are blocked.</span>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <>
+                                  <TwilioCallWidget
+                                    phoneNumber={phone.phoneNumber}
+                                    contactName={contact.name}
+                                    contactId={contact.id}
+                                    propertyId={propertyId}
+                                  />
+                                  <SMSChatButton
+                                    phoneNumber={phone.phoneNumber}
+                                    contactName={contact.name}
+                                    contactId={contact.id}
+                                    propertyId={propertyId}
+                                  />
+                                </>
+                              )}
                               <button
                                 onClick={() => handlePhoneClick(contact, phone)}
-                                className="text-sm text-blue-600 hover:underline font-medium"
+                                className={`text-sm font-medium ${
+                                  phone.dnc || contact.dnc
+                                    ? "text-red-400 line-through cursor-default"
+                                    : "text-blue-600 hover:underline"
+                                }`}
                               >
                                 {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
                               </button>
@@ -1649,6 +1772,73 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           propertyId={propertyId}
         />
       )}
+
+      {/* DNC Geral - Mark All Contacts Dialog */}
+      <AlertDialog open={showDNCGeralDialog} onOpenChange={setShowDNCGeralDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+              Mark ALL Contacts as DNC?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>This will:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Block ALL phone numbers</strong> for every contact in this property</li>
+                <li><strong>Archive this property</strong> (Desk Status → ARCHIVED)</li>
+                <li>Disable all call and SMS buttons for these contacts</li>
+              </ul>
+              <p className="text-sm mt-2">You can undo this later by clicking "DNC Geral (ON)" again.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                markPropertyDNCMutation.mutate({ propertyId });
+                setShowDNCGeralDialog(false);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <ShieldAlert className="h-4 w-4 mr-1" />
+              Mark All as DNC & Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* DNC Geral - Unmark All Contacts Dialog */}
+      <AlertDialog open={showUnmarkDNCGeralDialog} onOpenChange={setShowUnmarkDNCGeralDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-green-600">
+              <ShieldCheck className="h-5 w-5" />
+              Remove DNC from ALL Contacts?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>This will:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Unblock ALL phone numbers</strong> for every contact in this property</li>
+                <li><strong>Set property to ACTIVE</strong> (Desk Status → ACTIVE)</li>
+                <li>Re-enable all call and SMS buttons</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                unmarkPropertyDNCMutation.mutate({ propertyId });
+                setShowUnmarkDNCGeralDialog(false);
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              Remove DNC & Set Active
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -2532,3 +2532,14 @@
 - [x] Write vitest tests for task completion (26 tests passing)
 - [x] Updated PropertyTasks, TasksList, TaskCard, TasksCalendar
 - [x] Added summary badges (pending/done counts) and toast notifications
+
+## DNC (Do Not Call) System (COMPLETED)
+- [x] DNC Geral button: blocks ALL contacts of a property + changes Desk to ARCHIVED
+- [x] DNC Individual: mark/unmark specific phone numbers as DNC
+- [x] Blocked phone icon: disabled call icon with tooltip "Este número está marcado como DNC"
+- [x] DNC toggle in Call Log (CallModal): big toggle next to Disposition to mark/unmark DNC
+- [x] Unmark DNC Geral: restores all contacts and changes Desk back to ACTIVE
+- [x] Backend mutations: togglePhoneDNC, markPropertyDNC, unmarkPropertyDNC
+- [x] Write vitest tests for DNC system (24 tests passing)
+- [x] Confirmation dialogs for DNC Geral (mark/unmark)
+- [x] Visual indicators: strikethrough, red text, disabled buttons, red DNC badge

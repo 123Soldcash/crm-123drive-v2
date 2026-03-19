@@ -48,6 +48,7 @@ import {
   RefreshCw,
   WifiOff,
   Save,
+  ShieldAlert,
 } from "lucide-react";
 
 type CallStatus = "idle" | "initializing" | "connecting" | "ringing" | "in-progress" | "completed" | "failed" | "no-answer";
@@ -206,6 +207,19 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
     retry: 2,
   });
 
+  // Fetch contacts to get phone DNC status
+  const { data: contactsForDNC } = trpc.communication.getContactsByProperty.useQuery(
+    { propertyId },
+    { enabled: open && !!propertyId }
+  );
+
+  // Find the current phone's ID and DNC status
+  const currentPhoneData = contactsForDNC
+    ?.flatMap((c: any) => c.phones || [])
+    ?.find((p: any) => p.phoneNumber === phoneNumber || p.phoneNumber === phoneNumber.replace(/^\+1/, ''));
+  const currentPhoneId = currentPhoneData?.id || 0;
+  const phoneDNC = !!currentPhoneData?.dnc;
+
   // Fetch notes
   const { data: notesData, refetch: refetchNotes } = trpc.callNotes.getByContact.useQuery(
     { contactId },
@@ -218,6 +232,15 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   // Mutations
   const createCallLogMutation = trpc.twilio.createCallLog.useMutation();
   const updateCallLogMutation = trpc.twilio.updateCallLog.useMutation();
+  const togglePhoneDNCMutation = trpc.communication.togglePhoneDNC.useMutation({
+    onSuccess: (_, variables) => {
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      toast.success(variables.dnc ? "Number marked as DNC" : "DNC removed from number");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update DNC: ${error.message}`);
+    },
+  });
   const createNoteMutation = trpc.callNotes.create.useMutation();
   const deleteNoteMutation = trpc.callNotes.delete.useMutation();
   const logCommunicationMutation = trpc.communication.addCommunicationLog.useMutation({
@@ -690,9 +713,31 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* ═══════════ CALL LOG SECTION ═══════════ */}
                   <div className="space-y-4">
-                    {/* Disposition */}
+                    {/* Disposition + DNC Toggle Row */}
                     <div className="space-y-1.5">
-                      <Label className="text-sm font-semibold">Disposition *</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">Disposition *</Label>
+                        {/* DNC Toggle - Big and prominent */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (phoneDNC) {
+                              togglePhoneDNCMutation.mutate({ phoneId: currentPhoneId, dnc: false });
+                            } else {
+                              togglePhoneDNCMutation.mutate({ phoneId: currentPhoneId, dnc: true });
+                            }
+                          }}
+                          disabled={!currentPhoneId || togglePhoneDNCMutation.isPending}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all border-2 ${
+                            phoneDNC
+                              ? "bg-red-100 border-red-500 text-red-700 hover:bg-red-200"
+                              : "bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100 hover:border-gray-400"
+                          }`}
+                        >
+                          <ShieldAlert className={`h-5 w-5 ${phoneDNC ? "text-red-600" : "text-gray-400"}`} />
+                          {phoneDNC ? "DNC ON" : "DNC OFF"}
+                        </button>
+                      </div>
                       <Select value={logDisposition} onValueChange={setLogDisposition}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select call result..." />
