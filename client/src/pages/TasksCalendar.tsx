@@ -261,40 +261,50 @@ export function TasksCalendar() {
                     {selectedDate ? "No tasks for this date" : "Click a date to view tasks"}
                   </p>
                 ) : (
-                  selectedDateTasks.map((task) => (
+                  selectedDateTasks.map((task) => {
+                    const isDone = task.status === "Done";
+                    return (
                     <div
                       key={task.id}
-                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:border-gray-300 transition-colors"
+                      className={`rounded-lg p-3 transition-colors ${
+                        isDone
+                          ? "bg-emerald-50/50 border-2 border-emerald-200 opacity-70"
+                          : "bg-gray-50 border border-gray-200 hover:border-gray-300"
+                      }`}
                     >
                       <div className="flex items-start gap-2 mb-2">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 ${getPriorityColor(task.priority)}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 ${isDone ? "bg-emerald-400" : getPriorityColor(task.priority)}`} />
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 text-sm">{task.title || task.taskType}</h4>
+                          <h4 className={`font-semibold text-sm ${isDone ? "text-gray-400 line-through decoration-emerald-400 decoration-2" : "text-gray-900"}`}>{task.title || task.taskType}</h4>
                           {task.description && (
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
+                            <p className={`text-xs mt-1 line-clamp-2 ${isDone ? "text-gray-300 line-through" : "text-gray-500"}`}>{task.description}</p>
                           )}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
+                        <Badge variant="outline" className={`text-xs ${isDone ? "border-emerald-200 text-emerald-400" : "border-gray-300 text-gray-600"}`}>
                           {task.taskType}
                         </Badge>
-                        <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
-                          {task.status}
-                        </Badge>
+                        {isDone ? (
+                          <Badge className="text-xs bg-emerald-100 text-emerald-600 border-emerald-200">Done</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
+                            {task.status}
+                          </Badge>
+                        )}
                         {task.assignedToName && (
-                          <span className="text-xs text-gray-500">{task.assignedToName}</span>
+                          <span className={`text-xs ${isDone ? "text-gray-300" : "text-gray-500"}`}>{task.assignedToName}</span>
                         )}
                       </div>
 
                       {task.propertyAddress && task.propertyId && (
-                        <Link href={`/properties/${task.propertyId}`} className="block text-xs text-blue-600 hover:text-blue-800 hover:underline mt-2">
+                        <Link href={`/properties/${task.propertyId}`} className={`block text-xs hover:underline mt-2 ${isDone ? "text-gray-300" : "text-blue-600 hover:text-blue-800"}`}>
                           📍 {task.propertyAddress}, {task.propertyCity}
                         </Link>
                       )}
                     </div>
-                  ))
+                  )})
                 )}
               </div>
             </div>

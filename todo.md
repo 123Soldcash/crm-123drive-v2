@@ -2522,3 +2522,13 @@
 - [x] Apply mask to all other components (ContactEditModal, TwilioCallWidget, PhoneDuplicateAlert, BulkContactImport, IncomingCallNotification, UserManagement) - 13 files total
 - [x] Display only - no changes to database storage
 - [x] Write vitest tests for formatPhone utility (21 tests passing)
+
+## Task Completion & Visual Status Indicators (COMPLETED)
+- [x] Add completion toggle (click circle = done, click checkmark = reopen)
+- [x] Visual style for completed tasks (strikethrough, muted, emerald bg, green checkmark)
+- [x] Visual style for pending tasks (prominent, clear, circle icon)
+- [x] Completed tasks remain visible but sorted to bottom with separator
+- [x] Backend already supported status changes (updateTask mutation)
+- [x] Write vitest tests for task completion (26 tests passing)
+- [x] Updated PropertyTasks, TasksList, TaskCard, TasksCalendar
+- [x] Added summary badges (pending/done counts) and toast notifications
