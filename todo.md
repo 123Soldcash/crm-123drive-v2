@@ -2549,3 +2549,8 @@
 - [x] Remove DNC checkbox from flags row (📵 DNC checkbox removed)
 - [x] Keep only the DNC General button for global DNC
 - [x] Verify CallModal DNC toggle works for individual phone numbers (DNC ON/OFF next to Disposition)
+
+## DNC Bug Fixes (COMPLETED)
+- [x] BUG: DNC General not updating Desk to ARCHIVED — fixed by adding properties.getById.invalidate() to onSuccess
+- [x] BUG: DNC toggle missing in Call Log dialog — added "Mark DNC" / "DNC ON" button next to Disposition label
+- [x] DNC button next to Disposition in the Quick Call Log dialog — implemented with red/gray toggle

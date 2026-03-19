@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, deskStatus FROM properties WHERE id = (SELECT id FROM properties WHERE propertyId = 'MANUAL-1773864792252' LIMIT 1)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, deskStatus FROM properties WHERE id = (SELECT id FROM properties WHERE propertyId = 'MANUAL-1773864792252' LIMIT 1)",
+  "rows": [
+    {
+      "id": "2490001",
+      "deskStatus": "ARCHIVED"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tdeskStatus\n2490001\tARCHIVED\n",
+  "stderr": "",
+  "execution_time_ms": 124
+}

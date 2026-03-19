@@ -337,6 +337,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const markPropertyDNCMutation = trpc.communication.markPropertyDNC.useMutation({
     onSuccess: () => {
       utils.communication.getContactsByProperty.invalidate({ propertyId });
+      utils.properties.getById.invalidate({ id: propertyId });
       toast.success("All contacts marked as DNC. Property archived.");
     },
     onError: (error: any) => {
@@ -347,6 +348,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const unmarkPropertyDNCMutation = trpc.communication.unmarkPropertyDNC.useMutation({
     onSuccess: () => {
       utils.communication.getContactsByProperty.invalidate({ propertyId });
+      utils.properties.getById.invalidate({ id: propertyId });
       toast.success("All contacts DNC removed. Property set to Active.");
     },
     onError: (error: any) => {
@@ -1451,7 +1453,35 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             )}
 
             <div className="space-y-2">
-              <Label>Disposition *</Label>
+              <div className="flex items-center justify-between">
+                <Label>Disposition *</Label>
+                {/* DNC Toggle - Mark this specific phone as DNC */}
+                {selectedPhone && (() => {
+                  const phoneData = contacts?.flatMap((c: any) => (c.phones || []).map((p: any) => ({ ...p, contactId: c.id })))
+                    ?.find((p: any) => p.phoneNumber === selectedPhone.phoneNumber);
+                  const isPhoneDNC = !!phoneData?.dnc;
+                  const phoneId = phoneData?.id || 0;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (phoneId) {
+                          togglePhoneDNCMutation.mutate({ phoneId, dnc: !isPhoneDNC });
+                        }
+                      }}
+                      disabled={!phoneId || togglePhoneDNCMutation.isPending}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all border-2 ${
+                        isPhoneDNC
+                          ? "bg-red-100 border-red-500 text-red-700 hover:bg-red-200"
+                          : "bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100 hover:border-gray-400"
+                      }`}
+                    >
+                      <PhoneOff className={`h-5 w-5 ${isPhoneDNC ? "text-red-600" : "text-gray-400"}`} />
+                      {isPhoneDNC ? "DNC ON" : "Mark DNC"}
+                    </button>
+                  );
+                })()}
+              </div>
               <Select value={disposition} onValueChange={setDisposition}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select call result..." />
