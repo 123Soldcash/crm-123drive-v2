@@ -2559,3 +2559,9 @@
 - [x] Fix <p> cannot contain nested <ul> error — AlertDialogDescription renders as <p>, used asChild with <div> wrapper in DNC dialogs
 - [x] Fix <p> cannot contain nested <p> error — replaced nested <p> with <span className="block"> in NoTwilioPhoneDialog
 - [x] Fixed in: CallTrackingTable.tsx (2 DNC dialogs), NoTwilioPhoneDialog.tsx
+
+## BUG: DNC General - Desk Not Updating to ARCHIVED on Frontend (FIXED)
+- [x] Desk status not visually updating to ARCHIVED — root cause: backend updated deskStatus but not deskName (frontend reads deskName)
+- [x] Fixed: markPropertyDNC now sets both deskStatus="ARCHIVED" and deskName="ARCHIVED"
+- [x] Fixed: unmarkPropertyDNC now sets deskStatus="ACTIVE" and deskName="NEW_LEAD"
+- [x] Verified: desk badge changes to "⬛ Archived" immediately after DNC General click

@@ -520,9 +520,9 @@ export async function markPropertyDNC(propertyId: number) {
       .where(inArray(contactPhones.contactId, contactIds));
   }
   
-  // Update property desk status to ARCHIVED
+  // Update property desk status and desk name to ARCHIVED
   await db.update(properties)
-    .set({ deskStatus: "ARCHIVED" })
+    .set({ deskStatus: "ARCHIVED", deskName: "ARCHIVED" })
     .where(eq(properties.id, dbPropertyId));
 }
 
@@ -556,8 +556,8 @@ export async function unmarkPropertyDNC(propertyId: number) {
       .where(inArray(contactPhones.contactId, contactIds));
   }
   
-  // Update property desk status to ACTIVE
+  // Update property desk status to ACTIVE and reset desk name
   await db.update(properties)
-    .set({ deskStatus: "ACTIVE" })
+    .set({ deskStatus: "ACTIVE", deskName: "NEW_LEAD" })
     .where(eq(properties.id, dbPropertyId));
 }
