@@ -2554,3 +2554,8 @@
 - [x] BUG: DNC General not updating Desk to ARCHIVED — fixed by adding properties.getById.invalidate() to onSuccess
 - [x] BUG: DNC toggle missing in Call Log dialog — added "Mark DNC" / "DNC ON" button next to Disposition label
 - [x] DNC button next to Disposition in the Quick Call Log dialog — implemented with red/gray toggle
+
+## HTML Nesting Errors Fix (COMPLETED)
+- [x] Fix <p> cannot contain nested <ul> error — AlertDialogDescription renders as <p>, used asChild with <div> wrapper in DNC dialogs
+- [x] Fix <p> cannot contain nested <p> error — replaced nested <p> with <span className="block"> in NoTwilioPhoneDialog
+- [x] Fixed in: CallTrackingTable.tsx (2 DNC dialogs), NoTwilioPhoneDialog.tsx

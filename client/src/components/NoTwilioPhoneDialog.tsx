@@ -48,16 +48,18 @@ export function NoTwilioPhoneDialog({
               No Twilio Phone Number Configured
             </AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="text-sm leading-relaxed space-y-2 pt-1">
-            <p>
-              {actionIcon} To {actionLabel} from this CRM, your account needs a
-              <strong> Twilio phone number</strong> assigned to it.
-            </p>
-            <p className="text-gray-500">
-              Without it, the system cannot route the {action === "sms" ? "message" : "call"} and will return an error.
-              Ask your administrator to assign a Twilio number to your account in{" "}
-              <strong>User Management</strong>.
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="text-muted-foreground text-sm leading-relaxed space-y-2 pt-1">
+              <span className="block">
+                {actionIcon} To {actionLabel} from this CRM, your account needs a
+                <strong> Twilio phone number</strong> assigned to it.
+              </span>
+              <span className="block text-gray-500">
+                Without it, the system cannot route the {action === "sms" ? "message" : "call"} and will return an error.
+                Ask your administrator to assign a Twilio number to your account in{" "}
+                <strong>User Management</strong>.
+              </span>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -1804,14 +1804,16 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <ShieldAlert className="h-5 w-5" />
               Mark ALL Contacts as DNC?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>This will:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Block ALL phone numbers</strong> for every contact in this property</li>
-                <li><strong>Archive this property</strong> (Desk Status → ARCHIVED)</li>
-                <li>Disable all call and SMS buttons for these contacts</li>
-              </ul>
-              <p className="text-sm mt-2">You can undo this later by clicking "DNC General (ON)" again.</p>
+            <AlertDialogDescription asChild>
+              <div className="text-muted-foreground text-sm space-y-2">
+                <span>This will:</span>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Block ALL phone numbers</strong> for every contact in this property</li>
+                  <li><strong>Archive this property</strong> (Desk Status → ARCHIVED)</li>
+                  <li>Disable all call and SMS buttons for these contacts</li>
+                </ul>
+                <span className="block text-sm mt-2">You can undo this later by clicking "DNC General (ON)" again.</span>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1838,13 +1840,15 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <ShieldCheck className="h-5 w-5" />
               Remove DNC from ALL Contacts?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>This will:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Unblock ALL phone numbers</strong> for every contact in this property</li>
-                <li><strong>Set property to ACTIVE</strong> (Desk Status → ACTIVE)</li>
-                <li>Re-enable all call and SMS buttons</li>
-              </ul>
+            <AlertDialogDescription asChild>
+              <div className="text-muted-foreground text-sm space-y-2">
+                <span>This will:</span>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Unblock ALL phone numbers</strong> for every contact in this property</li>
+                  <li><strong>Set property to ACTIVE</strong> (Desk Status → ACTIVE)</li>
+                  <li>Re-enable all call and SMS buttons</li>
+                </ul>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
