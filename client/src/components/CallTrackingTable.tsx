@@ -366,9 +366,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       return;
     }
 
-    // Format notes with mood emoji if selected
-    const moodPrefix = mood ? `${mood} ` : "";
-    const notesText = notes ? ` - ${moodPrefix}${notes}` : "";
+    // Format notes
+    const notesText = notes ? ` - ${notes}` : "";
     
     logCommunicationMutation.mutate({
       propertyId,
@@ -376,6 +375,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       communicationType: "Phone",
       callResult: disposition as any,
       direction: "Outbound",
+      mood: mood || undefined,
+      disposition: disposition,
       notes: `Called ${selectedPhone.phoneNumber} (${selectedPhone.phoneType})${notesText}`,
       nextStep: "",
     });

@@ -2349,6 +2349,9 @@ export const appRouter = router({
             ])
             .optional(),
           direction: z.enum(["Outbound", "Inbound"]).optional(),
+          mood: z.string().optional(),
+          disposition: z.string().optional(),
+          propertyDetails: z.string().optional(), // JSON string
           notes: z.string().optional(),
           nextStep: z.string().optional(),
           communicationDate: z.date().optional(),

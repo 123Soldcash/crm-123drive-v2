@@ -504,6 +504,13 @@ export const communicationLog = mysqlTable("communicationLog", {
   
   direction: mysqlEnum("direction", ["Outbound", "Inbound"]).default("Outbound"),
   
+  // Mood & Disposition (per-call tracking)
+  mood: varchar("mood", { length: 20 }), // Emoji mood indicator
+  disposition: varchar("disposition", { length: 100 }), // Human-readable disposition label
+  
+  // Property details captured during call
+  propertyDetails: text("propertyDetails"), // JSON: bedBath, sf, roofAge, acAge, overallCondition, reasonToSell, howFastToSell
+  
   // Content
   notes: text("notes"),
   nextStep: text("nextStep"),

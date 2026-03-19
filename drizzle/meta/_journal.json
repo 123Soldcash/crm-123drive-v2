@@ -197,6 +197,13 @@
       "when": 1773864117459,
       "tag": "0027_last_longshot",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1773879127242,
+      "tag": "0028_known_quicksilver",
+      "breakpoints": true
     }
   ]
 }

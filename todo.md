@@ -2492,3 +2492,14 @@
 - [x] Write 21 vitest tests for parsing logic and backend mutation (all passing)
 - [x] Remove test data from database after verification
 - [x] Handle various formats: name + phone, name + email, name + phone + email, mixed order
+
+## Call Log Integration - Per-Call Records
+- [x] Integrate call log form (mood, disposition, notes) into the call experience
+- [x] Each call should have its own record with mood, disposition, and notes
+- [x] Call notes should appear together with general notes during/after a call
+- [x] Update backend to support per-call log data storage (mood, disposition, propertyDetails columns added)
+- [x] Write vitest tests for call log integration (10 tests passing)
+- [x] Added tabbed interface in CallModal: Notes tab + Call Log tab
+- [x] Call Log tab includes: Disposition, Mood, Decision Maker, Owner Verified, Quick Templates, Property Details, Notes
+- [x] Auto-saves call log when call ends with data filled
+- [x] Removed test data from database

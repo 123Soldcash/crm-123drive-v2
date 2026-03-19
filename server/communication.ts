@@ -297,6 +297,9 @@ export async function getCommunicationLogByProperty(propertyId: number) {
       communicationType: communicationLog.communicationType,
       callResult: communicationLog.callResult,
       direction: communicationLog.direction,
+      mood: communicationLog.mood,
+      disposition: communicationLog.disposition,
+      propertyDetails: communicationLog.propertyDetails,
       notes: communicationLog.notes,
       nextStep: communicationLog.nextStep,
       userId: communicationLog.userId,
@@ -317,7 +320,17 @@ export async function getCommunicationLogByContact(contactId: number) {
   if (!db) throw new Error("Database not available");
   
   return await db
-    .select({ id: communicationLog.id, contactId: communicationLog.contactId, communicationType: communicationLog.communicationType, communicationDate: communicationLog.communicationDate, notes: communicationLog.notes })
+    .select({
+      id: communicationLog.id,
+      contactId: communicationLog.contactId,
+      communicationType: communicationLog.communicationType,
+      communicationDate: communicationLog.communicationDate,
+      callResult: communicationLog.callResult,
+      mood: communicationLog.mood,
+      disposition: communicationLog.disposition,
+      propertyDetails: communicationLog.propertyDetails,
+      notes: communicationLog.notes,
+    })
     .from(communicationLog)
     .where(eq(communicationLog.contactId, contactId))
     .orderBy(desc(communicationLog.communicationDate));
