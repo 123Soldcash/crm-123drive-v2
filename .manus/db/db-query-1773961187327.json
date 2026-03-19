@@ -1,0 +1,178 @@
+{
+  "query": "SELECT id, phoneNumber, label, isActive, sortOrder FROM twilioNumbers ORDER BY sortOrder",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, phoneNumber, label, isActive, sortOrder FROM twilioNumbers ORDER BY sortOrder",
+  "rows": [
+    {
+      "id": "1",
+      "phoneNumber": "+15617781156",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "2",
+      "phoneNumber": "+19543291622",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "3",
+      "phoneNumber": "+19543355668",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "4",
+      "phoneNumber": "+17865309002",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "5",
+      "phoneNumber": "+15617860123",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "6",
+      "phoneNumber": "+19542093000",
+      "label": "Chris",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "7",
+      "phoneNumber": "+15617657653",
+      "label": "Vendor",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "8",
+      "phoneNumber": "+19542193000",
+      "label": "219-3000",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "9",
+      "phoneNumber": "+17868093700",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "10",
+      "phoneNumber": "+17867861149",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "11",
+      "phoneNumber": "+19543888805",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "12",
+      "phoneNumber": "+17866860010",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "13",
+      "phoneNumber": "+15617825005",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "14",
+      "phoneNumber": "+19549535003",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "15",
+      "phoneNumber": "+19544193000",
+      "label": "419-3000",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "16",
+      "phoneNumber": "+15617097653",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "17",
+      "phoneNumber": "+17869041444",
+      "label": "Web",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "18",
+      "phoneNumber": "+13219000198",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "19",
+      "phoneNumber": "+19544093000",
+      "label": "409-3000",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "20",
+      "phoneNumber": "+19542153000",
+      "label": "215-3000",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "21",
+      "phoneNumber": "+19549512010",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "22",
+      "phoneNumber": "+17869040005",
+      "label": "Buyers",
+      "isActive": "1",
+      "sortOrder": "0"
+    },
+    {
+      "id": "23",
+      "phoneNumber": "+19542313176",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    },
+    {
+      "id": "24",
+      "phoneNumber": "+15614682040",
+      "label": "Teste",
+      "isActive": "0",
+      "sortOrder": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tphoneNumber\tlabel\tisActive\tsortOrder\n1\t+15617781156\tTeste\t0\t0\n2\t+19543291622\tTeste\t0\t0\n3\t+19543355668\tTeste\t0\t0\n4\t+17865309002\tTeste\t0\t0\n5\t+15617860123\tTeste\t0\t0\n6\t+19542093000\tChris\t1\t0\n7\t+15617657653\tVendor\t1\t0\n8\t+19542193000\t219-3000\t1\t0\n9\t+17868093700\tTeste\t0\t0\n10\t+17867861149\tTeste\t0\t0\n11\t+19543888805\tTeste\t0\t0\n12\t+17866860010\tTeste\t0\t0\n13\t+15617825005\tTeste\t0\t0\n14\t+19549535003\tTeste\t0\t0\n15\t+19544193000\t419-3000\t1\t0\n16\t+15617097653\tTeste\t0\t0\n17\t+17869041444\tWeb\t1\t0\n18\t+13219000198\tTeste\t0\t0\n19\t+19544093000\t409-3000\t1\t0\n20\t+19542153000\t215-3000\t1\t0\n21\t+19549512010\tTeste\t0\t0\n22\t+17869040005\tBuyers\t1\t0\n23\t+19542313176\tTeste\t0\t0\n24\t+15614682040\tTeste\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 123
+}

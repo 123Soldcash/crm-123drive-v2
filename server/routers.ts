@@ -3154,15 +3154,18 @@ export const appRouter = router({
       }),
 
     // ─── Global Twilio Numbers Registry ────────────────────────────
-    /** List all registered Twilio numbers (active ones for agents, all for admins) */
-    listNumbers: protectedProcedure.query(async ({ ctx }) => {
-      const database = await getDb();
-      if (!database) throw new Error("Database not available");
-      if (ctx.user.role === "admin") {
-        return database.select().from(twilioNumbers).orderBy(twilioNumbers.sortOrder);
-      }
-      return database.select().from(twilioNumbers).where(eq(twilioNumbers.isActive, 1)).orderBy(twilioNumbers.sortOrder);
-    }),
+    /** List all registered Twilio numbers (active ones for agents, all for admins unless activeOnly=true) */
+    listNumbers: protectedProcedure
+      .input(z.object({ activeOnly: z.boolean().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Admins see all numbers in the management page, but activeOnly=true forces active filter (used by call/SMS widgets)
+        if (ctx.user.role === "admin" && !input?.activeOnly) {
+          return database.select().from(twilioNumbers).orderBy(twilioNumbers.sortOrder);
+        }
+        return database.select().from(twilioNumbers).where(eq(twilioNumbers.isActive, 1)).orderBy(twilioNumbers.sortOrder);
+      }),
 
     /** Add a new Twilio number (admin only) */
     addNumber: adminProcedure

@@ -37,7 +37,7 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<string>("");
 
-  const numbersQuery = trpc.twilio.listNumbers.useQuery(undefined, {
+  const numbersQuery = trpc.twilio.listNumbers.useQuery({ activeOnly: true }, {
     enabled: selectorOpen, // Only fetch when dropdown opens
   });
 

@@ -100,7 +100,7 @@ export function SMSChatButton({
   const normalizedPhone = normalizePhone(phoneNumber);
 
   // Fetch Twilio numbers when selector opens
-  const numbersQuery = trpc.twilio.listNumbers.useQuery(undefined, {
+  const numbersQuery = trpc.twilio.listNumbers.useQuery({ activeOnly: true }, {
     enabled: selectorOpen,
   });
 

@@ -2583,3 +2583,10 @@
 - [x] Update ContactEditModal: shows cross-property warning when adding new phone or saving with new phones
 - [x] Update Bulk Import: shows cross-property warnings for all phones across all contacts before import
 - [x] Write vitest tests for cross-property phone check (22 tests passing)
+## Filter Inactive Twilio Numbers from Call Selection (COMPLETED)
+- [x] Investigate Twilio number schema for status/active field
+- [x] Update backend listNumbers to accept optional activeOnly parameter
+- [x] Update TwilioCallWidget to pass activeOnly=true (call selector)
+- [x] Update SMSChatButton to pass activeOnly=true (SMS sender selector)
+- [x] Twilio Numbers management page still shows all numbers for admins
+- [x] Write vitest tests for active-only Twilio number filtering (17 tests passing)
