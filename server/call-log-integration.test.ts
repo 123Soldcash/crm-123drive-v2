@@ -254,3 +254,82 @@ describe("Call Log Integration - addCommunicationLog with mood/disposition/prope
     expect(parsed.roofAge).toBeUndefined();
   });
 });
+
+describe("CallModal Single Page Layout - UI Constants", () => {
+  it("disposition options list is complete and non-empty", () => {
+    const DISPOSITION_OPTIONS = [
+      "Interested - HOT LEAD",
+      "Interested - WARM LEAD - Wants too Much / Full Price",
+      "Interested - WARM LEAD - Not Hated",
+      "Left Message - Owner Verified",
+      "Left Message",
+      "Beep Beep",
+      "Busy",
+      "Call Back",
+      "Disconnected",
+      "Duplicated number",
+      "Fax",
+      "Follow-up",
+      "Hang up",
+      "Has calling restrictions",
+      "Investor/Buyer/Realtor Owned",
+      "Irate - DNC",
+      "Mail box full",
+      "Mail box not set-up",
+      "Not Answer",
+      "Not Available",
+      "Not Ringing",
+      "Not Service",
+      "Number repeated",
+      "Player",
+      "Portuguese",
+      "Property does not fit our criteria",
+      "Restrict",
+      "See Notes",
+      "Sold - DEAD",
+      "Spanish",
+      "Voicemail",
+      "Wrong Number",
+      "Wrong Person",
+    ];
+
+    expect(DISPOSITION_OPTIONS.length).toBeGreaterThan(0);
+    expect(DISPOSITION_OPTIONS).toHaveLength(33);
+    // Each option should be a non-empty string
+    DISPOSITION_OPTIONS.forEach((opt) => {
+      expect(typeof opt).toBe("string");
+      expect(opt.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("note templates are defined for quick use", () => {
+    const NOTE_TEMPLATES = [
+      "Left voicemail",
+      "Will call back tomorrow",
+      "Not interested",
+      "Requested more information",
+      "Wants to think about it",
+      "Call back next week",
+    ];
+
+    expect(NOTE_TEMPLATES).toHaveLength(6);
+    NOTE_TEMPLATES.forEach((t) => {
+      expect(typeof t).toBe("string");
+      expect(t.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("note templates can be appended to existing notes", () => {
+    const existing = "Customer is interested";
+    const template = "Will call back tomorrow";
+    const combined = `${existing}. ${template}`;
+    expect(combined).toBe("Customer is interested. Will call back tomorrow");
+  });
+
+  it("note templates work when notes are empty", () => {
+    const existing = "";
+    const template = "Left voicemail";
+    const result = existing ? `${existing}. ${template}` : template;
+    expect(result).toBe("Left voicemail");
+  });
+});

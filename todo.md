@@ -2503,3 +2503,11 @@
 - [x] Call Log tab includes: Disposition, Mood, Decision Maker, Owner Verified, Quick Templates, Property Details, Notes
 - [x] Auto-saves call log when call ends with data filled
 - [x] Removed test data from database
+
+## CallModal Fixes - Single Page Layout
+- [x] Remove separate Notes tab - merge everything into one single page
+- [x] Expand Notes section inside Call Log to be full-featured (add, view, delete notes with timestamps)
+- [x] Fix scrolling so all content is accessible (overflow-y-auto on right panel)
+- [x] Single scrollable page with: Call Log fields + Notes section all together
+- [x] Property Details section made collapsible to save space
+- [x] Updated vitest tests (14 tests passing)

@@ -2,24 +2,14 @@
  * CallModal — Professional call interface with Twilio Voice SDK
  * 
  * Left side: Contact info, call controls, real-time status
- * Right side: Integrated Call Log + Notes panel
- *   - During call: Notes panel for live note-taking
- *   - After call: Call Log form (disposition, mood, property details, notes)
+ * Right side: Single scrollable page with Call Log + Notes integrated
+ *   - Disposition, Mood, Decision Maker, Owner Verified
+ *   - Quick Templates
+ *   - Property Details (optional)
+ *   - Full Notes section (add, view, delete notes)
+ *   - Save Call Log button
  * 
  * Uses browser microphone via Twilio Voice JavaScript SDK.
- * Call flow:
- *   1. Browser gets Access Token with VoiceGrant (outgoingApplicationSid)
- *   2. User clicks "Call" → Device is created with edge fallback
- *   3. Browser calls device.connect({ params: { To: "+1..." } })
- *   4. Twilio sends POST to TwiML App Voice URL (/api/twilio/voice)
- *   5. Voice webhook returns <Dial><Number>+1...</Number></Dial>
- *   6. Twilio dials the destination — browser user hears ringing and can talk
- *
- * Key design decisions:
- * - Device is created lazily on first call (not on modal open) to avoid
- *   unnecessary WebSocket connections that may fail in restricted networks
- * - Edge fallback: tries ashburn → umatilla → roaming for resilience
- * - The REST API is NOT used to initiate calls — only to create call log entries
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
@@ -28,7 +18,6 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -38,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Phone,
@@ -58,7 +46,6 @@ import {
   Trash2,
   RefreshCw,
   WifiOff,
-  ClipboardList,
   Save,
 } from "lucide-react";
 
@@ -87,7 +74,6 @@ const STATUS_CONFIG: Record<CallStatus, { label: string; icon: React.ReactNode }
 
 const TWILIO_EDGES = ["ashburn", "umatilla", "roaming"] as const;
 
-// Shared constants
 const DISPOSITION_OPTIONS = [
   "Interested - HOT LEAD",
   "Interested - WARM LEAD - Wants too Much / Full Price",
@@ -197,8 +183,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const [reasonToSell, setReasonToSell] = useState("");
   const [howFastToSell, setHowFastToSell] = useState("");
 
-  // Right panel tab
-  const [rightTab, setRightTab] = useState<string>("notes");
+  // Property details collapsed
+  const [showPropertyDetails, setShowPropertyDetails] = useState(false);
 
   // Refs
   const deviceRef = useRef<Device | null>(null);
@@ -206,17 +192,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
   const callLogIdRef = useRef<number | undefined>(undefined);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     callLogIdRef.current = callLogId;
   }, [callLogId]);
-
-  // Auto-switch to call log tab when call ends
-  useEffect(() => {
-    if (callStatus === "completed" || callStatus === "no-answer") {
-      setRightTab("calllog");
-    }
-  }, [callStatus]);
 
   // Fetch access token
   const { data: tokenData, error: tokenError, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(undefined, {
@@ -290,86 +270,135 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           }
         });
 
-        device.on("error", (error: any) => {
-          const classified = classifyError(error);
-          if (!resolved) {
+        device.on("error", (err: any) => {
+          const classified = classifyError(err);
+          if (!resolved && !classified.isRetryable) {
             resolved = true;
             clearTimeout(timeoutId);
-            if (classified.isNetworkError) {
-              deviceRef.current = device;
-              setDeviceReady(true);
-              resolve(device);
-            } else {
-              setErrorMessage(classified.message);
-              resolve(null);
-            }
-          } else {
-            if (classified.isNetworkError && !activeCallRef.current) {
-              // idle network error, device will reconnect
-            } else {
-              setErrorMessage(classified.message);
-              if (callStatus === "idle" || callStatus === "initializing" || callStatus === "connecting") {
-                setCallStatus("failed");
-              }
-            }
+            resolve(null);
           }
         });
 
-        device.on("unregistered", () => setDeviceReady(false));
         device.register();
-      } catch (err: any) {
-        setErrorMessage(`Failed to initialize: ${err.message}`);
+      } catch (err) {
         resolve(null);
       }
     });
-  }, [callStatus]);
+  }, []);
 
-  // Duration timer
-  useEffect(() => {
-    if (callStatus === "in-progress" && !durationIntervalRef.current) {
-      callStartTimeRef.current = Date.now();
-      durationIntervalRef.current = setInterval(() => {
-        if (callStartTimeRef.current) {
-          setCallDuration(Math.floor((Date.now() - callStartTimeRef.current) / 1000));
+  // Make call
+  const handleMakeCall = useCallback(async () => {
+    if (!tokenData?.token) {
+      toast.error("No Twilio token available. Please wait or refresh.");
+      return;
+    }
+
+    setCallStatus("initializing");
+    setErrorMessage(undefined);
+
+    let device = deviceRef.current;
+    if (!device || !deviceReady) {
+      device = await initializeDevice(tokenData.token);
+      if (!device) {
+        setCallStatus("failed");
+        setErrorMessage("Failed to initialize Twilio. Check your network.");
+        return;
+      }
+    }
+
+    try {
+      setCallStatus("connecting");
+
+      const logResult = await createCallLogMutation.mutateAsync({
+        to: phoneNumber, contactId, propertyId,
+      });
+      if (logResult.callLogId) {
+        setCallLogId(logResult.callLogId);
+        callLogIdRef.current = logResult.callLogId;
+      }
+
+      const call = await device.connect({
+        params: {
+          To: phoneNumber,
+          ...(callerPhone ? { CallerId: callerPhone } : {}),
+        },
+      });
+
+      activeCallRef.current = call;
+
+      call.on("ringing", () => setCallStatus("ringing"));
+
+      call.on("accept", () => {
+        setCallStatus("in-progress");
+        callStartTimeRef.current = Date.now();
+        durationIntervalRef.current = setInterval(() => {
+          if (callStartTimeRef.current) {
+            setCallDuration(Math.floor((Date.now() - callStartTimeRef.current) / 1000));
+          }
+        }, 1000);
+      });
+
+      call.on("disconnect", () => {
+        if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+        setCallStatus("completed");
+        activeCallRef.current = null;
+
+        const currentLogId = callLogIdRef.current;
+        if (currentLogId) {
+          const finalDuration = callStartTimeRef.current ? Math.floor((Date.now() - callStartTimeRef.current) / 1000) : 0;
+          updateCallLogMutation.mutate({ callLogId: currentLogId, status: "completed", duration: finalDuration });
         }
-      }, 1000);
+      });
+
+      call.on("cancel", () => {
+        if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+        setCallStatus("no-answer");
+        activeCallRef.current = null;
+      });
+
+      call.on("error", (err: any) => {
+        if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
+        const classified = classifyError(err);
+        setErrorMessage(classified.message);
+
+        if (classified.isRetryable && retryCount < 3) {
+          setRetryCount((c) => c + 1);
+        }
+        setCallStatus("failed");
+        activeCallRef.current = null;
+      });
+    } catch (err: any) {
+      const classified = classifyError(err);
+      setErrorMessage(classified.message);
+      setCallStatus("failed");
     }
+  }, [tokenData, deviceReady, phoneNumber, contactId, propertyId, callerPhone, createCallLogMutation, updateCallLogMutation, initializeDevice, retryCount]);
 
-    if (callStatus === "completed" || callStatus === "failed" || callStatus === "no-answer" || callStatus === "idle") {
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-        durationIntervalRef.current = null;
-      }
-    }
+  const handleRetry = useCallback(() => {
+    setErrorMessage(undefined);
+    handleMakeCall();
+  }, [handleMakeCall]);
 
-    return () => {
-      if (durationIntervalRef.current) {
-        clearInterval(durationIntervalRef.current);
-        durationIntervalRef.current = null;
-      }
-    };
-  }, [callStatus]);
-
-  // Cleanup on close
+  // Cleanup on unmount/close
   useEffect(() => {
     if (!open) {
       if (activeCallRef.current) {
         activeCallRef.current.disconnect();
         activeCallRef.current = null;
       }
+      if (durationIntervalRef.current) clearInterval(durationIntervalRef.current);
       if (deviceRef.current) {
         try { deviceRef.current.destroy(); } catch {}
         deviceRef.current = null;
       }
       setCallStatus("idle");
-      setIsMuted(false);
       setCallDuration(0);
+      setIsMuted(false);
       setCallLogId(undefined);
       setErrorMessage(undefined);
       setRetryCount(0);
       setDeviceReady(false);
-      callLogIdRef.current = undefined;
-      // Reset call log form
+      setNoteText("");
       setLogDisposition("");
       setLogMood("");
       setLogNotes("");
@@ -383,118 +412,9 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       setOverallCondition("");
       setReasonToSell("");
       setHowFastToSell("");
-      setRightTab("notes");
+      setShowPropertyDetails(false);
     }
   }, [open]);
-
-  // Make call
-  const handleMakeCall = useCallback(async () => {
-    if (!tokenData?.token) {
-      if (tokenError) {
-        toast.error("Twilio not configured. Check your API credentials.");
-      } else {
-        toast.error("Waiting for Twilio token...");
-      }
-      return;
-    }
-
-    try {
-      setErrorMessage(undefined);
-      setCallStatus("initializing");
-      setIsMuted(false);
-      setCallDuration(0);
-      setLogSaved(false);
-
-      let device = deviceRef.current;
-      if (!device || !deviceReady) {
-        device = await initializeDevice(tokenData.token);
-        if (!device) {
-          setCallStatus("failed");
-          return;
-        }
-      }
-
-      setCallStatus("connecting");
-
-      try {
-        const logResult = await createCallLogMutation.mutateAsync({
-          to: phoneNumber, contactId, propertyId,
-        });
-        if (logResult.callLogId) {
-          setCallLogId(logResult.callLogId);
-          callLogIdRef.current = logResult.callLogId;
-        }
-      } catch (logErr) {
-        console.warn("[CallModal] Failed to create call log:", logErr);
-      }
-
-      const selectedCallerPhone = callerPhone || tokenData?.twilioPhone || "";
-      const call = await device.connect({
-        params: {
-          To: phoneNumber,
-          ContactId: String(contactId),
-          PropertyId: String(propertyId),
-          ...(selectedCallerPhone ? { CallerPhone: selectedCallerPhone } : {}),
-        },
-      });
-
-      activeCallRef.current = call;
-
-      call.on("accept", () => {
-        setCallStatus("in-progress");
-        setRetryCount(0);
-        const logId = callLogIdRef.current;
-        if (logId) updateCallLogMutation.mutate({ callLogId: logId, status: "in-progress" });
-      });
-
-      call.on("ringing", () => setCallStatus("ringing"));
-
-      call.on("disconnect", () => {
-        setCallStatus("completed");
-        activeCallRef.current = null;
-        const logId = callLogIdRef.current;
-        if (logId) {
-          const duration = callStartTimeRef.current ? Math.floor((Date.now() - callStartTimeRef.current) / 1000) : 0;
-          updateCallLogMutation.mutate({ callLogId: logId, status: "completed", duration });
-        }
-      });
-
-      call.on("cancel", () => {
-        setCallStatus("no-answer");
-        activeCallRef.current = null;
-        const logId = callLogIdRef.current;
-        if (logId) updateCallLogMutation.mutate({ callLogId: logId, status: "no-answer" });
-      });
-
-      call.on("error", (error: any) => {
-        const classified = classifyError(error);
-        setCallStatus("failed");
-        setErrorMessage(classified.message);
-        activeCallRef.current = null;
-        const logId = callLogIdRef.current;
-        if (logId) updateCallLogMutation.mutate({ callLogId: logId, status: "failed", errorMessage: classified.message });
-      });
-    } catch (error: any) {
-      setCallStatus("failed");
-      setErrorMessage(error.message);
-      toast.error("Failed to initiate call");
-    }
-  }, [phoneNumber, contactId, propertyId, tokenData?.token, tokenError, deviceReady, createCallLogMutation, updateCallLogMutation, initializeDevice, callerPhone]);
-
-  const handleRetry = useCallback(async () => {
-    setRetryCount((prev) => prev + 1);
-    setErrorMessage(undefined);
-    setCallStatus("idle");
-
-    if (deviceRef.current) {
-      try { deviceRef.current.destroy(); } catch {}
-      deviceRef.current = null;
-      setDeviceReady(false);
-    }
-
-    await refetchToken();
-    setTimeout(() => handleMakeCall(), 500);
-  }, [handleMakeCall, refetchToken]);
 
   const handleHangUp = useCallback(() => {
     if (activeCallRef.current) {
@@ -545,7 +465,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       return;
     }
 
-    // Build property details JSON
     const propertyDetails: Record<string, string> = {};
     if (bedBath) propertyDetails.bedBath = bedBath;
     if (sf) propertyDetails.sf = sf;
@@ -570,7 +489,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       nextStep: "",
     });
 
-    // Update contact/property flags
     if (markAsDecisionMaker) {
       updateContactMutation.mutate({ id: contactId, isDecisionMaker: 1 });
     }
@@ -578,7 +496,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       updatePropertyMutation.mutate({ id: propertyId, ownerVerified: 1 });
     }
 
-    // Invalidate communication log
     utils.communication.getCommunicationLog.invalidate();
   }, [logDisposition, logMood, logNotes, bedBath, sf, roofAge, acAge, overallCondition, reasonToSell, howFastToSell, propertyId, contactId, phoneNumber, markAsDecisionMaker, markAsOwnerVerified, logCommunicationMutation, updateContactMutation, updatePropertyMutation, utils]);
 
@@ -592,18 +509,17 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         toast.warning("Please hang up the call before closing");
         return;
       }
-      // Warn if call ended but log not saved
       if (isCallEnded && !logSaved && logDisposition && !v) {
         const confirmed = window.confirm("You have an unsaved call log. Close anyway?");
         if (!confirmed) return;
       }
       onOpenChange(v);
     }}>
-      <DialogContent className="sm:max-w-6xl w-[95vw] h-[700px] p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
+      <DialogContent className="sm:max-w-6xl w-[95vw] h-[85vh] max-h-[800px] p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
         <DialogTitle className="sr-only">Call {contactName}</DialogTitle>
         <div className="flex h-full">
           {/* LEFT SIDE — Call Controls */}
-          <div className="w-[300px] flex flex-col bg-muted/30 border-r p-5 shrink-0">
+          <div className="w-[280px] flex flex-col bg-muted/30 border-r p-5 shrink-0">
             {/* Contact Info */}
             <div className="text-center mb-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
@@ -722,7 +638,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               </div>
             )}
 
-            {/* Call Log saved indicator */}
             {logSaved && (
               <div className="text-center mt-2">
                 <Badge className="bg-green-100 text-green-700 border-green-300">
@@ -732,279 +647,213 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
             )}
           </div>
 
-          {/* RIGHT SIDE — Tabbed: Notes + Call Log */}
-          <div className="flex-1 flex flex-col bg-background">
-            <Tabs value={rightTab} onValueChange={setRightTab} className="flex flex-col h-full">
-              <div className="px-4 pt-3 border-b">
-                <TabsList className="w-full">
-                  <TabsTrigger value="notes" className="flex-1 gap-1.5">
-                    <FileText className="h-3.5 w-3.5" />
-                    Notes
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1 ml-1">
-                      {notesData?.length ?? 0}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="calllog" className="flex-1 gap-1.5">
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    Call Log
-                    {isCallEnded && !logSaved && (
-                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+          {/* RIGHT SIDE — Single scrollable page: Call Log + Notes */}
+          <div className="flex-1 flex flex-col bg-background overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-3 border-b bg-muted/20 shrink-0">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Call Log & Notes
+              </h3>
+            </div>
 
-              {/* NOTES TAB */}
-              <TabsContent value="notes" className="flex-1 flex flex-col mt-0 overflow-hidden">
-                <ScrollArea className="flex-1 px-4 py-3">
-                  {(!notesData || notesData.length === 0) ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
-                      <FileText className="h-10 w-10 mb-3 opacity-40" />
-                      <p className="text-sm">No notes yet</p>
-                      <p className="text-xs mt-1">Add a note below during or after the call</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {notesData.map((note) => (
-                        <div key={note.id} className="group relative bg-muted/50 rounded-lg p-3 border border-transparent hover:border-border transition-colors">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{note.content}</p>
-                            <button onClick={() => handleDeleteNote(note.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}{" "}
-                              at {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                            {note.callStatus && (
-                              <Badge variant="outline" className="text-[10px] h-4 px-1">{note.callStatus}</Badge>
-                            )}
-                            {note.callDuration != null && note.callDuration > 0 && (
-                              <span className="text-[10px]">({formatDuration(note.callDuration)})</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+            {/* Scrollable content */}
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-5 py-4">
+              {logSaved ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle2 className="h-12 w-12 text-green-500 mb-3" />
+                  <h3 className="text-lg font-semibold">Call Log Saved!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Disposition: <strong>{logDisposition}</strong>
+                    {logMood && <> | Mood: {logMood}</>}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    You can close this dialog or make another call.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {/* Call ended banner */}
+                  {isCallEnded && (
+                    <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                      callStatus === "completed" ? "bg-green-50 text-green-700 border border-green-200" :
+                      callStatus === "no-answer" ? "bg-orange-50 text-orange-700 border border-orange-200" :
+                      "bg-red-50 text-red-700 border border-red-200"
+                    }`}>
+                      {statusConfig.icon}
+                      {callStatus === "completed" ? `Call ended (${formatDuration(callDuration)})` :
+                       callStatus === "no-answer" ? "No answer" : "Call failed"}
+                      <span className="ml-auto text-xs font-normal">Log this call below</span>
                     </div>
                   )}
-                </ScrollArea>
 
-                {/* Note Input */}
-                <div className="px-4 py-3 border-t">
-                  <div className="flex gap-2">
-                    <Textarea
-                      value={noteText}
-                      onChange={(e) => setNoteText(e.target.value)}
-                      placeholder="Type a note..."
-                      className="min-h-[70px] max-h-[120px] resize-none text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddNote();
-                        }
-                      }}
-                    />
-                    <Button size="icon" onClick={handleAddNote} disabled={!noteText.trim() || createNoteMutation.isPending} className="shrink-0 h-[56px] w-10">
-                      {createNoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Press Enter to send, Shift+Enter for new line</p>
-                </div>
-              </TabsContent>
-
-              {/* CALL LOG TAB */}
-              <TabsContent value="calllog" className="flex-1 flex flex-col mt-0 overflow-hidden">
-                <ScrollArea className="flex-1 px-4 py-3">
-                  {logSaved ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <CheckCircle2 className="h-12 w-12 text-green-500 mb-3" />
-                      <h3 className="text-lg font-semibold">Call Log Saved!</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Disposition: <strong>{logDisposition}</strong>
-                        {logMood && <> | Mood: {logMood}</>}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-3">
-                        You can close this dialog or make another call.
-                      </p>
+                  {/* ═══════════ CALL LOG SECTION ═══════════ */}
+                  <div className="space-y-4">
+                    {/* Disposition */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Disposition *</Label>
+                      <Select value={logDisposition} onValueChange={setLogDisposition}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select call result..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {DISPOSITION_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Call ended banner */}
-                      {isCallEnded && (
-                        <div className={`p-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                          callStatus === "completed" ? "bg-green-50 text-green-700 border border-green-200" :
-                          callStatus === "no-answer" ? "bg-orange-50 text-orange-700 border border-orange-200" :
-                          "bg-red-50 text-red-700 border border-red-200"
-                        }`}>
-                          {statusConfig.icon}
-                          {callStatus === "completed" ? `Call ended (${formatDuration(callDuration)})` :
-                           callStatus === "no-answer" ? "No answer" : "Call failed"}
-                          <span className="ml-auto text-xs font-normal">Log this call below</span>
-                        </div>
-                      )}
 
-                      {/* Disposition */}
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-semibold">Disposition *</Label>
-                        <Select value={logDisposition} onValueChange={setLogDisposition}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select call result..." />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[300px]">
-                            {DISPOSITION_OPTIONS.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    {/* Mood */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Mood</Label>
+                      <div className="flex gap-2 flex-wrap">
+                        {MOOD_OPTIONS.map((option) => (
+                          <Button
+                            key={option.label}
+                            type="button"
+                            variant={logMood === option.emoji ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setLogMood(logMood === option.emoji ? "" : option.emoji)}
+                            className="h-9 px-3"
+                          >
+                            <span className="text-lg mr-1">{option.emoji}</span>
+                            <span className="text-xs">{option.label}</span>
+                          </Button>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Mood */}
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-semibold">Mood</Label>
-                        <div className="flex gap-2 flex-wrap">
-                          {MOOD_OPTIONS.map((option) => (
-                            <Button
-                              key={option.label}
-                              type="button"
-                              variant={logMood === option.emoji ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setLogMood(logMood === option.emoji ? "" : option.emoji)}
-                              className="h-9 px-3"
-                            >
-                              <span className="text-lg mr-1">{option.emoji}</span>
-                              <span className="text-xs">{option.label}</span>
-                            </Button>
-                          ))}
-                        </div>
+                    {/* Decision Maker & Owner Verified */}
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="cm-decision-maker" checked={markAsDecisionMaker} onCheckedChange={(c) => setMarkAsDecisionMaker(c as boolean)} />
+                        <Label htmlFor="cm-decision-maker" className="text-sm font-normal cursor-pointer">Decision Maker</Label>
                       </div>
-
-                      {/* Decision Maker & Owner Verified */}
-                      <div className="flex gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="cm-decision-maker" checked={markAsDecisionMaker} onCheckedChange={(c) => setMarkAsDecisionMaker(c as boolean)} />
-                          <Label htmlFor="cm-decision-maker" className="text-sm font-normal cursor-pointer">Decision Maker</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="cm-owner-verified" checked={markAsOwnerVerified} onCheckedChange={(c) => setMarkAsOwnerVerified(c as boolean)} />
-                          <Label htmlFor="cm-owner-verified" className="text-sm font-normal cursor-pointer">Owner Verified</Label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="cm-owner-verified" checked={markAsOwnerVerified} onCheckedChange={(c) => setMarkAsOwnerVerified(c as boolean)} />
+                        <Label htmlFor="cm-owner-verified" className="text-sm font-normal cursor-pointer">Owner Verified</Label>
                       </div>
+                    </div>
 
-                      {/* Quick Templates */}
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-semibold">Quick Templates</Label>
-                        <div className="flex gap-1.5 flex-wrap">
-                          {NOTE_TEMPLATES.map((template) => (
-                            <Button
-                              key={template}
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template}` : template)}
-                              className="h-7 text-xs"
-                            >
-                              {template}
-                            </Button>
-                          ))}
-                          {customTemplates.map((template: any) => (
-                            <Button
-                              key={template.id}
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template.templateText}` : template.templateText)}
-                              className="h-7 text-xs"
-                            >
-                              {template.templateText}
-                            </Button>
-                          ))}
-                        </div>
+                    {/* Quick Templates */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Quick Templates</Label>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {NOTE_TEMPLATES.map((template) => (
+                          <Button
+                            key={template}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template}` : template)}
+                            className="h-7 text-xs"
+                          >
+                            {template}
+                          </Button>
+                        ))}
+                        {customTemplates.map((template: any) => (
+                          <Button
+                            key={template.id}
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template.templateText}` : template.templateText)}
+                            className="h-7 text-xs"
+                          >
+                            {template.templateText}
+                          </Button>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Property Details */}
-                      <div className="border-t pt-3">
-                        <Label className="text-xs font-semibold text-muted-foreground mb-2 block">Property Details (Optional)</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Bed/Bath</Label>
-                            <input type="text" placeholder="e.g., 3/2" value={bedBath} onChange={(e) => setBedBath(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                    {/* Call Log Notes */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Call Summary</Label>
+                      <Textarea
+                        value={logNotes}
+                        onChange={(e) => setLogNotes(e.target.value)}
+                        placeholder="Add notes about this call..."
+                        rows={3}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    {/* Property Details - Collapsible */}
+                    <div className="border rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setShowPropertyDetails(!showPropertyDetails)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <span>Property Details (Optional)</span>
+                        <span className="text-xs">{showPropertyDetails ? "▲ Hide" : "▼ Show"}</span>
+                      </button>
+                      {showPropertyDetails && (
+                        <div className="px-3 pb-3 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Bed/Bath</Label>
+                              <input type="text" placeholder="e.g., 3/2" value={bedBath} onChange={(e) => setBedBath(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">SF</Label>
+                              <input type="text" placeholder="e.g., 1,500" value={sf} onChange={(e) => setSf(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Roof Age</Label>
+                              <input type="text" placeholder="e.g., 5 years" value={roofAge} onChange={(e) => setRoofAge(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">A/C Age</Label>
+                              <input type="text" placeholder="e.g., 3 years" value={acAge} onChange={(e) => setAcAge(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Overall Condition</Label>
+                              <Select value={overallCondition} onValueChange={setOverallCondition}>
+                                <SelectTrigger className="h-8 text-sm">
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Excellent">Excellent</SelectItem>
+                                  <SelectItem value="Good">Good</SelectItem>
+                                  <SelectItem value="Fair">Fair</SelectItem>
+                                  <SelectItem value="Poor">Poor</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Reason to Sell</Label>
+                              <input type="text" placeholder="e.g., Relocation" value={reasonToSell} onChange={(e) => setReasonToSell(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
+                            </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs">SF</Label>
-                            <input type="text" placeholder="e.g., 1,500" value={sf} onChange={(e) => setSf(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Roof Age</Label>
-                            <input type="text" placeholder="e.g., 5 years" value={roofAge} onChange={(e) => setRoofAge(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">A/C Age</Label>
-                            <input type="text" placeholder="e.g., 3 years" value={acAge} onChange={(e) => setAcAge(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Overall Condition</Label>
-                            <Select value={overallCondition} onValueChange={setOverallCondition}>
+                            <Label className="text-xs">How Fast to Sell</Label>
+                            <Select value={howFastToSell} onValueChange={setHowFastToSell}>
                               <SelectTrigger className="h-8 text-sm">
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Excellent">Excellent</SelectItem>
-                                <SelectItem value="Good">Good</SelectItem>
-                                <SelectItem value="Fair">Fair</SelectItem>
-                                <SelectItem value="Poor">Poor</SelectItem>
+                                <SelectItem value="ASAP">ASAP</SelectItem>
+                                <SelectItem value="Within 3 months">Within 3 months</SelectItem>
+                                <SelectItem value="Within 6 months">Within 6 months</SelectItem>
+                                <SelectItem value="Within 1 year">Within 1 year</SelectItem>
+                                <SelectItem value="No rush">No rush</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Reason to Sell</Label>
-                            <input type="text" placeholder="e.g., Relocation" value={reasonToSell} onChange={(e) => setReasonToSell(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary bg-background" />
-                          </div>
                         </div>
-                        <div className="space-y-1 mt-2">
-                          <Label className="text-xs">How Fast to Sell</Label>
-                          <Select value={howFastToSell} onValueChange={setHowFastToSell}>
-                            <SelectTrigger className="h-8 text-sm">
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ASAP">ASAP</SelectItem>
-                              <SelectItem value="Within 3 months">Within 3 months</SelectItem>
-                              <SelectItem value="Within 6 months">Within 6 months</SelectItem>
-                              <SelectItem value="Within 1 year">Within 1 year</SelectItem>
-                              <SelectItem value="No rush">No rush</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* Notes */}
-                      <div className="space-y-1.5">
-                        <Label className="text-sm font-semibold">Notes</Label>
-                        <Textarea
-                          value={logNotes}
-                          onChange={(e) => setLogNotes(e.target.value)}
-                          placeholder="Add any additional notes about this call..."
-                          rows={3}
-                          className="text-sm"
-                        />
-                      </div>
+                      )}
                     </div>
-                  )}
-                </ScrollArea>
 
-                {/* Save Button */}
-                {!logSaved && (
-                  <div className="px-4 py-3 border-t">
+                    {/* Save Call Log Button */}
                     <Button
                       onClick={handleSaveCallLog}
                       disabled={!logDisposition || logCommunicationMutation.isPending}
@@ -1019,9 +868,79 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       Save Call Log
                     </Button>
                   </div>
-                )}
-              </TabsContent>
-            </Tabs>
+
+                  {/* ═══════════ DIVIDER ═══════════ */}
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-background px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Call Notes ({notesData?.length ?? 0})
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* ═══════════ NOTES SECTION ═══════════ */}
+                  <div className="space-y-3">
+                    {/* Add Note Input */}
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Type a note..."
+                        className="min-h-[60px] max-h-[120px] resize-none text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddNote();
+                          }
+                        }}
+                      />
+                      <Button size="icon" onClick={handleAddNote} disabled={!noteText.trim() || createNoteMutation.isPending} className="shrink-0 h-[56px] w-10">
+                        {createNoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground -mt-1">Press Enter to send, Shift+Enter for new line</p>
+
+                    {/* Notes List */}
+                    {(!notesData || notesData.length === 0) ? (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground py-6">
+                        <FileText className="h-8 w-8 mb-2 opacity-40" />
+                        <p className="text-sm">No notes yet</p>
+                        <p className="text-xs mt-1">Add a note above during or after the call</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {notesData.map((note) => (
+                          <div key={note.id} className="group relative bg-muted/50 rounded-lg p-3 border border-transparent hover:border-border transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{note.content}</p>
+                              <button onClick={() => handleDeleteNote(note.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}{" "}
+                                at {new Date(note.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                              {note.callStatus && (
+                                <Badge variant="outline" className="text-[10px] h-4 px-1">{note.callStatus}</Badge>
+                              )}
+                              {note.callDuration != null && note.callDuration > 0 && (
+                                <span className="text-[10px]">({formatDuration(note.callDuration)})</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
