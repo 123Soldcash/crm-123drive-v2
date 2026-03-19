@@ -2565,3 +2565,14 @@
 - [x] Fixed: markPropertyDNC now sets both deskStatus="ARCHIVED" and deskName="ARCHIVED"
 - [x] Fixed: unmarkPropertyDNC now sets deskStatus="ACTIVE" and deskName="NEW_LEAD"
 - [x] Verified: desk badge changes to "⬛ Archived" immediately after DNC General click
+
+## Duplicate Phone Numbers - Cleanup & Prevention (COMPLETED)
+- [x] Analyze database for duplicate phone numbers within same property
+- [x] Clean up all duplicate phones in database (keep only one per property)
+- [x] Add backend validation: prevent adding duplicate phone within same property
+- [x] Update Add Contact form to show inline error when phone already exists in property
+- [x] Update ContactEditModal to show inline error for duplicate phones (client-side + server-side)
+- [x] Update Bulk Import to skip/warn about duplicate phones within same property
+- [x] Allow same phone number across different properties (no cross-property restriction)
+- [x] Write vitest tests for duplicate phone prevention (25 tests passing)
+- [x] Fix Sonner toast not rendering — added inline error messages as reliable fallback

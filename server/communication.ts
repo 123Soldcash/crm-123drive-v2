@@ -1,4 +1,4 @@
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   contacts,
@@ -96,11 +96,71 @@ export async function getContactById(contactId: number) {
   return result[0] || null;
 }
 
+// Helper: normalize phone number to digits only for comparison
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '').replace(/^1/, ''); // strip non-digits and leading country code 1
+}
+
+// Helper: get all existing phone numbers for a property
+export async function getExistingPhonesForProperty(propertyId: number): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const propertyContacts = await db.select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.propertyId, propertyId));
+  
+  if (propertyContacts.length === 0) return [];
+  
+  const contactIds = propertyContacts.map(c => c.id);
+  const phones = await db.select({ phoneNumber: contactPhones.phoneNumber })
+    .from(contactPhones)
+    .where(inArray(contactPhones.contactId, contactIds));
+  
+  return phones.map(p => normalizePhone(p.phoneNumber));
+}
+
+// Helper: check which phones are duplicates within a property
+export async function findDuplicatePhones(propertyId: number, newPhones: string[], excludeContactId?: number): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const propertyContacts = await db.select({ id: contacts.id })
+    .from(contacts)
+    .where(eq(contacts.propertyId, propertyId));
+  
+  if (propertyContacts.length === 0) return [];
+  
+  let contactIds = propertyContacts.map(c => c.id);
+  if (excludeContactId) {
+    contactIds = contactIds.filter(id => id !== excludeContactId);
+  }
+  if (contactIds.length === 0) return [];
+  
+  const existingPhones = await db.select({ phoneNumber: contactPhones.phoneNumber })
+    .from(contactPhones)
+    .where(inArray(contactPhones.contactId, contactIds));
+  
+  const existingNormalized = new Set(existingPhones.map(p => normalizePhone(p.phoneNumber)));
+  const newNormalized = newPhones.map(p => normalizePhone(p));
+  
+  return newNormalized.filter(p => existingNormalized.has(p));
+}
+
 export async function createContact(contactData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   const { phones, emails, addresses, ...contactBase } = contactData;
+  
+  // Check for duplicate phones within the same property
+  if (phones && Array.isArray(phones) && phones.length > 0 && contactBase.propertyId) {
+    const phoneNumbers = phones.map((p: any) => p.phoneNumber);
+    const duplicates = await findDuplicatePhones(contactBase.propertyId, phoneNumbers);
+    if (duplicates.length > 0) {
+      throw new Error(`Duplicate phone number(s) already exist in this property: ${duplicates.join(', ')}`);
+    }
+  }
   
   const result = await db.insert(contacts).values(contactBase);
   const contactId = result[0].insertId;
@@ -134,6 +194,18 @@ export async function updateContact(contactId: number, contactData: any) {
   if (!db) throw new Error("Database not available");
   
   const { phones, emails, addresses, ...updates } = contactData;
+  
+  // Check for duplicate phones within the same property (exclude current contact)
+  if (phones && Array.isArray(phones) && phones.length > 0) {
+    const contact = await db.select({ propertyId: contacts.propertyId }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+    if (contact[0]?.propertyId) {
+      const phoneNumbers = phones.map((p: any) => p.phoneNumber);
+      const duplicates = await findDuplicatePhones(contact[0].propertyId, phoneNumbers, contactId);
+      if (duplicates.length > 0) {
+        throw new Error(`Duplicate phone number(s) already exist in this property: ${duplicates.join(', ')}`);
+      }
+    }
+  }
   
   // Update base contact info
   if (Object.keys(updates).length > 0) {

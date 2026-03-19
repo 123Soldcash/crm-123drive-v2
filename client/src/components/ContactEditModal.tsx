@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { User, Phone, Mail, MapPin, Save, X, Plus, Trash2, History } from "lucide-react";
+import { User, Phone, Mail, MapPin, Save, X, Plus, Trash2, History, AlertCircle } from "lucide-react";
 
 interface ContactEditModalProps {
   open: boolean;
@@ -79,6 +79,10 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const [emails, setEmails] = useState<Array<{ email: string; isPrimary: number }>>([]);
   const [newEmail, setNewEmail] = useState("");
 
+  // Error state
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
   // Communication log for this contact
   const { data: communications } = trpc.communication.getCommunicationLog.useQuery(
     { propertyId },
@@ -134,6 +138,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const updateContactMutation = trpc.communication.updateContact.useMutation({
     onSuccess: () => {
       toast.success("Contact updated successfully!");
+      setSaveError(null);
       // Invalidate all relevant queries to refresh the page
       utils.contacts.byProperty.invalidate({ propertyId });
       utils.communication.getContactsByProperty.invalidate({ propertyId });
@@ -141,7 +146,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast.error(`Failed to update contact: ${error.message}`);
+      const msg = error.message || "Failed to update contact";
+      setSaveError(msg);
+      toast.error(msg);
     },
   });
 
@@ -167,6 +174,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
 
   const handleSave = async () => {
     if (!contact?.id) return;
+    setSaveError(null);
 
     try {
       // Send all contact details + phones + emails in a single mutation
@@ -204,6 +212,14 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
 
   const handleAddPhone = () => {
     if (!newPhone.trim()) return;
+    const normalized = newPhone.trim().replace(/\D/g, "");
+    // Check for duplicate phone in local state
+    const isDuplicate = phones.some(p => p.phoneNumber.replace(/\D/g, "") === normalized);
+    if (isDuplicate) {
+      setPhoneError(`Phone number ${newPhone.trim()} already exists for this contact`);
+      return;
+    }
+    setPhoneError(null);
     setPhones([...phones, { phoneNumber: newPhone.trim(), phoneType: newPhoneType, isPrimary: 0, dnc: 0 }]);
     setNewPhone("");
     setNewPhoneType("Mobile");
@@ -432,6 +448,12 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                   <Plus className="h-3.5 w-3.5 mr-1" /> Add
                 </Button>
               </div>
+              {phoneError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{phoneError}</span>
+                </div>
+              )}
             </div>
 
             {/* Emails Section */}
@@ -552,6 +574,14 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Error display */}
+        {saveError && (
+          <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{saveError}</span>
+          </div>
+        )}
 
         {/* Save / Cancel Buttons */}
         <div className="flex justify-end gap-2 pt-4 border-t">

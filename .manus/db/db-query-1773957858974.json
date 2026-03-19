@@ -1,0 +1,9 @@
+{
+  "query": "DELETE cp FROM contactPhones cp\nINNER JOIN (\n  SELECT cp2.id\n  FROM contactPhones cp2\n  INNER JOIN contacts c ON cp2.contactId = c.id\n  WHERE c.propertyId IS NOT NULL\n  AND cp2.id NOT IN (\n    SELECT MIN(cp3.id)\n    FROM contactPhones cp3\n    INNER JOIN contacts c2 ON cp3.contactId = c2.id\n    WHERE c2.propertyId IS NOT NULL\n    GROUP BY cp3.phoneNumber, c2.propertyId\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM contactPhones cp4\n    INNER JOIN contacts c3 ON cp4.contactId = c3.id\n    WHERE cp4.phoneNumber = cp2.phoneNumber\n    AND c3.propertyId = c.propertyId\n    AND cp4.id < cp2.id\n  )\n) AS dups ON cp.id = dups.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute DELETE cp FROM contactPhones cp\nINNER JOIN (\n  SELECT cp2.id\n  FROM contactPhones cp2\n  INNER JOIN contacts c ON cp2.contactId = c.id\n  WHERE c.propertyId IS NOT NULL\n  AND cp2.id NOT IN (\n    SELECT MIN(cp3.id)\n    FROM contactPhones cp3\n    INNER JOIN contacts c2 ON cp3.contactId = c2.id\n    WHERE c2.propertyId IS NOT NULL\n    GROUP BY cp3.phoneNumber, c2.propertyId\n  )\n  AND EXISTS (\n    SELECT 1\n    FROM contactPhones cp4\n    INNER JOIN contacts c3 ON cp4.contactId = c3.id\n    WHERE cp4.phoneNumber = cp2.phoneNumber\n    AND c3.propertyId = c.propertyId\n    AND cp4.id < cp2.id\n  )\n) AS dups ON cp.id = dups.id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 80
+}

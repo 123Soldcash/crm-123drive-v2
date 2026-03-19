@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -160,6 +160,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [newContactPhone, setNewContactPhone] = useState("");
   const [newContactPhoneType, setNewContactPhoneType] = useState("Mobile");
   const [newContactEmail, setNewContactEmail] = useState("");
+  const [addContactError, setAddContactError] = useState<string | null>(null);
 
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
@@ -235,15 +236,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setNewContactPhone("");
       setNewContactPhoneType("Mobile");
       setNewContactEmail("");
+      setAddContactError(null);
     },
     onError: (error: any) => {
-      toast.error(`Failed to add contact: ${error.message}`);
+      const msg = error.message || "Failed to add contact";
+      setAddContactError(msg);
+      toast.error(msg);
     },
   });
 
   const handleAddContact = () => {
+    setAddContactError(null);
     if (!newContactName.trim()) {
-      toast.error("Contact name is required");
+      setAddContactError("Contact name is required");
       return;
     }
     createContactMutation.mutate({
@@ -714,6 +719,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   />
                 </div>
               </div>
+              {addContactError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{addContactError}</span>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -727,7 +738,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowAddContactForm(false)}
+                  onClick={() => { setShowAddContactForm(false); setAddContactError(null); }}
                 >
                   Cancel
                 </Button>
@@ -1405,6 +1416,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     />
                   </div>
                 </div>
+                {addContactError && (
+                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{addContactError}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 pt-1">
                   <Button
                     size="sm"
@@ -1425,6 +1442,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       setNewContactPhone("");
                       setNewContactPhoneType("Mobile");
                       setNewContactEmail("");
+                      setAddContactError(null);
                     }}
                   >
                     Cancel
