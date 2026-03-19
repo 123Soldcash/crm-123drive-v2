@@ -12,7 +12,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
-import { ListPlus, Upload, AlertCircle, CheckCircle2, Phone, Mail, User } from "lucide-react";
+import { ListPlus, Upload, AlertCircle, CheckCircle2, Phone, Mail, User, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 interface ParsedContact {
@@ -100,6 +110,8 @@ export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportPr
 
   const bulkCreate = trpc.communication.bulkCreateContacts.useMutation();
   const utils = trpc.useUtils();
+  const [crossPropertyWarnings, setCrossPropertyWarnings] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }>>([]);
+  const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
 
   const parsedContacts = useMemo(() => {
     if (!text.trim()) return [];
@@ -112,8 +124,7 @@ export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportPr
     return contacts;
   }, [text]);
 
-  const handleImport = async () => {
-    if (parsedContacts.length === 0) return;
+  const doImport = async () => {
     setImporting(true);
     setImportResult(null);
 
@@ -149,6 +160,28 @@ export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportPr
     }
   };
 
+  const handleImport = async () => {
+    if (parsedContacts.length === 0) return;
+    // Collect all phones from all contacts
+    const allPhones = parsedContacts.flatMap(c => c.phones);
+    if (allPhones.length > 0) {
+      try {
+        const result = await utils.communication.checkCrossPropertyPhones.fetch({
+          propertyId,
+          phones: allPhones,
+        });
+        if (result.matches && result.matches.length > 0) {
+          setCrossPropertyWarnings(result.matches);
+          setShowCrossPropertyConfirm(true);
+          return;
+        }
+      } catch (e) {
+        // If check fails, proceed anyway
+      }
+    }
+    await doImport();
+  };
+
   const handleClose = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
@@ -163,6 +196,7 @@ Bob Wilson, bob@company.com
 Maria Garcia, 3055551234`;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
@@ -316,5 +350,53 @@ Maria Garcia, 3055551234`;
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Cross-Property Phone Warning Dialog */}
+    <AlertDialog open={showCrossPropertyConfirm} onOpenChange={setShowCrossPropertyConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+            <AlertTriangle className="h-5 w-5" />
+            Phone(s) Already Exist in Other Properties
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="text-sm space-y-3">
+              <span className="block text-muted-foreground">The following phone number(s) are already linked to other properties:</span>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {crossPropertyWarnings.map((match, idx) => (
+                  <div key={idx} className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                    <Phone className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium text-foreground">{formatPhone(match.phone)}</span>
+                      <span className="block text-muted-foreground">
+                        {match.address}
+                        {match.leadId && <span className="text-xs ml-1">(Lead #{match.leadId})</span>}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <span className="block text-muted-foreground">Do you want to import all contacts anyway?</span>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => { setShowCrossPropertyConfirm(false); setCrossPropertyWarnings([]); }}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              setShowCrossPropertyConfirm(false);
+              setCrossPropertyWarnings([]);
+              doImport();
+            }}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            Import Anyway
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -161,6 +161,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [newContactPhoneType, setNewContactPhoneType] = useState("Mobile");
   const [newContactEmail, setNewContactEmail] = useState("");
   const [addContactError, setAddContactError] = useState<string | null>(null);
+  const [crossPropertyWarning, setCrossPropertyWarning] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }> | null>(null);
+  const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
 
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
@@ -245,12 +247,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     },
   });
 
-  const handleAddContact = () => {
-    setAddContactError(null);
-    if (!newContactName.trim()) {
-      setAddContactError("Contact name is required");
-      return;
-    }
+  const doCreateContact = () => {
     createContactMutation.mutate({
       propertyId,
       name: newContactName.trim(),
@@ -259,6 +256,33 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       phone1Type: newContactPhone.trim() ? newContactPhoneType : undefined,
       email1: newContactEmail.trim() || undefined,
     });
+  };
+
+  const handleAddContact = async () => {
+    setAddContactError(null);
+    setCrossPropertyWarning(null);
+    if (!newContactName.trim()) {
+      setAddContactError("Contact name is required");
+      return;
+    }
+    // If there's a phone, check cross-property first
+    const phone = newContactPhone.trim();
+    if (phone) {
+      try {
+        const result = await utils.communication.checkCrossPropertyPhones.fetch({
+          propertyId,
+          phones: [phone],
+        });
+        if (result.matches && result.matches.length > 0) {
+          setCrossPropertyWarning(result.matches);
+          setShowCrossPropertyConfirm(true);
+          return;
+        }
+      } catch (e) {
+        // If check fails, proceed anyway
+      }
+    }
+    doCreateContact();
   };
 
   const updateNotesMutation = trpc.communication.updateCommunicationLog.useMutation({
@@ -1880,6 +1904,53 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             >
               <ShieldCheck className="h-4 w-4 mr-1" />
               Remove DNC & Set Active
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cross-Property Phone Warning Dialog */}
+      <AlertDialog open={showCrossPropertyConfirm} onOpenChange={setShowCrossPropertyConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Phone Already Exists in Another Property
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm space-y-3">
+                <span className="block text-muted-foreground">This phone number is already linked to the following propert{crossPropertyWarning && crossPropertyWarning.length > 1 ? 'ies' : 'y'}:</span>
+                <div className="space-y-2">
+                  {crossPropertyWarning?.map((match, idx) => (
+                    <div key={idx} className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                      <Phone className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium text-foreground">{formatPhone(match.phone)}</span>
+                        <span className="block text-muted-foreground">
+                          {match.address}
+                          {match.leadId && <span className="text-xs ml-1">(Lead #{match.leadId})</span>}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <span className="block text-muted-foreground">Do you want to add this contact anyway?</span>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowCrossPropertyConfirm(false); setCrossPropertyWarning(null); }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowCrossPropertyConfirm(false);
+                setCrossPropertyWarning(null);
+                doCreateContact();
+              }}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Add Anyway
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

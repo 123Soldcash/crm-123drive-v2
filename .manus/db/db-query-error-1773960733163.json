@@ -1,0 +1,8 @@
+{
+  "query": "SELECT cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId, COUNT(*) OVER (PARTITION BY REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '-', ''), '(', ''), ')', ''), ' ', '')) as cnt\nFROM contact_phones cp\nJOIN contacts c ON cp.contactId = c.id\nJOIN properties p ON c.propertyId = p.id\nGROUP BY cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId\nHAVING cnt > 0\nORDER BY cnt DESC\nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId, COUNT(*) OVER (PARTITION BY REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '-', ''), '(', ''), ')', ''), ' ', '')) as cnt\nFROM contact_phones cp\nJOIN contacts c ON cp.contactId = c.id\nJOIN properties p ON c.propertyId = p.id\nGROUP BY cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId\nHAVING cnt > 0\nORDER BY cnt DESC\nLIMIT 20",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'rdbafwhqbdqo37pina3pdu.contact_phones' doesn't exist"
+  ]
+}

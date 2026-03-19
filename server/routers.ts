@@ -2065,6 +2065,17 @@ export const appRouter = router({
         return await communication.getContactWithDetails(input.contactId);
       }),
 
+    // Cross-property phone check: warns if phone exists in other properties
+    checkCrossPropertyPhones: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        phones: z.array(z.string()),
+      }))
+      .query(async ({ input }) => {
+        const matches = await communication.findCrossPropertyPhones(input.propertyId, input.phones);
+        return { matches };
+      }),
+
     createContact: protectedProcedure
       .input(
         z.object({

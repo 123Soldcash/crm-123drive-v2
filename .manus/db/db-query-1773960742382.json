@@ -1,0 +1,130 @@
+{
+  "query": "SELECT cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId\nFROM contactPhones cp\nJOIN contacts c ON cp.contactId = c.id\nJOIN properties p ON c.propertyId = p.id\nORDER BY cp.phoneNumber\nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT cp.phoneNumber, c.propertyId, p.addressLine1, p.leadId\nFROM contactPhones cp\nJOIN contacts c ON cp.contactId = c.id\nJOIN properties p ON c.propertyId = p.id\nORDER BY cp.phoneNumber\nLIMIT 20",
+  "rows": [
+    {
+      "phoneNumber": "(201) 349-3870",
+      "propertyId": "2130183",
+      "addressLine1": "7000 Nw 66th Ter",
+      "leadId": "2000000185"
+    },
+    {
+      "phoneNumber": "(201) 567-1334",
+      "propertyId": "2130414",
+      "addressLine1": "510 Nw 2nd Ave",
+      "leadId": "2000000422"
+    },
+    {
+      "phoneNumber": "(201) 679-8691",
+      "propertyId": "2130123",
+      "addressLine1": "425 Nw 5th St",
+      "leadId": "2000000124"
+    },
+    {
+      "phoneNumber": "(201) 918-9241",
+      "propertyId": "2130231",
+      "addressLine1": "3129 Sw Natura Ave",
+      "leadId": "2000000237"
+    },
+    {
+      "phoneNumber": "(202) 365-2518",
+      "propertyId": "2130559",
+      "addressLine1": "10605 S Jog Rd Unit 210",
+      "leadId": "2000000570"
+    },
+    {
+      "phoneNumber": "(203) 323-8557",
+      "propertyId": "2130565",
+      "addressLine1": "3304 Aruba Way Apt A2",
+      "leadId": "2000000576"
+    },
+    {
+      "phoneNumber": "(203) 572-7903",
+      "propertyId": "2130059",
+      "addressLine1": "4827 Sierra Dr",
+      "leadId": "2000000060"
+    },
+    {
+      "phoneNumber": "(206) 437-1340",
+      "propertyId": "2130114",
+      "addressLine1": "3560 Gloria Ave",
+      "leadId": "2000000115"
+    },
+    {
+      "phoneNumber": "(215) 997-1086",
+      "propertyId": "2130088",
+      "addressLine1": "4601 Nw 45th St",
+      "leadId": "2000000089"
+    },
+    {
+      "phoneNumber": "(216) 258-8821",
+      "propertyId": "2130400",
+      "addressLine1": "6510 Sw 8th St",
+      "leadId": "2000000408"
+    },
+    {
+      "phoneNumber": "(226) 793-0770",
+      "propertyId": "2130281",
+      "addressLine1": "1380 Forrest Ct",
+      "leadId": "2000000287"
+    },
+    {
+      "phoneNumber": "(226) 793-0770",
+      "propertyId": "2130283",
+      "addressLine1": "327 Boundary Blvd",
+      "leadId": "2000000289"
+    },
+    {
+      "phoneNumber": "(231) 675-7701",
+      "propertyId": "2130076",
+      "addressLine1": "7836 Sunflower Dr",
+      "leadId": "2000000077"
+    },
+    {
+      "phoneNumber": "(234) 926-1224",
+      "propertyId": "2130519",
+      "addressLine1": "20930 Se 157th St",
+      "leadId": "2000000530"
+    },
+    {
+      "phoneNumber": "(239) 200-6796",
+      "propertyId": "2130362",
+      "addressLine1": "1305 S 27th Ave",
+      "leadId": "2000000369"
+    },
+    {
+      "phoneNumber": "(239) 272-4927",
+      "propertyId": "2130533",
+      "addressLine1": "13326 Saint Tropez Cir",
+      "leadId": "2000000544"
+    },
+    {
+      "phoneNumber": "(239) 440-5027",
+      "propertyId": "2130063",
+      "addressLine1": "1520 Nw 131st St",
+      "leadId": "2000000064"
+    },
+    {
+      "phoneNumber": "(239) 692-4821",
+      "propertyId": "2130192",
+      "addressLine1": "4520 Nw 22nd St",
+      "leadId": "2000000194"
+    },
+    {
+      "phoneNumber": "(248) 614-4575",
+      "propertyId": "2130431",
+      "addressLine1": "17090 Ne 4th Pl",
+      "leadId": "2000000439"
+    },
+    {
+      "phoneNumber": "(256) 337-3631",
+      "propertyId": "2130401",
+      "addressLine1": "145 Richardson Rd",
+      "leadId": "2000000409"
+    }
+  ],
+  "messages": [],
+  "stdout": "phoneNumber\tpropertyId\taddressLine1\tleadId\n(201) 349-3870\t2130183\t7000 Nw 66th Ter\t2000000185\n(201) 567-1334\t2130414\t510 Nw 2nd Ave\t2000000422\n(201) 679-8691\t2130123\t425 Nw 5th St\t2000000124\n(201) 918-9241\t2130231\t3129 Sw Natura Ave\t2000000237\n(202) 365-2518\t2130559\t10605 S Jog Rd Unit 210\t2000000570\n(203) 323-8557\t2130565\t3304 Aruba Way Apt A2\t2000000576\n(203) 572-7903\t2130059\t4827 Sierra Dr\t2000000060\n(206) 437-1340\t2130114\t3560 Gloria Ave\t2000000115\n(215) 997-1086\t2130088\t4601 Nw 45th St\t2000000089\n(216) 258-8821\t2130400\t6510 Sw 8th St\t2000000408\n(226) 793-0770\t2130281\t1380 Forrest Ct\t2000000287\n(226) 793-0770\t2130283\t327 Boundary Blvd\t2000000289\n(231) 675-7701\t2130076\t7836 Sunflower Dr\t2000000077\n(234) 926-1224\t2130519\t20930 Se 157th St\t2000000530\n(239) 200-6796\t2130362\t1305 S 27th Ave\t2000000369\n(239) 272-4927\t2130533\t13326 Saint Tropez Cir\t2000000544\n(239) 440-5027\t2130063\t1520 Nw 131st St\t2000000064\n(239) 692-4821\t2130192\t4520 Nw 22nd St\t2000000194\n(248) 614-4575\t2130431\t17090 Ne 4th Pl\t2000000439\n(256) 337-3631\t2130401\t145 Richardson Rd\t2000000409\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

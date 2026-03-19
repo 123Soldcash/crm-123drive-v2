@@ -1,4 +1,4 @@
-import { eq, desc, inArray, and } from "drizzle-orm";
+import { eq, desc, inArray, and, ne, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   contacts,
@@ -118,6 +118,91 @@ export async function getExistingPhonesForProperty(propertyId: number): Promise<
     .where(inArray(contactPhones.contactId, contactIds));
   
   return phones.map(p => normalizePhone(p.phoneNumber));
+}
+
+// Helper: check if phones exist in OTHER properties (cross-property warning)
+export async function findCrossPropertyPhones(
+  currentPropertyId: number,
+  phonesToCheck: string[]
+): Promise<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }>> {
+  const db = await getDb();
+  if (!db) return [];
+  if (phonesToCheck.length === 0) return [];
+
+  // Resolve the actual DB property id (URL might use leadId)
+  const dbPropertyId = await resolvePropertyDbId(currentPropertyId);
+  if (!dbPropertyId) return [];
+
+  const normalizedInput = phonesToCheck.map(p => normalizePhone(p));
+
+  // Get all phones from ALL contacts across ALL properties
+  const allPhones = await db
+    .select({
+      phoneNumber: contactPhones.phoneNumber,
+      contactId: contactPhones.contactId,
+    })
+    .from(contactPhones);
+
+  // Build a map: normalized phone -> contactIds
+  const phoneToContactIds = new Map<string, number[]>();
+  for (const row of allPhones) {
+    const norm = normalizePhone(row.phoneNumber);
+    if (!phoneToContactIds.has(norm)) phoneToContactIds.set(norm, []);
+    phoneToContactIds.get(norm)!.push(row.contactId);
+  }
+
+  // For each input phone, find contacts that are NOT in the current property
+  const results: Array<{ phone: string; propertyId: number; leadId: number | null; address: string }> = [];
+  const seenProperties = new Set<string>(); // phone+propertyId dedup
+
+  for (const normPhone of normalizedInput) {
+    const contactIds = phoneToContactIds.get(normPhone);
+    if (!contactIds || contactIds.length === 0) continue;
+
+    // Get the property info for these contacts
+    for (const cId of contactIds) {
+      const contactRow = await db
+        .select({ propertyId: contacts.propertyId })
+        .from(contacts)
+        .where(eq(contacts.id, cId))
+        .limit(1);
+
+      if (contactRow.length === 0) continue;
+      const propId = contactRow[0].propertyId;
+      if (propId === dbPropertyId) continue; // same property, skip
+
+      const key = `${normPhone}-${propId}`;
+      if (seenProperties.has(key)) continue;
+      seenProperties.add(key);
+
+      // Get property address
+      const propRow = await db
+        .select({
+          id: properties.id,
+          leadId: properties.leadId,
+          addressLine1: properties.addressLine1,
+          city: properties.city,
+          state: properties.state,
+          zipcode: properties.zipcode,
+        })
+        .from(properties)
+        .where(eq(properties.id, propId))
+        .limit(1);
+
+      if (propRow.length > 0) {
+        const p = propRow[0];
+        const address = [p.addressLine1, p.city, p.state, p.zipcode].filter(Boolean).join(", ");
+        results.push({
+          phone: normPhone,
+          propertyId: p.id,
+          leadId: p.leadId,
+          address: address || `Property #${p.id}`,
+        });
+      }
+    }
+  }
+
+  return results;
 }
 
 // Helper: check which phones are duplicates within a property

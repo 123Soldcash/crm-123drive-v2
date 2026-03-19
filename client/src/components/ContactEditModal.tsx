@@ -22,7 +22,17 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { User, Phone, Mail, MapPin, Save, X, Plus, Trash2, History, AlertCircle } from "lucide-react";
+import { User, Phone, Mail, MapPin, Save, X, Plus, Trash2, History, AlertCircle, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ContactEditModalProps {
   open: boolean;
@@ -82,6 +92,11 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   // Error state
   const [saveError, setSaveError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  // Cross-property warning state
+  const [crossPropertyWarnings, setCrossPropertyWarnings] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }>>([]);
+  const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'addPhone' | 'save' | null>(null);
+  const [pendingPhoneToAdd, setPendingPhoneToAdd] = useState<{ phoneNumber: string; phoneType: string } | null>(null);
 
   // Communication log for this contact
   const { data: communications } = trpc.communication.getCommunicationLog.useQuery(
@@ -172,13 +187,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     },
   });
 
-  const handleSave = async () => {
+  const doSave = async () => {
     if (!contact?.id) return;
-    setSaveError(null);
-
     try {
-      // Send all contact details + phones + emails in a single mutation
-      // The backend will delete existing phones/emails and recreate them
       await updateContactMutation.mutateAsync({
         contactId: contact.id,
         name: name || undefined,
@@ -210,7 +221,38 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     }
   };
 
-  const handleAddPhone = () => {
+  const handleSave = async () => {
+    if (!contact?.id) return;
+    setSaveError(null);
+
+    // Check cross-property for any new phones (phones not in original contact)
+    const originalPhoneNums = new Set(
+      (contact.phones || []).map((p: any) => p.phoneNumber.replace(/\D/g, ''))
+    );
+    const newPhoneNumbers = phones
+      .filter(p => !originalPhoneNums.has(p.phoneNumber.replace(/\D/g, '')))
+      .map(p => p.phoneNumber);
+
+    if (newPhoneNumbers.length > 0) {
+      try {
+        const result = await utils.communication.checkCrossPropertyPhones.fetch({
+          propertyId,
+          phones: newPhoneNumbers,
+        });
+        if (result.matches && result.matches.length > 0) {
+          setCrossPropertyWarnings(result.matches);
+          setPendingAction('save');
+          setShowCrossPropertyConfirm(true);
+          return;
+        }
+      } catch (e) {
+        // If check fails, proceed anyway
+      }
+    }
+    await doSave();
+  };
+
+  const handleAddPhone = async () => {
     if (!newPhone.trim()) return;
     const normalized = newPhone.trim().replace(/\D/g, "");
     // Check for duplicate phone in local state
@@ -220,9 +262,39 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
       return;
     }
     setPhoneError(null);
+    // Check cross-property
+    try {
+      const result = await utils.communication.checkCrossPropertyPhones.fetch({
+        propertyId,
+        phones: [newPhone.trim()],
+      });
+      if (result.matches && result.matches.length > 0) {
+        setCrossPropertyWarnings(result.matches);
+        setPendingAction('addPhone');
+        setPendingPhoneToAdd({ phoneNumber: newPhone.trim(), phoneType: newPhoneType });
+        setShowCrossPropertyConfirm(true);
+        return;
+      }
+    } catch (e) {
+      // If check fails, proceed anyway
+    }
     setPhones([...phones, { phoneNumber: newPhone.trim(), phoneType: newPhoneType, isPrimary: 0, dnc: 0 }]);
     setNewPhone("");
     setNewPhoneType("Mobile");
+  };
+
+  const handleCrossPropertyConfirm = () => {
+    setShowCrossPropertyConfirm(false);
+    setCrossPropertyWarnings([]);
+    if (pendingAction === 'addPhone' && pendingPhoneToAdd) {
+      setPhones([...phones, { phoneNumber: pendingPhoneToAdd.phoneNumber, phoneType: pendingPhoneToAdd.phoneType, isPrimary: 0, dnc: 0 }]);
+      setNewPhone("");
+      setNewPhoneType("Mobile");
+      setPendingPhoneToAdd(null);
+    } else if (pendingAction === 'save') {
+      doSave();
+    }
+    setPendingAction(null);
   };
 
   const handleRemovePhone = (index: number) => {
@@ -242,6 +314,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   if (!contact) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
@@ -595,5 +668,49 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Cross-Property Phone Warning Dialog */}
+    <AlertDialog open={showCrossPropertyConfirm} onOpenChange={setShowCrossPropertyConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+            <AlertTriangle className="h-5 w-5" />
+            Phone Already Exists in Another Property
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="text-sm space-y-3">
+              <span className="block text-muted-foreground">This phone number is already linked to the following propert{crossPropertyWarnings.length > 1 ? 'ies' : 'y'}:</span>
+              <div className="space-y-2">
+                {crossPropertyWarnings.map((match, idx) => (
+                  <div key={idx} className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                    <Phone className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium text-foreground">{match.phone}</span>
+                      <span className="block text-muted-foreground">
+                        {match.address}
+                        {match.leadId && <span className="text-xs ml-1">(Lead #{match.leadId})</span>}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <span className="block text-muted-foreground">Do you want to proceed anyway?</span>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => { setShowCrossPropertyConfirm(false); setCrossPropertyWarnings([]); setPendingAction(null); setPendingPhoneToAdd(null); }}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleCrossPropertyConfirm}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            {pendingAction === 'save' ? 'Save Anyway' : 'Add Anyway'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

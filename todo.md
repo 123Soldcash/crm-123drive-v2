@@ -2576,3 +2576,10 @@
 - [x] Allow same phone number across different properties (no cross-property restriction)
 - [x] Write vitest tests for duplicate phone prevention (25 tests passing)
 - [x] Fix Sonner toast not rendering — added inline error messages as reliable fallback
+
+## Cross-Property Phone Warning (COMPLETED)
+- [x] Create backend endpoint `checkCrossPropertyPhones` to check if phone exists in other properties (returns property addresses, leadIds)
+- [x] Update Add Contact form: shows amber warning dialog "Phone Already Exists in Another Property" with property details, Cancel/Add Anyway buttons
+- [x] Update ContactEditModal: shows cross-property warning when adding new phone or saving with new phones
+- [x] Update Bulk Import: shows cross-property warnings for all phones across all contacts before import
+- [x] Write vitest tests for cross-property phone check (22 tests passing)
