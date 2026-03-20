@@ -51,6 +51,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { StickyPropertyHeader } from "@/components/StickyPropertyHeader";
 import Comparables from "@/components/Comparables";
+import { OfferFormDialog } from "@/components/OfferFormDialog";
+import { PipelineStageData } from "@/components/PipelineStageData";
 
 export default function PropertyDetail() {
   const [, params] = useRoute("/properties/:id");
@@ -98,6 +100,7 @@ export default function PropertyDetail() {
 
   const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
   const [selectedPipelineStage, setSelectedPipelineStage] = useState<string>("");
+  const [offerFormOpen, setOfferFormOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
@@ -237,6 +240,12 @@ export default function PropertyDetail() {
 
   const handleAddToPipeline = () => {
     if (!selectedPipelineStage) return;
+    // If moving to OFFER_PENDING, show the offer form instead of directly changing stage
+    if (selectedPipelineStage === "OFFER_PENDING" && property?.dealStage !== "OFFER_PENDING") {
+      setPipelineDialogOpen(false);
+      setOfferFormOpen(true);
+      return;
+    }
     updateDealStage.mutate({ propertyId, newStage: selectedPipelineStage });
   };
 
@@ -404,6 +413,19 @@ export default function PropertyDetail() {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
       />
+
+      {/* Offer Form Dialog - appears when transitioning to Offer Pending */}
+      <OfferFormDialog
+        open={offerFormOpen}
+        onOpenChange={setOfferFormOpen}
+        propertyId={propertyId}
+        onSuccess={() => {
+          toast.success("Property moved to Offer Pending!");
+        }}
+      />
+
+      {/* Pipeline Stage Data (Offers, etc.) */}
+      <PipelineStageData propertyId={propertyId} dealStage={property?.dealStage || null} />
 
       {assignedAgents && assignedAgents.length > 0 && (
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">

@@ -14,8 +14,8 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers } from "../drizzle/schema";
-import { eq, sql, and, isNull } from "drizzle-orm";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers } from "../drizzle/schema";
+import { eq, sql, and, isNull, desc } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
@@ -1333,6 +1333,159 @@ export const appRouter = router({
           ctx.user!.id,
           input.notes
         );
+      }),
+
+    // ─── Pipeline Stage Data: Offers ──────────────────────────────
+    createOffer: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        toBeSent: z.boolean().default(false),
+        offerSent: z.boolean().default(false),
+        viaAdobe: z.boolean().default(false),
+        viaEmail: z.boolean().default(false),
+        viaTxt: z.boolean().default(false),
+        viaUps: z.boolean().default(false),
+        viaFedex: z.boolean().default(false),
+        viaUsps: z.boolean().default(false),
+        viaInPerson: z.boolean().default(false),
+        offerDate: z.string().optional(),
+        offerAmount: z.number().default(0),
+        isVerbal: z.boolean().default(false),
+        isWrittenOffer: z.boolean().default(false),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const b = (v: boolean) => v ? 1 : 0;
+        const result = await database.insert(propertyOffers).values({
+          propertyId: input.propertyId,
+          toBeSent: b(input.toBeSent),
+          offerSent: b(input.offerSent),
+          viaAdobe: b(input.viaAdobe),
+          viaEmail: b(input.viaEmail),
+          viaTxt: b(input.viaTxt),
+          viaUps: b(input.viaUps),
+          viaFedex: b(input.viaFedex),
+          viaUsps: b(input.viaUsps),
+          viaInPerson: b(input.viaInPerson),
+          offerDate: input.offerDate ? new Date(input.offerDate) : new Date(),
+          offerAmount: input.offerAmount,
+          isVerbal: b(input.isVerbal),
+          isWrittenOffer: b(input.isWrittenOffer),
+          createdBy: ctx.user!.id,
+        });
+        return { success: true, id: Number((result as any)[0]?.insertId) };
+      }),
+
+    getOffers: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) return [];
+        return database.select().from(propertyOffers)
+          .where(eq(propertyOffers.propertyId, input.propertyId))
+          .orderBy(desc(propertyOffers.createdAt));
+      }),
+
+    updateOffer: protectedProcedure
+      .input(z.object({
+        offerId: z.number(),
+        toBeSent: z.boolean().optional(),
+        offerSent: z.boolean().optional(),
+        viaAdobe: z.boolean().optional(),
+        viaEmail: z.boolean().optional(),
+        viaTxt: z.boolean().optional(),
+        viaUps: z.boolean().optional(),
+        viaFedex: z.boolean().optional(),
+        viaUsps: z.boolean().optional(),
+        viaInPerson: z.boolean().optional(),
+        offerDate: z.string().optional(),
+        offerAmount: z.number().optional(),
+        isVerbal: z.boolean().optional(),
+        isWrittenOffer: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const { offerId, ...fields } = input;
+        const updates: Record<string, any> = {};
+        const b = (v: boolean) => v ? 1 : 0;
+        if (fields.toBeSent !== undefined) updates.toBeSent = b(fields.toBeSent);
+        if (fields.offerSent !== undefined) updates.offerSent = b(fields.offerSent);
+        if (fields.viaAdobe !== undefined) updates.viaAdobe = b(fields.viaAdobe);
+        if (fields.viaEmail !== undefined) updates.viaEmail = b(fields.viaEmail);
+        if (fields.viaTxt !== undefined) updates.viaTxt = b(fields.viaTxt);
+        if (fields.viaUps !== undefined) updates.viaUps = b(fields.viaUps);
+        if (fields.viaFedex !== undefined) updates.viaFedex = b(fields.viaFedex);
+        if (fields.viaUsps !== undefined) updates.viaUsps = b(fields.viaUsps);
+        if (fields.viaInPerson !== undefined) updates.viaInPerson = b(fields.viaInPerson);
+        if (fields.offerDate !== undefined) updates.offerDate = new Date(fields.offerDate);
+        if (fields.offerAmount !== undefined) updates.offerAmount = fields.offerAmount;
+        if (fields.isVerbal !== undefined) updates.isVerbal = b(fields.isVerbal);
+        if (fields.isWrittenOffer !== undefined) updates.isWrittenOffer = b(fields.isWrittenOffer);
+        await database.update(propertyOffers).set(updates).where(eq(propertyOffers.id, offerId));
+        return { success: true };
+      }),
+
+    deleteOffer: protectedProcedure
+      .input(z.object({ offerId: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        await database.delete(propertyOffers).where(eq(propertyOffers.id, input.offerId));
+        return { success: true };
+      }),
+
+    // Move to Offer Pending: create offer(s) + change stage in one action
+    moveToOfferPending: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        offers: z.array(z.object({
+          toBeSent: z.boolean().default(false),
+          offerSent: z.boolean().default(false),
+          viaAdobe: z.boolean().default(false),
+          viaEmail: z.boolean().default(false),
+          viaTxt: z.boolean().default(false),
+          viaUps: z.boolean().default(false),
+          viaFedex: z.boolean().default(false),
+          viaUsps: z.boolean().default(false),
+          viaInPerson: z.boolean().default(false),
+          offerDate: z.string().optional(),
+          offerAmount: z.number().default(0),
+          isVerbal: z.boolean().default(false),
+          isWrittenOffer: z.boolean().default(false),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const b = (v: boolean) => v ? 1 : 0;
+
+        // Insert all offers
+        for (const offer of input.offers) {
+          await database.insert(propertyOffers).values({
+            propertyId: input.propertyId,
+            toBeSent: b(offer.toBeSent),
+            offerSent: b(offer.offerSent),
+            viaAdobe: b(offer.viaAdobe),
+            viaEmail: b(offer.viaEmail),
+            viaTxt: b(offer.viaTxt),
+            viaUps: b(offer.viaUps),
+            viaFedex: b(offer.viaFedex),
+            viaUsps: b(offer.viaUsps),
+            viaInPerson: b(offer.viaInPerson),
+            offerDate: offer.offerDate ? new Date(offer.offerDate) : new Date(),
+            offerAmount: offer.offerAmount,
+            isVerbal: b(offer.isVerbal),
+            isWrittenOffer: b(offer.isWrittenOffer),
+            createdBy: ctx.user!.id,
+          });
+        }
+
+        // Move the property to OFFER_PENDING stage
+        await updatePropertyStage(input.propertyId, "OFFER_PENDING", ctx.user!.id, `Offer created with ${input.offers.length} offer(s)`);
+
+        return { success: true, offersCreated: input.offers.length };
       }),
   }),
 

@@ -1509,3 +1509,44 @@ export const twilioNumbers = mysqlTable("twilioNumbers", {
 
 export type TwilioNumber = typeof twilioNumbers.$inferSelect;
 export type InsertTwilioNumber = typeof twilioNumbers.$inferInsert;
+
+
+/**
+ * Pipeline Stage Data: Offers
+ * Stores offer details when a property transitions to OFFER_PENDING stage.
+ * A property can have multiple offers (each row = one offer).
+ * This is part of the pipeline stage forms framework — future stages will have their own tables.
+ */
+export const propertyOffers = mysqlTable("propertyOffers", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+
+  // Status checkboxes
+  toBeSent: int("toBeSent").default(0).notNull(),       // 1 = checked
+  offerSent: int("offerSent").default(0).notNull(),      // 1 = checked
+
+  // Delivery method checkboxes
+  viaAdobe: int("viaAdobe").default(0).notNull(),
+  viaEmail: int("viaEmail").default(0).notNull(),
+  viaTxt: int("viaTxt").default(0).notNull(),
+  viaUps: int("viaUps").default(0).notNull(),
+  viaFedex: int("viaFedex").default(0).notNull(),
+  viaUsps: int("viaUsps").default(0).notNull(),
+  viaInPerson: int("viaInPerson").default(0).notNull(),
+
+  // Offer details
+  offerDate: timestamp("offerDate"),
+  offerAmount: int("offerAmount").default(0).notNull(),  // in cents or whole dollars
+
+  // Offer type checkboxes
+  isVerbal: int("isVerbal").default(0).notNull(),
+  isWrittenOffer: int("isWrittenOffer").default(0).notNull(),
+
+  // Metadata
+  createdBy: int("createdBy"),  // User ID who created the offer
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PropertyOffer = typeof propertyOffers.$inferSelect;
+export type InsertPropertyOffer = typeof propertyOffers.$inferInsert;

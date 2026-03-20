@@ -2595,3 +2595,14 @@
 - [x] Move Property, Financial, Identifiers, Owner data into the photo/header section (inside hero card)
 - [x] Leave the lower section empty (placeholder for future use)
 - [x] Ensure responsive layout works properly with data in header (2-col mobile, 4-col desktop)
+
+## Pipeline Stage Transition Forms (Offer Pending) (COMPLETED)
+- [x] Create database table for pipeline offers (property_offers) — 14 fields: checkboxes, date, amount, type
+- [x] Create backend CRUD procedures for offers (createOffer, listOffers, updateOffer, deleteOffer)
+- [x] Build Offer form dialog matching mockup (checkboxes, date, amount, verbal/written, New Offer button)
+- [x] Intercept pipeline transition to Offer Pending to show Offer form
+- [x] Build PipelineStageData display section on property page (below hero, above tags)
+- [x] Display stored offer data with badges (Offer Sent, Written, delivery methods, amount, date)
+- [x] Support multiple offers per property ("+ New Offer" button)
+- [x] Support edit and delete of individual offers
+- [x] Write vitest tests for pipeline offers (22 tests passing)

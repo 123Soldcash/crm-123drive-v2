@@ -1,0 +1,21 @@
+CREATE TABLE `propertyOffers` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`propertyId` int NOT NULL,
+	`toBeSent` int NOT NULL DEFAULT 0,
+	`offerSent` int NOT NULL DEFAULT 0,
+	`viaAdobe` int NOT NULL DEFAULT 0,
+	`viaEmail` int NOT NULL DEFAULT 0,
+	`viaTxt` int NOT NULL DEFAULT 0,
+	`viaUps` int NOT NULL DEFAULT 0,
+	`viaFedex` int NOT NULL DEFAULT 0,
+	`viaUsps` int NOT NULL DEFAULT 0,
+	`viaInPerson` int NOT NULL DEFAULT 0,
+	`offerDate` timestamp,
+	`offerAmount` int NOT NULL DEFAULT 0,
+	`isVerbal` int NOT NULL DEFAULT 0,
+	`isWrittenOffer` int NOT NULL DEFAULT 0,
+	`createdBy` int,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `propertyOffers_id` PRIMARY KEY(`id`)
+);
