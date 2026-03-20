@@ -649,7 +649,7 @@ export async function togglePhoneDNC(phoneId: number, dnc: boolean) {
 
 /**
  * Mark ALL contacts and ALL their phones as DNC for a property.
- * Also updates the property desk status to ARCHIVED.
+ * Also updates the property desk status to DEAD.
  */
 export async function markPropertyDNC(propertyId: number) {
   const db = await getDb();
@@ -677,9 +677,9 @@ export async function markPropertyDNC(propertyId: number) {
       .where(inArray(contactPhones.contactId, contactIds));
   }
   
-  // Update property desk status and desk name to ARCHIVED
-  await db.update(properties)
-    .set({ deskStatus: "ARCHIVED", deskName: "ARCHIVED" })
+// Update property desk status and desk name to DEAD
+   await db.update(properties)
+    .set({ deskStatus: "DEAD", deskName: "DEAD" })
     .where(eq(properties.id, dbPropertyId));
 }
 

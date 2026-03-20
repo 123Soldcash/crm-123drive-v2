@@ -202,7 +202,7 @@ export const properties = mysqlTable("properties", {
   
   // Desk management
   deskName: varchar("deskName", { length: 100 }), // Desk assignment (e.g., "Sales", "Follow-up")
-  deskStatus: mysqlEnum("deskStatus", ["BIN", "ACTIVE", "ARCHIVED"]).default("BIN"), // BIN=new leads, ACTIVE=in progress, ARCHIVED=completed
+  deskStatus: mysqlEnum("deskStatus", ["BIN", "ACTIVE", "DEAD"]).default("BIN"), // BIN=new leads, ACTIVE=in progress, DEAD=dead leads
   
   // Wholesale Deal Pipeline
   dealStage: mysqlEnum("dealStage", [

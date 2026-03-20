@@ -1988,7 +1988,7 @@ export async function reassignProperty(propertyId: number, assignedAgentId: numb
 // Desk Management Functions
 // ============================================
 
-export async function updateDesk(propertyId: number, deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "ARCHIVED"): Promise<void> {
+export async function updateDesk(propertyId: number, deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "DEAD"): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -2017,7 +2017,7 @@ export async function getDeskStats(): Promise<{ deskName: string | null; count: 
   return result;
 }
 
-export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE" | "ARCHIVED"): Promise<any[]> {
+export async function listByDesk(deskName?: string, deskStatus?: "BIN" | "ACTIVE" | "DEAD"): Promise<any[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   

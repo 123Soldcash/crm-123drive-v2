@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE properties MODIFY COLUMN deskStatus ENUM('BIN', 'ACTIVE', 'ARCHIVED', 'DEAD') DEFAULT 'BIN'; UPDATE properties SET deskStatus = 'DEAD', deskName = 'DEAD' WHERE deskStatus = 'ARCHIVED'; ALTER TABLE properties MODIFY COLUMN deskStatus ENUM('BIN', 'ACTIVE', 'DEAD') DEFAULT 'BIN';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute ALTER TABLE properties MODIFY COLUMN deskStatus ENUM('BIN', 'ACTIVE', 'ARCHIVED', 'DEAD') DEFAULT 'BIN'; UPDATE properties SET deskStatus = 'DEAD', deskName = 'DEAD' WHERE deskStatus = 'ARCHIVED'; ALTER TABLE properties MODIFY COLUMN deskStatus ENUM('BIN', 'ACTIVE', 'DEAD') DEFAULT 'BIN';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 566
+}

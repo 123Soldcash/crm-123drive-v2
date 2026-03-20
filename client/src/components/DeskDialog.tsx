@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Fixed desk options with colors
@@ -28,7 +30,7 @@ const DESK_OPTIONS = [
   { value: "DESK_4", label: "🔵 Rodolfo", description: "Desk 4 - Rodolfo", color: "bg-blue-600 text-white" },
   { value: "DESK_5", label: "🟨 Lucas", description: "Desk 5 - Lucas", color: "bg-amber-200 text-amber-800" },
   { value: "BIN", label: "🗑️ BIN", description: "Leads descartadas", color: "bg-gray-200 text-gray-700" },
-  { value: "ARCHIVED", label: "⬛ Archived", description: "Leads arquivadas/finalizadas", color: "bg-gray-800 text-white" },
+  { value: "DEAD", label: "💀 Dead", description: "Dead leads - finalizadas", color: "bg-gray-800 text-white" },
 ];
 
 interface DeskDialogProps {
@@ -37,7 +39,7 @@ interface DeskDialogProps {
   propertyId: number;
   currentDeskName?: string | null;
   currentDeskStatus?: string;
-  onSave: (deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "ARCHIVED") => void;
+  onSave: (deskName: string | undefined, deskStatus: "BIN" | "ACTIVE" | "DEAD", deadReason?: string) => void;
 }
 
 export function DeskDialog({
@@ -49,16 +51,20 @@ export function DeskDialog({
   onSave,
 }: DeskDialogProps) {
   const [selectedDesk, setSelectedDesk] = useState(currentDeskName || "BIN");
+  const [deadReason, setDeadReason] = useState("");
+  const [deadReasonError, setDeadReasonError] = useState("");
 
   // Update state when dialog opens with new property
   useEffect(() => {
     setSelectedDesk(currentDeskName || "BIN");
+    setDeadReason("");
+    setDeadReasonError("");
   }, [currentDeskName, open]);
 
   const handleSave = () => {
     // Map desk selection to deskName and deskStatus
     let deskName: string | undefined;
-    let deskStatus: "BIN" | "ACTIVE" | "ARCHIVED";
+    let deskStatus: "BIN" | "ACTIVE" | "DEAD";
 
     if (selectedDesk === "BIN") {
       deskName = "BIN";
@@ -66,15 +72,20 @@ export function DeskDialog({
     } else if (selectedDesk === "NEW_LEAD") {
       deskName = "NEW_LEAD";
       deskStatus = "BIN";
-    } else if (selectedDesk === "ARCHIVED") {
-      deskName = "ARCHIVED";
-      deskStatus = "ARCHIVED";
+    } else if (selectedDesk === "DEAD") {
+      deskName = "DEAD";
+      deskStatus = "DEAD";
+      // Require justification for Dead
+      if (!deadReason.trim()) {
+        setDeadReasonError("A justification is required when marking a lead as Dead.");
+        return;
+      }
     } else {
       deskName = selectedDesk;
       deskStatus = "ACTIVE";
     }
 
-    onSave(deskName, deskStatus);
+    onSave(deskName, deskStatus, selectedDesk === "DEAD" ? deadReason.trim() : undefined);
     onOpenChange(false);
   };
 
@@ -92,7 +103,7 @@ export function DeskDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="desk-select">Selecione a Desk</Label>
-            <Select value={selectedDesk} onValueChange={setSelectedDesk}>
+            <Select value={selectedDesk} onValueChange={(v) => { setSelectedDesk(v); setDeadReasonError(""); }}>
               <SelectTrigger id="desk-select" className="w-full">
                 <SelectValue placeholder="Selecione uma desk..." />
               </SelectTrigger>
@@ -115,6 +126,35 @@ export function DeskDialog({
             )}
           </div>
 
+          {/* Dead justification - only shows when DEAD is selected */}
+          {selectedDesk === "DEAD" && (
+            <div className="space-y-2">
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                    💀 Marking as Dead
+                  </span>
+                </div>
+                <p className="text-xs text-red-600 dark:text-red-400 mb-2">
+                  Please provide a reason why this lead is being marked as Dead. This will be saved to General Notes.
+                </p>
+                <Textarea
+                  placeholder="e.g., Owner not interested, property already sold, unable to contact..."
+                  value={deadReason}
+                  onChange={(e) => { setDeadReason(e.target.value); setDeadReasonError(""); }}
+                  className="min-h-[80px] bg-white dark:bg-gray-900"
+                />
+                {deadReasonError && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {deadReasonError}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Current status indicator */}
           <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-md">
             <p className="text-sm text-muted-foreground">
@@ -131,8 +171,8 @@ export function DeskDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
-            💾 Salvar
+          <Button onClick={handleSave} variant={selectedDesk === "DEAD" ? "destructive" : "default"}>
+            {selectedDesk === "DEAD" ? "💀 Mark as Dead" : "💾 Salvar"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -211,6 +211,13 @@
       "when": 1774038934180,
       "tag": "0029_funny_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1774044927756,
+      "tag": "0030_daily_shocker",
+      "breakpoints": true
     }
   ]
 }

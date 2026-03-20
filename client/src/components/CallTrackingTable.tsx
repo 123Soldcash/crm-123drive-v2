@@ -349,6 +349,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
   const [showDNCGeralDialog, setShowDNCGeralDialog] = useState(false);
   const [showUnmarkDNCGeralDialog, setShowUnmarkDNCGeralDialog] = useState(false);
+  const [dncDeadReason, setDncDeadReason] = useState("");
+  const [dncDeadReasonError, setDncDeadReasonError] = useState("");
 
   // Check if ALL contacts are DNC (for DNC Geral toggle)
   const allContactsDNC = contacts && contacts.length > 0 && contacts.every((c: any) => !!c.dnc);
@@ -363,11 +365,22 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     },
   });
 
+  const createDncNote = trpc.notes.create.useMutation({
+    onSuccess: () => {
+      utils.notes.byProperty.invalidate({ propertyId });
+    },
+  });
+
   const markPropertyDNCMutation = trpc.communication.markPropertyDNC.useMutation({
     onSuccess: () => {
       utils.communication.getContactsByProperty.invalidate({ propertyId });
       utils.properties.getById.invalidate({ id: propertyId });
-      toast.success("All contacts marked as DNC. Property archived.");
+      // Auto-create note with DNC reason
+      if (dncDeadReason.trim()) {
+        createDncNote.mutate({ propertyId, content: `💀 Lead Marked as DEAD (DNC)\nReason: ${dncDeadReason.trim()}`, noteType: "general" });
+      }
+      toast.success("All contacts marked as DNC. Property marked as Dead.");
+      setDncDeadReason("");
     },
     onError: (error: any) => {
       toast.error(`Failed to mark property DNC: ${error.message}`);
@@ -1851,24 +1864,45 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 <span>This will:</span>
                 <ul className="list-disc pl-5 space-y-1">
                   <li><strong>Block ALL phone numbers</strong> for every contact in this property</li>
-                  <li><strong>Archive this property</strong> (Desk Status → ARCHIVED)</li>
+                  <li><strong>Mark this property as Dead</strong> (Desk Status → DEAD)</li>
                   <li>Disable all call and SMS buttons for these contacts</li>
                 </ul>
-                <span className="block text-sm mt-2">You can undo this later by clicking "DNC General (ON)" again.</span>
+                <div className="mt-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
+                  <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-2">
+                    💀 Justification required:
+                  </p>
+                  <textarea
+                    placeholder="e.g., Owner requested DNC, wrong number, property already sold..."
+                    value={dncDeadReason}
+                    onChange={(e) => { setDncDeadReason(e.target.value); setDncDeadReasonError(""); }}
+                    className="w-full min-h-[80px] p-2 text-sm border rounded-md bg-white dark:bg-gray-900"
+                  />
+                  {dncDeadReasonError && (
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {dncDeadReasonError}
+                    </p>
+                  )}
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setDncDeadReason(""); setDncDeadReasonError(""); }}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => {
+              onClick={(e) => {
+                if (!dncDeadReason.trim()) {
+                  e.preventDefault();
+                  setDncDeadReasonError("A justification is required when marking a lead as Dead.");
+                  return;
+                }
                 markPropertyDNCMutation.mutate({ propertyId });
                 setShowDNCGeralDialog(false);
               }}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               <ShieldAlert className="h-4 w-4 mr-1" />
-              Mark All as DNC & Archive
+              Mark All as DNC & Dead
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

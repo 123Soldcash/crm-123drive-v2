@@ -1,0 +1,1 @@
+ALTER TABLE `properties` MODIFY COLUMN `deskStatus` enum('BIN','ACTIVE','DEAD') DEFAULT 'BIN';

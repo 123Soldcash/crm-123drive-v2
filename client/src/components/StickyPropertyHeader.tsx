@@ -20,6 +20,16 @@ import {
   MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertCircle } from "lucide-react";
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
 import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 import { PropertyImage } from "@/components/PropertyImage";
@@ -36,7 +46,7 @@ const DESK_OPTIONS = [
   { value: "DESK_4", label: "🔵 Rodolfo", color: "bg-blue-600 text-white border-blue-700" },
   { value: "DESK_5", label: "🟨 Lucas", color: "bg-amber-200 text-amber-800 border-amber-300" },
   { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
-  { value: "ARCHIVED", label: "⬛ Archived", color: "bg-gray-800 text-white border-gray-900" },
+  { value: "DEAD", label: "💀 Dead", color: "bg-gray-800 text-white border-gray-900" },
 ];
 
 interface StickyPropertyHeaderProps {
@@ -48,7 +58,7 @@ interface StickyPropertyHeaderProps {
   onAssignAgent: () => void;
   onUpdateLeadTemperature: (temp: string) => void;
   onToggleOwnerVerified: () => void;
-  onUpdateDesk: (deskName: string) => void;
+  onUpdateDesk: (deskName: string, deadReason?: string) => void;
   onPrevious: () => void;
   onNext: () => void;
   currentIndex: number;
@@ -78,6 +88,9 @@ export function StickyPropertyHeader({
   const [deskDropdownOpen, setDeskDropdownOpen] = useState(false);
   const [deskDropdownPos, setDeskDropdownPos] = useState({ top: 0, left: 0 });
   const deskButtonRef = useRef<HTMLButtonElement>(null);
+  const [showDeadReasonDialog, setShowDeadReasonDialog] = useState(false);
+  const [deadReason, setDeadReason] = useState("");
+  const [deadReasonError, setDeadReasonError] = useState("");
 
   const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || NOT_ASSIGNED_DESK;
 
@@ -367,7 +380,17 @@ export function StickyPropertyHeader({
                           "w-full text-left px-2 py-1.5 text-[11px] font-semibold rounded-md transition-colors hover:bg-slate-50",
                           desk.value === property.deskName && "bg-slate-100"
                         )}
-                        onClick={() => { onUpdateDesk(desk.value); setDeskDropdownOpen(false); }}
+                        onClick={() => {
+                          if (desk.value === "DEAD") {
+                            setDeskDropdownOpen(false);
+                            setDeadReason("");
+                            setDeadReasonError("");
+                            setShowDeadReasonDialog(true);
+                          } else {
+                            onUpdateDesk(desk.value);
+                            setDeskDropdownOpen(false);
+                          }
+                        }}
                       >
                         {desk.label}
                       </button>
@@ -486,6 +509,54 @@ export function StickyPropertyHeader({
 
       {/* ─── EMPTY SECTION: Reserved for future use ─── */}
       <div className="min-h-0" />
+
+      {/* ─── DEAD REASON DIALOG ─── */}
+      <Dialog open={showDeadReasonDialog} onOpenChange={setShowDeadReasonDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>💀</span> Mark as Dead
+            </DialogTitle>
+            <DialogDescription>
+              Please provide a reason why this lead is being marked as Dead. This will be saved to General Notes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
+              <Textarea
+                placeholder="e.g., Owner not interested, property already sold, unable to contact..."
+                value={deadReason}
+                onChange={(e) => { setDeadReason(e.target.value); setDeadReasonError(""); }}
+                className="min-h-[100px] bg-white dark:bg-gray-900"
+              />
+              {deadReasonError && (
+                <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {deadReasonError}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeadReasonDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!deadReason.trim()) {
+                  setDeadReasonError("A justification is required when marking a lead as Dead.");
+                  return;
+                }
+                onUpdateDesk("DEAD", deadReason.trim());
+                setShowDeadReasonDialog(false);
+              }}
+            >
+              💀 Mark as Dead
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

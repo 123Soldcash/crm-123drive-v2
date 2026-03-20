@@ -2614,3 +2614,13 @@
 - [x] Update updateOffer to create a note when offer is edited
 - [x] Browser test: create offer and verify note appears in General Notes (7 notes confirmed)
 - [x] Write vitest tests for auto-note creation (23 tests passing)
+
+## Rename "Archived" to "Dead" + Justification Requirement (COMPLETED)
+- [x] Rename "Archived" to "Dead" in database schema (enum: BIN, ACTIVE, DEAD)
+- [x] Rename "Archived" to "Dead" in all backend code (routers, db helpers, communication)
+- [x] Rename "Archived" to "Dead" in all frontend code (StickyPropertyHeader, CallTrackingTable, PropertyDetail)
+- [x] Add justification popup when marking a property as Dead (Dialog with textarea + validation)
+- [x] Auto-save Dead justification to General Notes (💀 Lead Marked as DEAD + reason)
+- [x] Update DNC flow to set status to "Dead" instead of "Archived"
+- [x] DNC triggers justification textarea and auto-note with DNC reason
+- [x] Write vitest tests for Dead status and justification (23 tests passing)

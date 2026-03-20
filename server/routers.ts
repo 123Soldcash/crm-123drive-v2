@@ -1116,7 +1116,7 @@ export const appRouter = router({
         return await db.updatePropertyDeepSearch(input);
       }),
     updateDesk: protectedProcedure
-      .input(z.object({ propertyId: z.number(), deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "ARCHIVED"]) }))
+      .input(z.object({ propertyId: z.number(), deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "DEAD"]) }))
       .mutation(async ({ input }) => {
         await db.updateDesk(input.propertyId, input.deskName, input.deskStatus);
         return { success: true };
@@ -1173,7 +1173,7 @@ export const appRouter = router({
       return await db.getDeskStats();
     }),
     listByDesk: protectedProcedure
-      .input(z.object({ deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "ARCHIVED"]).optional() }))
+      .input(z.object({ deskName: z.string().optional(), deskStatus: z.enum(["BIN", "ACTIVE", "DEAD"]).optional() }))
       .query(async ({ input }) => {
         return await db.listByDesk(input.deskName, input.deskStatus);
       }),

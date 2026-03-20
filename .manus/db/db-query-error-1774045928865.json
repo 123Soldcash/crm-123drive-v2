@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE properties SET deskStatus = 'NEW_LEAD' WHERE id = 2490001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute UPDATE properties SET deskStatus = 'NEW_LEAD' WHERE id = 2490001;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1406 (22001) at line 1: Data Too Long, field len 6, data len 8"
+  ]
+}

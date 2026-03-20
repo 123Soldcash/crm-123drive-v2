@@ -171,6 +171,12 @@ export default function PropertyDetail() {
     },
   });
 
+  const createDeadNote = trpc.notes.create.useMutation({
+    onSuccess: () => {
+      utils.notes.byProperty.invalidate({ propertyId });
+    },
+  });
+
   const isInPipeline = property?.dealStage ? STAGE_CONFIGS.some(s => s.id === property.dealStage && s.isPipeline) : false;
 
   const updateDealStage = trpc.properties.updateDealStage.useMutation({
@@ -303,9 +309,16 @@ export default function PropertyDetail() {
           updateLeadTemperature.mutate({ propertyId, temperature: temp as any })
         }
         onToggleOwnerVerified={() => toggleOwnerVerified.mutate({ propertyId, verified: !(property as any)?.ownerVerified })}
-        onUpdateDesk={(deskName) => {
-          const deskStatus = deskName === "BIN" ? "BIN" : deskName === "ARCHIVED" ? "ARCHIVED" : "ACTIVE";
-          updateDesk.mutate({ propertyId, deskName: deskName === "BIN" ? undefined : deskName, deskStatus });
+        onUpdateDesk={(deskName, deadReason) => {
+          const deskStatus = deskName === "BIN" ? "BIN" : deskName === "DEAD" ? "DEAD" : "ACTIVE";
+          updateDesk.mutate({ propertyId, deskName: deskName === "BIN" ? undefined : deskName, deskStatus }, {
+            onSuccess: () => {
+              if (deskName === "DEAD" && deadReason) {
+                // Auto-create a note with the dead reason
+                createDeadNote.mutate({ propertyId, content: `💀 Lead Marked as DEAD\nReason: ${deadReason}`, noteType: "general" });
+              }
+            }
+          });
         }}
         onPrevious={handlePrevious}
         onNext={handleNext}
