@@ -351,6 +351,22 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [showUnmarkDNCGeralDialog, setShowUnmarkDNCGeralDialog] = useState(false);
   const [dncDeadReason, setDncDeadReason] = useState("");
   const [dncDeadReasonError, setDncDeadReasonError] = useState("");
+  const [dncDeadCategory, setDncDeadCategory] = useState("");
+  const [dncDeadCategoryError, setDncDeadCategoryError] = useState("");
+
+  const DNC_DEAD_REASON_OPTIONS = [
+    { value: "SOLD_COMPANY", label: "Sold to another company", note: "(Note: Potential for us to reach out as a new buyer)" },
+    { value: "SOLD_PERSON", label: "Sold to a Person" },
+    { value: "SOLD_NO_INFO", label: "Sold \u2014 No information is available" },
+    { value: "GHOST_SELLER", label: "Ghost Seller", note: "(After 24 attempts, the seller can no longer be reached)" },
+    { value: "TITLE_ISSUES", label: "Title Issues", note: "(Problems with the title/legal ownership)" },
+    { value: "PROPERTY_CONDITION", label: "Property Condition", note: "The house is in worse shape than expected, or the repair costs make the deal unfeasible" },
+    { value: "REFINANCED", label: "Refinanced", note: "The owner found a way to keep the property by restructuring their debt" },
+    { value: "DUPLICATE_LEAD", label: "Duplicate Lead", note: "The lead was already in the system under a different name or number" },
+    { value: "WRONG_INFO", label: "Wrong Person/Number/Fraud", note: "The contact information was incorrect" },
+    { value: "NO_BUYER", label: "Unable to Assign / No Buyer Found" },
+    { value: "OTHER", label: "Other (Notes)" },
+  ];
 
   // Check if ALL contacts are DNC (for DNC Geral toggle)
   const allContactsDNC = contacts && contacts.length > 0 && contacts.every((c: any) => !!c.dnc);
@@ -376,8 +392,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       utils.communication.getContactsByProperty.invalidate({ propertyId });
       utils.properties.getById.invalidate({ id: propertyId });
       // Auto-create note with DNC reason
-      if (dncDeadReason.trim()) {
-        createDncNote.mutate({ propertyId, content: `💀 Lead Marked as DEAD (DNC)\nReason: ${dncDeadReason.trim()}`, noteType: "general" });
+      {
+        const catLabel = DNC_DEAD_REASON_OPTIONS.find(o => o.value === dncDeadCategory)?.label || dncDeadCategory;
+        const catNote = DNC_DEAD_REASON_OPTIONS.find(o => o.value === dncDeadCategory)?.note || "";
+        const noteContent = `💀 Lead Marked as DEAD (DNC)\nCategory: ${catLabel}${catNote ? " " + catNote : ""}${dncDeadReason.trim() ? "\nDetails: " + dncDeadReason.trim() : ""}`;
+        createDncNote.mutate({ propertyId, content: noteContent, noteType: "general" });
       }
       toast.success("All contacts marked as DNC. Property marked as Dead.");
       setDncDeadReason("");
@@ -1867,35 +1886,65 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <li><strong>Mark this property as Dead</strong> (Desk Status → DEAD)</li>
                   <li>Disable all call and SMS buttons for these contacts</li>
                 </ul>
-                <div className="mt-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
-                  <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-2">
-                    💀 Justification required:
-                  </p>
-                  <textarea
-                    placeholder="e.g., Owner requested DNC, wrong number, property already sold..."
-                    value={dncDeadReason}
-                    onChange={(e) => { setDncDeadReason(e.target.value); setDncDeadReasonError(""); }}
-                    className="w-full min-h-[80px] p-2 text-sm border rounded-md bg-white dark:bg-gray-900"
-                  />
-                  {dncDeadReasonError && (
-                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {dncDeadReasonError}
-                    </p>
-                  )}
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1.5">💀 Reason <span className="text-red-500">*</span></p>
+                    <select
+                      value={dncDeadCategory}
+                      onChange={(e) => { setDncDeadCategory(e.target.value); setDncDeadCategoryError(""); }}
+                      className="w-full p-2 text-sm border rounded-md bg-white dark:bg-gray-900"
+                    >
+                      <option value="">Select a reason...</option>
+                      {DNC_DEAD_REASON_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    {dncDeadCategory && (() => {
+                      const sel = DNC_DEAD_REASON_OPTIONS.find(o => o.value === dncDeadCategory);
+                      return sel?.note ? <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 italic">{sel.note}</p> : null;
+                    })()}
+                    {dncDeadCategoryError && (
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {dncDeadCategoryError}
+                      </p>
+                    )}
+                  </div>
+                  <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
+                    <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-2">Additional Notes:</p>
+                    <textarea
+                      placeholder="Add any additional details or context..."
+                      value={dncDeadReason}
+                      onChange={(e) => { setDncDeadReason(e.target.value); setDncDeadReasonError(""); }}
+                      className="w-full min-h-[60px] p-2 text-sm border rounded-md bg-white dark:bg-gray-900"
+                    />
+                    {dncDeadReasonError && (
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {dncDeadReasonError}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setDncDeadReason(""); setDncDeadReasonError(""); }}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setDncDeadReason(""); setDncDeadReasonError(""); setDncDeadCategory(""); setDncDeadCategoryError(""); }}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={(e) => {
-                if (!dncDeadReason.trim()) {
+                let hasErr = false;
+                if (!dncDeadCategory) {
                   e.preventDefault();
-                  setDncDeadReasonError("A justification is required when marking a lead as Dead.");
-                  return;
+                  setDncDeadCategoryError("Please select a reason.");
+                  hasErr = true;
                 }
+                if (dncDeadCategory === "OTHER" && !dncDeadReason.trim()) {
+                  e.preventDefault();
+                  setDncDeadReasonError("Please provide details when selecting 'Other'.");
+                  hasErr = true;
+                }
+                if (hasErr) return;
                 markPropertyDNCMutation.mutate({ propertyId });
                 setShowDNCGeralDialog(false);
               }}

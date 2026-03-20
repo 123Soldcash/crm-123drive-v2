@@ -1,0 +1,26 @@
+{
+  "query": "SHOW COLUMNS FROM properties LIKE '%desk%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SHOW COLUMNS FROM properties LIKE '%desk%';",
+  "rows": [
+    {
+      "Field": "deskName",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deskStatus",
+      "Type": "enum('BIN','ACTIVE','DEAD')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "BIN",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ndeskName\tvarchar(100)\tYES\t\tNULL\t\ndeskStatus\tenum('BIN','ACTIVE','DEAD')\tYES\t\tBIN\t\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

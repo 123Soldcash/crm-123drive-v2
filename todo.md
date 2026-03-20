@@ -2624,3 +2624,10 @@
 - [x] Update DNC flow to set status to "Dead" instead of "Archived"
 - [x] DNC triggers justification textarea and auto-note with DNC reason
 - [x] Write vitest tests for Dead status and justification (23 tests passing)
+## Dead Reason Selector (Required Dropdown) (COMPLETED)
+- [x] Add 11 predefined Dead reason options with helper descriptions
+- [x] Make reason selector required (cannot submit without selecting)
+- [x] Update StickyPropertyHeader Dead dialog with Select + helper text per reason
+- [x] Update CallTrackingTable DNC dialog with same reason selector
+- [x] Save selected reason category + details to General Notes
+- [x] Browser test: Ghost Seller selected, note saved with category + details ✅

@@ -29,7 +29,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle } from "lucide-react";
+
+const DEAD_REASON_OPTIONS = [
+  { value: "SOLD_COMPANY", label: "Sold to another company", note: "(Note: Potential for us to reach out as a new buyer)" },
+  { value: "SOLD_PERSON", label: "Sold to a Person" },
+  { value: "SOLD_NO_INFO", label: "Sold — No information is available" },
+  { value: "GHOST_SELLER", label: "Ghost Seller", note: "(After 24 attempts, the seller can no longer be reached)" },
+  { value: "TITLE_ISSUES", label: "Title Issues", note: "(Problems with the title/legal ownership)" },
+  { value: "PROPERTY_CONDITION", label: "Property Condition", note: "The house is in worse shape than expected, or the repair costs make the deal unfeasible" },
+  { value: "REFINANCED", label: "Refinanced", note: "The owner found a way to keep the property by restructuring their debt" },
+  { value: "DUPLICATE_LEAD", label: "Duplicate Lead", note: "The lead was already in the system under a different name or number" },
+  { value: "WRONG_INFO", label: "Wrong Person/Number/Fraud", note: "The contact information was incorrect" },
+  { value: "NO_BUYER", label: "Unable to Assign / No Buyer Found" },
+  { value: "OTHER", label: "Other (Notes)" },
+];
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
 import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 import { PropertyImage } from "@/components/PropertyImage";
@@ -89,8 +104,10 @@ export function StickyPropertyHeader({
   const [deskDropdownPos, setDeskDropdownPos] = useState({ top: 0, left: 0 });
   const deskButtonRef = useRef<HTMLButtonElement>(null);
   const [showDeadReasonDialog, setShowDeadReasonDialog] = useState(false);
+  const [deadReasonCategory, setDeadReasonCategory] = useState("");
   const [deadReason, setDeadReason] = useState("");
   const [deadReasonError, setDeadReasonError] = useState("");
+  const [deadCategoryError, setDeadCategoryError] = useState("");
 
   const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || NOT_ASSIGNED_DESK;
 
@@ -511,30 +528,65 @@ export function StickyPropertyHeader({
       <div className="min-h-0" />
 
       {/* ─── DEAD REASON DIALOG ─── */}
-      <Dialog open={showDeadReasonDialog} onOpenChange={setShowDeadReasonDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={showDeadReasonDialog} onOpenChange={(open) => {
+        setShowDeadReasonDialog(open);
+        if (!open) { setDeadReasonCategory(""); setDeadReason(""); setDeadReasonError(""); setDeadCategoryError(""); }
+      }}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span>💀</span> Mark as Dead
             </DialogTitle>
             <DialogDescription>
-              Please provide a reason why this lead is being marked as Dead. This will be saved to General Notes.
+              Select a reason and provide additional details. This will be saved to General Notes.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
-              <Textarea
-                placeholder="e.g., Owner not interested, property already sold, unable to contact..."
-                value={deadReason}
-                onChange={(e) => { setDeadReason(e.target.value); setDeadReasonError(""); }}
-                className="min-h-[100px] bg-white dark:bg-gray-900"
-              />
-              {deadReasonError && (
-                <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+          <div className="space-y-4 py-2">
+            {/* Reason Selector */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Reason <span className="text-red-500">*</span></label>
+              <Select value={deadReasonCategory} onValueChange={(v) => { setDeadReasonCategory(v); setDeadCategoryError(""); }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a reason..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEAD_REASON_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <span className="font-medium">{opt.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {deadReasonCategory && (() => {
+                const selected = DEAD_REASON_OPTIONS.find(o => o.value === deadReasonCategory);
+                return selected?.note ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 italic">{selected.note}</p>
+                ) : null;
+              })()}
+              {deadCategoryError && (
+                <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  {deadReasonError}
+                  {deadCategoryError}
                 </p>
               )}
+            </div>
+            {/* Additional Notes */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">Additional Notes</label>
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <Textarea
+                  placeholder="Add any additional details or context..."
+                  value={deadReason}
+                  onChange={(e) => { setDeadReason(e.target.value); setDeadReasonError(""); }}
+                  className="min-h-[80px] bg-white dark:bg-gray-900"
+                />
+                {deadReasonError && (
+                  <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {deadReasonError}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -544,12 +596,23 @@ export function StickyPropertyHeader({
             <Button
               variant="destructive"
               onClick={() => {
-                if (!deadReason.trim()) {
-                  setDeadReasonError("A justification is required when marking a lead as Dead.");
-                  return;
+                let hasError = false;
+                if (!deadReasonCategory) {
+                  setDeadCategoryError("Please select a reason.");
+                  hasError = true;
                 }
-                onUpdateDesk("DEAD", deadReason.trim());
+                if (deadReasonCategory === "OTHER" && !deadReason.trim()) {
+                  setDeadReasonError("Please provide details when selecting 'Other'.");
+                  hasError = true;
+                }
+                if (hasError) return;
+                const selectedLabel = DEAD_REASON_OPTIONS.find(o => o.value === deadReasonCategory)?.label || deadReasonCategory;
+                const selectedNote = DEAD_REASON_OPTIONS.find(o => o.value === deadReasonCategory)?.note || "";
+                const fullReason = `Category: ${selectedLabel}${selectedNote ? " " + selectedNote : ""}${deadReason.trim() ? "\nDetails: " + deadReason.trim() : ""}`;
+                onUpdateDesk("DEAD", fullReason);
                 setShowDeadReasonDialog(false);
+                setDeadReasonCategory("");
+                setDeadReason("");
               }}
             >
               💀 Mark as Dead
