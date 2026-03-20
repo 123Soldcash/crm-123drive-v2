@@ -275,6 +275,7 @@ export function CreateTaskDialog({
                   { label: "Today", days: 0 },
                   { label: "Tomorrow", days: 1 },
                   { label: "1 Week", days: 7 },
+                  { label: "2 Weeks", days: 14 },
                   { label: "1 Month", days: 30 },
                   { label: "3 Months", days: 90 },
                   { label: "6 Months", days: 180 },

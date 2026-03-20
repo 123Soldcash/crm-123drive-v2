@@ -2631,3 +2631,6 @@
 - [x] Update CallTrackingTable DNC dialog with same reason selector
 - [x] Save selected reason category + details to General Notes
 - [x] Browser test: Ghost Seller selected, note saved with category + details ✅
+
+## Quick Date Preset - Add "2 Weeks" (COMPLETED)
+- [x] Add "2 Weeks" (14 days) option between 1 Week and 1 Month in CreateTaskDialog
