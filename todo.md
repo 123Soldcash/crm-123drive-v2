@@ -2606,3 +2606,11 @@
 - [x] Support multiple offers per property ("+ New Offer" button)
 - [x] Support edit and delete of individual offers
 - [x] Write vitest tests for pipeline offers (22 tests passing)
+
+## Auto-Save Offer Data to General Notes (COMPLETED)
+- [x] Investigate notes table schema and how notes are created
+- [x] Update createOffer backend procedure to auto-create a formatted note with offer details
+- [x] Update moveToOfferPending to also create a note when pipeline transitions
+- [x] Update updateOffer to create a note when offer is edited
+- [x] Browser test: create offer and verify note appears in General Notes (7 notes confirmed)
+- [x] Write vitest tests for auto-note creation (23 tests passing)

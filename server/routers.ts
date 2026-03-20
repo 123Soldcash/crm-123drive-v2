@@ -28,6 +28,81 @@ import { deepSearchRouter } from "./routers/deep-search";
 import { importPropertiesRouter } from "./routers/import-properties";
 import { invitesRouter } from "./routers/invites";
 
+// ─── Helper: format offer data into a readable General Note ──────────
+function formatOfferNote(offer: {
+  toBeSent?: boolean;
+  offerSent?: boolean;
+  viaAdobe?: boolean;
+  viaEmail?: boolean;
+  viaTxt?: boolean;
+  viaUps?: boolean;
+  viaFedex?: boolean;
+  viaUsps?: boolean;
+  viaInPerson?: boolean;
+  offerDate?: string;
+  offerAmount?: number;
+  isVerbal?: boolean;
+  isWrittenOffer?: boolean;
+}, title: string): string {
+  const lines: string[] = [`📋 ${title}`];
+  lines.push(`Date: ${offer.offerDate || new Date().toISOString().split("T")[0]}`);
+  lines.push(`Amount: $${(offer.offerAmount || 0).toLocaleString("en-US")}`);
+
+  const status: string[] = [];
+  if (offer.toBeSent) status.push("To be Sent");
+  if (offer.offerSent) status.push("Offer Sent");
+  if (status.length) lines.push(`Status: ${status.join(", ")}`);
+
+  const delivery: string[] = [];
+  if (offer.viaAdobe) delivery.push("Adobe");
+  if (offer.viaEmail) delivery.push("Email");
+  if (offer.viaTxt) delivery.push("Txt");
+  if (offer.viaUps) delivery.push("UPS");
+  if (offer.viaFedex) delivery.push("FedEx");
+  if (offer.viaUsps) delivery.push("USPS");
+  if (offer.viaInPerson) delivery.push("In Person");
+  if (delivery.length) lines.push(`Delivery: ${delivery.join(", ")}`);
+
+  const type: string[] = [];
+  if (offer.isVerbal) type.push("Verbal");
+  if (offer.isWrittenOffer) type.push("Written Offer");
+  if (type.length) lines.push(`Type: ${type.join(", ")}`);
+
+  return lines.join("\n");
+}
+
+function formatOfferNoteFromRow(row: {
+  toBeSent: number | null;
+  offerSent: number | null;
+  viaAdobe: number | null;
+  viaEmail: number | null;
+  viaTxt: number | null;
+  viaUps: number | null;
+  viaFedex: number | null;
+  viaUsps: number | null;
+  viaInPerson: number | null;
+  offerDate: Date | null;
+  offerAmount: number | null;
+  isVerbal: number | null;
+  isWrittenOffer: number | null;
+}, title: string): string {
+  return formatOfferNote({
+    toBeSent: row.toBeSent === 1,
+    offerSent: row.offerSent === 1,
+    viaAdobe: row.viaAdobe === 1,
+    viaEmail: row.viaEmail === 1,
+    viaTxt: row.viaTxt === 1,
+    viaUps: row.viaUps === 1,
+    viaFedex: row.viaFedex === 1,
+    viaUsps: row.viaUsps === 1,
+    viaInPerson: row.viaInPerson === 1,
+    offerDate: row.offerDate ? row.offerDate.toISOString().split("T")[0] : undefined,
+    offerAmount: row.offerAmount ?? 0,
+    isVerbal: row.isVerbal === 1,
+    isWrittenOffer: row.isWrittenOffer === 1,
+  }, title);
+}
+
 export const appRouter = router({
   system: systemRouter,
   agents: agentsRouter,
@@ -47,6 +122,10 @@ export const appRouter = router({
       } as const;
     }),
   }),
+
+  // ─── Helper: format offer data into a readable note ──────────
+  // Used by createOffer, moveToOfferPending, and updateOffer
+  // to auto-save offer details as General Notes
 
   properties: router({
     statusCounts: protectedProcedure.query(async () => {
@@ -1336,6 +1415,10 @@ export const appRouter = router({
       }),
 
     // ─── Pipeline Stage Data: Offers ──────────────────────────────
+
+    // Helper: format offer data into a readable note
+    // (defined inline so it's accessible to all offer procedures)
+
     createOffer: protectedProcedure
       .input(z.object({
         propertyId: z.number(),
@@ -1374,6 +1457,16 @@ export const appRouter = router({
           isWrittenOffer: b(input.isWrittenOffer),
           createdBy: ctx.user!.id,
         });
+
+        // Auto-save offer data as a General Note
+        const noteContent = formatOfferNote(input, "New Offer Created");
+        await database.insert(notes).values({
+          propertyId: input.propertyId,
+          userId: ctx.user!.id,
+          content: noteContent,
+          noteType: "general",
+        });
+
         return { success: true, id: Number((result as any)[0]?.insertId) };
       }),
 
@@ -1404,7 +1497,7 @@ export const appRouter = router({
         isVerbal: z.boolean().optional(),
         isWrittenOffer: z.boolean().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) throw new Error("Database not available");
         const { offerId, ...fields } = input;
@@ -1424,6 +1517,20 @@ export const appRouter = router({
         if (fields.isVerbal !== undefined) updates.isVerbal = b(fields.isVerbal);
         if (fields.isWrittenOffer !== undefined) updates.isWrittenOffer = b(fields.isWrittenOffer);
         await database.update(propertyOffers).set(updates).where(eq(propertyOffers.id, offerId));
+
+        // Auto-save update as a General Note
+        // Fetch the updated offer to get full data for the note
+        const [updatedOffer] = await database.select().from(propertyOffers).where(eq(propertyOffers.id, offerId));
+        if (updatedOffer) {
+          const noteContent = formatOfferNoteFromRow(updatedOffer, "Offer Updated");
+          await database.insert(notes).values({
+            propertyId: updatedOffer.propertyId,
+            userId: ctx.user!.id,
+            content: noteContent,
+            noteType: "general",
+          });
+        }
+
         return { success: true };
       }),
 
@@ -1479,6 +1586,18 @@ export const appRouter = router({
             isVerbal: b(offer.isVerbal),
             isWrittenOffer: b(offer.isWrittenOffer),
             createdBy: ctx.user!.id,
+          });
+        }
+
+        // Auto-save each offer as a General Note
+        for (let i = 0; i < input.offers.length; i++) {
+          const offer = input.offers[i];
+          const noteContent = formatOfferNote(offer, `Offer #${i + 1} — Moved to Offer Pending`);
+          await database.insert(notes).values({
+            propertyId: input.propertyId,
+            userId: ctx.user!.id,
+            content: noteContent,
+            noteType: "general",
           });
         }
 
