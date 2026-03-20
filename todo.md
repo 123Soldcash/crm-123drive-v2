@@ -2590,3 +2590,8 @@
 - [x] Update SMSChatButton to pass activeOnly=true (SMS sender selector)
 - [x] Twilio Numbers management page still shows all numbers for admins
 - [x] Write vitest tests for active-only Twilio number filtering (17 tests passing)
+
+## Move Property Data Cards into Header Section (COMPLETED)
+- [x] Move Property, Financial, Identifiers, Owner data into the photo/header section (inside hero card)
+- [x] Leave the lower section empty (placeholder for future use)
+- [x] Ensure responsive layout works properly with data in header (2-col mobile, 4-col desktop)
