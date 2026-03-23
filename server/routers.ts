@@ -2628,6 +2628,9 @@ export const appRouter = router({
               "Voicemail",
               "Wrong Number",
               "Wrong Person",
+              "Not Interested - IHATE - DEAD",
+              "Not Interested - Hang-up - FU in 4 months",
+              "Not Interested - NICE - FU in 2 Months",
               "Other",
             ])
             .optional(),
@@ -2654,13 +2657,54 @@ export const appRouter = router({
             newTemperature = "HOT";
           } else if (input.callResult === "Interested - WARM LEAD - Wants too Much / Full Price" || input.callResult === "Interested - WARM LEAD - Not Hated") {
             newTemperature = "WARM";
-          } else if (input.callResult === "Irate - DNC" || input.callResult === "Sold - DEAD") {
+          } else if (input.callResult === "Irate - DNC" || input.callResult === "Sold - DEAD" || input.callResult === "Not Interested - IHATE - DEAD") {
             newTemperature = "DEAD";
           }
 
           if (newTemperature) {
             await db.updateLeadTemperature(input.propertyId, newTemperature);
           }
+        }
+
+        // Auto-actions for "Not Interested" dispositions
+        if (input.callResult === "Not Interested - IHATE - DEAD") {
+          // Mark property as DEAD
+          await db.updateDesk(input.propertyId, undefined, "DEAD");
+          // Create a note explaining why
+          await db.addPropertyNote({
+            propertyId: input.propertyId,
+            userId: ctx.user!.id,
+            content: "\u274c Not Interested - IHATE - Property marked as DEAD automatically via disposition.",
+            noteType: "general",
+          });
+        } else if (input.callResult === "Not Interested - Hang-up - FU in 4 months") {
+          // Create follow-up task in 4 months
+          const fuDate = new Date();
+          fuDate.setMonth(fuDate.getMonth() + 4);
+          await db.createTask({
+            title: "Follow-up: Not Interested - Hang-up",
+            description: "Auto-created from disposition: Not Interested - Hang-up - FU in 4 months",
+            taskType: "Follow-up",
+            priority: "Medium",
+            status: "To Do",
+            propertyId: input.propertyId,
+            createdById: ctx.user!.id,
+            dueDate: fuDate,
+          });
+        } else if (input.callResult === "Not Interested - NICE - FU in 2 Months") {
+          // Create follow-up task in 2 months
+          const fuDate = new Date();
+          fuDate.setMonth(fuDate.getMonth() + 2);
+          await db.createTask({
+            title: "Follow-up: Not Interested - NICE",
+            description: "Auto-created from disposition: Not Interested - NICE - FU in 2 Months",
+            taskType: "Follow-up",
+            priority: "Medium",
+            status: "To Do",
+            propertyId: input.propertyId,
+            createdById: ctx.user!.id,
+            dueDate: fuDate,
+          });
         }
 
         return { success: true, logId };
@@ -2707,6 +2751,9 @@ export const appRouter = router({
               "Voicemail",
               "Wrong Number",
               "Wrong Person",
+              "Not Interested - IHATE - DEAD",
+              "Not Interested - Hang-up - FU in 4 months",
+              "Not Interested - NICE - FU in 2 Months",
               "Other",
             ])
             .optional(),

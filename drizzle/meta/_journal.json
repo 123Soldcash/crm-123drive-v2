@@ -218,6 +218,13 @@
       "when": 1774044927756,
       "tag": "0030_daily_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1774309982882,
+      "tag": "0031_puzzling_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

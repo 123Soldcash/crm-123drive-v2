@@ -110,6 +110,9 @@ const DISPOSITION_OPTIONS = [
   "Voicemail",
   "Wrong Number",
   "Wrong Person",
+  "Not Interested - IHATE - DEAD",
+  "Not Interested - Hang-up - FU in 4 months",
+  "Not Interested - NICE - FU in 2 Months",
 ];
 
 const MOOD_OPTIONS = [

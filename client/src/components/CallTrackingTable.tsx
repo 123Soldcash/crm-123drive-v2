@@ -111,6 +111,9 @@ const DISPOSITION_OPTIONS = [
   "Voicemail",
   "Wrong Number",
   "Wrong Person",
+  "Not Interested - IHATE - DEAD",
+  "Not Interested - Hang-up - FU in 4 months",
+  "Not Interested - NICE - FU in 2 Months",
 ];
 
 export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
@@ -834,6 +837,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 <SelectItem value="Busy">Busy</SelectItem>
                 <SelectItem value="Disconnected">Disconnected</SelectItem>
                 <SelectItem value="Wrong Number">Wrong Number</SelectItem>
+                <SelectItem value="Not Interested - IHATE - DEAD">Not Interested - IHATE - DEAD</SelectItem>
+                <SelectItem value="Not Interested - Hang-up - FU in 4 months">Not Interested - Hang-up - FU 4m</SelectItem>
+                <SelectItem value="Not Interested - NICE - FU in 2 Months">Not Interested - NICE - FU 2m</SelectItem>
               </SelectContent>
             </Select>
 
@@ -1239,6 +1245,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   lastDisposition.includes("HOT") ? "bg-red-100 text-red-800 border-red-300 font-semibold" :
                                   lastDisposition.includes("WARM") ? "bg-orange-100 text-orange-800 border-orange-300 font-semibold" :
                                   lastDisposition.includes("COLD") ? "bg-blue-100 text-blue-800 border-blue-300" :
+                                  lastDisposition.includes("Not Interested") ? "bg-rose-100 text-rose-800 border-rose-300 font-semibold" :
                                   "bg-gray-100 text-gray-800 border-gray-300"
                                 }`}
                               >

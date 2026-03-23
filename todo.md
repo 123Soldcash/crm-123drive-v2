@@ -2634,3 +2634,9 @@
 
 ## Quick Date Preset - Add "2 Weeks" (COMPLETED)
 - [x] Add "2 Weeks" (14 days) option between 1 Week and 1 Month in CreateTaskDialog
+## New Disposition Options - "Not Interested" with Auto-Actions
+- [x] Add "Not Interested - IHATE - DEAD" disposition (auto-marks property as Dead with "Not Interested" justification)
+- [x] Add "Not Interested - Hang-up - FU in 4 months" disposition (auto-creates follow-up task in 4 months)
+- [x] Add "Not Interested - NICE - FU in 2 Months" disposition (auto-creates follow-up task in 2 months)
+- [x] Implement in both normal Call Log and Quick Call Log dialogs
+- [x] Write vitest tests for new disposition options (9 tests passing)
