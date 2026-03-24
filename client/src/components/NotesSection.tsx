@@ -25,7 +25,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive, ClipboardPaste, ImagePlus, Pin } from "lucide-react";
+import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive, ClipboardPaste, ImagePlus, Pin, Pencil, Check } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { toast } from "sonner";
@@ -98,6 +99,7 @@ function extractImageBlobs(items: DataTransferItemList): Blob[] {
 }
 
 export function NotesSection({ propertyId }: NotesSectionProps) {
+  const { user } = useAuth();
   const [noteText, setNoteText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<Record<number, string>>({});
@@ -108,6 +110,8 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
   const [showDocuments, setShowDocuments] = useState(true);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isPastingImage, setIsPastingImage] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -347,6 +351,33 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
       toast.error("Failed to toggle pin");
     },
   });
+
+  const updateNoteMutation = trpc.notes.update.useMutation({
+    onSuccess: () => {
+      utils.notes.byProperty.invalidate({ propertyId });
+      setEditingNoteId(null);
+      setEditingContent("");
+      toast.success("Note updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update note");
+    },
+  });
+
+  const handleStartEdit = (noteId: number, content: string) => {
+    setEditingNoteId(noteId);
+    setEditingContent(content);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingNoteId || !editingContent.trim()) return;
+    updateNoteMutation.mutate({ id: editingNoteId, content: editingContent.trim() });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setEditingContent("");
+  };
 
   const handleStandaloneDocUpload = async (files: FileList) => {
     for (const file of Array.from(files)) {
@@ -805,7 +836,38 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       {note.userName || "Unknown"}
                     </td>
                     <td className="p-3 text-sm text-slate-600 align-top">
-                      <p className="whitespace-pre-wrap">{note.content}</p>
+                      {editingNoteId === note.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            className="min-h-[80px] text-sm bg-white border-blue-300 focus:border-blue-500"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
+                              onClick={handleSaveEdit}
+                              disabled={updateNoteMutation.isPending || !editingContent.trim()}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              {updateNoteMutation.isPending ? "Saving..." : "Save"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={handleCancelEdit}
+                              disabled={updateNoteMutation.isPending}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{note.content}</p>
+                      )}
 
                       {/* Photos attached to this note */}
                       {(allPhotos?.filter(photo => photo.noteId === note.id)?.length ?? 0) > 0 && (
@@ -881,14 +943,27 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
                       )}
                     </td>
                     <td className="p-3 align-top">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-gray-400 hover:text-red-500"
-                        onClick={() => deleteNoteMutation.mutate({ id: note.id })}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <div className="flex flex-col gap-1">
+                        {user?.id === note.userId && editingNoteId !== note.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-gray-400 hover:text-blue-500"
+                            onClick={() => handleStartEdit(note.id, note.content)}
+                            title="Edit note"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-gray-400 hover:text-red-500"
+                          onClick={() => deleteNoteMutation.mutate({ id: note.id })}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );

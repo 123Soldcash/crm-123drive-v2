@@ -2663,3 +2663,9 @@
 - [x] Add PIN button to each note card in the frontend
 - [x] Visual distinction for pinned notes (amber highlight + filled pin icon)
 - [x] Write vitest tests for PIN functionality (9 tests passing)
+
+## Edit Notes Feature
+- [x] Add edit button next to delete button on each note (only visible to note creator)
+- [x] Implement inline editing with save/cancel buttons
+- [x] Only the user who created the note can edit it (owner-only)
+- [x] Write vitest tests for edit note functionality (9 tests passing)
