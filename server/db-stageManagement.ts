@@ -113,6 +113,7 @@ export async function getPropertiesByStage(stage?: string, agentId?: number) {
       dealStage: properties.dealStage,
       stageChangedAt: properties.stageChangedAt,
       deskName: properties.deskName,
+      deskStatus: properties.deskStatus,
       createdAt: properties.createdAt,
     };
 

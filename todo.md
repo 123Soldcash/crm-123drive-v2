@@ -2640,3 +2640,9 @@
 - [x] Add "Not Interested - NICE - FU in 2 Months" disposition (auto-creates follow-up task in 2 months)
 - [x] Implement in both normal Call Log and Quick Call Log dialogs
 - [x] Write vitest tests for new disposition options (9 tests passing)
+
+## Pipeline Improvements - Desk Filter & List View
+- [x] Add desk filter dropdown to Pipeline page (BIN, DESK_CHRIS, DESK_1-5, ARCHIVED, DEAD, etc.)
+- [x] Add list view toggle (Kanban board vs. List view)
+- [x] Implement list view with sortable columns for Pipeline properties
+- [x] Ensure both views respect the desk filter
