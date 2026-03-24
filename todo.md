@@ -2646,3 +2646,6 @@
 - [x] Add list view toggle (Kanban board vs. List view)
 - [x] Implement list view with sortable columns for Pipeline properties
 - [x] Ensure both views respect the desk filter
+
+## Pipeline Board View Fix
+- [x] Move navigation bar (desk filter + view toggle) to sticky top of Kanban board

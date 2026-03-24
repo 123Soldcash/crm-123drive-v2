@@ -581,8 +581,8 @@ export default function PipelineKanban() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header - sticky so it stays visible when scrolling the Kanban board */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-30 bg-background pb-4 -mb-4">
         <div>
           <h1 className="text-3xl font-bold">Deal Pipeline</h1>
           <p className="text-muted-foreground">
