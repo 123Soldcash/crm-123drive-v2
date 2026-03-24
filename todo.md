@@ -2649,3 +2649,6 @@
 
 ## Pipeline Board View Fix
 - [x] Move navigation bar (desk filter + view toggle) to sticky top of Kanban board
+
+## Pipeline Board View Fix - Sticky Header Not Working
+- [x] Fix sticky header not staying at top when scrolling - restructured layout with flex column and independent scroll area

@@ -580,101 +580,106 @@ export default function PipelineKanban() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header - sticky so it stays visible when scrolling the Kanban board */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-30 bg-background pb-4 -mb-4">
-        <div>
-          <h1 className="text-3xl font-bold">Deal Pipeline</h1>
-          <p className="text-muted-foreground">
-            {viewMode === "kanban"
-              ? "Drag and drop leads between stages to update their status"
-              : "List view of all pipeline leads — click any row to open details"}
-          </p>
+    <div className="flex flex-col h-[calc(100vh-2rem)] -m-4">
+      {/* Header - fixed at top */}
+      <div className="shrink-0 px-6 pt-6 pb-4 bg-background border-b space-y-4 z-30">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Deal Pipeline</h1>
+            <p className="text-muted-foreground">
+              {viewMode === "kanban"
+                ? "Drag and drop leads between stages to update their status"
+                : "List view of all pipeline leads — click any row to open details"}
+            </p>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            {/* Desk Filter */}
+            <Select value={deskFilter} onValueChange={setDeskFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Desks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Desks ({pipelineProperties.length})</SelectItem>
+                {DESK_OPTIONS.map((desk) => (
+                  <SelectItem key={desk} value={desk}>
+                    {getDeskLabel(desk)} {deskCounts[desk] ? `(${deskCounts[desk]})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* View Toggle */}
+            <div className="flex items-center border rounded-lg overflow-hidden">
+              <Button
+                variant={viewMode === "kanban" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none h-9 px-3 gap-1.5"
+                onClick={() => setViewMode("kanban")}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                <span className="hidden sm:inline">Board</span>
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none h-9 px-3 gap-1.5"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">List</span>
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Desk Filter */}
-          <Select value={deskFilter} onValueChange={setDeskFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Desks" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Desks ({pipelineProperties.length})</SelectItem>
-              {DESK_OPTIONS.map((desk) => (
-                <SelectItem key={desk} value={desk}>
-                  {getDeskLabel(desk)} {deskCounts[desk] ? `(${deskCounts[desk]})` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* View Toggle */}
-          <div className="flex items-center border rounded-lg overflow-hidden">
-            <Button
-              variant={viewMode === "kanban" ? "default" : "ghost"}
-              size="sm"
-              className="rounded-none h-9 px-3 gap-1.5"
-              onClick={() => setViewMode("kanban")}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="hidden sm:inline">Board</span>
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              className="rounded-none h-9 px-3 gap-1.5"
-              onClick={() => setViewMode("list")}
-            >
-              <List className="w-4 h-4" />
-              <span className="hidden sm:inline">List</span>
-            </Button>
-          </div>
+        {/* Info Banner */}
+        <div className="text-sm text-muted-foreground px-4 py-3 bg-muted/30 rounded-lg border">
+          💼 <strong>Pipeline View:</strong> Showing only active deals (seller interested). Pre-pipeline stages (New Lead, Skip Traced, First Contact) remain in Properties list.
+          {deskFilter !== "all" && (
+            <span className="ml-2">
+              — Filtered by <strong>{getDeskLabel(deskFilter)}</strong> ({filteredProperties.length} leads)
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div className="text-sm text-muted-foreground px-4 py-3 bg-muted/30 rounded-lg border">
-        💼 <strong>Pipeline View:</strong> Showing only active deals (seller interested). Pre-pipeline stages (New Lead, Skip Traced, First Contact) remain in Properties list.
-        {deskFilter !== "all" && (
-          <span className="ml-2">
-            — Filtered by <strong>{getDeskLabel(deskFilter)}</strong> ({filteredProperties.length} leads)
-          </span>
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-auto px-6 py-4">
+        {/* Kanban View */}
+        {viewMode === "kanban" && (
+          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").map((stageConfig) => (
+                <DroppableStageColumn
+                  key={stageConfig.id}
+                  stageConfig={stageConfig}
+                  properties={getPropertiesByStage(stageConfig.id)}
+                />
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeProperty ? (
+                <div className="rotate-3">
+                  <DraggablePropertyCard property={activeProperty} />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {/* List View */}
+        {viewMode === "list" && (
+          <PipelineListView
+            properties={sortedProperties}
+            sortField={sortField}
+            sortDir={sortDir}
+            onSort={handleSort}
+          />
         )}
       </div>
-
-      {/* Kanban View */}
-      {viewMode === "kanban" && (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").map((stageConfig) => (
-              <DroppableStageColumn
-                key={stageConfig.id}
-                stageConfig={stageConfig}
-                properties={getPropertiesByStage(stageConfig.id)}
-              />
-            ))}
-          </div>
-
-          <DragOverlay>
-            {activeProperty ? (
-              <div className="rotate-3">
-                <DraggablePropertyCard property={activeProperty} />
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      )}
-
-      {/* List View */}
-      {viewMode === "list" && (
-        <PipelineListView
-          properties={sortedProperties}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
-      )}
     </div>
   );
 }
