@@ -543,6 +543,9 @@ export const notes = mysqlTable("notes", {
   // Note type for categorization (general, desk-chris, etc.)
   noteType: mysqlEnum("noteType", ["general", "desk-chris"]).default("general"),
   
+  // Pin flag - pinned notes appear at the top of the list
+  isPinned: int("isPinned").default(0).notNull(), // 0=NO, 1=YES
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

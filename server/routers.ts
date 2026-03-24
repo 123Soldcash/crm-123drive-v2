@@ -2142,6 +2142,12 @@ export const appRouter = router({
         await db.deleteNote(input.id, ctx.user.id);
         return { success: true };
       }),
+
+    togglePin: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.toggleNotePin(input.id);
+      }),
   }),
 
   importDealMachine: importDealMachineRouter,

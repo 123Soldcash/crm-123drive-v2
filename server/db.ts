@@ -628,13 +628,14 @@ export async function getPropertyNotes(propertyId: number) {
       noteType: notes.noteType,
       userId: notes.userId,
       userName: users.name,
+      isPinned: notes.isPinned,
       createdAt: notes.createdAt,
       updatedAt: notes.updatedAt,
     })
     .from(notes)
     .leftJoin(users, eq(notes.userId, users.id))
     .where(eq(notes.propertyId, propertyId))
-    .orderBy(desc(notes.createdAt));
+    .orderBy(desc(notes.isPinned), desc(notes.createdAt));
 
   return results;
 }
@@ -2557,6 +2558,20 @@ export async function updateNote(noteId: number, userId: number, content: string
     .update(notes)
     .set({ content, updatedAt: new Date() })
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
+}
+
+export async function toggleNotePin(noteId: number): Promise<{ isPinned: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get current pin state
+  const [note] = await db.select({ isPinned: notes.isPinned }).from(notes).where(eq(notes.id, noteId));
+  if (!note) throw new Error("Note not found");
+  
+  const newPinState = note.isPinned === 1 ? 0 : 1;
+  await db.update(notes).set({ isPinned: newPinState }).where(eq(notes.id, noteId));
+  
+  return { isPinned: newPinState };
 }
 
 

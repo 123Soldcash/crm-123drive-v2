@@ -25,7 +25,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive, ClipboardPaste, ImagePlus } from "lucide-react";
+import { Camera, Trash2, Upload, X, Search, Download, FileText, ZoomIn, File, Paperclip, FileSpreadsheet, FileImage, FileArchive, ClipboardPaste, ImagePlus, Pin } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { toast } from "sonner";
@@ -335,6 +335,16 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
     },
     onError: () => {
       toast.error("Failed to delete photo");
+    },
+  });
+
+  const togglePinMutation = trpc.notes.togglePin.useMutation({
+    onSuccess: (result) => {
+      utils.notes.byProperty.invalidate({ propertyId });
+      toast.success(result.isPinned ? "Note pinned to top" : "Note unpinned");
+    },
+    onError: () => {
+      toast.error("Failed to toggle pin");
     },
   });
 
@@ -754,6 +764,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
           <table className="w-full min-w-max">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-8 p-2"></th>
                 <th className="text-left p-3 text-xs font-semibold text-slate-700 w-32">Date</th>
                 <th className="text-left p-3 text-xs font-semibold text-slate-700 w-40">Agent</th>
                 <th className="text-left p-3 text-xs font-semibold text-slate-700">Notes</th>
@@ -763,7 +774,7 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
             <tbody>
               {filteredNotes.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-6 text-center text-sm text-gray-400">
+                  <td colSpan={5} className="p-6 text-center text-sm text-gray-400">
                     No notes yet. Add one above or paste a screenshot with Ctrl+V.
                   </td>
                 </tr>
@@ -771,7 +782,18 @@ export function NotesSection({ propertyId }: NotesSectionProps) {
               {filteredNotes.map((note) => {
                 const noteDocuments = documents?.filter(d => d.noteId === note.id) || [];
                 return (
-                  <tr key={note.id} className="border-b border-slate-100 hover:bg-gray-50/50">
+                  <tr key={note.id} className={`border-b border-slate-100 hover:bg-gray-50/50 ${note.isPinned ? 'bg-amber-50/60' : ''}`}>
+                    <td className="p-2 align-top text-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-6 w-6 transition-colors ${note.isPinned ? 'text-amber-500 hover:text-amber-600' : 'text-gray-300 hover:text-amber-500'}`}
+                        onClick={() => togglePinMutation.mutate({ id: note.id })}
+                        title={note.isPinned ? 'Unpin note' : 'Pin note to top'}
+                      >
+                        <Pin className={`h-3.5 w-3.5 ${note.isPinned ? 'fill-amber-500' : ''}`} />
+                      </Button>
+                    </td>
                     <td className="p-3 text-xs text-slate-600 align-top">
                       {new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       <br />

@@ -225,6 +225,13 @@
       "when": 1774309982882,
       "tag": "0031_puzzling_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1774395104660,
+      "tag": "0032_fancy_klaw",
+      "breakpoints": true
     }
   ]
 }

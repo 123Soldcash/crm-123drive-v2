@@ -2655,3 +2655,11 @@
 
 ## Pipeline Board - Horizontal Scrollbar Position
 - [x] Move horizontal scrollbar from bottom of Kanban board to the top (just below the header)
+
+## PIN Notes Feature
+- [x] Add isPinned column to notes schema in drizzle
+- [x] Add togglePin backend procedure in routers.ts
+- [x] Update notes query to sort pinned notes first, then chronological
+- [x] Add PIN button to each note card in the frontend
+- [x] Visual distinction for pinned notes (amber highlight + filled pin icon)
+- [x] Write vitest tests for PIN functionality (9 tests passing)
