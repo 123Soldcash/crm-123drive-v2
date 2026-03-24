@@ -2652,3 +2652,6 @@
 
 ## Pipeline Board View Fix - Sticky Header Not Working
 - [x] Fix sticky header not staying at top when scrolling - restructured layout with flex column and independent scroll area
+
+## Pipeline Board - Horizontal Scrollbar Position
+- [x] Move horizontal scrollbar from bottom of Kanban board to the top (just below the header)

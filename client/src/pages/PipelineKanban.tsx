@@ -646,18 +646,45 @@ export default function PipelineKanban() {
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-hidden px-6 py-4 flex flex-col">
         {/* Kanban View */}
         {viewMode === "kanban" && (
           <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="flex gap-4 overflow-x-auto pb-4">
-              {STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").map((stageConfig) => (
-                <DroppableStageColumn
-                  key={stageConfig.id}
-                  stageConfig={stageConfig}
-                  properties={getPropertiesByStage(stageConfig.id)}
-                />
-              ))}
+            {/* Top horizontal scrollbar */}
+            <div
+              className="shrink-0 overflow-x-auto overflow-y-hidden border-b border-border/50"
+              style={{ height: '16px' }}
+              onScroll={(e) => {
+                const target = e.currentTarget;
+                const kanbanContent = target.nextElementSibling as HTMLElement;
+                if (kanbanContent) kanbanContent.scrollLeft = target.scrollLeft;
+              }}
+            >
+              <div style={{ width: `${STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").length * 304}px`, height: '1px' }} />
+            </div>
+
+            {/* Kanban columns - scrolls vertically, horizontal scroll hidden (synced with top bar) */}
+            <div
+              className="flex-1 overflow-y-auto overflow-x-hidden"
+              ref={(el) => {
+                if (el) {
+                  // Sync horizontal scroll from top scrollbar
+                  const topScrollbar = el.previousElementSibling as HTMLElement;
+                  if (topScrollbar) {
+                    topScrollbar.onscroll = () => { el.scrollLeft = topScrollbar.scrollLeft; };
+                  }
+                }
+              }}
+            >
+              <div className="flex gap-4 pb-4" style={{ width: `${STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").length * 304}px` }}>
+                {STAGE_CONFIGS.filter((s) => s.isPipeline && s.phase !== "dead").map((stageConfig) => (
+                  <DroppableStageColumn
+                    key={stageConfig.id}
+                    stageConfig={stageConfig}
+                    properties={getPropertiesByStage(stageConfig.id)}
+                  />
+                ))}
+              </div>
             </div>
 
             <DragOverlay>
@@ -672,12 +699,14 @@ export default function PipelineKanban() {
 
         {/* List View */}
         {viewMode === "list" && (
-          <PipelineListView
-            properties={sortedProperties}
-            sortField={sortField}
-            sortDir={sortDir}
-            onSort={handleSort}
-          />
+          <div className="flex-1 overflow-auto">
+            <PipelineListView
+              properties={sortedProperties}
+              sortField={sortField}
+              sortDir={sortDir}
+              onSort={handleSort}
+            />
+          </div>
         )}
       </div>
     </div>
