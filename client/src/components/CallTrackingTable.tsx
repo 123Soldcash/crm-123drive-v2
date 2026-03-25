@@ -179,7 +179,21 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
   const primaryTwilioNumber = propertyData?.primaryTwilioNumber || null;
-  
+
+  // Fetch available Twilio numbers for the Default Caller ID selector
+  const { data: twilioNumbersList = [] } = trpc.twilio.listNumbers.useQuery({ activeOnly: true });
+
+  // Mutation to update the primary Twilio number on the property
+  const updatePrimaryTwilioNumberMutation = trpc.communication.updatePrimaryTwilioNumber.useMutation({
+    onSuccess: () => {
+      toast.success("Default Twilio number updated");
+      utils.properties.getById.invalidate({ id: propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update: ${error.message}`);
+    },
+  });
+
   const addTemplateMutation = trpc.noteTemplates.add.useMutation({
     onSuccess: () => {
       toast.success("Template added");
@@ -825,6 +839,48 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <Phone className="h-5 w-5" />
               Contacts
             </CardTitle>
+          </div>
+
+          {/* Default Caller ID Selector - Property Level */}
+          <div className="mt-3 p-3 rounded-lg border bg-blue-50/50 border-blue-200">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <Phone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                <span className="text-sm font-semibold text-blue-800">Default Caller ID</span>
+                {primaryTwilioNumber && (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                    {formatPhone(primaryTwilioNumber)}
+                  </Badge>
+                )}
+                {!primaryTwilioNumber && (
+                  <span className="text-xs text-muted-foreground">(not set — will be auto-set on first inbound call)</span>
+                )}
+              </div>
+              <Select
+                value={primaryTwilioNumber || "_none"}
+                onValueChange={(value) => {
+                  updatePrimaryTwilioNumberMutation.mutate({
+                    propertyId,
+                    primaryTwilioNumber: value === "_none" ? null : value,
+                  });
+                }}
+              >
+                <SelectTrigger className="w-[220px] h-8 text-xs bg-white">
+                  <SelectValue placeholder="Select default number" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">No default number</SelectItem>
+                  {(twilioNumbersList as any[]).map((num: any) => (
+                    <SelectItem key={num.id} value={num.phoneNumber}>
+                      {num.label} ({formatPhone(num.phoneNumber)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              When set, clicking the call button will use this number automatically instead of showing the number selector.
+            </p>
           </div>
           
           {/* Filters */}

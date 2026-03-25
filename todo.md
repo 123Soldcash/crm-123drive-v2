@@ -2708,3 +2708,9 @@
 - [x] If no primary number set, show the number selector as before
 - [x] Pass primaryTwilioNumber from CallTrackingTable to TwilioCallWidget
 - [x] Write vitest tests for revised primary Twilio number feature (28 tests passing)
+
+## Primary Twilio Number - Fix: Add selector to CallTrackingTable
+- [x] Add PrimaryTwilioNumberSelector (Default Caller ID card) to CallTrackingTable component (the actual contacts component used in property detail page)
+- [x] The selector was only in ContactsSection which is NOT used in the property detail page
+- [x] Verify the selector is visible and functional in the property detail page
+- [x] Update vitest tests (33 tests passing)

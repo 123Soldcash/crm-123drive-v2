@@ -326,6 +326,68 @@ describe("Primary Twilio Number Feature", () => {
         "primaryTwilioNumber={primaryTwilioNumber}"
       );
     });
+
+    it("should have Default Caller ID selector inline", () => {
+      const callTrackingContent = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../client/src/components/CallTrackingTable.tsx"
+        ),
+        "utf-8"
+      );
+      expect(callTrackingContent).toContain("Default Caller ID");
+      expect(callTrackingContent).toContain("twilioNumbersList");
+      expect(callTrackingContent).toContain("updatePrimaryTwilioNumberMutation");
+    });
+
+    it("should fetch Twilio numbers for the selector dropdown", () => {
+      const callTrackingContent = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../client/src/components/CallTrackingTable.tsx"
+        ),
+        "utf-8"
+      );
+      expect(callTrackingContent).toContain(
+        "trpc.twilio.listNumbers.useQuery"
+      );
+    });
+
+    it("should have the updatePrimaryTwilioNumber mutation", () => {
+      const callTrackingContent = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../client/src/components/CallTrackingTable.tsx"
+        ),
+        "utf-8"
+      );
+      expect(callTrackingContent).toContain(
+        "trpc.communication.updatePrimaryTwilioNumber.useMutation"
+      );
+    });
+
+    it("should show 'No default number' option in the selector", () => {
+      const callTrackingContent = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../client/src/components/CallTrackingTable.tsx"
+        ),
+        "utf-8"
+      );
+      expect(callTrackingContent).toContain("No default number");
+      expect(callTrackingContent).toContain("_none");
+    });
+
+    it("should show auto-set message when no primary number", () => {
+      const callTrackingContent = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "../client/src/components/CallTrackingTable.tsx"
+        ),
+        "utf-8"
+      );
+      expect(callTrackingContent).toContain("auto-set on first inbound call");
+    });
   });
 
   // ─── Value Logic ─────────────────────────────────────────────────────────
