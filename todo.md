@@ -2731,3 +2731,9 @@
 - [x] Backend must always create a contact when adding a property (even if phone/email empty)
 - [x] Update frontend Add Property form (QuickAddLeadDialog) to include phone number and email fields
 - [x] Write vitest tests for the new feature (17 tests passing)
+
+## Bug Fix: Add Property modal on Properties page missing Phone/Email fields
+- [x] Found AddPropertyDialog component in Properties.tsx (separate from QuickAddLeadDialog)
+- [x] Added Phone Number and Email fields to AddPropertyDialog
+- [x] Contact is auto-created via backend (same properties.create procedure)
+- [x] 24 vitest tests passing (both dialogs covered)

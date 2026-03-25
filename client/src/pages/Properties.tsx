@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus, Workflow } from "lucide-react";
+import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus, Workflow, Phone, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -1299,6 +1299,8 @@ function AddPropertyDialog() {
     state: "",
     zipcode: "",
     owner1Name: "",
+    ownerPhone: "",
+    ownerEmail: "",
     leadTemperature: "TBD" as "SUPER HOT" | "HOT" | "WARM" | "COLD" | "DEAD" | "TBD",
     lat: undefined as number | undefined,
     lng: undefined as number | undefined,
@@ -1317,6 +1319,8 @@ function AddPropertyDialog() {
         state: "",
         zipcode: "",
         owner1Name: "",
+        ownerPhone: "",
+        ownerEmail: "",
         leadTemperature: "TBD",
         lat: undefined,
         lng: undefined,
@@ -1453,6 +1457,31 @@ function AddPropertyDialog() {
               value={formData.owner1Name}
               onChange={(e) => setFormData({ ...formData, owner1Name: e.target.value })}
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="ownerPhone" className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" /> Phone Number
+              </Label>
+              <Input
+                id="ownerPhone"
+                placeholder="(954) 555-1234"
+                value={formData.ownerPhone}
+                onChange={(e) => setFormData({ ...formData, ownerPhone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ownerEmail" className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </Label>
+              <Input
+                id="ownerEmail"
+                type="email"
+                placeholder="owner@email.com"
+                value={formData.ownerEmail}
+                onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

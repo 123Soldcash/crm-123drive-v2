@@ -120,3 +120,51 @@ describe("Frontend: QuickAddLeadDialog form fields", () => {
     expect(dialogContent).toContain("...formData");
   });
 });
+
+// ─── 4. Frontend: AddPropertyDialog (Properties page) has phone and email fields ───
+
+describe("Frontend: AddPropertyDialog (Properties page) form fields", () => {
+  const propertiesContent = fs.readFileSync(
+    path.resolve(__dirname, "../client/src/pages/Properties.tsx"),
+    "utf-8"
+  );
+
+  // Extract just the AddPropertyDialog function
+  const dialogIdx = propertiesContent.indexOf("function AddPropertyDialog()");
+  const dialogContent = propertiesContent.substring(dialogIdx);
+
+  it("has ownerPhone in form state", () => {
+    expect(dialogContent).toContain('ownerPhone: ""');
+  });
+
+  it("has ownerEmail in form state", () => {
+    expect(dialogContent).toContain('ownerEmail: ""');
+  });
+
+  it("renders Phone Number input field", () => {
+    expect(dialogContent).toContain('id="ownerPhone"');
+    expect(dialogContent).toContain('placeholder="(954) 555-1234"');
+  });
+
+  it("renders Email input field", () => {
+    expect(dialogContent).toContain('id="ownerEmail"');
+    expect(dialogContent).toContain('type="email"');
+    expect(dialogContent).toContain('placeholder="owner@email.com"');
+  });
+
+  it("imports Phone and Mail icons", () => {
+    expect(propertiesContent).toContain("Phone");
+    expect(propertiesContent).toContain("Mail");
+  });
+
+  it("resets ownerPhone and ownerEmail on success", () => {
+    const phoneResets = dialogContent.split('ownerPhone: ""').length - 1;
+    expect(phoneResets).toBeGreaterThanOrEqual(2);
+    const emailResets = dialogContent.split('ownerEmail: ""').length - 1;
+    expect(emailResets).toBeGreaterThanOrEqual(2);
+  });
+
+  it("passes formData to create mutation", () => {
+    expect(dialogContent).toContain("createProperty.mutate(formData)");
+  });
+});
