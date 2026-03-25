@@ -234,6 +234,9 @@ export const properties = mysqlTable("properties", {
   // Property Image (custom upload URL from S3, overrides Street View)
   propertyImage: text("propertyImage"),
 
+  // Primary Twilio Number for outbound calls from this property
+  primaryTwilioNumber: varchar("primaryTwilioNumber", { length: 20 }),
+
   // Lead Source (references leadSources.name for flexibility)
   leadSource: varchar("leadSource", { length: 255 }),
 
@@ -362,9 +365,6 @@ export const contacts = mysqlTable("contacts", {
   contactedDate: timestamp("contactedDate"),
   onBoard: int("onBoard").default(0).notNull(), // 0=NO, 1=YES
   notOnBoard: int("notOnBoard").default(0).notNull(), // 0=NO, 1=YES
-  
-  // Primary Twilio number for outbound calls (set automatically on first inbound call)
-  primaryTwilioNumber: varchar("primaryTwilioNumber", { length: 20 }),
   
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),

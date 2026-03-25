@@ -98,6 +98,13 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
 
+  // Fetch property to get primaryTwilioNumber
+  const { data: property } = trpc.properties.getById.useQuery(
+    { id: propertyId },
+    { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
+  );
+  const primaryTwilioNumber = property?.primaryTwilioNumber || null;
+
   // Detect duplicate phones and emails across all contacts in this property
   const { duplicatePhones, duplicateEmails } = useMemo(() => {
     const phoneCount: Record<string, number> = {};
@@ -162,22 +169,6 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
       toast.error(`Failed to delete contact: ${error.message}`);
     },
   });
-
-  const updatePrimaryTwilioMutation = trpc.communication.updatePrimaryTwilioNumber.useMutation({
-    onSuccess: () => {
-      toast.success("Primary Twilio number updated");
-      utils.communication.getContactsByProperty.invalidate({ propertyId });
-    },
-    onError: (error) => {
-      toast.error(`Failed to update primary number: ${error.message}`);
-    },
-  });
-
-  // Twilio numbers for the primary number selector
-  const { data: twilioNumbers = [] } = trpc.twilio.listNumbers.useQuery(
-    { activeOnly: true },
-    { enabled: isModalOpen }
-  );
 
   // Handlers
   const resetForm = () => {
@@ -380,6 +371,9 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
       </CardHeader>
 
       <CardContent>
+        {/* Primary Twilio Number Selector - Property Level */}
+        <PrimaryTwilioNumberSelector propertyId={propertyId} />
+
         {!contacts || contacts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No contacts yet. Click "Add Contact" to get started.
@@ -443,6 +437,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                                 contactName={contact.name}
                                 contactId={contact.id}
                                 propertyId={propertyId}
+                                primaryTwilioNumber={primaryTwilioNumber}
                               />
                               <SMSChatButton
                                 phoneNumber={primaryPhone.phoneNumber}
@@ -466,15 +461,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                         })()}
                       </div>
 
-                      {/* Primary Twilio Number */}
-                      {contact.primaryTwilioNumber && (
-                        <div className="mt-2 flex items-center gap-2 text-sm">
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            <Phone className="w-3 h-3 mr-1" />
-                            Primary: {formatPhone(contact.primaryTwilioNumber)}
-                          </Badge>
-                        </div>
-                      )}
+
 
                       {contactCalls.length > 0 && (
                         <div className="mt-3 pt-3 border-t">
@@ -608,34 +595,7 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                 </div>
               </div>
 
-              {/* Primary Twilio Number Selector */}
-              {selectedContact && (
-                <div className="pt-2 border-t">
-                  <Label className="text-sm font-semibold">Primary Twilio Number</Label>
-                  <p className="text-xs text-muted-foreground mb-2">This number will be used as the default caller ID when calling this contact. Set automatically on first inbound call.</p>
-                  <Select
-                    value={selectedContact.primaryTwilioNumber || "_none"}
-                    onValueChange={(value) => {
-                      updatePrimaryTwilioMutation.mutate({
-                        contactId: selectedContact.id,
-                        primaryTwilioNumber: value === "_none" ? null : value,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="No primary number set" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">No primary number</SelectItem>
-                      {(twilioNumbers as any[]).map((num: any) => (
-                        <SelectItem key={num.id} value={num.phoneNumber}>
-                          {num.label} ({formatPhone(num.phoneNumber)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+
 
               <div className="flex gap-2 pt-4">
                 <Button
@@ -706,5 +666,79 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+
+/**
+ * PrimaryTwilioNumberSelector - Property-level default Twilio number
+ * Shows the current primary number and allows changing it.
+ * Auto-set when a lead calls in; can be manually changed here.
+ */
+function PrimaryTwilioNumberSelector({ propertyId }: { propertyId: number }) {
+  const utils = trpc.useUtils();
+  
+  // Fetch the property to get the current primaryTwilioNumber
+  const { data: property } = trpc.properties.getById.useQuery(
+    { id: propertyId },
+    { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
+  );
+
+  // Fetch available Twilio numbers
+  const { data: twilioNumbers = [] } = trpc.twilio.listNumbers.useQuery({ activeOnly: true });
+
+  const updateMutation = trpc.communication.updatePrimaryTwilioNumber.useMutation({
+    onSuccess: () => {
+      toast.success("Default Twilio number updated");
+      utils.properties.getById.invalidate({ id: propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update: ${error.message}`);
+    },
+  });
+
+  const currentNumber = property?.primaryTwilioNumber;
+
+  return (
+    <div className="mb-4 p-3 rounded-lg border bg-blue-50/50 border-blue-200">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <Phone className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <span className="text-sm font-semibold text-blue-800">Default Caller ID</span>
+          {currentNumber && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+              {formatPhone(currentNumber)}
+            </Badge>
+          )}
+          {!currentNumber && (
+            <span className="text-xs text-muted-foreground">(not set — will be auto-set on first inbound call)</span>
+          )}
+        </div>
+        <Select
+          value={currentNumber || "_none"}
+          onValueChange={(value) => {
+            updateMutation.mutate({
+              propertyId,
+              primaryTwilioNumber: value === "_none" ? null : value,
+            });
+          }}
+        >
+          <SelectTrigger className="w-[220px] h-8 text-xs bg-white">
+            <SelectValue placeholder="Select default number" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_none">No default number</SelectItem>
+            {(twilioNumbers as any[]).map((num: any) => (
+              <SelectItem key={num.id} value={num.phoneNumber}>
+                {num.label} ({formatPhone(num.phoneNumber)})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <p className="text-xs text-muted-foreground mt-1.5">
+        When set, clicking the call button will use this number automatically instead of showing the number selector.
+      </p>
+    </div>
   );
 }

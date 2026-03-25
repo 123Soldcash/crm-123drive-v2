@@ -1,0 +1,1 @@
+ALTER TABLE `properties` ADD `primaryTwilioNumber` varchar(20);

@@ -343,6 +343,7 @@ export async function getPropertyById(id: number) {
     stageChangedAt: properties.stageChangedAt,
     leadSource: properties.leadSource,
     campaignName: properties.campaignName,
+    primaryTwilioNumber: properties.primaryTwilioNumber,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.leadId, id)).limit(1);
   
@@ -384,6 +385,7 @@ export async function getPropertyById(id: number) {
     stageChangedAt: properties.stageChangedAt,
     leadSource: properties.leadSource,
     campaignName: properties.campaignName,
+    primaryTwilioNumber: properties.primaryTwilioNumber,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.id, id)).limit(1);
   }

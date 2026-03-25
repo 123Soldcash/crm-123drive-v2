@@ -172,6 +172,13 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   });
 
   const { data: customTemplates = [] } = trpc.noteTemplates.list.useQuery();
+
+  // Fetch property to get primaryTwilioNumber for auto-dial
+  const { data: propertyData } = trpc.properties.getById.useQuery(
+    { id: propertyId },
+    { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
+  );
+  const primaryTwilioNumber = propertyData?.primaryTwilioNumber || null;
   
   const addTemplateMutation = trpc.noteTemplates.add.useMutation({
     onSuccess: () => {
@@ -1174,6 +1181,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                     contactName={contact.name}
                                     contactId={contact.id}
                                     propertyId={propertyId}
+                                    primaryTwilioNumber={primaryTwilioNumber}
                                   />
                                   <SMSChatButton
                                     phoneNumber={phone.phoneNumber}

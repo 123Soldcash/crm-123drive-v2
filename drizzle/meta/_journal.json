@@ -239,6 +239,20 @@
       "when": 1774471005816,
       "tag": "0033_green_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1774472136324,
+      "tag": "0034_mature_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1774472459965,
+      "tag": "0035_shallow_blob",
+      "breakpoints": true
     }
   ]
 }

@@ -2698,3 +2698,13 @@
 - [x] Show primary Twilio number badge in contact card (green badge)
 - [x] Add dropdown selector in contact edit modal to change primary number
 - [x] Write vitest tests for primary Twilio number functionality (14 tests passing)
+
+## Primary Twilio Number - REVISION (Property-Level)
+- [x] Move primaryTwilioNumber from contacts table to properties table
+- [x] Update backend: add updatePrimaryTwilioNumber procedure in communication router
+- [x] Fix Twilio inbound webhook: match caller phone → find contacts → find properties → set primary number on ALL matched properties (first call only)
+- [x] Add PrimaryTwilioNumberSelector in Contacts section of each property (Default Caller ID card with dropdown)
+- [x] Auto-dial: TwilioCallWidget skips number selector when property has primary number set
+- [x] If no primary number set, show the number selector as before
+- [x] Pass primaryTwilioNumber from CallTrackingTable to TwilioCallWidget
+- [x] Write vitest tests for revised primary Twilio number feature (28 tests passing)

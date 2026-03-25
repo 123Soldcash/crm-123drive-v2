@@ -1,9 +1,9 @@
 /**
  * TwilioCallWidget — Small phone button that opens a number selector, then the CallModal
  * 
- * This is the inline button shown next to phone numbers in the contacts table.
- * Clicking it shows a dropdown to select which Twilio number to call from,
- * then opens the full CallModal with call controls and notes.
+ * If the property has a primaryTwilioNumber set, clicking the button will
+ * skip the number selector and immediately open the CallModal with that number.
+ * If no primary number is set, the dropdown appears to let the user choose.
  */
 import { useState } from "react";
 import { Phone, Loader2 } from "lucide-react";
@@ -19,6 +19,7 @@ interface TwilioCallWidgetProps {
   contactName: string;
   contactId?: number;
   propertyId?: number;
+  primaryTwilioNumber?: string | null;
 }
 
 /**
@@ -32,7 +33,7 @@ function formatE164(phone: string): string {
   return `+1${digits}`;
 }
 
-export function TwilioCallWidget({ phoneNumber, contactName, contactId, propertyId }: TwilioCallWidgetProps) {
+export function TwilioCallWidget({ phoneNumber, contactName, contactId, propertyId, primaryTwilioNumber }: TwilioCallWidgetProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<string>("");
@@ -48,7 +49,13 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
   }
 
   function handleCallClick() {
-    setSelectorOpen(true);
+    // If property has a primary Twilio number, skip the selector and use it directly
+    if (primaryTwilioNumber) {
+      setSelectedNumber(primaryTwilioNumber);
+      setModalOpen(true);
+    } else {
+      setSelectorOpen(true);
+    }
   }
 
   const numbers = numbersQuery.data || [];
@@ -62,7 +69,7 @@ export function TwilioCallWidget({ phoneNumber, contactName, contactId, property
             size="sm"
             onClick={handleCallClick}
             className="h-7 w-7 p-0 hover:bg-green-50 rounded-full"
-            title={`Call ${contactName}`}
+            title={primaryTwilioNumber ? `Call ${contactName} (using default: ${formatPhone(primaryTwilioNumber)})` : `Call ${contactName}`}
           >
             <Phone className="h-3.5 w-3.5 text-green-600" />
           </Button>
