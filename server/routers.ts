@@ -1262,7 +1262,36 @@ export const appRouter = router({
         if (ctx.user.role !== "admin") {
           throw new Error("Only admins can perform bulk assignments");
         }
-        const result = await db.bulkAssignAgentToProperties(input.agentId, input.filters);
+        const result = await db.bulkAssignAgentToProperties(input.agentId, {
+          ...input.filters,
+          userId: ctx.user.id,
+          userRole: ctx.user.role,
+        });
+        return result;
+      }),
+
+    bulkUpdateDesk: protectedProcedure
+      .input(z.object({
+        targetDesk: z.string(),
+        filters: z.object({
+          leadTemperature: z.string().optional(),
+          deskName: z.string().optional(),
+          status: z.string().optional(),
+          unassignedOnly: z.boolean().optional(),
+        }),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user?.id) {
+          throw new Error("User not authenticated");
+        }
+        if (ctx.user.role !== "admin") {
+          throw new Error("Only admins can perform bulk desk updates");
+        }
+        const result = await db.bulkUpdateDesk(input.targetDesk, {
+          ...input.filters,
+          userId: ctx.user.id,
+          userRole: ctx.user.role,
+        });
         return result;
       }),
 

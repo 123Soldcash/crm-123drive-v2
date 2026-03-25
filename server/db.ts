@@ -2499,6 +2499,8 @@ export async function bulkAssignAgentToProperties(agentId: number, filters: {
   deskName?: string;
   status?: string;
   unassignedOnly?: boolean;
+  userId?: number;
+  userRole?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -2510,6 +2512,26 @@ export async function bulkAssignAgentToProperties(agentId: number, filters: {
     assignedCount++;
   }
   return { success: true, count: assignedCount };
+}
+
+export async function bulkUpdateDesk(deskName: string, filters: {
+  leadTemperature?: string;
+  deskName?: string;
+  status?: string;
+  unassignedOnly?: boolean;
+  userId?: number;
+  userRole?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const matchingProperties = await getPropertiesWithFilters(filters);
+  let updatedCount = 0;
+  for (const prop of matchingProperties) {
+    await db.update(properties).set({ deskName, updatedAt: new Date() }).where(eq(properties.id, (prop as any).id));
+    updatedCount++;
+  }
+  return { success: true, count: updatedCount };
 }
 
 export async function bulkReassignProperties(propertyIds: number[], assignedAgentId: number | null, reassignedByUserId?: number): Promise<void> {

@@ -2669,3 +2669,14 @@
 - [x] Implement inline editing with save/cancel buttons
 - [x] Only the user who created the note can edit it (owner-only)
 - [x] Write vitest tests for edit note functionality (9 tests passing)
+
+## Bulk Assign Agents - Fix & Enhance
+- [x] Validate and fix Bulk Assign Agents page to work properly
+- [x] Show ALL users (agents + admins) in the user selection via agents.listAll
+- [x] Add Bulk Desk Transfer functionality (move properties between desks)
+- [x] Add "Both" mode to assign user AND change desk simultaneously
+- [x] Added bulkUpdateDesk backend procedure in routers.ts + db.ts
+- [x] Ensure all filters work correctly (temperature, desk, status, unassigned)
+- [x] Properties preview list with desk/temperature/agent badges
+- [x] Confirmation dialog with action summary
+- [x] Write vitest tests for bulk operations (17 tests passing)
