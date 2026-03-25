@@ -2680,3 +2680,12 @@
 - [x] Properties preview list with desk/temperature/agent badges
 - [x] Confirmation dialog with action summary
 - [x] Write vitest tests for bulk operations (17 tests passing)
+
+## Call History (Incoming Calls Log)
+- [x] Use existing communicationLog table (Phone type) for call history data
+- [x] Create getCallHistory and getCallHistoryStats db helper functions
+- [x] Create callHistory.list and callHistory.stats tRPC procedures
+- [x] Create Call History page with stats cards, filters, and sortable table
+- [x] Add filters: direction (Inbound/Outbound), call result, search, date range
+- [x] Add "Call History" to sidebar navigation with Phone icon
+- [x] Write vitest tests for call history functionality (13 tests passing)

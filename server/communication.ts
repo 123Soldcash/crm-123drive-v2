@@ -718,3 +718,124 @@ export async function unmarkPropertyDNC(propertyId: number) {
     .set({ deskStatus: "ACTIVE", deskName: "NEW_LEAD" })
     .where(eq(properties.id, dbPropertyId));
 }
+
+
+/**
+ * Get call history with filters for the Call History page.
+ * Returns all phone communication logs with property and user info.
+ */
+export async function getCallHistory(filters: {
+  direction?: "Inbound" | "Outbound" | "all";
+  callResult?: string;
+  search?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  userId?: number;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { users } = await import("../drizzle/schema.js");
+
+  const conditions: any[] = [
+    eq(communicationLog.communicationType, "Phone"),
+  ];
+
+  if (filters.direction && filters.direction !== "all") {
+    conditions.push(eq(communicationLog.direction, filters.direction));
+  }
+
+  if (filters.callResult) {
+    conditions.push(eq(communicationLog.callResult, filters.callResult as any));
+  }
+
+  if (filters.userId) {
+    conditions.push(eq(communicationLog.userId, filters.userId));
+  }
+
+  if (filters.dateFrom) {
+    const { gte } = await import("drizzle-orm");
+    conditions.push(gte(communicationLog.communicationDate, filters.dateFrom));
+  }
+
+  if (filters.dateTo) {
+    const { lte } = await import("drizzle-orm");
+    conditions.push(lte(communicationLog.communicationDate, filters.dateTo));
+  }
+
+  const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+  const logs = await db
+    .select({
+      id: communicationLog.id,
+      propertyId: communicationLog.propertyId,
+      contactId: communicationLog.contactId,
+      communicationType: communicationLog.communicationType,
+      callResult: communicationLog.callResult,
+      direction: communicationLog.direction,
+      mood: communicationLog.mood,
+      disposition: communicationLog.disposition,
+      notes: communicationLog.notes,
+      nextStep: communicationLog.nextStep,
+      userId: communicationLog.userId,
+      communicationDate: communicationLog.communicationDate,
+      createdAt: communicationLog.createdAt,
+      userName: users.name,
+      propertyAddress: properties.addressLine1,
+      propertyCity: properties.city,
+      propertyState: properties.state,
+      propertyLeadId: properties.leadId,
+    })
+    .from(communicationLog)
+    .leftJoin(users, eq(communicationLog.userId, users.id))
+    .leftJoin(properties, eq(communicationLog.propertyId, properties.id))
+    .where(whereClause)
+    .orderBy(desc(communicationLog.communicationDate))
+    .limit(filters.limit || 100)
+    .offset(filters.offset || 0);
+
+  // If search filter, apply in-memory filtering on address/notes
+  if (filters.search) {
+    const searchLower = filters.search.toLowerCase();
+    return logs.filter(
+      (log) =>
+        (log.propertyAddress && log.propertyAddress.toLowerCase().includes(searchLower)) ||
+        (log.notes && log.notes.toLowerCase().includes(searchLower)) ||
+        (log.userName && log.userName.toLowerCase().includes(searchLower)) ||
+        (log.callResult && log.callResult.toLowerCase().includes(searchLower))
+    );
+  }
+
+  return logs;
+}
+
+/**
+ * Get call history stats (total calls, inbound, outbound, by result).
+ */
+export async function getCallHistoryStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const allCalls = await db
+    .select({
+      direction: communicationLog.direction,
+      callResult: communicationLog.callResult,
+    })
+    .from(communicationLog)
+    .where(eq(communicationLog.communicationType, "Phone"));
+
+  const total = allCalls.length;
+  const inbound = allCalls.filter((c) => c.direction === "Inbound").length;
+  const outbound = allCalls.filter((c) => c.direction === "Outbound").length;
+
+  // Count by call result
+  const byResult: Record<string, number> = {};
+  for (const call of allCalls) {
+    const result = call.callResult || "No Result";
+    byResult[result] = (byResult[result] || 0) + 1;
+  }
+
+  return { total, inbound, outbound, byResult };
+}

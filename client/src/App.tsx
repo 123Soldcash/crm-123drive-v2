@@ -26,6 +26,7 @@ import InviteAccept from "./pages/InviteAccept";
 import SMSInbox from "./pages/SMSInbox";
 import SMSTemplates from "./pages/SMSTemplates";
 import TwilioNumbers from "./pages/TwilioNumbers";
+import CallHistory from "./pages/CallHistory";
 import { IncomingCallNotification } from "./components/IncomingCallNotification";
 
 // Named wrapper components to prevent React from unmounting/remounting
@@ -90,6 +91,9 @@ function SMSTemplatesPage() {
 function TwilioNumbersPage() {
   return <DashboardLayout><TwilioNumbers /></DashboardLayout>;
 }
+function CallHistoryPage() {
+  return <DashboardLayout><CallHistory /></DashboardLayout>;
+}
 
 function Router() {
   return (
@@ -116,6 +120,7 @@ function Router() {
       <Route path="/sms" component={SMSInboxPage} />
       <Route path="/message-templates" component={SMSTemplatesPage} />
       <Route path="/twilio-numbers" component={TwilioNumbersPage} />
+      <Route path="/call-history" component={CallHistoryPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

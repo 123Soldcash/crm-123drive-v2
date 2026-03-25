@@ -37,6 +37,7 @@ const menuItems = [
   { icon: FileText, label: "Message Templates", path: "/message-templates" },
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
+  { icon: Phone, label: "Call History", path: "/call-history" },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
   { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },
   { icon: Users, label: "User Management", path: "/users", adminOnly: true },

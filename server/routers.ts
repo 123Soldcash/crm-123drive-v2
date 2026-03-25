@@ -4378,5 +4378,29 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // Call History - view all call logs with filters
+  callHistory: router({
+    list: protectedProcedure
+      .input(
+        z.object({
+          direction: z.enum(["Inbound", "Outbound", "all"]).optional().default("all"),
+          callResult: z.string().optional(),
+          search: z.string().optional(),
+          dateFrom: z.date().optional(),
+          dateTo: z.date().optional(),
+          userId: z.number().optional(),
+          limit: z.number().optional().default(100),
+          offset: z.number().optional().default(0),
+        })
+      )
+      .query(async ({ input }) => {
+        return await communication.getCallHistory(input);
+      }),
+
+    stats: protectedProcedure.query(async () => {
+      return await communication.getCallHistoryStats();
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;;
