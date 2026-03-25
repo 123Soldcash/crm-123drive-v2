@@ -2714,3 +2714,6 @@
 - [x] The selector was only in ContactsSection which is NOT used in the property detail page
 - [x] Verify the selector is visible and functional in the property detail page
 - [x] Update vitest tests (33 tests passing)
+
+## Bug Fix: Double parentheses in Default Caller ID dropdown
+- [x] Fix double parens in dropdown items — removed extra wrapping parens, now shows 'Chris (954) 209-3000' instead of 'Chris ((954) 209-3000)'

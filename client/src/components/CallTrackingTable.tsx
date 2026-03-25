@@ -872,7 +872,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <SelectItem value="_none">No default number</SelectItem>
                   {(twilioNumbersList as any[]).map((num: any) => (
                     <SelectItem key={num.id} value={num.phoneNumber}>
-                      {num.label} ({formatPhone(num.phoneNumber)})
+                      {num.label} {formatPhone(num.phoneNumber)}
                     </SelectItem>
                   ))}
                 </SelectContent>
