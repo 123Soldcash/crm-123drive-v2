@@ -2725,3 +2725,9 @@
 - [x] Frontend shows Phone Number column with contact number + 'via' Twilio number
 - [x] Inbound webhook, CallTrackingTable, and CallModal all save phone numbers when logging
 - [x] 18 vitest tests passing
+
+## Add Property: Auto-create contact (owner) with phone and email
+- [x] Update backend addProperty procedure to accept ownerPhone and ownerEmail
+- [x] Backend must always create a contact when adding a property (even if phone/email empty)
+- [x] Update frontend Add Property form (QuickAddLeadDialog) to include phone number and email fields
+- [x] Write vitest tests for the new feature (17 tests passing)

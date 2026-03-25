@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Search, Plus, ArrowRight } from "lucide-react";
+import { Loader2, Search, Plus, ArrowRight, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { STAGE_CONFIGS } from "@/lib/stageConfig";
 import { useLocation } from "wouter";
@@ -26,6 +26,8 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
     state: "",
     zipCode: "",
     owner1Name: "",
+    ownerPhone: "",
+    ownerEmail: "",
   });
 
   const [, setLocation] = useLocation();
@@ -77,6 +79,8 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
       state: "",
       zipCode: "",
       owner1Name: "",
+      ownerPhone: "",
+      ownerEmail: "",
     });
   };
 
@@ -285,6 +289,33 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
                 value={formData.owner1Name}
                 onChange={(e) => setFormData({ ...formData, owner1Name: e.target.value })}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ownerPhone" className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5" /> Phone Number
+                </Label>
+                <Input
+                  id="ownerPhone"
+                  placeholder="(954) 555-1234"
+                  value={formData.ownerPhone}
+                  onChange={(e) => setFormData({ ...formData, ownerPhone: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ownerEmail" className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5" /> Email
+                </Label>
+                <Input
+                  id="ownerEmail"
+                  type="email"
+                  placeholder="owner@email.com"
+                  value={formData.ownerEmail}
+                  onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="flex gap-2 pt-4">

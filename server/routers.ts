@@ -554,6 +554,8 @@ export const appRouter = router({
           leadTemperature: z.enum(["SUPER HOT", "HOT", "WARM", "COLD", "DEAD", "TBD"]).optional(),
           status: z.string().optional(),
           dealStage: z.string().optional(),
+          ownerPhone: z.string().optional(),
+          ownerEmail: z.string().optional(),
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -618,6 +620,29 @@ export const appRouter = router({
         const insertedId = (result as any)?.[0]?.id;
         
         console.log('[CREATE PROPERTY V3] Success! ID:', insertedId);
+        
+        // Always create a contact (owner) for the new property
+        try {
+          const { createContact } = await import("./communication");
+          const phones = input.ownerPhone && input.ownerPhone.trim()
+            ? [{ phoneNumber: input.ownerPhone.trim(), phoneType: "Mobile" }]
+            : undefined;
+          const emails = input.ownerEmail && input.ownerEmail.trim()
+            ? [{ email: input.ownerEmail.trim() }]
+            : undefined;
+          
+          const contactId = await createContact({
+            propertyId: Number(insertedId),
+            name: input.owner1Name || "Owner",
+            relationship: "Owner",
+            phones,
+            emails,
+          });
+          console.log('[CREATE PROPERTY V3] Contact created! ID:', contactId);
+        } catch (contactError) {
+          console.error('[CREATE PROPERTY V3] Error creating contact:', contactError);
+          // Don't fail the property creation if contact creation fails
+        }
         
         return { success: true, id: Number(insertedId) };
       }),
