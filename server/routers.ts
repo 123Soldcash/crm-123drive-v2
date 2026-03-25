@@ -2503,6 +2503,24 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Primary Twilio Number Management
+    updatePrimaryTwilioNumber: protectedProcedure
+      .input(z.object({
+        contactId: z.number(),
+        primaryTwilioNumber: z.string().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        const { contacts } = await import("../drizzle/schema.js");
+        const { eq } = await import("drizzle-orm");
+        const { getDb } = await import("./db.js");
+        const database = await getDb();
+        if (!database) throw new Error("Database unavailable");
+        await database.update(contacts)
+          .set({ primaryTwilioNumber: input.primaryTwilioNumber })
+          .where(eq(contacts.id, input.contactId));
+        return { success: true };
+      }),
+
     // Phone Management
     addPhone: protectedProcedure
       .input(

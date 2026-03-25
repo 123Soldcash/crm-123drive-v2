@@ -363,6 +363,9 @@ export const contacts = mysqlTable("contacts", {
   onBoard: int("onBoard").default(0).notNull(), // 0=NO, 1=YES
   notOnBoard: int("notOnBoard").default(0).notNull(), // 0=NO, 1=YES
   
+  // Primary Twilio number for outbound calls (set automatically on first inbound call)
+  primaryTwilioNumber: varchar("primaryTwilioNumber", { length: 20 }),
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

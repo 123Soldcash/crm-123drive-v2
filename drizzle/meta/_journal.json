@@ -232,6 +232,13 @@
       "when": 1774395104660,
       "tag": "0032_fancy_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1774471005816,
+      "tag": "0033_green_gargoyle",
+      "breakpoints": true
     }
   ]
 }

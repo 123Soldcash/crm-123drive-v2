@@ -163,6 +163,22 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
     },
   });
 
+  const updatePrimaryTwilioMutation = trpc.communication.updatePrimaryTwilioNumber.useMutation({
+    onSuccess: () => {
+      toast.success("Primary Twilio number updated");
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+    },
+    onError: (error) => {
+      toast.error(`Failed to update primary number: ${error.message}`);
+    },
+  });
+
+  // Twilio numbers for the primary number selector
+  const { data: twilioNumbers = [] } = trpc.twilio.listNumbers.useQuery(
+    { activeOnly: true },
+    { enabled: isModalOpen }
+  );
+
   // Handlers
   const resetForm = () => {
     setFormData({
@@ -450,6 +466,16 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                         })()}
                       </div>
 
+                      {/* Primary Twilio Number */}
+                      {contact.primaryTwilioNumber && (
+                        <div className="mt-2 flex items-center gap-2 text-sm">
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            <Phone className="w-3 h-3 mr-1" />
+                            Primary: {formatPhone(contact.primaryTwilioNumber)}
+                          </Badge>
+                        </div>
+                      )}
+
                       {contactCalls.length > 0 && (
                         <div className="mt-3 pt-3 border-t">
                           <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
@@ -581,6 +607,35 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                   <Label>🕊 Deceased</Label>
                 </div>
               </div>
+
+              {/* Primary Twilio Number Selector */}
+              {selectedContact && (
+                <div className="pt-2 border-t">
+                  <Label className="text-sm font-semibold">Primary Twilio Number</Label>
+                  <p className="text-xs text-muted-foreground mb-2">This number will be used as the default caller ID when calling this contact. Set automatically on first inbound call.</p>
+                  <Select
+                    value={selectedContact.primaryTwilioNumber || "_none"}
+                    onValueChange={(value) => {
+                      updatePrimaryTwilioMutation.mutate({
+                        contactId: selectedContact.id,
+                        primaryTwilioNumber: value === "_none" ? null : value,
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No primary number set" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">No primary number</SelectItem>
+                      {(twilioNumbers as any[]).map((num: any) => (
+                        <SelectItem key={num.id} value={num.phoneNumber}>
+                          {num.label} ({formatPhone(num.phoneNumber)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="flex gap-2 pt-4">
                 <Button

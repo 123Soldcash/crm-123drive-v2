@@ -1,0 +1,1 @@
+ALTER TABLE `contacts` ADD `primaryTwilioNumber` varchar(20);

@@ -2689,3 +2689,12 @@
 - [x] Add filters: direction (Inbound/Outbound), call result, search, date range
 - [x] Add "Call History" to sidebar navigation with Phone icon
 - [x] Write vitest tests for call history functionality (13 tests passing)
+
+## Primary Twilio Number for Contacts
+- [x] Add primaryTwilioNumber column to contacts schema
+- [x] Add updatePrimaryTwilioNumber tRPC procedure for manual changes
+- [x] Update Twilio inbound webhook to auto-set primary number on first inbound call
+- [x] Only set on first call - don't override if already set (isNull check)
+- [x] Show primary Twilio number badge in contact card (green badge)
+- [x] Add dropdown selector in contact edit modal to change primary number
+- [x] Write vitest tests for primary Twilio number functionality (14 tests passing)
