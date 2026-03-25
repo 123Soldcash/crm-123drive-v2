@@ -521,6 +521,12 @@ export const communicationLog = mysqlTable("communicationLog", {
   notes: text("notes"),
   nextStep: text("nextStep"),
   
+  // Twilio number used for this call (E.164 format)
+  twilioNumber: varchar("twilioNumber", { length: 20 }),
+  
+  // Phone number of the contact that was called/received
+  contactPhoneNumber: varchar("contactPhoneNumber", { length: 20 }),
+  
   // Attribution
   userId: int("userId").notNull(), // Who made the contact attempt
   

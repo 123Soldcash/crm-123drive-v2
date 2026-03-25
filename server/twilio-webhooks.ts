@@ -198,6 +198,8 @@ export function registerTwilioWebhooks(app: Express) {
               propertyId: 0, // Unknown property for inbound calls
               communicationType: "Phone",
               direction: "Inbound",
+              twilioNumber: to || undefined, // The Twilio number that received the call
+              contactPhoneNumber: from || undefined, // The caller's phone number
               userId: 1, // System user
               notes: `Inbound call from ${from} to ${to}. CallSid: ${callSid || "unknown"}`,
             });

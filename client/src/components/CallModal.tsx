@@ -512,6 +512,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
       mood: logMood || undefined,
       disposition: logDisposition,
       propertyDetails: Object.keys(propertyDetails).length > 0 ? JSON.stringify(propertyDetails) : undefined,
+      twilioNumber: callerPhone || undefined,
+      contactPhoneNumber: phoneNumber,
       notes: `Called ${phoneNumber}${notesText}`,
       nextStep: "",
     });

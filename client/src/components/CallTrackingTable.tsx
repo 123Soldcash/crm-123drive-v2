@@ -345,6 +345,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       communicationType: "Phone",
       callResult: callResultMap[disposition],
       direction: "Outbound",
+      twilioNumber: primaryTwilioNumber || undefined,
+      contactPhoneNumber: phoneNumber,
       notes: "",
     });
   };
@@ -508,6 +510,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       direction: "Outbound",
       mood: mood || undefined,
       disposition: disposition,
+      twilioNumber: primaryTwilioNumber || undefined,
+      contactPhoneNumber: selectedPhone.phoneNumber,
       notes: `Called ${selectedPhone.phoneNumber} (${selectedPhone.phoneType})${notesText}`,
       nextStep: "",
     });

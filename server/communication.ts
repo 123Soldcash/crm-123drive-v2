@@ -779,6 +779,8 @@ export async function getCallHistory(filters: {
       disposition: communicationLog.disposition,
       notes: communicationLog.notes,
       nextStep: communicationLog.nextStep,
+      twilioNumber: communicationLog.twilioNumber,
+      contactPhoneNumber: communicationLog.contactPhoneNumber,
       userId: communicationLog.userId,
       communicationDate: communicationLog.communicationDate,
       createdAt: communicationLog.createdAt,

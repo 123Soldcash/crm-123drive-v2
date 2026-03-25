@@ -113,7 +113,7 @@ function getDirectionBadge(direction: string | null) {
   return <Badge variant="outline">Unknown</Badge>;
 }
 
-type SortField = "date" | "direction" | "callResult" | "property" | "agent";
+type SortField = "date" | "direction" | "callResult" | "property" | "agent" | "phoneNumber";
 type SortOrder = "asc" | "desc";
 
 export default function CallHistory() {
@@ -149,6 +149,8 @@ export default function CallHistory() {
           return mult * ((a.propertyAddress || "").localeCompare(b.propertyAddress || ""));
         case "agent":
           return mult * ((a.userName || "").localeCompare(b.userName || ""));
+        case "phoneNumber":
+          return mult * ((a.contactPhoneNumber || "").localeCompare(b.contactPhoneNumber || ""));
         default:
           return 0;
       }
@@ -362,6 +364,7 @@ export default function CallHistory() {
                   <TableRow>
                     <SortHeader field="date">Date & Time</SortHeader>
                     <SortHeader field="direction">Direction</SortHeader>
+                    <SortHeader field="phoneNumber">Phone Number</SortHeader>
                     <SortHeader field="callResult">Call Result</SortHeader>
                     <SortHeader field="property">Property</SortHeader>
                     <SortHeader field="agent">Agent</SortHeader>
@@ -393,6 +396,22 @@ export default function CallHistory() {
                         </div>
                       </TableCell>
                       <TableCell>{getDirectionBadge(call.direction)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {call.contactPhoneNumber ? (
+                            <div>
+                              <div className="font-medium">{call.contactPhoneNumber}</div>
+                              {call.twilioNumber && (
+                                <div className="text-xs text-muted-foreground">
+                                  via {call.twilioNumber}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {call.callResult ? (
                           <Badge

@@ -2693,6 +2693,8 @@ export const appRouter = router({
           propertyDetails: z.string().optional(), // JSON string
           notes: z.string().optional(),
           nextStep: z.string().optional(),
+          twilioNumber: z.string().optional(),
+          contactPhoneNumber: z.string().optional(),
           communicationDate: z.date().optional(),
         })
       )

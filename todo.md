@@ -2717,3 +2717,11 @@
 
 ## Bug Fix: Double parentheses in Default Caller ID dropdown
 - [x] Fix double parens in dropdown items — removed extra wrapping parens, now shows 'Chris (954) 209-3000' instead of 'Chris ((954) 209-3000)'
+
+## Call History: Add caller number column
+- [x] Add a column to Call History page showing the phone number that was used for the call (Twilio number)
+- [x] Added twilioNumber and contactPhoneNumber columns to communicationLog schema
+- [x] Backend returns both fields in getCallHistory
+- [x] Frontend shows Phone Number column with contact number + 'via' Twilio number
+- [x] Inbound webhook, CallTrackingTable, and CallModal all save phone numbers when logging
+- [x] 18 vitest tests passing
