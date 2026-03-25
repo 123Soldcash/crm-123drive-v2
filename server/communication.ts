@@ -459,6 +459,8 @@ export async function getCommunicationLogByProperty(propertyId: number) {
       propertyDetails: communicationLog.propertyDetails,
       notes: communicationLog.notes,
       nextStep: communicationLog.nextStep,
+      twilioNumber: communicationLog.twilioNumber,
+      contactPhoneNumber: communicationLog.contactPhoneNumber,
       userId: communicationLog.userId,
       communicationDate: communicationLog.communicationDate,
       createdAt: communicationLog.createdAt,

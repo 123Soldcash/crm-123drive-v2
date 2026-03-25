@@ -2737,3 +2737,14 @@
 - [x] Added Phone Number and Email fields to AddPropertyDialog
 - [x] Contact is auto-created via backend (same properties.create procedure)
 - [x] 24 vitest tests passing (both dialogs covered)
+
+## Bug Fix: Call Log & Notes not working properly (FIXED)
+- [x] Review Call Log & Notes UI component (disposition, mood, notes, call summary)
+- [x] Fix: Property Details fields wired to React state (Bed/Bath, SF, Roof Age, A/C Age, Condition, Reason to Sell, How Fast)
+- [x] Fix: Property Details sent as JSON to backend via propertyDetails field
+- [x] Fix: Communication matching now uses contactPhoneNumber field (not fragile notes-based matching)
+- [x] Fix: Backend getCommunicationLogByProperty now returns contactPhoneNumber and twilioNumber
+- [x] Fix: Form resets properly on dialog close/save via resetCallLogForm()
+- [x] Fix: logCommunicationMutation invalidates properties.getById for instant UI refresh
+- [x] Write vitest tests for the call log flow (24 tests passing)
+- [x] No test data inserted in database (tests are code-level, not integration)

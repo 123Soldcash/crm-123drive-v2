@@ -129,6 +129,15 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [mood, setMood] = useState<string>("");
   const [markAsDecisionMaker, setMarkAsDecisionMaker] = useState(false);
   const [markAsOwnerVerified, setMarkAsOwnerVerified] = useState(false);
+  // Property detail fields for Quick Call Log
+  const [propBedBath, setPropBedBath] = useState("");
+  const [propSf, setPropSf] = useState("");
+  const [propRoofAge, setPropRoofAge] = useState("");
+  const [propAcAge, setPropAcAge] = useState("");
+  const [propOverallCondition, setPropOverallCondition] = useState("");
+  const [propReasonToSell, setPropReasonToSell] = useState("");
+  const [propHowFastToSell, setPropHowFastToSell] = useState("");
+  const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showAddTemplateDialog, setShowAddTemplateDialog] = useState(false);
   const [newTemplateText, setNewTemplateText] = useState("");
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
@@ -238,12 +247,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     onSuccess: () => {
       toast.success("Call logged successfully");
       utils.communication.getCommunicationLog.invalidate();
-      setSelectedPhone(null);
-      setDisposition("");
-      setNotes("");
-      setMood("");
-      setMarkAsDecisionMaker(false);
-      setMarkAsOwnerVerified(false);
+      utils.properties.getById.invalidate({ id: propertyId });
+      resetCallLogForm();
     },
     onError: (error: any) => {
       toast.error(`Failed to log call: ${error.message}`);
@@ -499,6 +504,16 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       return;
     }
 
+    // Build property details JSON
+    const propertyDetails: Record<string, string> = {};
+    if (propBedBath) propertyDetails.bedBath = propBedBath;
+    if (propSf) propertyDetails.sf = propSf;
+    if (propRoofAge) propertyDetails.roofAge = propRoofAge;
+    if (propAcAge) propertyDetails.acAge = propAcAge;
+    if (propOverallCondition) propertyDetails.overallCondition = propOverallCondition;
+    if (propReasonToSell) propertyDetails.reasonToSell = propReasonToSell;
+    if (propHowFastToSell) propertyDetails.howFastToSell = propHowFastToSell;
+
     // Format notes
     const notesText = notes ? ` - ${notes}` : "";
     
@@ -510,6 +525,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       direction: "Outbound",
       mood: mood || undefined,
       disposition: disposition,
+      propertyDetails: Object.keys(propertyDetails).length > 0 ? JSON.stringify(propertyDetails) : undefined,
       twilioNumber: primaryTwilioNumber || undefined,
       contactPhoneNumber: selectedPhone.phoneNumber,
       notes: `Called ${selectedPhone.phoneNumber} (${selectedPhone.phoneType})${notesText}`,
@@ -533,51 +549,58 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     }
   };
 
+  // Reset all form fields when dialog closes
+  const resetCallLogForm = () => {
+    setSelectedPhone(null);
+    setDisposition("");
+    setNotes("");
+    setMood("");
+    setMarkAsDecisionMaker(false);
+    setMarkAsOwnerVerified(false);
+    setPropBedBath("");
+    setPropSf("");
+    setPropRoofAge("");
+    setPropAcAge("");
+    setPropOverallCondition("");
+    setPropReasonToSell("");
+    setPropHowFastToSell("");
+    setShowPropertyDetails(false);
+  };
+
   // Get last communication for a phone number
-  const getLastDisposition = (contactId: number, phoneNumber: string) => {
-    if (!communications) return null;
-    
-    const phoneCalls = communications.filter(
+  // Match communications by contactPhoneNumber field (primary) or fallback to notes-based matching for old logs
+  const matchPhoneCalls = (contactId: number, phoneNumber: string) => {
+    if (!communications) return [];
+    return communications.filter(
       (c: any) => 
         c.contactId === contactId && 
         c.communicationType === "Phone" &&
-        c.notes?.includes(phoneNumber)
+        (c.contactPhoneNumber === phoneNumber || (!c.contactPhoneNumber && c.notes?.includes(phoneNumber)))
     );
-    
+  };
+
+  const getLastDisposition = (contactId: number, phoneNumber: string) => {
+    const phoneCalls = matchPhoneCalls(contactId, phoneNumber);
     return phoneCalls.length > 0 ? phoneCalls[0].callResult : null;
   };
 
   // Count call attempts for a phone number
   const getCallAttempts = (contactId: number, phoneNumber: string) => {
-    if (!communications) return 0;
-    
-    return communications.filter(
-      (c: any) => 
-        c.contactId === contactId && 
-        c.communicationType === "Phone" &&
-        c.notes?.includes(phoneNumber)
-    ).length;
+    return matchPhoneCalls(contactId, phoneNumber).length;
   };
 
   // Get last communication notes for a phone number with date and agent
   const getLastNotes = (contactId: number, phoneNumber: string) => {
-    if (!communications) return null;
-    
-    const phoneCalls = communications.filter(
-      (c: any) => 
-        c.contactId === contactId && 
-        c.communicationType === "Phone" &&
-        c.notes?.includes(phoneNumber)
-    );
+    const phoneCalls = matchPhoneCalls(contactId, phoneNumber);
     
     if (phoneCalls.length === 0) return null;
     
     const lastCall = phoneCalls[0];
-    const notes = lastCall.notes || "";
+    const rawNotes = lastCall.notes || "";
     
-    // Extract notes after " - " if it exists
-    const dashIndex = notes.indexOf(" - ");
-    const noteText = dashIndex !== -1 ? notes.substring(dashIndex + 3).trim() : notes;
+    // Extract notes after " - " if it exists (format: "Called +1234 (Mobile) - actual notes")
+    const dashIndex = rawNotes.indexOf(" - ");
+    const noteText = dashIndex !== -1 ? rawNotes.substring(dashIndex + 3).trim() : rawNotes;
     
     if (!noteText) return null;
     
@@ -585,8 +608,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     const date = new Date(lastCall.createdAt);
     const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     
-    // Get agent name (you'll need to fetch user data or pass it)
-    // For now, using a placeholder - you may need to join with users table
     const agentName = lastCall.userName || 'Agent';
     
     return `${formattedDate} - ${agentName}: ${noteText}`;
@@ -594,15 +615,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
   // Get last communication log for a phone number
   const getLastCommunicationLog = (contactId: number, phoneNumber: string) => {
-    if (!communications) return null;
-    
-    const phoneCalls = communications.filter(
-      (c: any) => 
-        c.contactId === contactId && 
-        c.communicationType === "Phone" &&
-        c.notes?.includes(phoneNumber)
-    );
-    
+    const phoneCalls = matchPhoneCalls(contactId, phoneNumber);
     return phoneCalls.length > 0 ? phoneCalls[0] : null;
   };
 
@@ -1586,7 +1599,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       </Card>
 
       {/* Quick Call Log Dialog */}
-      <Dialog open={!!selectedPhone} onOpenChange={() => setSelectedPhone(null)}>
+      <Dialog open={!!selectedPhone} onOpenChange={(open) => { if (!open) resetCallLogForm(); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Log Call</DialogTitle>
@@ -1749,6 +1762,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <Label className="text-xs">Bed/Bath</Label>
                   <input
                     type="text"
+                    value={propBedBath}
+                    onChange={(e) => setPropBedBath(e.target.value)}
                     placeholder="e.g., 3/2"
                     className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1757,6 +1772,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <Label className="text-xs">SF</Label>
                   <input
                     type="text"
+                    value={propSf}
+                    onChange={(e) => setPropSf(e.target.value)}
                     placeholder="e.g., 1,500"
                     className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1765,6 +1782,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <Label className="text-xs">Roof Age</Label>
                   <input
                     type="text"
+                    value={propRoofAge}
+                    onChange={(e) => setPropRoofAge(e.target.value)}
                     placeholder="e.g., 5 years"
                     className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1773,6 +1792,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <Label className="text-xs">A/C Age</Label>
                   <input
                     type="text"
+                    value={propAcAge}
+                    onChange={(e) => setPropAcAge(e.target.value)}
                     placeholder="e.g., 3 years"
                     className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1781,7 +1802,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Overall Condition</Label>
-                  <select className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                  <select
+                    value={propOverallCondition}
+                    onChange={(e) => setPropOverallCondition(e.target.value)}
+                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
                     <option value="">Select...</option>
                     <option value="Excellent">Excellent</option>
                     <option value="Good">Good</option>
@@ -1793,6 +1818,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <Label className="text-xs">Reason to Sell</Label>
                   <input
                     type="text"
+                    value={propReasonToSell}
+                    onChange={(e) => setPropReasonToSell(e.target.value)}
                     placeholder="e.g., Relocation"
                     className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1800,7 +1827,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               </div>
               <div className="space-y-1 mt-3">
                 <Label className="text-xs">How Fast to Sell</Label>
-                <select className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                <select
+                  value={propHowFastToSell}
+                  onChange={(e) => setPropHowFastToSell(e.target.value)}
+                  className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                >
                   <option value="">Select...</option>
                   <option value="ASAP">ASAP</option>
                   <option value="Within 3 months">Within 3 months</option>
@@ -1822,11 +1853,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             </div>
 
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setSelectedPhone(null)}>
+              <Button variant="outline" onClick={() => resetCallLogForm()}>
                 Cancel
               </Button>
               <Button onClick={handleLogCall} disabled={!disposition}>
-                Log Call
+                Save Call Log
               </Button>
             </div>
           </div>
