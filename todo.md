@@ -2786,3 +2786,10 @@
 - [x] Center panel: header lg, labels base, disposition/select base, mood buttons sm, notes base, summary base
 - [x] Right panel: contact name xl, phone lg, status base, timer 4xl, dialpad keys lg, labels sm
 - [x] Property Details inputs sm, labels xs, selects sm
+
+## Import Buyers via Excel
+- [x] Create Excel template structure with buyer fields (Name, Email, Phone, Company, Status) + preferences
+- [x] Backend: Excel parsing with xlsx library, validation, duplicate detection, batch insert
+- [x] Frontend: Import button on Buyers page, template download, file upload, validation preview, batch processing
+- [x] Instructions on the import page explaining the Excel structure
+- [x] Vitest tests for import functionality (18 tests passing)

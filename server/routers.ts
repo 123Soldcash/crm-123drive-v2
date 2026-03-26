@@ -4062,6 +4062,78 @@ export const appRouter = router({
         const { getMatchingBuyers } = await import("./db-buyers");
         return await getMatchingBuyers(input.propertyId);
       }),
+
+    // Validate Excel import data (preview before importing)
+    validateImport: protectedProcedure
+      .input(
+        z.object({
+          rows: z.array(
+            z.object({
+              name: z.string(),
+              email: z.string(),
+              phone: z.string().optional(),
+              company: z.string().optional(),
+              status: z.string().optional(),
+              notes: z.string().optional(),
+              preferredStates: z.string().optional(),
+              preferredCities: z.string().optional(),
+              preferredZipcodes: z.string().optional(),
+              propertyTypes: z.string().optional(),
+              minBeds: z.number().optional().nullable(),
+              maxBeds: z.number().optional().nullable(),
+              minBaths: z.number().optional().nullable(),
+              maxBaths: z.number().optional().nullable(),
+              minPrice: z.number().optional().nullable(),
+              maxPrice: z.number().optional().nullable(),
+              maxRepairCost: z.number().optional().nullable(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { validateBuyerImport } = await import("./db-buyers-import");
+        return await validateBuyerImport(input.rows as any);
+      }),
+
+    // Execute the actual import after validation
+    bulkImport: protectedProcedure
+      .input(
+        z.object({
+          rows: z.array(
+            z.object({
+              name: z.string(),
+              email: z.string(),
+              phone: z.string().optional(),
+              company: z.string().optional(),
+              status: z.string().optional(),
+              notes: z.string().optional(),
+              preferredStates: z.string().optional(),
+              preferredCities: z.string().optional(),
+              preferredZipcodes: z.string().optional(),
+              propertyTypes: z.string().optional(),
+              minBeds: z.number().optional().nullable(),
+              maxBeds: z.number().optional().nullable(),
+              minBaths: z.number().optional().nullable(),
+              maxBaths: z.number().optional().nullable(),
+              minPrice: z.number().optional().nullable(),
+              maxPrice: z.number().optional().nullable(),
+              maxRepairCost: z.number().optional().nullable(),
+            })
+          ),
+          skipDuplicates: z.boolean().default(true),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { importBuyersBatch } = await import("./db-buyers-import");
+        return await importBuyersBatch(input.rows as any, input.skipDuplicates);
+      }),
+
+    // Get template column definitions
+    getTemplateColumns: protectedProcedure
+      .query(async () => {
+        const { getTemplateColumns } = await import("./db-buyers-import");
+        return getTemplateColumns();
+      }),
   }),
 
   documents: router({

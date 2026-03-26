@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, User, Mail, Phone, Building, Tag, MoreHorizontal, Trash2, Edit, ExternalLink } from "lucide-react";
+import { Search, Plus, User, Mail, Phone, Building, Tag, MoreHorizontal, Trash2, Edit, ExternalLink, FileSpreadsheet } from "lucide-react";
+import ImportBuyersDialog from "@/components/ImportBuyersDialog";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function Buyers() {
   const [, setLocationNav] = useLocation();
   const [search, setSearch] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [newBuyer, setNewBuyer] = useState({
     name: "",
     email: "",
@@ -113,12 +115,20 @@ export default function Buyers() {
           <h1 className="text-3xl font-bold tracking-tight">Cash Buyers</h1>
           <p className="text-muted-foreground">Manage your list of potential buyers and their preferences.</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="mr-2 h-4 w-4" /> Add Buyer
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsImportDialogOpen(true)}
+            className="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            <FileSpreadsheet className="h-4 w-4" /> Import Excel
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <Plus className="mr-2 h-4 w-4" /> Add Buyer
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleAddBuyer}>
               <DialogHeader>
@@ -196,7 +206,10 @@ export default function Buyers() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <ImportBuyersDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
 
       <Card>
         <CardHeader className="pb-3">
