@@ -2757,3 +2757,12 @@
 - [x] CallModal renders inside CallTrackingTable for the active call (Log Call only during call)
 - [x] SMS button preserved next to phone number
 - [x] 22 vitest tests passing
+
+## CallModal Redesign: Dialpad + 3-Column Layout + Property Info (DONE)
+- [x] Add DTMF dialpad (numeric keypad 1-9, *, 0, #) with sendDigits integration
+- [x] Reorganize layout: Left (320px) = property info, Center = call log/notes, Right (280px) = call controls + dialpad
+- [x] Left panel: property image, address, temperature, desk, property/financial/identifiers/owner details
+- [x] Fetch property data via trpc.properties.getById.useQuery
+- [x] Call controls (Start Call, timer, mute, hang up) moved to right side
+- [x] Fixed TypeScript errors: createCallLog uses 'to', updateCallLog uses 'callLogId', callNotes uses 'noteId'
+- [x] 33 vitest tests passing
