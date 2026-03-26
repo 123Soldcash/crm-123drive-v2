@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -48,8 +48,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { TwilioCallWidget } from "./TwilioCallWidget";
 import { SMSChatButton } from "./SMSChatButton";
+import { CallModal } from "./CallModal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ContactEditModal } from "./ContactEditModal";
 import { ContactNotesDialog } from "./ContactNotesDialog";
 import { BulkContactImport } from "./BulkContactImport";
@@ -175,6 +176,10 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [addContactError, setAddContactError] = useState<string | null>(null);
   const [crossPropertyWarning, setCrossPropertyWarning] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }> | null>(null);
   const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
+  // Inline call state: clicking phone number starts a call directly
+  const [callSelectorOpen, setCallSelectorOpen] = useState<string | null>(null); // phoneNumber that has selector open
+  const [callModalOpen, setCallModalOpen] = useState(false);
+  const [callModalPhone, setCallModalPhone] = useState<{ phoneNumber: string; contactName: string; contactId: number; callerPhone: string } | null>(null);
 
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
@@ -326,13 +331,43 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     },
   });
 
-  const handlePhoneClick = (contact: any, phone: any) => {
-    setSelectedPhone({
+  // Format phone number to E.164 format for Twilio
+  const formatE164 = (phone: string): string => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+    if (digits.length === 10) return `+1${digits}`;
+    if (phone.startsWith("+")) return phone.replace(/[^\d+]/g, "");
+    return `+1${digits}`;
+  };
+
+  // Click on phone number: start call directly (skip Log Call dialog)
+  const handlePhoneCallClick = (contact: any, phone: any) => {
+    if (phone.dnc || contact.dnc) return; // DNC blocked
+    if (primaryTwilioNumber) {
+      // Auto-dial with primary number
+      setCallModalPhone({
+        phoneNumber: formatE164(phone.phoneNumber),
+        contactName: contact.name || "Unknown",
+        contactId: contact.id,
+        callerPhone: primaryTwilioNumber,
+      });
+      setCallModalOpen(true);
+    } else {
+      // Show number selector popover
+      setCallSelectorOpen(phone.phoneNumber);
+    }
+  };
+
+  // When a Twilio number is selected from the popover
+  const handleSelectTwilioNumber = (contact: any, phone: any, twilioNumber: string) => {
+    setCallSelectorOpen(null);
+    setCallModalPhone({
+      phoneNumber: formatE164(phone.phoneNumber),
+      contactName: contact.name || "Unknown",
       contactId: contact.id,
-      contactName: contact.name,
-      phoneNumber: phone.phoneNumber,
-      phoneType: phone.phoneType,
+      callerPhone: twilioNumber,
     });
+    setCallModalOpen(true);
   };
 
   const handleQuickDisposition = (contactId: number, phoneNumber: string, disposition: string) => {
@@ -1249,13 +1284,46 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 </TooltipProvider>
                               ) : (
                                 <>
-                                  <TwilioCallWidget
-                                    phoneNumber={phone.phoneNumber}
-                                    contactName={contact.name}
-                                    contactId={contact.id}
-                                    propertyId={propertyId}
-                                    primaryTwilioNumber={primaryTwilioNumber}
-                                  />
+                                  {/* Clickable phone number starts call directly */}
+                                  <Popover 
+                                    open={callSelectorOpen === phone.phoneNumber} 
+                                    onOpenChange={(open) => setCallSelectorOpen(open ? phone.phoneNumber : null)}
+                                  >
+                                    <PopoverTrigger asChild>
+                                      <button
+                                        onClick={() => handlePhoneCallClick(contact, phone)}
+                                        className="text-sm font-medium text-green-700 hover:text-green-900 hover:underline cursor-pointer flex items-center gap-1"
+                                        title={primaryTwilioNumber ? `Call ${contact.name} (using default: ${formatPhone(primaryTwilioNumber)})` : `Click to call ${contact.name}`}
+                                      >
+                                        <Phone className="h-3 w-3 text-green-600" />
+                                        {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-64 p-2" align="start">
+                                      <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select caller number:</p>
+                                      {(twilioNumbersList as any[]).length === 0 ? (
+                                        <div className="text-center py-3 px-2">
+                                          <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
+                                          {(twilioNumbersList as any[]).map((num: any) => (
+                                            <button
+                                              key={num.id}
+                                              onClick={() => handleSelectTwilioNumber(contact, phone, num.phoneNumber)}
+                                              className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
+                                            >
+                                              <Phone className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                                              <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">{num.label}</p>
+                                                <p className="text-xs text-muted-foreground font-mono">{formatPhone(num.phoneNumber)}</p>
+                                              </div>
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </PopoverContent>
+                                  </Popover>
                                   <SMSChatButton
                                     phoneNumber={phone.phoneNumber}
                                     contactName={contact.name}
@@ -1264,16 +1332,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   />
                                 </>
                               )}
-                              <button
-                                onClick={() => handlePhoneClick(contact, phone)}
-                                className={`text-sm font-medium ${
-                                  phone.dnc || contact.dnc
-                                    ? "text-red-400 line-through cursor-default"
-                                    : "text-blue-600 hover:underline"
-                                }`}
-                              >
-                                {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
-                              </button>
                               <button
                                 onClick={() => handleNoteClick(contact.id, phone.phoneNumber)}
                                 className="text-gray-400 hover:text-blue-600 transition-colors"
@@ -2144,6 +2202,22 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Call Modal — triggered when clicking a phone number */}
+      {callModalOpen && callModalPhone && (
+        <CallModal
+          open={callModalOpen}
+          onOpenChange={(open) => {
+            setCallModalOpen(open);
+            if (!open) setCallModalPhone(null);
+          }}
+          phoneNumber={callModalPhone.phoneNumber}
+          contactName={callModalPhone.contactName}
+          contactId={callModalPhone.contactId}
+          propertyId={propertyId}
+          callerPhone={callModalPhone.callerPhone}
+        />
+      )}
     </>
   );
 }

@@ -2748,3 +2748,12 @@
 - [x] Fix: logCommunicationMutation invalidates properties.getById for instant UI refresh
 - [x] Write vitest tests for the call log flow (24 tests passing)
 - [x] No test data inserted in database (tests are code-level, not integration)
+
+## Property Detail Contacts: Click-to-Call on Phone Number
+- [x] Removed TwilioCallWidget button from Contacts table
+- [x] Phone number text is now clickable — green color with phone icon, starts call directly
+- [x] If primary Twilio number is set, auto-dials immediately (no selector)
+- [x] If no primary number, shows Popover with Twilio number list to choose from
+- [x] CallModal renders inside CallTrackingTable for the active call (Log Call only during call)
+- [x] SMS button preserved next to phone number
+- [x] 22 vitest tests passing
