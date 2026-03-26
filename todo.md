@@ -2780,3 +2780,9 @@
 - [x] Changed all 3 columns to flex-1 (equal 1/3 width, removed fixed px widths)
 - [x] Increased font sizes: section headers xs→sm, content xs→sm, address sm→base, contact name base→lg, phone sm→base, notes 10px→xs, status xs→sm
 - [x] 21 vitest tests passing
+
+## CallModal: Increase font sizes further for better readability (DONE)
+- [x] Left panel: address lg, city/state base, section headers sm, content base, badges sm
+- [x] Center panel: header lg, labels base, disposition/select base, mood buttons sm, notes base, summary base
+- [x] Right panel: contact name xl, phone lg, status base, timer 4xl, dialpad keys lg, labels sm
+- [x] Property Details inputs sm, labels xs, selects sm

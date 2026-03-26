@@ -635,8 +635,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-base font-semibold leading-tight">{prop.addressLine1 || "No address"}</p>
-                    <p className="text-sm text-muted-foreground">{prop.city}{prop.city && prop.state ? ", " : ""}{prop.state} {prop.zipcode}</p>
+                    <p className="text-lg font-semibold leading-tight">{prop.addressLine1 || "No address"}</p>
+                    <p className="text-base text-muted-foreground">{prop.city}{prop.city && prop.state ? ", " : ""}{prop.state} {prop.zipcode}</p>
                   </div>
                 </div>
               </div>
@@ -648,13 +648,13 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   <span className="ml-1">{prop.leadTemperature || "TBD"}</span>
                 </Badge>
                 {prop.deskStatus && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-sm">
                     {prop.deskName || prop.deskStatus}
                   </Badge>
                 )}
                 {prop.ownerVerified === 1 && (
-                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">
-                    <CheckCircle2 className="h-3 w-3 mr-0.5" /> Verified
+                  <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-300">
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-0.5" /> Verified
                   </Badge>
                 )}
               </div>
@@ -662,11 +662,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Property Details */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <Home className="h-3.5 w-3.5" /> Property
+                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Home className="h-4 w-4" /> Property
                   </p>
                 </div>
-                <div className="px-3 py-2.5 space-y-2 text-sm">
+                <div className="px-3 py-2.5 space-y-2.5 text-base">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-medium">{prop.propertyType || "N/A"}</span>
@@ -693,11 +693,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Financial */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <DollarSign className="h-3.5 w-3.5" /> Financial
+                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <DollarSign className="h-4 w-4" /> Financial
                   </p>
                 </div>
-                <div className="px-3 py-2.5 space-y-2 text-sm">
+                <div className="px-3 py-2.5 space-y-2.5 text-base">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Est. Value</span>
                     <span className="font-medium text-green-700">{formatCurrency(estimatedValue)}</span>
@@ -728,11 +728,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Identifiers */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <Hash className="h-3.5 w-3.5" /> Identifiers
+                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Hash className="h-4 w-4" /> Identifiers
                   </p>
                 </div>
-                <div className="px-3 py-2.5 space-y-2 text-sm">
+                <div className="px-3 py-2.5 space-y-2.5 text-base">
                   {prop.leadId && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Lead ID</span>
@@ -763,11 +763,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Owner Info */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <User className="h-3.5 w-3.5" /> Owner
+                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <User className="h-4 w-4" /> Owner
                   </p>
                 </div>
-                <div className="px-3 py-2.5 space-y-2 text-sm">
+                <div className="px-3 py-2.5 space-y-2.5 text-base">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Name</span>
                     <span className="font-medium">{prop.owner1Name || contactName}</span>
@@ -789,8 +789,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
               {/* Assigned Agent */}
               {prop.assignedAgent && (
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <User className="h-3 w-3" />
+                <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" />
                   Agent: <span className="font-medium text-foreground">{prop.assignedAgent}</span>
                 </div>
               )}
@@ -801,7 +801,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           <div className="flex-1 flex flex-col bg-background overflow-hidden min-w-0">
             {/* Header */}
             <div className="px-4 py-3 border-b bg-muted/20 shrink-0">
-              <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Call Log & Notes
               </h3>
@@ -840,7 +840,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   {/* Disposition + DNC */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold">Disposition *</Label>
+                      <Label className="text-base font-semibold">Disposition *</Label>
                       <button
                         type="button"
                         onClick={() => {
@@ -862,7 +862,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       </button>
                     </div>
                     <Select value={logDisposition} onValueChange={setLogDisposition}>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-10 text-base">
                         <SelectValue placeholder="Select call result..." />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
@@ -875,7 +875,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* Mood */}
                   <div className="space-y-1">
-                    <Label className="text-sm font-semibold">Mood</Label>
+                    <Label className="text-base font-semibold">Mood</Label>
                     <div className="flex gap-1.5 flex-wrap">
                       {MOOD_OPTIONS.map((option) => (
                         <Button
@@ -884,7 +884,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                           variant={logMood === option.emoji ? "default" : "outline"}
                           size="sm"
                           onClick={() => setLogMood(logMood === option.emoji ? "" : option.emoji)}
-                          className="h-7 px-2 text-xs"
+                          className="h-8 px-3 text-sm"
                         >
                           <span className="text-sm mr-0.5">{option.emoji}</span>
                           {option.label}
@@ -897,22 +897,22 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   <div className="flex gap-3">
                     <div className="flex items-center space-x-1.5">
                       <Checkbox id="cm-dm" checked={markAsDecisionMaker} onCheckedChange={(c) => setMarkAsDecisionMaker(c as boolean)} />
-                      <Label htmlFor="cm-dm" className="text-xs cursor-pointer">Decision Maker</Label>
+                      <Label htmlFor="cm-dm" className="text-sm cursor-pointer">Decision Maker</Label>
                     </div>
                     <div className="flex items-center space-x-1.5">
                       <Checkbox id="cm-ov" checked={markAsOwnerVerified} onCheckedChange={(c) => setMarkAsOwnerVerified(c as boolean)} />
-                      <Label htmlFor="cm-ov" className="text-xs cursor-pointer">Owner Verified</Label>
+                      <Label htmlFor="cm-ov" className="text-sm cursor-pointer">Owner Verified</Label>
                     </div>
                   </div>
 
                   {/* Quick Templates */}
                   <div className="space-y-1">
-                    <Label className="text-sm font-semibold">Quick Templates</Label>
+                    <Label className="text-base font-semibold">Quick Templates</Label>
                     <div className="flex gap-1 flex-wrap">
                       {NOTE_TEMPLATES.map((template) => (
                         <Button key={template} type="button" variant="ghost" size="sm"
                           onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template}` : template)}
-                          className="h-6 text-[11px] px-2"
+                          className="h-7 text-xs px-2.5"
                         >
                           {template}
                         </Button>
@@ -920,7 +920,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       {customTemplates.map((template: any) => (
                         <Button key={template.id} type="button" variant="secondary" size="sm"
                           onClick={() => setLogNotes(logNotes ? `${logNotes}. ${template.templateText}` : template.templateText)}
-                          className="h-6 text-[11px] px-2"
+                          className="h-7 text-xs px-2.5"
                         >
                           {template.templateText}
                         </Button>
@@ -930,13 +930,13 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* Call Summary */}
                   <div className="space-y-1">
-                    <Label className="text-sm font-semibold">Call Summary</Label>
+                    <Label className="text-base font-semibold">Call Summary</Label>
                     <Textarea
                       value={logNotes}
                       onChange={(e) => setLogNotes(e.target.value)}
                       placeholder="Add notes about this call..."
                       rows={2}
-                      className="text-sm"
+                      className="text-base"
                     />
                   </div>
 
@@ -945,40 +945,40 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                     <button
                       type="button"
                       onClick={() => setShowPropertyDetails(!showPropertyDetails)}
-                      className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <span>Property Details (Optional)</span>
-                      <span className="text-[10px]">{showPropertyDetails ? "▲ Hide" : "▼ Show"}</span>
+                      <span className="text-xs">{showPropertyDetails ? "▲ Hide" : "▼ Show"}</span>
                     </button>
                     {showPropertyDetails && (
                       <div className="px-3 pb-2 space-y-1.5">
                         <div className="grid grid-cols-2 gap-1.5">
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">Bed/Bath</Label>
+                            <Label className="text-xs">Bed/Bath</Label>
                             <input type="text" placeholder="e.g., 3/2" value={bedBath} onChange={(e) => setBedBath(e.target.value)}
-                              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
                           </div>
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">SF</Label>
+                            <Label className="text-xs">SF</Label>
                             <input type="text" placeholder="e.g., 1,500" value={sf} onChange={(e) => setSf(e.target.value)}
-                              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
                           </div>
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">Roof Age</Label>
+                            <Label className="text-xs">Roof Age</Label>
                             <input type="text" placeholder="e.g., 5 years" value={roofAge} onChange={(e) => setRoofAge(e.target.value)}
-                              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
                           </div>
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">A/C Age</Label>
+                            <Label className="text-xs">A/C Age</Label>
                             <input type="text" placeholder="e.g., 3 years" value={acAge} onChange={(e) => setAcAge(e.target.value)}
-                              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-1.5">
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">Condition</Label>
+                            <Label className="text-xs">Condition</Label>
                             <Select value={overallCondition} onValueChange={setOverallCondition}>
-                              <SelectTrigger className="h-7 text-xs">
+                              <SelectTrigger className="h-8 text-sm">
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
                               <SelectContent>
@@ -990,15 +990,15 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                             </Select>
                           </div>
                           <div className="space-y-0.5">
-                            <Label className="text-[10px]">Reason to Sell</Label>
+                            <Label className="text-xs">Reason to Sell</Label>
                             <input type="text" placeholder="e.g., Relocation" value={reasonToSell} onChange={(e) => setReasonToSell(e.target.value)}
-                              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
+                              className="w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary bg-background" />
                           </div>
                         </div>
                         <div className="space-y-0.5">
-                          <Label className="text-[10px]">How Fast to Sell</Label>
+                          <Label className="text-xs">How Fast to Sell</Label>
                           <Select value={howFastToSell} onValueChange={setHowFastToSell}>
-                            <SelectTrigger className="h-7 text-xs">
+                            <SelectTrigger className="h-8 text-sm">
                               <SelectValue placeholder="Select..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -1035,7 +1035,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                     <div className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center">
-                    <span className="bg-background px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span className="bg-background px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Call Notes ({notesData?.length ?? 0})
                     </span>
                   </div>
@@ -1048,7 +1048,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       value={noteText}
                       onChange={(e) => setNoteText(e.target.value)}
                       placeholder="Type a note..."
-                      className="min-h-[50px] max-h-[100px] resize-none text-sm"
+                      className="min-h-[50px] max-h-[100px] resize-none text-base"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
@@ -1060,24 +1060,24 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       {createNoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground -mt-0.5">Press Enter to send, Shift+Enter for new line</p>
+                  <p className="text-xs text-muted-foreground -mt-0.5">Press Enter to send, Shift+Enter for new line</p>
 
                   {(!notesData || notesData.length === 0) ? (
                     <div className="flex flex-col items-center justify-center text-muted-foreground py-4">
                       <FileText className="h-6 w-6 mb-1 opacity-40" />
-                      <p className="text-xs">No notes yet</p>
+                      <p className="text-sm">No notes yet</p>
                     </div>
                   ) : (
                     <div className="space-y-1.5">
                       {notesData.map((note) => (
                         <div key={note.id} className="group relative bg-muted/50 rounded-lg p-2.5 border border-transparent hover:border-border transition-colors">
                           <div className="flex items-start gap-2">
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words flex-1">{note.content}</p>
+                            <p className="text-base leading-relaxed whitespace-pre-wrap break-words flex-1">{note.content}</p>
                             <button onClick={() => handleDeleteNote(note.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0">
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mt-1.5 text-sm text-muted-foreground">
                             <Clock className="h-2.5 w-2.5" />
                             <span>
                               {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
@@ -1107,10 +1107,10 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
                 <User className="h-8 w-8 text-primary/60" />
               </div>
-              <h2 className="text-lg font-semibold truncate text-foreground">{contactName}</h2>
-              <p className="text-muted-foreground text-base mt-0.5 font-mono">{formatPhone(phoneNumber)}</p>
+              <h2 className="text-xl font-semibold truncate text-foreground">{contactName}</h2>
+              <p className="text-muted-foreground text-lg mt-0.5 font-mono">{formatPhone(phoneNumber)}</p>
               {callerPhone && (
-                <p className="text-xs text-muted-foreground mt-0.5">via {formatPhone(callerPhone)}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">via {formatPhone(callerPhone)}</p>
               )}
             </div>
 
@@ -1126,10 +1126,10 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 "bg-orange-100 text-orange-700"
               }`}>
                 {statusConfig.icon}
-                <span className="font-medium">{statusConfig.label}</span>
+                <span className="font-medium text-base">{statusConfig.label}</span>
               </div>
 
-              <div className={`text-3xl font-mono tabular-nums mb-3 ${
+              <div className={`text-4xl font-mono tabular-nums mb-3 ${
                 callStatus === "in-progress" ? "text-green-600 font-semibold" :
                 isCallEnded ? "text-muted-foreground" : "text-muted-foreground/40"
               }`}>
@@ -1183,7 +1183,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                     >
                       <Phone className="h-6 w-6 text-white" />
                     </button>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {callStatus === "failed" && retryCount < 3 ? "Retry" :
                        isCallEnded ? "Call again" : "Start call"}
                     </span>
@@ -1210,8 +1210,8 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               </div>
 
               {isMuted && isCallActive && (
-                <Badge variant="destructive" className="text-[10px] mb-2">
-                  <MicOff className="h-3 w-3 mr-1" /> Muted
+                <Badge variant="destructive" className="text-sm mb-2">
+                  <MicOff className="h-3.5 w-3.5 mr-1" /> Muted
                 </Badge>
               )}
 
@@ -1233,7 +1233,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               <button
                 type="button"
                 onClick={() => setShowDialpad(!showDialpad)}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
+                className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
               >
                 <Grid3X3 className="h-3.5 w-3.5" />
                 {showDialpad ? "Hide Dialpad" : "Show Dialpad"}
@@ -1244,7 +1244,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   {/* DTMF digits display */}
                   {dtmfDigits && (
                     <div className="text-center">
-                      <p className="text-sm font-mono tracking-widest text-foreground bg-muted/50 rounded px-2 py-1">
+                      <p className="text-base font-mono tracking-widest text-foreground bg-muted/50 rounded px-2 py-1.5">
                         {dtmfDigits}
                       </p>
                     </div>
@@ -1263,14 +1263,14 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                             : "bg-muted/30 text-muted-foreground/40 cursor-not-allowed border border-transparent"
                         }`}
                       >
-                        <span className="text-base font-semibold leading-none">{key.digit}</span>
-                        {key.sub && <span className="text-[8px] text-muted-foreground leading-none mt-0.5">{key.sub}</span>}
+                        <span className="text-lg font-semibold leading-none">{key.digit}</span>
+                        {key.sub && <span className="text-[10px] text-muted-foreground leading-none mt-0.5">{key.sub}</span>}
                       </button>
                     ))}
                   </div>
 
                   {callStatus !== "in-progress" && (
-                    <p className="text-[9px] text-muted-foreground text-center">
+                    <p className="text-xs text-muted-foreground text-center">
                       Dialpad active during calls only
                     </p>
                   )}
