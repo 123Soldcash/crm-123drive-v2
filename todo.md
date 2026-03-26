@@ -2766,3 +2766,12 @@
 - [x] Call controls (Start Call, timer, mute, hang up) moved to right side
 - [x] Fixed TypeScript errors: createCallLog uses 'to', updateCallLog uses 'callLogId', callNotes uses 'noteId'
 - [x] 33 vitest tests passing
+
+## CallModal Layout & Data Fixes (DONE)
+- [x] Reduced Call Log & Notes center panel to 340px fixed width (was flex-1)
+- [x] Expanded left property info panel from 320px to 420px
+- [x] Fixed image: prop.imageUrl → prop.propertyImage (correct field name)
+- [x] Added propertyImage to both getPropertyById select blocks in db.ts
+- [x] Fixed field names: bedrooms→totalBedrooms, bathrooms→totalBaths, sqft→buildingSquareFeet, ownerName→owner1Name, apn→apnParcelId, mailingAddress→ownerLocation
+- [x] Right panel expanded from 280px to 300px
+- [x] 21 vitest tests passing

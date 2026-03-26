@@ -344,6 +344,7 @@ export async function getPropertyById(id: number) {
     leadSource: properties.leadSource,
     campaignName: properties.campaignName,
     primaryTwilioNumber: properties.primaryTwilioNumber,
+    propertyImage: properties.propertyImage,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.leadId, id)).limit(1);
   
@@ -386,6 +387,7 @@ export async function getPropertyById(id: number) {
     leadSource: properties.leadSource,
     campaignName: properties.campaignName,
     primaryTwilioNumber: properties.primaryTwilioNumber,
+    propertyImage: properties.propertyImage,
     createdAt: properties.createdAt,
   }).from(properties).where(eq(properties.id, id)).limit(1);
   }

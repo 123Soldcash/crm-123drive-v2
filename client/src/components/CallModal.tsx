@@ -617,11 +617,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         <div className="flex h-full">
 
           {/* ═══════════ LEFT PANEL — Property Info ═══════════ */}
-          <div className="w-[320px] flex flex-col bg-muted/20 border-r shrink-0 overflow-y-auto">
+          <div className="w-[420px] flex flex-col bg-muted/20 border-r shrink-0 overflow-y-auto">
             {/* Property Image */}
-            {prop.imageUrl ? (
-              <div className="w-full h-[160px] bg-gray-200 overflow-hidden">
-                <img src={prop.imageUrl} alt="Property" className="w-full h-full object-cover" />
+            {prop.propertyImage ? (
+              <div className="w-full h-[200px] bg-gray-200 overflow-hidden">
+                <img src={prop.propertyImage} alt="Property" className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="w-full h-[100px] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -677,11 +677,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Bed/Bath</span>
-                    <span className="font-medium">{prop.bedrooms || "?"}/{prop.bathrooms || "?"}</span>
+                    <span className="font-medium">{prop.totalBedrooms || "?"}/{prop.totalBaths || "?"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Sq Ft</span>
-                    <span className="font-medium">{prop.sqft ? prop.sqft.toLocaleString() : "N/A"}</span>
+                    <span className="font-medium">{prop.buildingSquareFeet ? Number(prop.buildingSquareFeet).toLocaleString() : "N/A"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Lot Size</span>
@@ -751,10 +751,10 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       <span className="font-medium">{prop.county}</span>
                     </div>
                   )}
-                  {prop.apn && (
+                  {prop.apnParcelId && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">APN</span>
-                      <span className="font-medium font-mono text-[11px]">{prop.apn}</span>
+                      <span className="font-medium font-mono text-[11px]">{prop.apnParcelId}</span>
                     </div>
                   )}
                 </div>
@@ -770,12 +770,12 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 <div className="px-2.5 py-2 space-y-1.5 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Name</span>
-                    <span className="font-medium">{prop.ownerName || contactName}</span>
+                    <span className="font-medium">{prop.owner1Name || contactName}</span>
                   </div>
-                  {prop.mailingAddress && (
+                  {prop.ownerLocation && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Mailing</span>
-                      <span className="font-medium text-right max-w-[160px] truncate" title={prop.mailingAddress}>{prop.mailingAddress}</span>
+                      <span className="font-medium text-right max-w-[200px] truncate" title={prop.ownerLocation}>{prop.ownerLocation}</span>
                     </div>
                   )}
                   {prop.occupancy && (
@@ -798,7 +798,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           </div>
 
           {/* ═══════════ CENTER PANEL — Call Log & Notes ═══════════ */}
-          <div className="flex-1 flex flex-col bg-background overflow-hidden" style={{ maxWidth: "calc(100% - 320px - 280px)" }}>
+          <div className="flex flex-col bg-background overflow-hidden" style={{ width: "340px", minWidth: "300px", maxWidth: "400px" }}>
             {/* Header */}
             <div className="px-4 py-2.5 border-b bg-muted/20 shrink-0">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -1101,7 +1101,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           </div>
 
           {/* ═══════════ RIGHT PANEL — Call Controls + Dialpad ═══════════ */}
-          <div className="w-[280px] flex flex-col bg-muted/30 border-l shrink-0">
+          <div className="w-[300px] flex flex-col bg-muted/30 border-l shrink-0">
             {/* Contact Info */}
             <div className="text-center p-4 pb-2">
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
