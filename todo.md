@@ -2793,3 +2793,7 @@
 - [x] Frontend: Import button on Buyers page, template download, file upload, validation preview, batch processing
 - [x] Instructions on the import page explaining the Excel structure
 - [x] Vitest tests for import functionality (18 tests passing)
+
+## Buyers: Fix Edit Info button
+- [x] Merge View Details and Edit Info into a single working Edit button
+- [x] Ensure buyer detail page supports editing all fields (Name, Email, Phone, Company, Status, Preferences, Notes)

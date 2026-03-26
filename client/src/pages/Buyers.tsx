@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, User, Mail, Phone, Building, Tag, MoreHorizontal, Trash2, Edit, ExternalLink, FileSpreadsheet } from "lucide-react";
+import { Search, Plus, User, Mail, Phone, Building, Tag, Trash2, Edit, FileSpreadsheet } from "lucide-react";
 import ImportBuyersDialog from "@/components/ImportBuyersDialog";
 import {
   Dialog,
@@ -23,14 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -285,33 +278,28 @@ export default function Buyers() {
                       </TableCell>
                       <TableCell>{getStatusBadge(buyer.status || "Active")}</TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setLocationNav(`/buyers/${buyer.id}`)}>
-                              <ExternalLink className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" /> Edit Info
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => {
-                                if (confirm("Are you sure you want to delete this buyer?")) {
-                                  deleteBuyer.mutate({ id: buyer.id });
-                                }
-                              }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete Buyer
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-purple-700 border-purple-200 hover:bg-purple-50"
+                            onClick={() => setLocationNav(`/buyers/${buyer.id}`)}
+                          >
+                            <Edit className="h-3.5 w-3.5" /> Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => {
+                              if (confirm("Are you sure you want to delete this buyer?")) {
+                                deleteBuyer.mutate({ id: buyer.id });
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
