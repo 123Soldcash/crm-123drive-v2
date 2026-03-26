@@ -11,6 +11,12 @@
  * and listens for the "incoming" event. It does NOT block the user's workflow.
  *
  * The Device is kept alive globally so inbound calls can be received on any page.
+ *
+ * FREEZE PREVENTION:
+ * - All Twilio operations wrapped in try/catch to prevent unhandled errors
+ * - Device initialization is guarded against re-entry with a ref flag
+ * - Token refresh is debounced to prevent rapid re-initialization
+ * - WebSocket errors are caught and logged without blocking the UI
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
@@ -44,6 +50,12 @@ export function IncomingCallNotification() {
   const incomingCallRef = useRef<Call | null>(null);
   const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
+  // Guard against concurrent initialization
+  const initializingRef = useRef(false);
+  // Track if component is mounted to prevent state updates after unmount
+  const mountedRef = useRef(true);
+  // Debounce token refresh
+  const lastInitTimeRef = useRef(0);
 
   // Fetch access token for Twilio Device SDK
   const { data: tokenData, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(
@@ -52,16 +64,40 @@ export function IncomingCallNotification() {
       enabled: !!user,
       staleTime: 1000 * 60 * 25, // 25 min (tokens last 60 min)
       retry: 2,
+      // Prevent refetch storms
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     }
   );
 
   // Initialize Twilio Device for receiving incoming calls
   const initializeDevice = useCallback(async (token: string) => {
-    // Destroy any existing device
+    // Guard: prevent concurrent initialization
+    if (initializingRef.current) {
+      console.log("[IncomingCall] Already initializing, skipping...");
+      return;
+    }
+
+    // Guard: debounce — don't re-init within 5 seconds
+    const now = Date.now();
+    if (now - lastInitTimeRef.current < 5000) {
+      console.log("[IncomingCall] Debounced — last init was <5s ago");
+      return;
+    }
+
+    initializingRef.current = true;
+    lastInitTimeRef.current = now;
+
+    // Destroy any existing device safely
     if (deviceRef.current) {
-      try { deviceRef.current.destroy(); } catch {}
+      try {
+        deviceRef.current.removeAllListeners();
+        deviceRef.current.destroy();
+      } catch (e) {
+        console.warn("[IncomingCall] Error destroying old device:", e);
+      }
       deviceRef.current = null;
-      setDeviceReady(false);
+      if (mountedRef.current) setDeviceReady(false);
     }
 
     try {
@@ -74,112 +110,194 @@ export function IncomingCallNotification() {
 
       // Listen for incoming calls
       device.on("incoming", (call: Call) => {
-        console.log("[IncomingCall] Incoming call from:", call.parameters?.From);
-        incomingCallRef.current = call;
-        setCallerNumber(call.parameters?.From || "Unknown");
-        setCallState("ringing");
+        if (!mountedRef.current) return;
+        try {
+          console.log("[IncomingCall] Incoming call from:", call.parameters?.From);
+          incomingCallRef.current = call;
+          setCallerNumber(call.parameters?.From || "Unknown");
+          setCallState("ringing");
 
-        // Auto-reject after 30 seconds if not answered
-        const autoRejectTimeout = setTimeout(() => {
-          if (incomingCallRef.current && callState === "ringing") {
-            console.log("[IncomingCall] Auto-rejecting after 30s timeout");
-            incomingCallRef.current.reject();
-            setCallState("idle");
-            setCallerNumber("");
+          // Auto-reject after 30 seconds if not answered
+          const autoRejectTimeout = setTimeout(() => {
+            if (incomingCallRef.current && mountedRef.current) {
+              try {
+                console.log("[IncomingCall] Auto-rejecting after 30s timeout");
+                incomingCallRef.current.reject();
+              } catch (e) {
+                console.warn("[IncomingCall] Error auto-rejecting:", e);
+              }
+              if (mountedRef.current) {
+                setCallState("idle");
+                setCallerNumber("");
+              }
+              incomingCallRef.current = null;
+            }
+          }, 30000);
+
+          // Listen for call events
+          call.on("cancel", () => {
+            console.log("[IncomingCall] Call cancelled by caller");
+            clearTimeout(autoRejectTimeout);
+            if (mountedRef.current) {
+              setCallState("idle");
+              setCallerNumber("");
+              toast.info("Incoming call was cancelled by the caller");
+            }
             incomingCallRef.current = null;
-          }
-        }, 30000);
+          });
 
-        // Listen for call events
-        call.on("cancel", () => {
-          console.log("[IncomingCall] Call cancelled by caller");
-          clearTimeout(autoRejectTimeout);
-          setCallState("idle");
-          setCallerNumber("");
-          incomingCallRef.current = null;
-          toast.info("Incoming call was cancelled by the caller");
-        });
+          call.on("disconnect", () => {
+            console.log("[IncomingCall] Call disconnected");
+            clearTimeout(autoRejectTimeout);
+            if (mountedRef.current) {
+              setCallState("ended");
+            }
+            incomingCallRef.current = null;
+            // Clear duration timer
+            if (durationIntervalRef.current) {
+              clearInterval(durationIntervalRef.current);
+              durationIntervalRef.current = null;
+            }
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+              if (mountedRef.current) {
+                setCallState("idle");
+                setCallerNumber("");
+                setCallDuration(0);
+                setIsMuted(false);
+              }
+            }, 3000);
+          });
 
-        call.on("disconnect", () => {
-          console.log("[IncomingCall] Call disconnected");
-          clearTimeout(autoRejectTimeout);
-          setCallState("ended");
-          incomingCallRef.current = null;
-          // Clear duration timer
-          if (durationIntervalRef.current) {
-            clearInterval(durationIntervalRef.current);
-            durationIntervalRef.current = null;
-          }
-          // Auto-hide after 3 seconds
-          setTimeout(() => {
-            setCallState("idle");
-            setCallerNumber("");
-            setCallDuration(0);
-            setIsMuted(false);
-          }, 3000);
-        });
+          call.on("reject", () => {
+            console.log("[IncomingCall] Call rejected");
+            clearTimeout(autoRejectTimeout);
+            if (mountedRef.current) {
+              setCallState("idle");
+              setCallerNumber("");
+            }
+            incomingCallRef.current = null;
+          });
 
-        call.on("reject", () => {
-          console.log("[IncomingCall] Call rejected");
-          clearTimeout(autoRejectTimeout);
-          setCallState("idle");
-          setCallerNumber("");
-          incomingCallRef.current = null;
-        });
+          call.on("error", (err: any) => {
+            console.warn("[IncomingCall] Call error:", err?.code, err?.message);
+            // Don't freeze — just log and clean up
+            clearTimeout(autoRejectTimeout);
+            if (mountedRef.current) {
+              setCallState("idle");
+              setCallerNumber("");
+            }
+            incomingCallRef.current = null;
+          });
+        } catch (e) {
+          console.error("[IncomingCall] Error handling incoming call:", e);
+        }
       });
 
       device.on("registered", () => {
         console.log("[IncomingCall] Device registered — ready to receive calls");
         deviceRef.current = device;
-        setDeviceReady(true);
+        if (mountedRef.current) setDeviceReady(true);
+        initializingRef.current = false;
       });
 
       device.on("error", (error: any) => {
-        console.error("[IncomingCall] Device error:", error.code, error.message);
+        console.error("[IncomingCall] Device error:", error?.code, error?.message);
+        // Don't try to re-initialize on error — just log it
+        // The tokenWillExpire handler will refresh when needed
+        initializingRef.current = false;
       });
 
       device.on("unregistered", () => {
         console.log("[IncomingCall] Device unregistered");
-        setDeviceReady(false);
+        if (mountedRef.current) setDeviceReady(false);
+        initializingRef.current = false;
       });
 
       device.on("tokenWillExpire", () => {
         console.log("[IncomingCall] Token expiring, refreshing...");
         refetchToken().then(({ data }) => {
-          if (data?.token && deviceRef.current) {
-            deviceRef.current.updateToken(data.token);
-            console.log("[IncomingCall] Token refreshed");
+          if (data?.token && deviceRef.current && mountedRef.current) {
+            try {
+              deviceRef.current.updateToken(data.token);
+              console.log("[IncomingCall] Token refreshed successfully");
+            } catch (e) {
+              console.warn("[IncomingCall] Error updating token:", e);
+            }
           }
+        }).catch((e) => {
+          console.warn("[IncomingCall] Error refetching token:", e);
         });
       });
 
-      device.register();
+      // Register with timeout protection
+      const registerTimeout = setTimeout(() => {
+        if (initializingRef.current) {
+          console.warn("[IncomingCall] Device registration timed out after 15s");
+          initializingRef.current = false;
+          // Still keep the device — it may register later
+          deviceRef.current = device;
+          if (mountedRef.current) setDeviceReady(true);
+        }
+      }, 15000);
+
+      device.register().then(() => {
+        clearTimeout(registerTimeout);
+      }).catch((err) => {
+        clearTimeout(registerTimeout);
+        console.warn("[IncomingCall] Device register() rejected:", err);
+        initializingRef.current = false;
+        // Still keep the device reference — it may work for outbound
+        deviceRef.current = device;
+        if (mountedRef.current) setDeviceReady(true);
+      });
     } catch (err: any) {
       console.error("[IncomingCall] Failed to create Device:", err);
+      initializingRef.current = false;
     }
   }, [refetchToken]);
 
   // Initialize device when token is available
   useEffect(() => {
-    if (tokenData?.token && user && !deviceReady) {
+    if (tokenData?.token && user && !deviceReady && !initializingRef.current) {
       initializeDevice(tokenData.token);
     }
 
     return () => {
+      // Only destroy on full unmount, not on re-renders
+    };
+  }, [tokenData?.token, user, deviceReady, initializeDevice]);
+
+  // Full cleanup on unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      initializingRef.current = false;
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = null;
+      }
+      if (incomingCallRef.current) {
+        try { incomingCallRef.current.reject(); } catch {}
+        incomingCallRef.current = null;
+      }
       if (deviceRef.current) {
-        try { deviceRef.current.destroy(); } catch {}
+        try {
+          deviceRef.current.removeAllListeners();
+          deviceRef.current.destroy();
+        } catch {}
         deviceRef.current = null;
-        setDeviceReady(false);
       }
     };
-  }, [tokenData?.token, user]);
+  }, []);
 
   // Duration timer for active calls
   useEffect(() => {
     if (callState === "active" && !durationIntervalRef.current) {
       callStartTimeRef.current = Date.now();
       durationIntervalRef.current = setInterval(() => {
-        if (callStartTimeRef.current) {
+        if (callStartTimeRef.current && mountedRef.current) {
           setCallDuration(Math.floor((Date.now() - callStartTimeRef.current) / 1000));
         }
       }, 1000);
@@ -201,18 +319,29 @@ export function IncomingCallNotification() {
   // Accept the incoming call
   const handleAccept = useCallback(() => {
     if (incomingCallRef.current) {
-      console.log("[IncomingCall] Accepting call from:", callerNumber);
-      incomingCallRef.current.accept();
-      setCallState("active");
-      toast.success("Call connected");
+      try {
+        console.log("[IncomingCall] Accepting call from:", callerNumber);
+        incomingCallRef.current.accept();
+        setCallState("active");
+        toast.success("Call connected");
+      } catch (e) {
+        console.error("[IncomingCall] Error accepting call:", e);
+        toast.error("Failed to accept call");
+        setCallState("idle");
+        incomingCallRef.current = null;
+      }
     }
   }, [callerNumber]);
 
   // Reject the incoming call
   const handleReject = useCallback(() => {
     if (incomingCallRef.current) {
-      console.log("[IncomingCall] Rejecting call from:", callerNumber);
-      incomingCallRef.current.reject();
+      try {
+        console.log("[IncomingCall] Rejecting call from:", callerNumber);
+        incomingCallRef.current.reject();
+      } catch (e) {
+        console.warn("[IncomingCall] Error rejecting call:", e);
+      }
       setCallState("idle");
       setCallerNumber("");
       incomingCallRef.current = null;
@@ -223,17 +352,29 @@ export function IncomingCallNotification() {
   // Hang up an active call
   const handleHangup = useCallback(() => {
     if (incomingCallRef.current) {
-      console.log("[IncomingCall] Hanging up call");
-      incomingCallRef.current.disconnect();
+      try {
+        console.log("[IncomingCall] Hanging up call");
+        incomingCallRef.current.disconnect();
+      } catch (e) {
+        console.warn("[IncomingCall] Error hanging up:", e);
+        // Force cleanup
+        setCallState("idle");
+        setCallerNumber("");
+        incomingCallRef.current = null;
+      }
     }
   }, []);
 
   // Toggle mute
   const handleToggleMute = useCallback(() => {
     if (incomingCallRef.current) {
-      const newMuted = !isMuted;
-      incomingCallRef.current.mute(newMuted);
-      setIsMuted(newMuted);
+      try {
+        const newMuted = !isMuted;
+        incomingCallRef.current.mute(newMuted);
+        setIsMuted(newMuted);
+      } catch (e) {
+        console.warn("[IncomingCall] Error toggling mute:", e);
+      }
     }
   }, [isMuted]);
 
@@ -250,8 +391,6 @@ export function IncomingCallNotification() {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
-
-  // Use shared formatPhone utility
 
   // Don't render anything if idle
   if (callState === "idle") return null;

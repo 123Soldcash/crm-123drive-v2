@@ -2810,3 +2810,9 @@
 - [x] Frontend: Desk Management page with table, add dialog, edit inline, delete with transfer dialog
 - [x] Add sidebar nav entry and route in App.tsx
 - [x] Vitest tests for desk management procedures (27 tests passing)
+
+## Bug: CRM Random Freeze
+- [x] Investigate IncomingCallNotification component for blocking patterns
+- [x] Check Twilio WebSocket/Device for memory leaks or thread blocking
+- [x] Check for infinite re-render loops in global components
+- [x] Fix identified root cause: added re-entry guard, debounce, mountedRef, try/catch on all Twilio ops, proper cleanup
