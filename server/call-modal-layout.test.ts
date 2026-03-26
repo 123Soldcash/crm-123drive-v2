@@ -10,21 +10,32 @@ describe("CallModal Layout & Data Fixes", () => {
   // ============================================================
   // 1. Layout widths
   // ============================================================
-  describe("Panel widths", () => {
-    it("should have left panel at 420px", () => {
+  describe("Panel widths — equal 1/3 distribution", () => {
+    it("should have all 3 panels using flex-1 for equal width", () => {
       const content = fs.readFileSync(path.join(CLIENT_DIR, 'components', 'CallModal.tsx'), 'utf-8');
-      expect(content).toContain('w-[420px]');
+      // All 3 panels should use flex-1 for equal 1/3 distribution
+      const leftPanel = content.includes('LEFT PANEL') && content.includes('flex-1 flex flex-col bg-muted/20');
+      const centerPanel = content.includes('CENTER PANEL') && content.includes('flex-1 flex flex-col bg-background');
+      const rightPanel = content.includes('RIGHT PANEL') && content.includes('flex-1 flex flex-col bg-muted/30');
+      expect(leftPanel).toBe(true);
+      expect(centerPanel).toBe(true);
+      expect(rightPanel).toBe(true);
     });
 
-    it("should have center panel (Call Log) with constrained width around 340px", () => {
+    it("should NOT have fixed pixel widths on panels", () => {
       const content = fs.readFileSync(path.join(CLIENT_DIR, 'components', 'CallModal.tsx'), 'utf-8');
-      // Center panel uses inline style for width
-      expect(content).toContain('width: "340px"');
+      // No fixed widths like w-[420px], w-[340px], w-[300px] on the main panels
+      expect(content).not.toContain('w-[420px]');
+      expect(content).not.toContain('w-[340px]');
+      expect(content).not.toContain('w-[300px]');
     });
 
-    it("should have right panel at 300px", () => {
+    it("should have min-w-0 on all panels to prevent overflow", () => {
       const content = fs.readFileSync(path.join(CLIENT_DIR, 'components', 'CallModal.tsx'), 'utf-8');
-      expect(content).toContain('w-[300px]');
+      // Count occurrences of min-w-0 in the panel divs
+      const matches = content.match(/flex-1 flex flex-col.*min-w-0/g);
+      expect(matches).not.toBeNull();
+      expect(matches!.length).toBeGreaterThanOrEqual(3);
     });
   });
 

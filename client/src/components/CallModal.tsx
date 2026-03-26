@@ -617,7 +617,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
         <div className="flex h-full">
 
           {/* ═══════════ LEFT PANEL — Property Info ═══════════ */}
-          <div className="w-[420px] flex flex-col bg-muted/20 border-r shrink-0 overflow-y-auto">
+          <div className="flex-1 flex flex-col bg-muted/20 border-r overflow-y-auto min-w-0">
             {/* Property Image */}
             {prop.propertyImage ? (
               <div className="w-full h-[200px] bg-gray-200 overflow-hidden">
@@ -632,18 +632,18 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
             <div className="p-3 space-y-3">
               {/* Address */}
               <div>
-                <div className="flex items-start gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold leading-tight">{prop.addressLine1 || "No address"}</p>
-                    <p className="text-xs text-muted-foreground">{prop.city}{prop.city && prop.state ? ", " : ""}{prop.state} {prop.zipcode}</p>
+                    <p className="text-base font-semibold leading-tight">{prop.addressLine1 || "No address"}</p>
+                    <p className="text-sm text-muted-foreground">{prop.city}{prop.city && prop.state ? ", " : ""}{prop.state} {prop.zipcode}</p>
                   </div>
                 </div>
               </div>
 
               {/* Temperature + Desk Status */}
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className={`text-xs ${leadTemp.color}`}>
+                <Badge variant="outline" className={`text-sm ${leadTemp.color}`}>
                   {leadTemp.icon}
                   <span className="ml-1">{prop.leadTemperature || "TBD"}</span>
                 </Badge>
@@ -662,11 +662,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Property Details */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <Home className="h-3 w-3" /> Property
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <Home className="h-3.5 w-3.5" /> Property
                   </p>
                 </div>
-                <div className="px-2.5 py-2 space-y-1.5 text-xs">
+                <div className="px-3 py-2.5 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-medium">{prop.propertyType || "N/A"}</span>
@@ -693,11 +693,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Financial */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" /> Financial
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5" /> Financial
                   </p>
                 </div>
-                <div className="px-2.5 py-2 space-y-1.5 text-xs">
+                <div className="px-3 py-2.5 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Est. Value</span>
                     <span className="font-medium text-green-700">{formatCurrency(estimatedValue)}</span>
@@ -728,11 +728,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Identifiers */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <Hash className="h-3 w-3" /> Identifiers
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <Hash className="h-3.5 w-3.5" /> Identifiers
                   </p>
                 </div>
-                <div className="px-2.5 py-2 space-y-1.5 text-xs">
+                <div className="px-3 py-2.5 space-y-2 text-sm">
                   {prop.leadId && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Lead ID</span>
@@ -763,11 +763,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
               {/* Owner Info */}
               <div className="border rounded-md bg-background">
                 <div className="px-2.5 py-1.5 border-b bg-muted/30">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" /> Owner
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <User className="h-3.5 w-3.5" /> Owner
                   </p>
                 </div>
-                <div className="px-2.5 py-2 space-y-1.5 text-xs">
+                <div className="px-3 py-2.5 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Name</span>
                     <span className="font-medium">{prop.owner1Name || contactName}</span>
@@ -798,11 +798,11 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           </div>
 
           {/* ═══════════ CENTER PANEL — Call Log & Notes ═══════════ */}
-          <div className="flex flex-col bg-background overflow-hidden" style={{ width: "340px", minWidth: "300px", maxWidth: "400px" }}>
+          <div className="flex-1 flex flex-col bg-background overflow-hidden min-w-0">
             {/* Header */}
-            <div className="px-4 py-2.5 border-b bg-muted/20 shrink-0">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+            <div className="px-4 py-3 border-b bg-muted/20 shrink-0">
+              <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                <FileText className="h-5 w-5" />
                 Call Log & Notes
               </h3>
             </div>
@@ -840,7 +840,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                   {/* Disposition + DNC */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-semibold">Disposition *</Label>
+                      <Label className="text-sm font-semibold">Disposition *</Label>
                       <button
                         type="button"
                         onClick={() => {
@@ -875,7 +875,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* Mood */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-semibold">Mood</Label>
+                    <Label className="text-sm font-semibold">Mood</Label>
                     <div className="flex gap-1.5 flex-wrap">
                       {MOOD_OPTIONS.map((option) => (
                         <Button
@@ -907,7 +907,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* Quick Templates */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-semibold">Quick Templates</Label>
+                    <Label className="text-sm font-semibold">Quick Templates</Label>
                     <div className="flex gap-1 flex-wrap">
                       {NOTE_TEMPLATES.map((template) => (
                         <Button key={template} type="button" variant="ghost" size="sm"
@@ -930,7 +930,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
 
                   {/* Call Summary */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-semibold">Call Summary</Label>
+                    <Label className="text-sm font-semibold">Call Summary</Label>
                     <Textarea
                       value={logNotes}
                       onChange={(e) => setLogNotes(e.target.value)}
@@ -1072,12 +1072,12 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                       {notesData.map((note) => (
                         <div key={note.id} className="group relative bg-muted/50 rounded-lg p-2.5 border border-transparent hover:border-border transition-colors">
                           <div className="flex items-start gap-2">
-                            <p className="text-xs leading-relaxed whitespace-pre-wrap break-words flex-1">{note.content}</p>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words flex-1">{note.content}</p>
                             <button onClick={() => handleDeleteNote(note.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0">
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+                          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
                             <Clock className="h-2.5 w-2.5" />
                             <span>
                               {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
@@ -1101,22 +1101,22 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
           </div>
 
           {/* ═══════════ RIGHT PANEL — Call Controls + Dialpad ═══════════ */}
-          <div className="w-[300px] flex flex-col bg-muted/30 border-l shrink-0">
+          <div className="flex-1 flex flex-col bg-muted/30 border-l min-w-0">
             {/* Contact Info */}
             <div className="text-center p-4 pb-2">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                <User className="h-7 w-7 text-primary/60" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                <User className="h-8 w-8 text-primary/60" />
               </div>
-              <h2 className="text-base font-semibold truncate text-foreground">{contactName}</h2>
-              <p className="text-muted-foreground text-sm mt-0.5 font-mono">{formatPhone(phoneNumber)}</p>
+              <h2 className="text-lg font-semibold truncate text-foreground">{contactName}</h2>
+              <p className="text-muted-foreground text-base mt-0.5 font-mono">{formatPhone(phoneNumber)}</p>
               {callerPhone && (
-                <p className="text-[10px] text-muted-foreground mt-0.5">via {formatPhone(callerPhone)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">via {formatPhone(callerPhone)}</p>
               )}
             </div>
 
             {/* Call Status */}
             <div className="flex-1 flex flex-col items-center justify-center px-4">
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full mb-2 text-xs ${
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full mb-3 text-sm ${
                 callStatus === "idle" ? "bg-gray-100 text-gray-600" :
                 callStatus === "initializing" || callStatus === "connecting" ? "bg-yellow-100 text-yellow-700" :
                 callStatus === "ringing" ? "bg-blue-100 text-blue-700" :
