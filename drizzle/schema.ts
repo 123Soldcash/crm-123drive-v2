@@ -1565,3 +1565,22 @@ export const propertyOffers = mysqlTable("propertyOffers", {
 
 export type PropertyOffer = typeof propertyOffers.$inferSelect;
 export type InsertPropertyOffer = typeof propertyOffers.$inferInsert;
+
+
+/**
+ * Desks table - manages desk definitions for property organization
+ * Properties reference desks by name (deskName field in properties table)
+ */
+export const desks = mysqlTable("desks", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  color: varchar("color", { length: 20 }), // Optional color for UI display
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isSystem: int("isSystem").default(0).notNull(), // 1 = system desk (cannot be deleted)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Desk = typeof desks.$inferSelect;
+export type InsertDesk = typeof desks.$inferInsert;

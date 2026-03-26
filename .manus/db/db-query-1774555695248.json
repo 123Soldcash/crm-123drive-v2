@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, email FROM agents WHERE name LIKE '%Jackjones%' OR name LIKE '%Robert%' OR name LIKE '%jack%' OR name LIKE '%robert%' OR email LIKE '%jackjones%' OR email LIKE '%robert.33021%' OR name LIKE '%Zack%' OR name LIKE '%103%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email FROM agents WHERE name LIKE '%Jackjones%' OR name LIKE '%Robert%' OR name LIKE '%jack%' OR name LIKE '%robert%' OR email LIKE '%jackjones%' OR email LIKE '%robert.33021%' OR name LIKE '%Zack%' OR name LIKE '%103%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 199
+}

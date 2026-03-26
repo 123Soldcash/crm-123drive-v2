@@ -1,0 +1,74 @@
+{
+  "query": "SELECT 'skiptracingLogs.agentName LIKE Robert' as ref, COUNT(*) as cnt FROM skiptracingLogs WHERE agentName LIKE '%Robert%' OR agentName LIKE '%robert%'\nUNION ALL\nSELECT 'skiptracingLogs.agentName LIKE Jack/Zack', COUNT(*) FROM skiptracingLogs WHERE agentName LIKE '%Jack%' OR agentName LIKE '%Zack%' OR agentName LIKE '%103%'\nUNION ALL\nSELECT 'outreachLogs.agentName LIKE Robert', COUNT(*) FROM outreachLogs WHERE agentName LIKE '%Robert%' OR agentName LIKE '%robert%'\nUNION ALL\nSELECT 'outreachLogs.agentName LIKE Jack/Zack', COUNT(*) FROM outreachLogs WHERE agentName LIKE '%Jack%' OR agentName LIKE '%Zack%' OR agentName LIKE '%103%'\nUNION ALL\nSELECT 'automatedFollowUps.createdByName LIKE Robert', COUNT(*) FROM automatedFollowUps WHERE createdByName LIKE '%Robert%' OR createdByName LIKE '%robert%'\nUNION ALL\nSELECT 'automatedFollowUps.createdByName LIKE Jack/Zack', COUNT(*) FROM automatedFollowUps WHERE createdByName LIKE '%Jack%' OR createdByName LIKE '%Zack%' OR createdByName LIKE '%103%'\nUNION ALL\nSELECT 'smsTemplates.createdByName LIKE Robert', COUNT(*) FROM smsTemplates WHERE createdByName LIKE '%Robert%' OR createdByName LIKE '%robert%'\nUNION ALL\nSELECT 'smsTemplates.createdByName LIKE Jack/Zack', COUNT(*) FROM smsTemplates WHERE createdByName LIKE '%Jack%' OR createdByName LIKE '%Zack%' OR createdByName LIKE '%103%'\nUNION ALL\nSELECT 'leadAssignments.agentId=12030020', COUNT(*) FROM leadAssignments WHERE agentId = 12030020\nUNION ALL\nSELECT 'leadAssignments.agentId=12030025', COUNT(*) FROM leadAssignments WHERE agentId = 12030025\nUNION ALL\nSELECT 'propertyAgents.agentId=12030020', COUNT(*) FROM propertyAgents WHERE agentId = 12030020\nUNION ALL\nSELECT 'propertyAgents.agentId=12030025', COUNT(*) FROM propertyAgents WHERE agentId = 12030025\nUNION ALL\nSELECT 'stageHistory.changedBy=12030020', COUNT(*) FROM stageHistory WHERE changedBy = 12030020\nUNION ALL\nSELECT 'stageHistory.changedBy=12030025', COUNT(*) FROM stageHistory WHERE changedBy = 12030025\nUNION ALL\nSELECT 'visits.userId=12030020', COUNT(*) FROM visits WHERE userId = 12030020\nUNION ALL\nSELECT 'visits.userId=12030025', COUNT(*) FROM visits WHERE userId = 12030025;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'skiptracingLogs.agentName LIKE Robert' as ref, COUNT(*) as cnt FROM skiptracingLogs WHERE agentName LIKE '%Robert%' OR agentName LIKE '%robert%'\nUNION ALL\nSELECT 'skiptracingLogs.agentName LIKE Jack/Zack', COUNT(*) FROM skiptracingLogs WHERE agentName LIKE '%Jack%' OR agentName LIKE '%Zack%' OR agentName LIKE '%103%'\nUNION ALL\nSELECT 'outreachLogs.agentName LIKE Robert', COUNT(*) FROM outreachLogs WHERE agentName LIKE '%Robert%' OR agentName LIKE '%robert%'\nUNION ALL\nSELECT 'outreachLogs.agentName LIKE Jack/Zack', COUNT(*) FROM outreachLogs WHERE agentName LIKE '%Jack%' OR agentName LIKE '%Zack%' OR agentName LIKE '%103%'\nUNION ALL\nSELECT 'automatedFollowUps.createdByName LIKE Robert', COUNT(*) FROM automatedFollowUps WHERE createdByName LIKE '%Robert%' OR createdByName LIKE '%robert%'\nUNION ALL\nSELECT 'automatedFollowUps.createdByName LIKE Jack/Zack', COUNT(*) FROM automatedFollowUps WHERE createdByName LIKE '%Jack%' OR createdByName LIKE '%Zack%' OR createdByName LIKE '%103%'\nUNION ALL\nSELECT 'smsTemplates.createdByName LIKE Robert', COUNT(*) FROM smsTemplates WHERE createdByName LIKE '%Robert%' OR createdByName LIKE '%robert%'\nUNION ALL\nSELECT 'smsTemplates.createdByName LIKE Jack/Zack', COUNT(*) FROM smsTemplates WHERE createdByName LIKE '%Jack%' OR createdByName LIKE '%Zack%' OR createdByName LIKE '%103%'\nUNION ALL\nSELECT 'leadAssignments.agentId=12030020', COUNT(*) FROM leadAssignments WHERE agentId = 12030020\nUNION ALL\nSELECT 'leadAssignments.agentId=12030025', COUNT(*) FROM leadAssignments WHERE agentId = 12030025\nUNION ALL\nSELECT 'propertyAgents.agentId=12030020', COUNT(*) FROM propertyAgents WHERE agentId = 12030020\nUNION ALL\nSELECT 'propertyAgents.agentId=12030025', COUNT(*) FROM propertyAgents WHERE agentId = 12030025\nUNION ALL\nSELECT 'stageHistory.changedBy=12030020', COUNT(*) FROM stageHistory WHERE changedBy = 12030020\nUNION ALL\nSELECT 'stageHistory.changedBy=12030025', COUNT(*) FROM stageHistory WHERE changedBy = 12030025\nUNION ALL\nSELECT 'visits.userId=12030020', COUNT(*) FROM visits WHERE userId = 12030020\nUNION ALL\nSELECT 'visits.userId=12030025', COUNT(*) FROM visits WHERE userId = 12030025;",
+  "rows": [
+    {
+      "ref": "skiptracingLogs.agentName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "outreachLogs.agentName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "automatedFollowUps.createdByName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "skiptracingLogs.agentName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "outreachLogs.agentName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "automatedFollowUps.createdByName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "smsTemplates.createdByName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "leadAssignments.agentId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "smsTemplates.createdByName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "leadAssignments.agentId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "stageHistory.changedBy=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "propertyAgents.agentId=12030020",
+      "cnt": "1"
+    },
+    {
+      "ref": "stageHistory.changedBy=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "propertyAgents.agentId=12030025",
+      "cnt": "138"
+    },
+    {
+      "ref": "visits.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "visits.userId=12030025",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "ref\tcnt\nskiptracingLogs.agentName LIKE Robert\t0\noutreachLogs.agentName LIKE Robert\t0\nautomatedFollowUps.createdByName LIKE Robert\t0\nskiptracingLogs.agentName LIKE Jack/Zack\t0\noutreachLogs.agentName LIKE Jack/Zack\t0\nautomatedFollowUps.createdByName LIKE Jack/Zack\t0\nsmsTemplates.createdByName LIKE Robert\t0\nleadAssignments.agentId=12030020\t0\nsmsTemplates.createdByName LIKE Jack/Zack\t0\nleadAssignments.agentId=12030025\t0\nstageHistory.changedBy=12030020\t0\npropertyAgents.agentId=12030020\t1\nstageHistory.changedBy=12030025\t0\npropertyAgents.agentId=12030025\t138\nvisits.userId=12030020\t0\nvisits.userId=12030025\t0\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

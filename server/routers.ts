@@ -27,6 +27,7 @@ import { ENV } from "./_core/env";
 import { deepSearchRouter } from "./routers/deep-search";
 import { importPropertiesRouter } from "./routers/import-properties";
 import { invitesRouter } from "./routers/invites";
+import { desksRouter } from "./routers/desks";
 
 // ─── Helper: format offer data into a readable General Note ──────────
 function formatOfferNote(offer: {
@@ -112,6 +113,7 @@ export const appRouter = router({
   dealmachineRolando: dealmachineRolandoRouter,
   comparables: comparablesRouter,
   invites: invitesRouter,
+  desks: desksRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

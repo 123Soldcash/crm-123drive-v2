@@ -1,0 +1,66 @@
+{
+  "query": "SELECT 'properties.listName LIKE Robert' as ref, COUNT(*) as cnt FROM properties WHERE listName LIKE '%Robert%' OR listName LIKE '%robert%'\nUNION ALL\nSELECT 'properties.listName LIKE Jack/Zack', COUNT(*) FROM properties WHERE listName LIKE '%Jack%' OR listName LIKE '%Zack%' OR listName LIKE '%103%'\nUNION ALL\nSELECT 'properties.deskName LIKE Robert', COUNT(*) FROM properties WHERE deskName LIKE '%Robert%' OR deskName LIKE '%robert%'\nUNION ALL\nSELECT 'properties.deskName LIKE Jack/Zack', COUNT(*) FROM properties WHERE deskName LIKE '%Jack%' OR deskName LIKE '%Zack%' OR deskName LIKE '%103%'\nUNION ALL\nSELECT 'photos.userId=12030020', COUNT(*) FROM photos WHERE userId = 12030020\nUNION ALL\nSELECT 'photos.userId=12030025', COUNT(*) FROM photos WHERE userId = 12030025\nUNION ALL\nSELECT 'propertyDocuments.userId=12030020', COUNT(*) FROM propertyDocuments WHERE userId = 12030020\nUNION ALL\nSELECT 'propertyDocuments.userId=12030025', COUNT(*) FROM propertyDocuments WHERE userId = 12030025\nUNION ALL\nSELECT 'callNotes.userId=12030020', COUNT(*) FROM callNotes WHERE userId = 12030020\nUNION ALL\nSELECT 'callNotes.userId=12030025', COUNT(*) FROM callNotes WHERE userId = 12030025\nUNION ALL\nSELECT 'taskComments.userId=12030020', COUNT(*) FROM taskComments WHERE userId = 12030020\nUNION ALL\nSELECT 'taskComments.userId=12030025', COUNT(*) FROM taskComments WHERE userId = 12030025\nUNION ALL\nSELECT 'leadTransfers.fromAgentId=12030020', COUNT(*) FROM leadTransfers WHERE fromAgentId = 12030020 OR toAgentId = 12030020\nUNION ALL\nSELECT 'leadTransfers.fromAgentId=12030025', COUNT(*) FROM leadTransfers WHERE fromAgentId = 12030025 OR toAgentId = 12030025;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'properties.listName LIKE Robert' as ref, COUNT(*) as cnt FROM properties WHERE listName LIKE '%Robert%' OR listName LIKE '%robert%'\nUNION ALL\nSELECT 'properties.listName LIKE Jack/Zack', COUNT(*) FROM properties WHERE listName LIKE '%Jack%' OR listName LIKE '%Zack%' OR listName LIKE '%103%'\nUNION ALL\nSELECT 'properties.deskName LIKE Robert', COUNT(*) FROM properties WHERE deskName LIKE '%Robert%' OR deskName LIKE '%robert%'\nUNION ALL\nSELECT 'properties.deskName LIKE Jack/Zack', COUNT(*) FROM properties WHERE deskName LIKE '%Jack%' OR deskName LIKE '%Zack%' OR deskName LIKE '%103%'\nUNION ALL\nSELECT 'photos.userId=12030020', COUNT(*) FROM photos WHERE userId = 12030020\nUNION ALL\nSELECT 'photos.userId=12030025', COUNT(*) FROM photos WHERE userId = 12030025\nUNION ALL\nSELECT 'propertyDocuments.userId=12030020', COUNT(*) FROM propertyDocuments WHERE userId = 12030020\nUNION ALL\nSELECT 'propertyDocuments.userId=12030025', COUNT(*) FROM propertyDocuments WHERE userId = 12030025\nUNION ALL\nSELECT 'callNotes.userId=12030020', COUNT(*) FROM callNotes WHERE userId = 12030020\nUNION ALL\nSELECT 'callNotes.userId=12030025', COUNT(*) FROM callNotes WHERE userId = 12030025\nUNION ALL\nSELECT 'taskComments.userId=12030020', COUNT(*) FROM taskComments WHERE userId = 12030020\nUNION ALL\nSELECT 'taskComments.userId=12030025', COUNT(*) FROM taskComments WHERE userId = 12030025\nUNION ALL\nSELECT 'leadTransfers.fromAgentId=12030020', COUNT(*) FROM leadTransfers WHERE fromAgentId = 12030020 OR toAgentId = 12030020\nUNION ALL\nSELECT 'leadTransfers.fromAgentId=12030025', COUNT(*) FROM leadTransfers WHERE fromAgentId = 12030025 OR toAgentId = 12030025;",
+  "rows": [
+    {
+      "ref": "photos.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.listName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.listName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.deskName LIKE Jack/Zack",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.deskName LIKE Robert",
+      "cnt": "0"
+    },
+    {
+      "ref": "photos.userId=12030025",
+      "cnt": "4"
+    },
+    {
+      "ref": "propertyDocuments.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "propertyDocuments.userId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "callNotes.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "callNotes.userId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "taskComments.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "taskComments.userId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "leadTransfers.fromAgentId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "leadTransfers.fromAgentId=12030020",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "ref\tcnt\nphotos.userId=12030020\t0\nproperties.listName LIKE Jack/Zack\t0\nproperties.listName LIKE Robert\t0\nproperties.deskName LIKE Jack/Zack\t0\nproperties.deskName LIKE Robert\t0\nphotos.userId=12030025\t4\npropertyDocuments.userId=12030020\t0\npropertyDocuments.userId=12030025\t0\ncallNotes.userId=12030020\t0\ncallNotes.userId=12030025\t0\ntaskComments.userId=12030020\t0\ntaskComments.userId=12030025\t0\nleadTransfers.fromAgentId=12030025\t0\nleadTransfers.fromAgentId=12030020\t0\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

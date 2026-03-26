@@ -2797,3 +2797,16 @@
 ## Buyers: Fix Edit Info button
 - [x] Merge View Details and Edit Info into a single working Edit button
 - [x] Ensure buyer detail page supports editing all fields (Name, Email, Phone, Company, Status, Preferences, Notes)
+
+## Rename Agents
+- [ ] Rename Jackjones15103 to Zach in all tables (users, properties, tasks, activity, assignments, etc.)
+- [ ] Rename Robert.33021 to Edsel in all tables (users, properties, tasks, activity, assignments, etc.)
+- [ ] Verify all references updated correctly
+
+## Desk Management Page
+- [x] Create desks table in schema (id, name, description, color, sortOrder, isSystem, timestamps)
+- [x] Migrate schema with pnpm db:push + seed existing desks
+- [x] Backend: CRUD procedures (list, create, rename, delete with property transfer)
+- [x] Frontend: Desk Management page with table, add dialog, edit inline, delete with transfer dialog
+- [x] Add sidebar nav entry and route in App.tsx
+- [x] Vitest tests for desk management procedures (27 tests passing)

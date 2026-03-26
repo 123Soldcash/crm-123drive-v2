@@ -1,0 +1,58 @@
+{
+  "query": "SELECT 'properties.assignedAgentId=12030020' as ref, COUNT(*) as cnt FROM properties WHERE assignedAgentId = 12030020\nUNION ALL\nSELECT 'properties.assignedAgentId=12030025', COUNT(*) FROM properties WHERE assignedAgentId = 12030025\nUNION ALL\nSELECT 'tasks.assignedToId=12030020', COUNT(*) FROM tasks WHERE assignedToId = 12030020\nUNION ALL\nSELECT 'tasks.assignedToId=12030025', COUNT(*) FROM tasks WHERE assignedToId = 12030025\nUNION ALL\nSELECT 'tasks.createdById=12030020', COUNT(*) FROM tasks WHERE createdById = 12030020\nUNION ALL\nSELECT 'tasks.createdById=12030025', COUNT(*) FROM tasks WHERE createdById = 12030025\nUNION ALL\nSELECT 'communicationLog.userId=12030020', COUNT(*) FROM communicationLog WHERE userId = 12030020\nUNION ALL\nSELECT 'communicationLog.userId=12030025', COUNT(*) FROM communicationLog WHERE userId = 12030025\nUNION ALL\nSELECT 'notes.userId=12030020', COUNT(*) FROM notes WHERE userId = 12030020\nUNION ALL\nSELECT 'notes.userId=12030025', COUNT(*) FROM notes WHERE userId = 12030025\nUNION ALL\nSELECT 'callLogs.userId=12030020', COUNT(*) FROM callLogs WHERE userId = 12030020\nUNION ALL\nSELECT 'callLogs.userId=12030025', COUNT(*) FROM callLogs WHERE userId = 12030025;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT 'properties.assignedAgentId=12030020' as ref, COUNT(*) as cnt FROM properties WHERE assignedAgentId = 12030020\nUNION ALL\nSELECT 'properties.assignedAgentId=12030025', COUNT(*) FROM properties WHERE assignedAgentId = 12030025\nUNION ALL\nSELECT 'tasks.assignedToId=12030020', COUNT(*) FROM tasks WHERE assignedToId = 12030020\nUNION ALL\nSELECT 'tasks.assignedToId=12030025', COUNT(*) FROM tasks WHERE assignedToId = 12030025\nUNION ALL\nSELECT 'tasks.createdById=12030020', COUNT(*) FROM tasks WHERE createdById = 12030020\nUNION ALL\nSELECT 'tasks.createdById=12030025', COUNT(*) FROM tasks WHERE createdById = 12030025\nUNION ALL\nSELECT 'communicationLog.userId=12030020', COUNT(*) FROM communicationLog WHERE userId = 12030020\nUNION ALL\nSELECT 'communicationLog.userId=12030025', COUNT(*) FROM communicationLog WHERE userId = 12030025\nUNION ALL\nSELECT 'notes.userId=12030020', COUNT(*) FROM notes WHERE userId = 12030020\nUNION ALL\nSELECT 'notes.userId=12030025', COUNT(*) FROM notes WHERE userId = 12030025\nUNION ALL\nSELECT 'callLogs.userId=12030020', COUNT(*) FROM callLogs WHERE userId = 12030020\nUNION ALL\nSELECT 'callLogs.userId=12030025', COUNT(*) FROM callLogs WHERE userId = 12030025;",
+  "rows": [
+    {
+      "ref": "tasks.assignedToId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "tasks.assignedToId=12030025",
+      "cnt": "0"
+    },
+    {
+      "ref": "tasks.createdById=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.assignedAgentId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "properties.assignedAgentId=12030025",
+      "cnt": "137"
+    },
+    {
+      "ref": "tasks.createdById=12030025",
+      "cnt": "27"
+    },
+    {
+      "ref": "communicationLog.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "communicationLog.userId=12030025",
+      "cnt": "147"
+    },
+    {
+      "ref": "callLogs.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "callLogs.userId=12030025",
+      "cnt": "84"
+    },
+    {
+      "ref": "notes.userId=12030020",
+      "cnt": "0"
+    },
+    {
+      "ref": "notes.userId=12030025",
+      "cnt": "2964"
+    }
+  ],
+  "messages": [],
+  "stdout": "ref\tcnt\ntasks.assignedToId=12030020\t0\ntasks.assignedToId=12030025\t0\ntasks.createdById=12030020\t0\nproperties.assignedAgentId=12030020\t0\nproperties.assignedAgentId=12030025\t137\ntasks.createdById=12030025\t27\ncommunicationLog.userId=12030020\t0\ncommunicationLog.userId=12030025\t147\ncallLogs.userId=12030020\t0\ncallLogs.userId=12030025\t84\nnotes.userId=12030020\t0\nnotes.userId=12030025\t2964\n",
+  "stderr": "",
+  "execution_time_ms": 71
+}

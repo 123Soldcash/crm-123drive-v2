@@ -1,0 +1,46 @@
+{
+  "query": "SELECT deskName, COUNT(*) as propertyCount FROM properties GROUP BY deskName ORDER BY propertyCount DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT deskName, COUNT(*) as propertyCount FROM properties GROUP BY deskName ORDER BY propertyCount DESC;",
+  "rows": [
+    {
+      "deskName": "NULL",
+      "propertyCount": "727"
+    },
+    {
+      "deskName": "DESK_3",
+      "propertyCount": "133"
+    },
+    {
+      "deskName": "DESK_CHRIS",
+      "propertyCount": "31"
+    },
+    {
+      "deskName": "DEAD",
+      "propertyCount": "19"
+    },
+    {
+      "deskName": "BIN",
+      "propertyCount": "10"
+    },
+    {
+      "deskName": "Desk_Deep_Search",
+      "propertyCount": "10"
+    },
+    {
+      "deskName": "NEW_LEAD",
+      "propertyCount": "4"
+    },
+    {
+      "deskName": "DESK_1",
+      "propertyCount": "1"
+    },
+    {
+      "deskName": "New Lead",
+      "propertyCount": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "deskName\tpropertyCount\nNULL\t727\nDESK_3\t133\nDESK_CHRIS\t31\nDEAD\t19\nBIN\t10\nDesk_Deep_Search\t10\nNEW_LEAD\t4\nDESK_1\t1\nNew Lead\t1\n",
+  "stderr": "",
+  "execution_time_ms": 140
+}

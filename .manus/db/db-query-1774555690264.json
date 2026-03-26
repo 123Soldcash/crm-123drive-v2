@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, name, email, role FROM users WHERE name LIKE '%Jackjones%' OR name LIKE '%Robert%' OR name LIKE '%jack%' OR name LIKE '%robert%' OR email LIKE '%jackjones%' OR email LIKE '%robert.33021%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name, email, role FROM users WHERE name LIKE '%Jackjones%' OR name LIKE '%Robert%' OR name LIKE '%jack%' OR name LIKE '%robert%' OR email LIKE '%jackjones%' OR email LIKE '%robert.33021%';",
+  "rows": [
+    {
+      "id": "12030020",
+      "name": "Robert Donald",
+      "email": "robert.33021@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "12030025",
+      "name": "103_Zack Jones",
+      "email": "jackjones15103@gmail.com",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n12030020\tRobert Donald\trobert.33021@gmail.com\tadmin\n12030025\t103_Zack Jones\tjackjones15103@gmail.com\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 126
+}

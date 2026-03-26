@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO desks (name, description, sortOrder, isSystem) VALUES\n('BIN', 'Default bin for new/unassigned leads', 1, 1),\n('NEW_LEAD', 'Newly imported leads', 2, 1),\n('DEAD', 'Dead/closed leads', 3, 1),\n('DESK_CHRIS', 'Desk Chris', 10, 0),\n('DESK_3', 'Desk 3', 11, 0),\n('DESK_1', 'Desk 1', 12, 0),\n('Desk_Deep_Search', 'Deep Search desk', 13, 0);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute INSERT INTO desks (name, description, sortOrder, isSystem) VALUES\n('BIN', 'Default bin for new/unassigned leads', 1, 1),\n('NEW_LEAD', 'Newly imported leads', 2, 1),\n('DEAD', 'Dead/closed leads', 3, 1),\n('DESK_CHRIS', 'Desk Chris', 10, 0),\n('DESK_3', 'Desk 3', 11, 0),\n('DESK_1', 'Desk 1', 12, 0),\n('Desk_Deep_Search', 'Deep Search desk', 13, 0);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 124
+}
