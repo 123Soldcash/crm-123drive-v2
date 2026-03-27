@@ -33,7 +33,6 @@ const menuItems = [
   { icon: Workflow, label: "Pipeline", path: "/pipeline" },
   { icon: MapPin, label: "Map View", path: "/map" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks/kanban" },
-  { icon: MessageSquare, label: "SMS Inbox", path: "/sms" },
   { icon: FileText, label: "Message Templates", path: "/message-templates" },
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },

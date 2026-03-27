@@ -2826,3 +2826,4 @@
 - [x] Add filter: All / Calls Only / SMS Only
 - [x] Keep sorted by date (newest first)
 - [x] Vitest tests for unified communications (10 tests passing)
+- [x] Remove SMS Inbox from sidebar menu (merged into Communications Log)
