@@ -431,8 +431,12 @@ export default function CallHistory() {
                         {/* Property */}
                         <TableCell>
                           {rec.propertyAddress ? (
-                            <div className="max-w-[200px]">
-                              <div className="font-medium text-sm truncate">{rec.propertyAddress}</div>
+                            <div
+                              className="max-w-[200px] cursor-pointer hover:bg-accent/50 rounded px-1 py-0.5 -mx-1 transition-colors"
+                              onClick={() => rec.propertyLeadId && navigate(`/properties/${rec.propertyLeadId}`)}
+                              title="Click to view property"
+                            >
+                              <div className="font-medium text-sm truncate text-primary hover:underline">{rec.propertyAddress}</div>
                               {(rec.propertyCity || rec.propertyState) && (
                                 <div className="text-xs text-muted-foreground truncate">
                                   {[rec.propertyCity, rec.propertyState].filter(Boolean).join(", ")}

@@ -2827,3 +2827,4 @@
 - [x] Keep sorted by date (newest first)
 - [x] Vitest tests for unified communications (10 tests passing)
 - [x] Remove SMS Inbox from sidebar menu (merged into Communications Log)
+- [x] Make Property column in Communication Channels clickable to navigate to property detail
