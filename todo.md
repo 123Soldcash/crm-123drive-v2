@@ -2816,3 +2816,6 @@
 - [x] Check Twilio WebSocket/Device for memory leaks or thread blocking
 - [x] Check for infinite re-render loops in global components
 - [x] Fix identified root cause: added re-entry guard, debounce, mountedRef, try/catch on all Twilio ops, proper cleanup
+
+## SMS & Calls Deep Modifications
+- [x] Remove Call Result and Notes columns from Call History table (front-end only)

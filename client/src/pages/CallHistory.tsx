@@ -365,10 +365,8 @@ export default function CallHistory() {
                     <SortHeader field="date">Date & Time</SortHeader>
                     <SortHeader field="direction">Direction</SortHeader>
                     <SortHeader field="phoneNumber">Phone Number</SortHeader>
-                    <SortHeader field="callResult">Call Result</SortHeader>
                     <SortHeader field="property">Property</SortHeader>
                     <SortHeader field="agent">Agent</SortHeader>
-                    <TableHead>Notes</TableHead>
                     <TableHead className="w-[60px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -413,18 +411,6 @@ export default function CallHistory() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {call.callResult ? (
-                          <Badge
-                            variant="outline"
-                            className={`${getCallResultBadgeColor(call.callResult)} text-xs`}
-                          >
-                            {call.callResult}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
                         {call.propertyAddress ? (
                           <div className="max-w-[200px]">
                             <div className="font-medium text-sm truncate">{call.propertyAddress}</div>
@@ -440,17 +426,6 @@ export default function CallHistory() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm">{call.userName || "System"}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[250px]">
-                          {call.notes ? (
-                            <p className="text-xs text-muted-foreground truncate" title={call.notes}>
-                              {call.notes}
-                            </p>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell>
                         {call.propertyLeadId && call.propertyLeadId > 0 ? (
