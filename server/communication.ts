@@ -843,3 +843,254 @@ export async function getCallHistoryStats() {
 
   return { total, inbound, outbound, byResult };
 }
+
+
+// ─── Unified Communications Log (Calls + SMS) ─────────────────────────────
+
+export type UnifiedCommRecord = {
+  id: number;
+  type: "call" | "sms";
+  direction: "Inbound" | "Outbound";
+  phoneNumber: string | null;
+  twilioNumber: string | null;
+  propertyAddress: string | null;
+  propertyCity: string | null;
+  propertyState: string | null;
+  propertyLeadId: number | null;
+  propertyId: number | null;
+  agentName: string | null;
+  date: Date;
+  // SMS-specific
+  messageBody: string | null;
+  messageStatus: string | null;
+  // Call-specific
+  callResult: string | null;
+  disposition: string | null;
+};
+
+/**
+ * Returns a unified list of calls and SMS, sorted by date descending.
+ */
+export async function getUnifiedCommunications(filters: {
+  commType?: "call" | "sms" | "all";
+  direction?: "Inbound" | "Outbound" | "all";
+  search?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  userId?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<UnifiedCommRecord[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { users, smsMessages } = await import("../drizzle/schema.js");
+  const { gte, lte } = await import("drizzle-orm");
+
+  const limit = filters.limit || 200;
+  const offset = filters.offset || 0;
+
+  let callRecords: UnifiedCommRecord[] = [];
+  let smsRecords: UnifiedCommRecord[] = [];
+
+  // ── Fetch CALL records ──
+  if (filters.commType === "all" || filters.commType === "call" || !filters.commType) {
+    const callConditions: any[] = [
+      eq(communicationLog.communicationType, "Phone"),
+    ];
+
+    if (filters.direction && filters.direction !== "all") {
+      callConditions.push(eq(communicationLog.direction, filters.direction));
+    }
+
+    if (filters.userId) {
+      callConditions.push(eq(communicationLog.userId, filters.userId));
+    }
+
+    if (filters.dateFrom) {
+      callConditions.push(gte(communicationLog.communicationDate, filters.dateFrom));
+    }
+
+    if (filters.dateTo) {
+      callConditions.push(lte(communicationLog.communicationDate, filters.dateTo));
+    }
+
+    const callWhere = callConditions.length > 1 ? and(...callConditions) : callConditions[0];
+
+    const rawCalls = await db
+      .select({
+        id: communicationLog.id,
+        direction: communicationLog.direction,
+        phoneNumber: communicationLog.contactPhoneNumber,
+        twilioNumber: communicationLog.twilioNumber,
+        propertyAddress: properties.addressLine1,
+        propertyCity: properties.city,
+        propertyState: properties.state,
+        propertyLeadId: properties.leadId,
+        propertyId: communicationLog.propertyId,
+        agentName: users.name,
+        date: communicationLog.communicationDate,
+        callResult: communicationLog.callResult,
+        disposition: communicationLog.disposition,
+      })
+      .from(communicationLog)
+      .leftJoin(users, eq(communicationLog.userId, users.id))
+      .leftJoin(properties, eq(communicationLog.propertyId, properties.id))
+      .where(callWhere)
+      .orderBy(desc(communicationLog.communicationDate));
+
+    callRecords = rawCalls.map((c) => ({
+      id: c.id,
+      type: "call" as const,
+      direction: (c.direction || "Outbound") as "Inbound" | "Outbound",
+      phoneNumber: c.phoneNumber,
+      twilioNumber: c.twilioNumber,
+      propertyAddress: c.propertyAddress,
+      propertyCity: c.propertyCity,
+      propertyState: c.propertyState,
+      propertyLeadId: c.propertyLeadId,
+      propertyId: c.propertyId,
+      agentName: c.agentName,
+      date: c.date,
+      messageBody: null,
+      messageStatus: null,
+      callResult: c.callResult,
+      disposition: c.disposition,
+    }));
+  }
+
+  // ── Fetch SMS records ──
+  if (filters.commType === "all" || filters.commType === "sms" || !filters.commType) {
+    const smsConditions: any[] = [];
+
+    if (filters.direction && filters.direction !== "all") {
+      // smsMessages uses lowercase direction, normalize
+      const smsDir = filters.direction.toLowerCase() as "inbound" | "outbound";
+      smsConditions.push(eq(smsMessages.direction, smsDir));
+    }
+
+    if (filters.userId) {
+      smsConditions.push(eq(smsMessages.sentByUserId, filters.userId));
+    }
+
+    if (filters.dateFrom) {
+      smsConditions.push(gte(smsMessages.createdAt, filters.dateFrom));
+    }
+
+    if (filters.dateTo) {
+      smsConditions.push(lte(smsMessages.createdAt, filters.dateTo));
+    }
+
+    const smsWhere = smsConditions.length > 0
+      ? (smsConditions.length > 1 ? and(...smsConditions) : smsConditions[0])
+      : undefined;
+
+    const rawSms = await db
+      .select({
+        id: smsMessages.id,
+        direction: smsMessages.direction,
+        phoneNumber: smsMessages.contactPhone,
+        twilioNumber: smsMessages.twilioPhone,
+        propertyAddress: properties.addressLine1,
+        propertyCity: properties.city,
+        propertyState: properties.state,
+        propertyLeadId: properties.leadId,
+        propertyId: smsMessages.propertyId,
+        agentName: smsMessages.sentByName,
+        date: smsMessages.createdAt,
+        body: smsMessages.body,
+        status: smsMessages.status,
+      })
+      .from(smsMessages)
+      .leftJoin(properties, eq(smsMessages.propertyId, properties.id))
+      .where(smsWhere)
+      .orderBy(desc(smsMessages.createdAt));
+
+    smsRecords = rawSms.map((s) => ({
+      id: s.id,
+      type: "sms" as const,
+      direction: (s.direction === "inbound" ? "Inbound" : "Outbound") as "Inbound" | "Outbound",
+      phoneNumber: s.phoneNumber,
+      twilioNumber: s.twilioNumber,
+      propertyAddress: s.propertyAddress,
+      propertyCity: s.propertyCity,
+      propertyState: s.propertyState,
+      propertyLeadId: s.propertyLeadId,
+      propertyId: s.propertyId,
+      agentName: s.agentName,
+      date: s.date,
+      messageBody: s.body,
+      messageStatus: s.status,
+      callResult: null,
+      disposition: null,
+    }));
+  }
+
+  // ── Merge and sort by date DESC ──
+  let merged = [...callRecords, ...smsRecords].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // ── Apply search filter (in-memory) ──
+  if (filters.search) {
+    const searchLower = filters.search.toLowerCase();
+    merged = merged.filter(
+      (r) =>
+        (r.phoneNumber && r.phoneNumber.toLowerCase().includes(searchLower)) ||
+        (r.propertyAddress && r.propertyAddress.toLowerCase().includes(searchLower)) ||
+        (r.agentName && r.agentName.toLowerCase().includes(searchLower)) ||
+        (r.messageBody && r.messageBody.toLowerCase().includes(searchLower)) ||
+        (r.callResult && r.callResult.toLowerCase().includes(searchLower))
+    );
+  }
+
+  // ── Paginate ──
+  return merged.slice(offset, offset + limit);
+}
+
+/**
+ * Get unified communication stats (calls + SMS).
+ */
+export async function getUnifiedCommStats() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { smsMessages } = await import("../drizzle/schema.js");
+
+  // Call stats
+  const allCalls = await db
+    .select({
+      direction: communicationLog.direction,
+      callResult: communicationLog.callResult,
+    })
+    .from(communicationLog)
+    .where(eq(communicationLog.communicationType, "Phone"));
+
+  const totalCalls = allCalls.length;
+  const inboundCalls = allCalls.filter((c) => c.direction === "Inbound").length;
+  const outboundCalls = allCalls.filter((c) => c.direction === "Outbound").length;
+
+  // SMS stats
+  const allSms = await db
+    .select({
+      direction: smsMessages.direction,
+      status: smsMessages.status,
+    })
+    .from(smsMessages);
+
+  const totalSms = allSms.length;
+  const inboundSms = allSms.filter((s) => s.direction === "inbound").length;
+  const outboundSms = allSms.filter((s) => s.direction === "outbound").length;
+
+  return {
+    totalCalls,
+    inboundCalls,
+    outboundCalls,
+    totalSms,
+    inboundSms,
+    outboundSms,
+    totalAll: totalCalls + totalSms,
+    inboundAll: inboundCalls + inboundSms,
+    outboundAll: outboundCalls + outboundSms,
+  };
+}

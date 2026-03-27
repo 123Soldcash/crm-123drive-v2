@@ -4520,6 +4520,28 @@ export const appRouter = router({
     stats: protectedProcedure.query(async () => {
       return await communication.getCallHistoryStats();
     }),
+
+    // Unified Communications Log (Calls + SMS merged)
+    unified: protectedProcedure
+      .input(
+        z.object({
+          commType: z.enum(["call", "sms", "all"]).optional().default("all"),
+          direction: z.enum(["Inbound", "Outbound", "all"]).optional().default("all"),
+          search: z.string().optional(),
+          dateFrom: z.date().optional(),
+          dateTo: z.date().optional(),
+          userId: z.number().optional(),
+          limit: z.number().optional().default(200),
+          offset: z.number().optional().default(0),
+        })
+      )
+      .query(async ({ input }) => {
+        return await communication.getUnifiedCommunications(input);
+      }),
+
+    unifiedStats: protectedProcedure.query(async () => {
+      return await communication.getUnifiedCommStats();
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;;

@@ -2819,3 +2819,10 @@
 
 ## SMS & Calls Deep Modifications
 - [x] Remove Call Result and Notes columns from Call History table (front-end only)
+- [x] Merge SMS Inbox + Call History into unified Communications Log
+- [x] Backend: unified query that returns both calls and SMS sorted by date
+- [x] SMS records must include: Direction, Phone Number, Property, Agent
+- [x] Frontend: rebuild Call History page to show both types with visual distinction
+- [x] Add filter: All / Calls Only / SMS Only
+- [x] Keep sorted by date (newest first)
+- [x] Vitest tests for unified communications (10 tests passing)
