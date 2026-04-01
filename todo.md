@@ -2901,3 +2901,9 @@
 - [x] Merge Contact Details + Phones & Emails into fixed fields on screen (always visible)
 - [x] Call History becomes a scrollable list at the bottom (fixed height, overflow-y-auto)
 - [x] All sections visible and editable simultaneously — no tab switching needed
+
+## Webhook Step 2 — Save ALL Fields to General Notes
+- [x] Read and audit the webhook Step 2 handler
+- [x] Map every incoming webhook field vs what is currently saved
+- [x] Fix handler to save ALL fields (no exceptions) to General Notes
+- [x] Test with a real/simulated webhook payload — 72/72 tests pass

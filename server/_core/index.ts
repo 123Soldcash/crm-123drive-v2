@@ -375,32 +375,63 @@ async function startServer() {
 
       const noteLines: string[] = [];
       noteLines.push("=== Website Form - Step 2 (Qualifying Questions) ===");
-      noteLines.push(`Date: ${new Date().toLocaleDateString("en-US")}`);
+      noteLines.push(`Date: ${new Date().toLocaleDateString("en-US")} ${new Date().toLocaleTimeString("en-US")}`);
       noteLines.push(`Name: ${ownerName}`);
-      if (address) noteLines.push(`Address: ${address}, ${city}, ${state} ${zipcode}`);
+      if (phone) noteLines.push(`Phone: ${phone}`);
+      if (email) noteLines.push(`Email: ${email}`);
+      if (address || city || state || zipcode) {
+        noteLines.push(`Address: ${[address, city, state, zipcode].filter(Boolean).join(", ")}`);
+      }
       noteLines.push("");
+
+      // Track which keys were already captured by known qualifying fields
+      const capturedKeys = new Set<string>();
 
       for (const field of qualifyingFields) {
         let value = data[field.key];
+        let usedKey = field.key;
         if (!value) {
           for (const alias of field.aliases) {
-            if (data[alias]) { value = data[alias]; break; }
+            if (data[alias]) { value = data[alias]; usedKey = alias; break; }
           }
         }
         if (value) {
           noteLines.push(`${field.label}: ${value}`);
+          // Mark all aliases as captured so they don't appear in the raw dump
+          capturedKeys.add(field.key);
+          field.aliases.forEach(a => capturedKeys.add(a));
+          capturedKeys.add(usedKey);
         }
       }
 
-      // Only insert note if we have qualifying data
-      if (noteLines.length > 4) {
-        await database.insert(notes).values({
-          propertyId,
-          userId: 1, // System user
-          content: noteLines.join("\n"),
-          noteType: "general",
-        });
+      // ── Raw Data Dump: save every remaining webhook field that wasn't already captured ──
+      // This ensures ZERO data loss regardless of field naming
+      const knownBaseKeys = new Set([
+        "Phone", "phone", "Email", "email",
+        "FirstName", "firstName", "first_name", "First name",
+        "LastName", "lastName", "last_name", "Last name",
+        "Address", "address", "City", "city", "State", "state",
+        "Zipcode", "zipcode", "Zip", "zip", "ZIP Code", "zip_code",
+      ]);
+      const extraFields: string[] = [];
+      for (const [key, val] of Object.entries(data)) {
+        if (!knownBaseKeys.has(key) && !capturedKeys.has(key) && val !== undefined && val !== null && String(val).trim() !== "") {
+          extraFields.push(`  ${key}: ${val}`);
+        }
       }
+      if (extraFields.length > 0) {
+        noteLines.push("");
+        noteLines.push("--- Additional Fields (Raw) ---");
+        noteLines.push(...extraFields);
+      }
+
+      // Always insert note — every Step 2 call is logged, no data lost
+      await database.insert(notes).values({
+        propertyId,
+        userId: 1, // System user
+        content: noteLines.join("\n"),
+        noteType: "general",
+      });
 
       // ─── Extract qualifying field values (shared by both deep search tables) ─────
       const getFieldValue = (key: string, aliases: string[]): string => {
