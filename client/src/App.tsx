@@ -29,6 +29,7 @@ import TwilioNumbers from "./pages/TwilioNumbers";
 import CallHistory from "./pages/CallHistory";
 import DeskManagement from "./pages/DeskManagement";
 import { IncomingCallNotification } from "./components/IncomingCallNotification";
+import { FloatingDialer } from "./components/FloatingDialer";
 
 // Named wrapper components to prevent React from unmounting/remounting
 // on every render (inline arrow functions create new references each time)
@@ -140,6 +141,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <IncomingCallNotification />
+          <FloatingDialer />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

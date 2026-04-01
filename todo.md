@@ -2841,3 +2841,17 @@
 
 ## Melhoria: Coluna Notes dos Contatos
 - [x] Exibir disposition + note juntos na coluna de notes da lista de contatos (resumo da ligação)
+
+## Floating Global Dialer
+- [ ] Build FloatingDialer component (bottom-right button, opens dialpad overlay)
+- [ ] Dialpad with number input (type or paste any number)
+- [ ] Twilio number selector (choose which number to call from)
+- [ ] Active call state (timer, mute, hang up) without blocking navigation
+- [ ] Register globally in App.tsx so it persists across all pages
+
+## Floating Global Dialer
+- [x] Create FloatingDialer component with dialpad, number input, caller ID selector
+- [x] Active call state: timer, mute, hang up
+- [x] Minimize/expand while in call
+- [x] Register globally in App.tsx — persists across all pages
+- [x] No navigation blocking — can browse CRM during a call
