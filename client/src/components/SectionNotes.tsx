@@ -237,10 +237,12 @@ export function SectionNotes({
   propertyId,
   section,
   accentColor = "blue",
+  label,
 }: {
   propertyId: number;
   section: string;
   accentColor?: string;
+  label?: string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [newText, setNewText] = useState("");
@@ -348,7 +350,7 @@ export function SectionNotes({
         <div className="flex items-center gap-2">
           <MessageSquarePlus className={`w-3.5 h-3.5 ${accentTextMap[accentColor] || accentTextMap.blue}`} />
           <span className={`text-xs font-semibold ${accentTextMap[accentColor] || accentTextMap.blue}`}>
-            Section Notes
+            {label || "Section Notes"}
             {notes.length > 0 && (
               <span className="ml-1.5 bg-white rounded-full px-1.5 py-0.5 text-xs font-bold border">
                 {notes.length}

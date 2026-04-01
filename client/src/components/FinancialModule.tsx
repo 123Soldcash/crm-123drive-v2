@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2 } from "lucide-react";
+import { SectionNotes } from "@/components/SectionNotes";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -353,6 +354,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           className="text-xs h-16"
         />
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_delinquent_taxes" accentColor="blue" label="Delinquent Taxes Notes" />
 
       {/* ── Card 2: Repairs ─────────────────────────────────────────────── */}
       <FinancialCard title="Repairs" icon={<Wrench className="w-4 h-4" />} accentColor="orange">
@@ -393,6 +395,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           </>
         )}
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_repairs" accentColor="orange" label="Repairs Notes" />
 
       {/* ── Card 3: Debt & Liens ────────────────────────────────────────── */}
       <FinancialCard title="Debt & Liens" icon={<Landmark className="w-4 h-4" />} accentColor="purple">
@@ -462,8 +465,9 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           )}
         </div>
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_debt_liens" accentColor="purple" label="Debt & Liens Notes" />
 
-      {/* ── Card 4: Foreclosure / Pre-Foreclosure ──────────────────────── */}
+      {/* ── Card 4: Foreclosure / Pre-Foreclosuresure ──────────────────────── */}
       <FinancialCard title="Foreclosure / Pre-Foreclosure" icon={<Gavel className="w-4 h-4" />} accentColor="red">
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -488,6 +492,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           className="text-xs h-16"
         />
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_foreclosure" accentColor="red" label="Foreclosure Notes" />
 
       {/* ── Card 5: Code / Tax Lien ─────────────────────────────────────── */}
       <FinancialCard title="Code / Tax Lien" icon={<FileWarning className="w-4 h-4" />} accentColor="yellow">
@@ -514,6 +519,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           className="text-xs h-16"
         />
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_code_tax_lien" accentColor="yellow" label="Code / Tax Lien Notes" />
 
       {/* ── Card 6: Deed / Title History ────────────────────────────────── */}
       <FinancialCard title="Deed / Title History" icon={<ScrollText className="w-4 h-4" />} accentColor="slate">
@@ -594,6 +600,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
           Add Deed Entry
         </Button>
       </FinancialCard>
+      <SectionNotes propertyId={propertyId} section="financial_deed_history" accentColor="slate" label="Deed / Title History Notes" />
 
 
     </div>

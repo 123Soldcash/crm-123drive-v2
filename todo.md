@@ -2867,3 +2867,9 @@
 ## Section Notes: Always Open by Default
 - [x] Change SectionNotes default state to expanded=true (always open)
 - [x] Toggle button now shows "Minimize" when open and "Show" when collapsed
+
+## Financial Module: Per-Section Notes
+- [x] Identify all 6 sections in the Financial Module tab
+- [x] Add SectionNotes component to each Financial section (always open, Minimize/Show toggle)
+- [x] Support text, documents, and screenshots per section (same as Deep Search Overview)
+- [x] Added label prop to SectionNotes for custom section titles
