@@ -2838,3 +2838,6 @@
 - [x] Investigar como notes são salvos durante ligação (CallModal salva em callNotes table, não communicationLog)
 - [x] Investigar como a coluna de notes é consultada na lista de contatos (só lia communicationLog)
 - [x] Corrigir: adicionado getLatestByProperty no backend + getLastNotes agora mescla ambas as fontes e exibe a mais recente
+
+## Melhoria: Coluna Notes dos Contatos
+- [x] Exibir disposition + note juntos na coluna de notes da lista de contatos (resumo da ligação)

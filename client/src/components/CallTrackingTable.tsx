@@ -628,25 +628,26 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     return matchPhoneCalls(contactId, phoneNumber).length;
   };
 
-  // Get last communication notes for a phone number with date and agent
+  // Get last communication notes for a phone number with date, disposition, and note text
   // Also checks callNotes table (notes added during calls via CallModal) and returns whichever is more recent
   const getLastNotes = (contactId: number, phoneNumber: string) => {
     const phoneCalls = matchPhoneCalls(contactId, phoneNumber);
     
-    // Get latest from communicationLog
+    // Get latest from communicationLog — includes disposition + notes
     let commDate: Date | null = null;
     let commText: string | null = null;
+    let commDisposition: string | null = null;
     let commAgent: string = 'Agent';
     if (phoneCalls.length > 0) {
       const lastCall = phoneCalls[0];
       const rawNotes = lastCall.notes || "";
+      // Extract notes after " - " if it exists (format: "Called +1234 (Mobile) - actual notes")
       const dashIndex = rawNotes.indexOf(" - ");
       const noteText = dashIndex !== -1 ? rawNotes.substring(dashIndex + 3).trim() : rawNotes;
-      if (noteText) {
-        commDate = new Date(lastCall.createdAt);
-        commText = noteText;
-        commAgent = lastCall.userName || 'Agent';
-      }
+      commDate = new Date(lastCall.createdAt);
+      commText = noteText || null;
+      commDisposition = lastCall.disposition || null;
+      commAgent = lastCall.userName || 'Agent';
     }
 
     // Get latest from callNotes table (notes typed during CallModal)
@@ -661,22 +662,31 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     // Pick whichever is more recent
     let finalDate: Date | null = null;
     let finalText: string | null = null;
+    let finalDisposition: string | null = null;
     let finalAgent: string = 'Agent';
 
     if (callNoteDate && callNoteText && (!commDate || callNoteDate >= commDate)) {
       finalDate = callNoteDate;
       finalText = callNoteText;
-      finalAgent = 'Agent';
-    } else if (commDate && commText) {
+      finalDisposition = commDisposition; // disposition still comes from communicationLog
+      finalAgent = commAgent || 'Agent';
+    } else if (commDate) {
       finalDate = commDate;
       finalText = commText;
+      finalDisposition = commDisposition;
       finalAgent = commAgent;
     }
 
-    if (!finalDate || !finalText) return null;
+    if (!finalDate) return null;
 
     const formattedDate = finalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${formattedDate} - ${finalAgent}: ${finalText}`;
+    
+    // Build summary: "Dec 24 - Agent: [Disposition] Note text"
+    const parts: string[] = [`${formattedDate} - ${finalAgent}:`];
+    if (finalDisposition) parts.push(`[${finalDisposition}]`);
+    if (finalText) parts.push(finalText);
+    
+    return parts.length > 1 ? parts.join(' ') : null;
   };
 
   // Get last communication log for a phone number
