@@ -182,3 +182,41 @@ export async function getCallLogsByContact(contactId: number) {
     .orderBy(desc(callLogs.startedAt));
   return results;
 }
+
+/**
+ * Get the latest call note per contact for a given property.
+ * Used by the contacts list to show the most recent note in the Notes column.
+ * Returns a map of contactId -> { content, createdAt, userName }
+ */
+export async function getLatestCallNotesByProperty(propertyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get all call notes for this property, ordered newest first
+  const results = await db
+    .select({
+      id: callNotes.id,
+      contactId: callNotes.contactId,
+      content: callNotes.content,
+      createdAt: callNotes.createdAt,
+      userId: callNotes.userId,
+    })
+    .from(callNotes)
+    .where(eq(callNotes.propertyId, propertyId))
+    .orderBy(desc(callNotes.createdAt));
+
+  // Build a map: contactId -> latest note (first occurrence since ordered desc)
+  const latestByContact: Record<number, { id: number; content: string; createdAt: Date; userId: number }> = {};
+  for (const row of results) {
+    if (!latestByContact[row.contactId]) {
+      latestByContact[row.contactId] = {
+        id: row.id,
+        content: row.content,
+        createdAt: row.createdAt,
+        userId: row.userId,
+      };
+    }
+  }
+
+  return latestByContact;
+}

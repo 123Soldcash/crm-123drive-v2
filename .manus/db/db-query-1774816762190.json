@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name FROM desks WHERE LOWER(name) LIKE '%deep%search%'; SELECT id, name, email FROM agents WHERE LOWER(name) LIKE '%chris%russo%'; SELECT id, name, email FROM users WHERE LOWER(name) LIKE '%chris%russo%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT id, name FROM desks WHERE LOWER(name) LIKE '%deep%search%'; SELECT id, name, email FROM agents WHERE LOWER(name) LIKE '%chris%russo%'; SELECT id, name, email FROM users WHERE LOWER(name) LIKE '%chris%russo%';",
+  "rows": [
+    {
+      "id": "7",
+      "name": "Desk_Deep_Search"
+    }
+  ],
+  "messages": [
+    "id\tname\temail",
+    "19080008\tChristopher Russo\tchrisrusso3000@gmail.com"
+  ],
+  "stdout": "id\tname\n7\tDesk_Deep_Search\nid\tname\temail\n19080008\tChristopher Russo\tchrisrusso3000@gmail.com\n",
+  "stderr": "",
+  "execution_time_ms": 120
+}

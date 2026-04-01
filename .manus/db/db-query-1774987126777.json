@@ -1,0 +1,50 @@
+{
+  "query": "SELECT CASE WHEN phoneNumber LIKE '+1%' THEN SUBSTRING(phoneNumber, 3, 3) WHEN phoneNumber LIKE '1%' AND LENGTH(phoneNumber) = 11 THEN SUBSTRING(phoneNumber, 2, 3) WHEN LENGTH(phoneNumber) = 10 THEN SUBSTRING(phoneNumber, 1, 3) ELSE SUBSTRING(phoneNumber, 1, 3) END AS area_code, COUNT(*) AS total_phones FROM contactPhones GROUP BY area_code ORDER BY total_phones DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT CASE WHEN phoneNumber LIKE '+1%' THEN SUBSTRING(phoneNumber, 3, 3) WHEN phoneNumber LIKE '1%' AND LENGTH(phoneNumber) = 11 THEN SUBSTRING(phoneNumber, 2, 3) WHEN LENGTH(phoneNumber) = 10 THEN SUBSTRING(phoneNumber, 1, 3) ELSE SUBSTRING(phoneNumber, 1, 3) END AS area_code, COUNT(*) AS total_phones FROM contactPhones GROUP BY area_code ORDER BY total_phones DESC LIMIT 10;",
+  "rows": [
+    {
+      "area_code": "954",
+      "total_phones": "257"
+    },
+    {
+      "area_code": "(95",
+      "total_phones": "186"
+    },
+    {
+      "area_code": "407",
+      "total_phones": "108"
+    },
+    {
+      "area_code": "(30",
+      "total_phones": "79"
+    },
+    {
+      "area_code": "(78",
+      "total_phones": "70"
+    },
+    {
+      "area_code": "(56",
+      "total_phones": "64"
+    },
+    {
+      "area_code": "754",
+      "total_phones": "50"
+    },
+    {
+      "area_code": "305",
+      "total_phones": "42"
+    },
+    {
+      "area_code": "786",
+      "total_phones": "35"
+    },
+    {
+      "area_code": "(81",
+      "total_phones": "31"
+    }
+  ],
+  "messages": [],
+  "stdout": "area_code\ttotal_phones\n954\t257\n(95\t186\n407\t108\n(30\t79\n(78\t70\n(56\t64\n754\t50\n305\t42\n786\t35\n(81\t31\n",
+  "stderr": "",
+  "execution_time_ms": 88
+}

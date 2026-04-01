@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_phones FROM contactPhones;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT COUNT(*) as total_phones FROM contactPhones;",
+  "rows": [
+    {
+      "total_phones": "1451"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_phones\n1451\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

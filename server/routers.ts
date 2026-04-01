@@ -3680,6 +3680,14 @@ export const appRouter = router({
         const { getCallLogsByContact } = await import("./db-callNotes");
         return getCallLogsByContact(input.contactId);
       }),
+
+    /** Get the latest call note per contact for a property (for contacts list display) */
+    getLatestByProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        const { getLatestCallNotesByProperty } = await import("./db-callNotes");
+        return getLatestCallNotesByProperty(input.propertyId);
+      }),
   }),
 
   // Agents Management

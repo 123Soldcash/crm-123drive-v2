@@ -2828,3 +2828,13 @@
 - [x] Vitest tests for unified communications (10 tests passing)
 - [x] Remove SMS Inbox from sidebar menu (merged into Communications Log)
 - [x] Make Property column in Communication Channels clickable to navigate to property detail
+
+## Import 38 Preprobate/Foreclosure Leads
+- [x] Verify Deep Search desk and Chris Russo agent exist
+- [x] Check for duplicate addresses against existing properties (0 duplicates)
+- [x] Import 38 properties with 79 contacts, 106 phones, 135 emails, 114 tags
+
+## Bug: Notes adicionados durante ligação não aparecem na coluna de notes da lista de contatos
+- [x] Investigar como notes são salvos durante ligação (CallModal salva em callNotes table, não communicationLog)
+- [x] Investigar como a coluna de notes é consultada na lista de contatos (só lia communicationLog)
+- [x] Corrigir: adicionado getLatestByProperty no backend + getLastNotes agora mescla ambas as fontes e exibe a mais recente

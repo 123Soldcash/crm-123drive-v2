@@ -1,0 +1,880 @@
+{
+  "query": "SELECT SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '+1', ''), '(', ''), ')', ''), '-', ''), 1, 3) AS area_code, p.city, p.state, COUNT(*) AS cnt FROM contactPhones cp JOIN contacts c ON cp.contactId = c.id JOIN properties p ON c.propertyId = p.id WHERE SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '+1', ''), '(', ''), ')', ''), '-', ''), 1, 3) IN ('954', '407', '305', '786', '561') GROUP BY area_code, p.city, p.state ORDER BY area_code, cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HoMEWBM6m36fKT.7b334260735d --database RDbAfwHQBDqo37pina3pDu --execute SELECT SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '+1', ''), '(', ''), ')', ''), '-', ''), 1, 3) AS area_code, p.city, p.state, COUNT(*) AS cnt FROM contactPhones cp JOIN contacts c ON cp.contactId = c.id JOIN properties p ON c.propertyId = p.id WHERE SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(cp.phoneNumber, '+1', ''), '(', ''), ')', ''), '-', ''), 1, 3) IN ('954', '407', '305', '786', '561') GROUP BY area_code, p.city, p.state ORDER BY area_code, cnt DESC;",
+  "rows": [
+    {
+      "area_code": "305",
+      "city": "Miami",
+      "state": "FL",
+      "cnt": "51"
+    },
+    {
+      "area_code": "305",
+      "city": "Pembroke Pines",
+      "state": "FL",
+      "cnt": "10"
+    },
+    {
+      "area_code": "305",
+      "city": "Hialeah",
+      "state": "FL",
+      "cnt": "7"
+    },
+    {
+      "area_code": "305",
+      "city": "Sunrise",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "305",
+      "city": "West Park",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "305",
+      "city": "Hollywood",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "305",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "305",
+      "city": "Miami Gardens",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "305",
+      "city": "Opa-locka",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "305",
+      "city": "Pompano Beach",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "305",
+      "city": "Orlando",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "305",
+      "city": "Opa Locka",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "305",
+      "city": "Unincorporated County",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "305",
+      "city": "Homestead",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Cutler Bay",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "North Miami",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Miramar",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "TBD",
+      "state": "",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Davie",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Miami Lakes",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "South Miami",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Tamarac",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Hallandale Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "palm bay",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "Lake Placid",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "West Palm Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "305",
+      "city": "North Miami Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Orlando",
+      "state": "FL",
+      "cnt": "110"
+    },
+    {
+      "area_code": "407",
+      "city": "Eustis",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Riviera Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Fl 33437",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Orange City",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Fort Pierce",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Saint Cloud",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": " Sanford",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "FORT LAUDERDALE",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Kissimmee",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "407",
+      "city": "Winter Park",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "West Palm Beach",
+      "state": "FL",
+      "cnt": "14"
+    },
+    {
+      "area_code": "561",
+      "city": "Deerfield Beach",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "561",
+      "city": "Boynton Beach",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "561",
+      "city": "Delray Beach",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "561",
+      "city": "Riviera Beach",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "561",
+      "city": "Belle Glade",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "561",
+      "city": "Boca Raton",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "561",
+      "city": "Tamarac",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "561",
+      "city": "Margate",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "561",
+      "city": "Pompano Beach",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "561",
+      "city": "Fl 33407",
+      "state": "Fl",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Lauderhill",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Miami",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Jupiter",
+      "state": "Fl",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Wellington",
+      "state": "Fl",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Coconut Creek",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "South Bay",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Lake Worth",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Greenacres",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "561",
+      "city": "Palm Beach Shores",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Miami beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Fl 33406",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Hallandale Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Miami Springs",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Palm Beach Gardens",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Mangonia Park",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Orlando",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Lake Worth Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Port Charlotte",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Unincorporated County",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Delraybeach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": ", Riviera Beach,",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "Homestead",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "561",
+      "city": "North Miami Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Miami",
+      "state": "FL",
+      "cnt": "36"
+    },
+    {
+      "area_code": "786",
+      "city": "Miami Gardens",
+      "state": "FL",
+      "cnt": "7"
+    },
+    {
+      "area_code": "786",
+      "city": "Hialeah",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "786",
+      "city": "Miramar",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "786",
+      "city": "Pembroke Pines",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "786",
+      "city": "West Park",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "786",
+      "city": "Hollywood",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "786",
+      "city": "Unincorporated County",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "786",
+      "city": "Hallandale Beach",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "786",
+      "city": "Homestead",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "786",
+      "city": "Sunrise",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "North Miami Beach",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "Pompano Beach",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "Dania",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "Florida Miami",
+      "state": "MI",
+      "cnt": "2"
+    },
+    {
+      "area_code": "786",
+      "city": "Fort Pierce",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Plam Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Orlando",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "North Miami",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Wesley Chapel",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Margate",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Coral Gables",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Opa Locka",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Opa-locka",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "786",
+      "city": "Palm Bay",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Fort Lauderdale",
+      "state": "FL",
+      "cnt": "101"
+    },
+    {
+      "area_code": "954",
+      "city": "Hollywood",
+      "state": "FL",
+      "cnt": "40"
+    },
+    {
+      "area_code": "954",
+      "city": "Pompano Beach",
+      "state": "FL",
+      "cnt": "39"
+    },
+    {
+      "area_code": "954",
+      "city": "Lauderhill",
+      "state": "FL",
+      "cnt": "31"
+    },
+    {
+      "area_code": "954",
+      "city": "Deerfield Beach",
+      "state": "FL",
+      "cnt": "27"
+    },
+    {
+      "area_code": "954",
+      "city": "Pembroke Pines",
+      "state": "FL",
+      "cnt": "22"
+    },
+    {
+      "area_code": "954",
+      "city": "West Park",
+      "state": "FL",
+      "cnt": "21"
+    },
+    {
+      "area_code": "954",
+      "city": "Tamarac",
+      "state": "FL",
+      "cnt": "18"
+    },
+    {
+      "area_code": "954",
+      "city": "Miramar",
+      "state": "FL",
+      "cnt": "18"
+    },
+    {
+      "area_code": "954",
+      "city": "Dania",
+      "state": "FL",
+      "cnt": "16"
+    },
+    {
+      "area_code": "954",
+      "city": "Margate",
+      "state": "FL",
+      "cnt": "8"
+    },
+    {
+      "area_code": "954",
+      "city": "Miami",
+      "state": "FL",
+      "cnt": "8"
+    },
+    {
+      "area_code": "954",
+      "city": "Orlando",
+      "state": "FL",
+      "cnt": "7"
+    },
+    {
+      "area_code": "954",
+      "city": "Plantation",
+      "state": "FL",
+      "cnt": "7"
+    },
+    {
+      "area_code": "954",
+      "city": "Sunrise",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "954",
+      "city": "North Lauderdale",
+      "state": "FL",
+      "cnt": "6"
+    },
+    {
+      "area_code": "954",
+      "city": "Coconut Creek",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "954",
+      "city": "Davie",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "954",
+      "city": "DANIA BEACH",
+      "state": "FL",
+      "cnt": "5"
+    },
+    {
+      "area_code": "954",
+      "city": "West Palm Beach",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "954",
+      "city": "Lauderdale Lakes",
+      "state": "FL",
+      "cnt": "4"
+    },
+    {
+      "area_code": "954",
+      "city": "Hallandale Beach",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "954",
+      "city": "Boynton Beach",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "954",
+      "city": "Miami Gardens",
+      "state": "FL",
+      "cnt": "3"
+    },
+    {
+      "area_code": "954",
+      "city": "Cooper City",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "954",
+      "city": "Tampa",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "954",
+      "city": "Oakland Park",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "954",
+      "city": "Winter Park",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "954",
+      "city": "Delray Beach",
+      "state": "FL",
+      "cnt": "2"
+    },
+    {
+      "area_code": "954",
+      "city": "Hilliard",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Opa-locka",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": ", Riviera Beach,",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Wellington",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Unincorporated County",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Lauderdale",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Coral Springs",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Riviera Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Summerfield",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Windermere",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "North Miami Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Atlanta",
+      "state": "GA",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Royal Palm Beach",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Lauderdale",
+      "state": "AZ",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Lake Worth",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Clermont",
+      "state": "FL",
+      "cnt": "1"
+    },
+    {
+      "area_code": "954",
+      "city": "Tarpon Springs",
+      "state": "FL",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "area_code\tcity\tstate\tcnt\n305\tMiami\tFL\t51\n305\tPembroke Pines\tFL\t10\n305\tHialeah\tFL\t7\n305\tSunrise\tFL\t6\n305\tWest Park\tFL\t6\n305\tHollywood\tFL\t5\n305\tFort Lauderdale\tFL\t3\n305\tMiami Gardens\tFL\t3\n305\tOpa-locka\tFL\t3\n305\tPompano Beach\tFL\t3\n305\tOrlando\tFL\t2\n305\tOpa Locka\tFL\t2\n305\tUnincorporated County\tFL\t2\n305\tHomestead\tFL\t1\n305\tCutler Bay\tFL\t1\n305\tNorth Miami\tFL\t1\n305\tMiramar\tFL\t1\n305\tTBD\t\t1\n305\tDavie\tFL\t1\n305\tMiami Lakes\tFL\t1\n305\tSouth Miami\tFL\t1\n305\tTamarac\tFL\t1\n305\tHallandale Beach\tFL\t1\n305\tpalm bay\tFL\t1\n305\tLake Placid\tFL\t1\n305\tWest Palm Beach\tFL\t1\n305\tNorth Miami Beach\tFL\t1\n407\tOrlando\tFL\t110\n407\tEustis\tFL\t1\n407\tRiviera Beach\tFL\t1\n407\tFl 33437\tFL\t1\n407\tOrange City\tFL\t1\n407\tFort Pierce\tFL\t1\n407\tSaint Cloud\tFL\t1\n407\t Sanford\tFL\t1\n407\tFORT LAUDERDALE\tFL\t1\n407\tKissimmee\tFL\t1\n407\tWinter Park\tFL\t1\n561\tWest Palm Beach\tFL\t14\n561\tDeerfield Beach\tFL\t6\n561\tBoynton Beach\tFL\t5\n561\tDelray Beach\tFL\t5\n561\tRiviera Beach\tFL\t5\n561\tBelle Glade\tFL\t4\n561\tBoca Raton\tFL\t4\n561\tTamarac\tFL\t4\n561\tMargate\tFL\t3\n561\tPompano Beach\tFL\t3\n561\tFl 33407\tFl\t2\n561\tLauderhill\tFL\t2\n561\tMiami\tFL\t2\n561\tJupiter\tFl\t2\n561\tWellington\tFl\t2\n561\tCoconut Creek\tFL\t2\n561\tSouth Bay\tFL\t2\n561\tFort Lauderdale\tFL\t2\n561\tLake Worth\tFL\t2\n561\tGreenacres\tFL\t2\n561\tPalm Beach Shores\tFL\t1\n561\tMiami beach\tFL\t1\n561\tFl 33406\tFL\t1\n561\tHallandale Beach\tFL\t1\n561\tMiami Springs\tFL\t1\n561\tPalm Beach Gardens\tFL\t1\n561\tMangonia Park\tFL\t1\n561\tOrlando\tFL\t1\n561\tLake Worth Beach\tFL\t1\n561\tPort Charlotte\tFL\t1\n561\tUnincorporated County\tFL\t1\n561\tDelraybeach\tFL\t1\n561\t, Riviera Beach,\tFL\t1\n561\tHomestead\tFL\t1\n561\tNorth Miami Beach\tFL\t1\n786\tMiami\tFL\t36\n786\tMiami Gardens\tFL\t7\n786\tHialeah\tFL\t6\n786\tMiramar\tFL\t5\n786\tPembroke Pines\tFL\t5\n786\tWest Park\tFL\t5\n786\tHollywood\tFL\t5\n786\tUnincorporated County\tFL\t4\n786\tHallandale Beach\tFL\t4\n786\tHomestead\tFL\t3\n786\tSunrise\tFL\t2\n786\tFort Lauderdale\tFL\t2\n786\tNorth Miami Beach\tFL\t2\n786\tPompano Beach\tFL\t2\n786\tDania\tFL\t2\n786\tFlorida Miami\tMI\t2\n786\tFort Pierce\tFL\t1\n786\tPlam Beach\tFL\t1\n786\tOrlando\tFL\t1\n786\tNorth Miami\tFL\t1\n786\tWesley Chapel\tFL\t1\n786\tMargate\tFL\t1\n786\tCoral Gables\tFL\t1\n786\tOpa Locka\tFL\t1\n786\tOpa-locka\tFL\t1\n786\tPalm Bay\tFL\t1\n954\tFort Lauderdale\tFL\t101\n954\tHollywood\tFL\t40\n954\tPompano Beach\tFL\t39\n954\tLauderhill\tFL\t31\n954\tDeerfield Beach\tFL\t27\n954\tPembroke Pines\tFL\t22\n954\tWest Park\tFL\t21\n954\tTamarac\tFL\t18\n954\tMiramar\tFL\t18\n954\tDania\tFL\t16\n954\tMargate\tFL\t8\n954\tMiami\tFL\t8\n954\tOrlando\tFL\t7\n954\tPlantation\tFL\t7\n954\tSunrise\tFL\t6\n954\tNorth Lauderdale\tFL\t6\n954\tCoconut Creek\tFL\t5\n954\tDavie\tFL\t5\n954\tDANIA BEACH\tFL\t5\n954\tWest Palm Beach\tFL\t4\n954\tLauderdale Lakes\tFL\t4\n954\tHallandale Beach\tFL\t3\n954\tBoynton Beach\tFL\t3\n954\tMiami Gardens\tFL\t3\n954\tCooper City\tFL\t2\n954\tTampa\tFL\t2\n954\tOakland Park\tFL\t2\n954\tWinter Park\tFL\t2\n954\tDelray Beach\tFL\t2\n954\tHilliard\tFL\t1\n954\tOpa-locka\tFL\t1\n954\t, Riviera Beach,\tFL\t1\n954\tWellington\tFL\t1\n954\tUnincorporated County\tFL\t1\n954\tLauderdale\tFL\t1\n954\tCoral Springs\tFL\t1\n954\tRiviera Beach\tFL\t1\n954\tSummerfield\tFL\t1\n954\tWindermere\tFL\t1\n954\tNorth Miami Beach\tFL\t1\n954\tAtlanta\tGA\t1\n954\tRoyal Palm Beach\tFL\t1\n954\tLauderdale\tAZ\t1\n954\tLake Worth\tFL\t1\n954\tClermont\tFL\t1\n954\tTarpon Springs\tFL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}
