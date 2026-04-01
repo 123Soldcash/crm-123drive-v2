@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2, ExternalLink } from "lucide-react";
 import { SectionNotes } from "@/components/SectionNotes";
+import { TaxUrlManager } from "@/components/TaxUrlManager";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -302,31 +303,8 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
       {/* ── Card 1: Delinquent Taxes ────────────────────────────────────── */}
       <FinancialCard title="Delinquent Taxes" icon={<DollarSign className="w-4 h-4" />} accentColor="red">
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1.5 block">Tax Lookup Website URL</label>
-          <div className="flex gap-2 items-center">
-            <Input
-              type="url"
-              value={taxLookupUrl}
-              onChange={(e) => { setTaxLookupUrl(e.target.value); markDirty(); }}
-              placeholder="https://www.broward.org/Records/TaxDeeds/..."
-              className="text-xs h-9 flex-1"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!taxLookupUrl}
-              onClick={() => {
-                const url = taxLookupUrl.startsWith('http') ? taxLookupUrl : `https://${taxLookupUrl}`;
-                window.open(url, '_blank', 'noopener,noreferrer');
-              }}
-              className="h-9 px-3 shrink-0"
-              title="Open in new tab"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">Paste the URL of the county tax records site for this property.</p>
+          <label className="text-xs font-medium text-gray-500 mb-1.5 block">Tax Lookup URLs</label>
+          <TaxUrlManager propertyId={propertyId} />
         </div>
       </FinancialCard>
       <SectionNotes propertyId={propertyId} section="financial_delinquent_taxes" accentColor="blue" label="Delinquent Taxes Notes" />

@@ -2878,3 +2878,9 @@
 - [x] Remove year rows (2025, 2024, 2023, 2022, 2021, 2020) and total from Delinquent Taxes card
 - [x] Remove Tax Notes textarea (already covered by SectionNotes below)
 - [x] Add URL field with open-in-new-tab button for tax lookup website
+
+## Financial Module: Tax URL Manager
+- [x] Create taxUrls table (id, propertyId, label, url, isSelected, createdAt)
+- [x] Backend: CRUD procedures (list, add, remove, setSelected, updateLabel)
+- [x] Frontend: TaxUrlManager component with add/remove/select/open + inline label editing
+- [x] Replaced single URL field in Delinquent Taxes card with TaxUrlManager

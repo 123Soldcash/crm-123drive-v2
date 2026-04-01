@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
+import { int, tinyint, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -1618,3 +1618,15 @@ export const sectionNoteAttachments = mysqlTable("sectionNoteAttachments", {
 
 export type SectionNoteAttachment = typeof sectionNoteAttachments.$inferSelect;
 export type InsertSectionNoteAttachment = typeof sectionNoteAttachments.$inferInsert;
+
+// ─── Tax URLs (Delinquent Taxes URL Manager) ─────────────────────────────────
+export const taxUrls = mysqlTable("taxUrls", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  label: varchar("label", { length: 255 }).notNull().default("Tax Record"),
+  url: text("url").notNull(),
+  isSelected: tinyint("isSelected").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TaxUrl = typeof taxUrls.$inferSelect;
+export type InsertTaxUrl = typeof taxUrls.$inferInsert;
