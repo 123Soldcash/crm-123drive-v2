@@ -2884,3 +2884,14 @@
 - [x] Backend: CRUD procedures (list, add, remove, setSelected, updateLabel)
 - [x] Frontend: TaxUrlManager component with add/remove/select/open + inline label editing
 - [x] Replaced single URL field in Delinquent Taxes card with TaxUrlManager
+
+## Tax URL System Redesign (Global URLs + Per-Property Selection)
+- [x] Redesign taxUrls table to be GLOBAL (id, label, url, createdAt) — no propertyId
+- [x] Add selectedTaxUrlId field to propertyFinancials table (FK → taxUrls.id)
+- [x] Migrate DB with pnpm db:push
+- [x] Backend: list all global URLs, add URL, remove URL, update URL label
+- [x] Backend: getSelectedTaxUrl(propertyId), setSelectedTaxUrl(propertyId, taxUrlId)
+- [x] Frontend: TaxUrlManager shows dropdown of all global URLs to select for property
+- [x] Frontend: Admin can manage global URL list (add/edit/remove) from the same component
+- [x] Open selected URL in new tab with one click
+- [x] Fixed db.select error (missing await on async getDb())

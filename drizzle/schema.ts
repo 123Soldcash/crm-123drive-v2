@@ -1366,6 +1366,8 @@ export const financialModule = mysqlTable("financialModule", {
   delinquentTax2020: int("fm_delinquentTax2020"),
   delinquentTaxTotal: int("fm_delinquentTaxTotal"),
   taxNotes: text("fm_taxNotes"),
+  // FK to global taxUrls table — which URL is selected for this property
+  selectedTaxUrlId: int("fm_selectedTaxUrlId"),
 
   // ── Card 2: Repairs ──────────────────────────────────────────────────────
   needsRepairs: int("fm_needsRepairs").default(0), // 0=No, 1=Yes
@@ -1619,13 +1621,13 @@ export const sectionNoteAttachments = mysqlTable("sectionNoteAttachments", {
 export type SectionNoteAttachment = typeof sectionNoteAttachments.$inferSelect;
 export type InsertSectionNoteAttachment = typeof sectionNoteAttachments.$inferInsert;
 
-// ─── Tax URLs (Delinquent Taxes URL Manager) ─────────────────────────────────
+// ─── Tax URLs (Global list of county tax lookup websites) ───────────────────
+// These are GLOBAL — shared across all properties (like Lead Source).
+// Each property selects which URL to use via selectedTaxUrlId in propertyFinancials.
 export const taxUrls = mysqlTable("taxUrls", {
   id: int("id").autoincrement().primaryKey(),
-  propertyId: int("propertyId").notNull(),
   label: varchar("label", { length: 255 }).notNull().default("Tax Record"),
   url: text("url").notNull(),
-  isSelected: tinyint("isSelected").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type TaxUrl = typeof taxUrls.$inferSelect;
