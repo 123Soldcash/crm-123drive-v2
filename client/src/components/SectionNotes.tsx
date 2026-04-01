@@ -242,7 +242,7 @@ export function SectionNotes({
   section: string;
   accentColor?: string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [newText, setNewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -349,18 +349,21 @@ export function SectionNotes({
           <MessageSquarePlus className={`w-3.5 h-3.5 ${accentTextMap[accentColor] || accentTextMap.blue}`} />
           <span className={`text-xs font-semibold ${accentTextMap[accentColor] || accentTextMap.blue}`}>
             Section Notes
-            {isExpanded && notes.length > 0 && (
+            {notes.length > 0 && (
               <span className="ml-1.5 bg-white rounded-full px-1.5 py-0.5 text-xs font-bold border">
                 {notes.length}
               </span>
             )}
           </span>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="w-3.5 h-3.5 text-gray-400" />
-        ) : (
-          <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-        )}
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <span>{isExpanded ? "Minimize" : "Show"}</span>
+          {isExpanded ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
+        </div>
       </button>
 
       {/* Expanded content */}

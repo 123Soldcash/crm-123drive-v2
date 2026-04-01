@@ -2863,3 +2863,7 @@
 - [x] Attached to 6 sections: Property Basics (blue), Condition (orange), Occupancy (green), Seller Situation (red), Legal & Title (purple), Probate & Family Tree (yellow)
 - [x] Supports text, documents (PDF/DOC/XLS), and screenshots (PNG/JPG) — max 16MB
 - [x] Vitest tests: 11 tests passing
+
+## Section Notes: Always Open by Default
+- [x] Change SectionNotes default state to expanded=true (always open)
+- [x] Toggle button now shows "Minimize" when open and "Show" when collapsed
