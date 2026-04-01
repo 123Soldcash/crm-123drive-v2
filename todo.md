@@ -2895,3 +2895,9 @@
 - [x] Frontend: Admin can manage global URL list (add/edit/remove) from the same component
 - [x] Open selected URL in new tab with one click
 - [x] Fixed db.select error (missing await on async getDb())
+
+## Edit Contact Page Redesign (Single Unified Layout)
+- [x] Remove tabs from Edit Contact page (Contact Details / Phones & Emails / Call History)
+- [x] Merge Contact Details + Phones & Emails into fixed fields on screen (always visible)
+- [x] Call History becomes a scrollable list at the bottom (fixed height, overflow-y-auto)
+- [x] All sections visible and editable simultaneously — no tab switching needed
