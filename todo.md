@@ -2873,3 +2873,8 @@
 - [x] Add SectionNotes component to each Financial section (always open, Minimize/Show toggle)
 - [x] Support text, documents, and screenshots per section (same as Deep Search Overview)
 - [x] Added label prop to SectionNotes for custom section titles
+
+## Financial Module: Delinquent Taxes Section Update
+- [x] Remove year rows (2025, 2024, 2023, 2022, 2021, 2020) and total from Delinquent Taxes card
+- [x] Remove Tax Notes textarea (already covered by SectionNotes below)
+- [x] Add URL field with open-in-new-tab button for tax lookup website

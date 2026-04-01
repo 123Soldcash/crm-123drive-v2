@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { CheckCircle, Loader2, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2 } from "lucide-react";
+import { CheckCircle, Loader2, AlertTriangle, DollarSign, Wrench, Landmark, Gavel, FileWarning, ScrollText, Plus, Trash2, ExternalLink } from "lucide-react";
 import { SectionNotes } from "@/components/SectionNotes";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -133,13 +133,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   const utils = trpc.useUtils();
 
   // Card 1: Delinquent Taxes
-  const [tax2025, setTax2025] = useState<number | null>(null);
-  const [tax2024, setTax2024] = useState<number | null>(null);
-  const [tax2023, setTax2023] = useState<number | null>(null);
-  const [tax2022, setTax2022] = useState<number | null>(null);
-  const [tax2021, setTax2021] = useState<number | null>(null);
-  const [tax2020, setTax2020] = useState<number | null>(null);
-  const [taxNotes, setTaxNotes] = useState("");
+  const [taxLookupUrl, setTaxLookupUrl] = useState("");
 
   // Card 2: Repairs
   const [needsRepairs, setNeedsRepairs] = useState(false);
@@ -180,13 +174,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   useEffect(() => {
     if (data) {
       isSyncing.current = true;
-      setTax2025(data.delinquentTax2025);
-      setTax2024(data.delinquentTax2024);
-      setTax2023(data.delinquentTax2023);
-      setTax2022(data.delinquentTax2022);
-      setTax2021(data.delinquentTax2021);
-      setTax2020(data.delinquentTax2020);
-      setTaxNotes(data.taxNotes || "");
+      setTaxLookupUrl(data.taxNotes || "");
       setNeedsRepairs(data.needsRepairs === 1);
       setRepairCategories(safeParseJson(data.repairCategories));
       setEstimatedRepairCost(data.estimatedRepairCost);
@@ -222,8 +210,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   }, []);
 
   const performSave = useCallback(async (vals: {
-    tax2025: number|null; tax2024: number|null; tax2023: number|null; tax2022: number|null;
-    tax2021: number|null; tax2020: number|null; taxNotes: string; needsRepairs: boolean;
+    taxLookupUrl: string; needsRepairs: boolean;
     repairCategories: string[]; estimatedRepairCost: number|null; repairNotes: string;
     mortgage: string|null; mortgageNotes: string; liens: boolean; totalLienAmount: number|null;
     lienTypes: string[]; lienNotes: string; preForeclosure: boolean; auctionScheduled: boolean;
@@ -234,13 +221,7 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
     try {
       await updateMutation.mutateAsync({
         propertyId,
-        delinquentTax2025: vals.tax2025,
-        delinquentTax2024: vals.tax2024,
-        delinquentTax2023: vals.tax2023,
-        delinquentTax2022: vals.tax2022,
-        delinquentTax2021: vals.tax2021,
-        delinquentTax2020: vals.tax2020,
-        taxNotes: vals.taxNotes || null,
+        taxNotes: vals.taxLookupUrl || null,
         needsRepairs: vals.needsRepairs ? 1 : 0,
         repairCategories: JSON.stringify(vals.repairCategories),
         estimatedRepairCost: vals.estimatedRepairCost,
@@ -281,19 +262,17 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
   const markDirty = useCallback(() => {
     if (isInitialLoad.current || isSyncing.current) return;
     triggerAutoSave({
-      tax2025, tax2024, tax2023, tax2022, tax2021, tax2020, taxNotes, needsRepairs,
+      taxLookupUrl, needsRepairs,
       repairCategories, estimatedRepairCost, repairNotes, mortgage, mortgageNotes,
       liens, totalLienAmount, lienTypes, lienNotes, preForeclosure, auctionScheduled,
       lisPendens, nodFiled, foreclosureNotes, codeViolations, taxLien, codeTaxNotes, deedHistory,
     });
-  }, [triggerAutoSave, tax2025, tax2024, tax2023, tax2022, tax2021, tax2020, taxNotes, needsRepairs,
+  }, [triggerAutoSave, taxLookupUrl, needsRepairs,
     repairCategories, estimatedRepairCost, repairNotes, mortgage, mortgageNotes,
     liens, totalLienAmount, lienTypes, lienNotes, preForeclosure, auctionScheduled,
     lisPendens, nodFiled, foreclosureNotes, codeViolations, taxLien, codeTaxNotes, deedHistory]);
 
-  // Auto-calculate tax total
-  const taxTotal = [tax2025, tax2024, tax2023, tax2022, tax2021, tax2020]
-    .reduce((sum: number, v) => sum + (v || 0), 0);
+
 
   if (isLoading) {
     return (
@@ -322,37 +301,33 @@ export function FinancialModule({ propertyId }: { propertyId: number }) {
 
       {/* ── Card 1: Delinquent Taxes ────────────────────────────────────── */}
       <FinancialCard title="Delinquent Taxes" icon={<DollarSign className="w-4 h-4" />} accentColor="red">
-        <div className="space-y-2">
-          {[
-            { year: "2025", val: tax2025, set: setTax2025 },
-            { year: "2024", val: tax2024, set: setTax2024 },
-            { year: "2023", val: tax2023, set: setTax2023 },
-            { year: "2022", val: tax2022, set: setTax2022 },
-            { year: "2021", val: tax2021, set: setTax2021 },
-            { year: "2020", val: tax2020, set: setTax2020 },
-          ].map(({ year, val, set }) => (
-            <div key={year} className="flex items-center gap-3">
-              <span className="text-xs font-medium text-gray-500 w-10">{year}</span>
-              <CurrencyInput
-                value={val}
-                onChange={(v) => { set(v); markDirty(); }}
-                placeholder="Amount"
-              />
-            </div>
-          ))}
-          <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
-            <span className="text-xs font-bold text-gray-700 w-10">Total</span>
-            <div className="text-sm font-bold text-red-600">
-              ${(taxTotal ?? 0).toLocaleString()}
-            </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1.5 block">Tax Lookup Website URL</label>
+          <div className="flex gap-2 items-center">
+            <Input
+              type="url"
+              value={taxLookupUrl}
+              onChange={(e) => { setTaxLookupUrl(e.target.value); markDirty(); }}
+              placeholder="https://www.broward.org/Records/TaxDeeds/..."
+              className="text-xs h-9 flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!taxLookupUrl}
+              onClick={() => {
+                const url = taxLookupUrl.startsWith('http') ? taxLookupUrl : `https://${taxLookupUrl}`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+              }}
+              className="h-9 px-3 shrink-0"
+              title="Open in new tab"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
           </div>
+          <p className="text-xs text-gray-400 mt-1">Paste the URL of the county tax records site for this property.</p>
         </div>
-        <Textarea
-          value={taxNotes}
-          onChange={(e) => { setTaxNotes(e.target.value); markDirty(); }}
-          placeholder="Tax notes..."
-          className="text-xs h-16"
-        />
       </FinancialCard>
       <SectionNotes propertyId={propertyId} section="financial_delinquent_taxes" accentColor="blue" label="Delinquent Taxes Notes" />
 
