@@ -267,6 +267,13 @@
       "when": 1774565641467,
       "tag": "0037_steep_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1775075647513,
+      "tag": "0038_cool_doctor_octopus",
+      "breakpoints": true
     }
   ]
 }

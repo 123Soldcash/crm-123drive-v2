@@ -1584,3 +1584,37 @@ export const desks = mysqlTable("desks", {
 
 export type Desk = typeof desks.$inferSelect;
 export type InsertDesk = typeof desks.$inferInsert;
+
+/**
+ * Section Notes table - stores rich notes per Deep Search Overview section
+ * Each note belongs to a property + section combination and supports text + file attachments
+ */
+export const sectionNotes = mysqlTable("sectionNotes", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  section: varchar("section", { length: 100 }).notNull(), // e.g. "property_basics", "condition", "occupancy"
+  text: text("text"), // Rich text content
+  createdBy: int("createdBy").notNull(), // userId
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SectionNote = typeof sectionNotes.$inferSelect;
+export type InsertSectionNote = typeof sectionNotes.$inferInsert;
+
+/**
+ * Section Note Attachments - files (images, PDFs, docs) attached to section notes
+ */
+export const sectionNoteAttachments = mysqlTable("sectionNoteAttachments", {
+  id: int("id").autoincrement().primaryKey(),
+  sectionNoteId: int("sectionNoteId").notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 public URL
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  fileSize: int("fileSize"), // bytes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SectionNoteAttachment = typeof sectionNoteAttachments.$inferSelect;
+export type InsertSectionNoteAttachment = typeof sectionNoteAttachments.$inferInsert;

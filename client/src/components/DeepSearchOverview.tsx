@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, AlertTriangle, Shield, Scale, Home, Eye, Users, FileText, TreePine } from "lucide-react";
 import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
+import { SectionNotes } from "@/components/SectionNotes";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPTION CONSTANTS (from spec)
@@ -350,6 +351,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             onChange={(v) => { setPropertyTags(v); }}
           />
         </div>
+        <SectionNotes propertyId={propertyId} section="property_basics" accentColor="blue" />
       </SectionCard>
 
       {/* ── Condition ───────────────────────────────────────────────────── */}
@@ -393,6 +395,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             />
           </div>
         ))}
+        <SectionNotes propertyId={propertyId} section="condition" accentColor="orange" />
       </SectionCard>
 
       {/* ── Occupancy ───────────────────────────────────────────────────── */}
@@ -448,6 +451,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             />
           </div>
         )}
+        <SectionNotes propertyId={propertyId} section="occupancy" accentColor="green" />
       </SectionCard>
 
       {/* ── Seller Situation (Motivation) ───────────────────────────────── */}
@@ -479,6 +483,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             colorClass="bg-rose-100 text-rose-800 border-rose-300"
           />
         </div>
+        <SectionNotes propertyId={propertyId} section="seller_situation" accentColor="red" />
       </SectionCard>
 
       {/* ── Legal & Title ───────────────────────────────────────────────── */}
@@ -510,6 +515,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             colorClass="bg-violet-100 text-violet-800 border-violet-300"
           />
         </div>
+        <SectionNotes propertyId={propertyId} section="legal_title" accentColor="purple" />
       </SectionCard>
 
       {/* ── Probate & Family Tree ──────────────────────────────────────── */}
@@ -555,6 +561,7 @@ export function DeepSearchOverview({ propertyId }: { propertyId: number }) {
             </div>
           </>
         )}
+        <SectionNotes propertyId={propertyId} section="probate_family_tree" accentColor="yellow" />
       </SectionCard>
 
       {/* ── Notes ───────────────────────────────────────────────────────── */}

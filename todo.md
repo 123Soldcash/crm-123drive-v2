@@ -2855,3 +2855,11 @@
 - [x] Minimize/expand while in call
 - [x] Register globally in App.tsx — persists across all pages
 - [x] No navigation blocking — can browse CRM during a call
+
+## Deep Search Overview: Per-Section Notes
+- [x] Create sectionNotes + sectionNoteAttachments tables in schema + migrated
+- [x] Backend: CRUD procedures (create, read, update, delete notes + upload/delete attachments via S3)
+- [x] Frontend: SectionNotes component with text editor + file/image upload (PNG, JPG, PDF, DOC, XLS, TXT)
+- [x] Attached to 6 sections: Property Basics (blue), Condition (orange), Occupancy (green), Seller Situation (red), Legal & Title (purple), Probate & Family Tree (yellow)
+- [x] Supports text, documents (PDF/DOC/XLS), and screenshots (PNG/JPG) — max 16MB
+- [x] Vitest tests: 11 tests passing
