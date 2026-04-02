@@ -2924,3 +2924,11 @@
 - [x] Frontend: Each notification shows property address, source badge, campaign, text preview, timestamp, View Property button
 - [x] Frontend: Bulk "Mark all as read" action
 - [x] ENV: SLACK_BOT_TOKEN + SLACK_SIGNING_SECRET added to env.ts
+
+## Slack Notification Toast (Bottom-Right)
+- [x] Add Sonner toast that fires when new Slack notification arrives
+- [x] Toast appears bottom-right, above the floating call button (offset: 96px)
+- [x] Toast shows: source badge (Instantly/Autocalls), property address, campaign, short text preview
+- [x] Toast auto-dismisses after 8 seconds
+- [x] Clicking the toast opens the property page
+- [x] Polling every 15s detects new notifications (compare unread count change)

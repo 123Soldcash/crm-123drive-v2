@@ -4,9 +4,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme="light"
-      position="top-right"
+      position="bottom-right"
       richColors
       closeButton
+      offset={96}
       style={
         {
           "--normal-bg": "var(--popover)",

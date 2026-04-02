@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, X, ExternalLink, CheckCheck, Building2, Zap, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 
 function timeAgo(date: Date | string): string {
   const now = new Date();
@@ -22,12 +23,14 @@ const SOURCE_CONFIG = {
     color: "bg-blue-100 text-blue-700 border-blue-200",
     icon: Zap,
     iconColor: "text-blue-500",
+    toastColor: "#3b82f6",
   },
   autocalls: {
     label: "Autocalls",
     color: "bg-orange-100 text-orange-700 border-orange-200",
     icon: Phone,
     iconColor: "text-orange-500",
+    toastColor: "#f97316",
   },
 };
 
@@ -35,6 +38,8 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const prevCountRef = useRef<number | null>(null);
+  const isFirstLoad = useRef(true);
 
   // Only admins see notifications
   if (user?.role !== "admin") return null;
@@ -42,8 +47,16 @@ export default function NotificationBell() {
   const utils = trpc.useUtils();
 
   const { data: countData } = trpc.notifications.unreadCount.useQuery(undefined, {
-    refetchInterval: 30_000, // poll every 30s
+    refetchInterval: 15_000, // poll every 15s for faster toast detection
   });
+
+  const { data: latestNotifications } = trpc.notifications.list.useQuery(
+    { limit: 5, offset: 0, source: "all", unreadOnly: true },
+    {
+      refetchInterval: 15_000,
+      enabled: user?.role === "admin",
+    }
+  );
 
   const { data: notifications, isLoading } = trpc.notifications.list.useQuery(
     { limit: 30, offset: 0, source: "all", unreadOnly: false },
@@ -67,11 +80,92 @@ export default function NotificationBell() {
   // Mark all as read when drawer opens
   useEffect(() => {
     if (open && countData && countData.count > 0) {
-      // Small delay so user sees the unread state briefly
       const t = setTimeout(() => markAllRead.mutate(), 1500);
       return () => clearTimeout(t);
     }
   }, [open]);
+
+  // Show toast when new notifications arrive
+  useEffect(() => {
+    const currentCount = countData?.count ?? 0;
+
+    // Skip the very first load to avoid toasting on page refresh
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      prevCountRef.current = currentCount;
+      return;
+    }
+
+    const prev = prevCountRef.current ?? 0;
+    if (currentCount > prev && latestNotifications && latestNotifications.length > 0) {
+      // Show toast for the newest notification(s)
+      const newCount = currentCount - prev;
+      const newest = latestNotifications[0];
+      const src = SOURCE_CONFIG[newest.source as keyof typeof SOURCE_CONFIG];
+      const address = [newest.addressLine1, newest.city, newest.state].filter(Boolean).join(", ");
+      const propertyLabel = address || `Property #${newest.propertyId}`;
+      const preview = newest.messageText ? newest.messageText.substring(0, 80) + (newest.messageText.length > 80 ? "…" : "") : "";
+
+      toast.custom(
+        (t) => (
+          <div
+            className="flex items-start gap-3 bg-white dark:bg-zinc-900 border rounded-xl shadow-lg p-4 w-80 cursor-pointer hover:shadow-xl transition-shadow"
+            style={{ borderLeft: `4px solid ${src?.toastColor ?? "#6366f1"}` }}
+            onClick={() => {
+              toast.dismiss(t);
+              setLocation(`/properties/${newest.propertyId}`);
+            }}
+          >
+            <div
+              className={`mt-0.5 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${src?.color ?? "bg-gray-100"}`}
+            >
+              {src ? (
+                <src.icon className={`h-4 w-4 ${src.iconColor}`} />
+              ) : (
+                <Building2 className="h-4 w-4 text-gray-500" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${src?.color ?? "bg-gray-100 text-gray-700"}`}
+                >
+                  {src?.label ?? newest.source}
+                </span>
+                {newCount > 1 && (
+                  <span className="text-[10px] text-muted-foreground">+{newCount - 1} more</span>
+                )}
+              </div>
+              <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                {propertyLabel}
+              </p>
+              {newest.campaignName && (
+                <p className="text-xs text-muted-foreground truncate">{newest.campaignName}</p>
+              )}
+              {preview && (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                  {preview}
+                </p>
+              )}
+              <p className="text-[10px] text-muted-foreground/60 mt-1">Tap to open property</p>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); toast.dismiss(t); }}
+              className="shrink-0 h-5 w-5 rounded flex items-center justify-center hover:bg-accent transition-colors"
+            >
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          </div>
+        ),
+        {
+          duration: 8000,
+          position: "bottom-right",
+        }
+      );
+    }
+
+    prevCountRef.current = currentCount;
+  }, [countData?.count]);
 
   const unreadCount = countData?.count ?? 0;
 
