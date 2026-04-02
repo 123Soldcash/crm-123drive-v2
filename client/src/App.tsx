@@ -28,6 +28,7 @@ import SMSTemplates from "./pages/SMSTemplates";
 import TwilioNumbers from "./pages/TwilioNumbers";
 import CallHistory from "./pages/CallHistory";
 import DeskManagement from "./pages/DeskManagement";
+import NotificationsPage from "./pages/Notifications";
 import { IncomingCallNotification } from "./components/IncomingCallNotification";
 import { FloatingDialer } from "./components/FloatingDialer";
 
@@ -127,6 +128,7 @@ function Router() {
       <Route path="/twilio-numbers" component={TwilioNumbersPage} />
       <Route path="/call-history" component={CallHistoryPage} />
       <Route path="/desk-management" component={DeskManagementPage} />
+      <Route path="/notifications" component={NotificationsPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

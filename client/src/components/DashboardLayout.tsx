@@ -22,6 +22,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -305,20 +306,20 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
-                  </span>
-                </div>
-              </div>
-            </div>
+        {/* Top bar — always visible on mobile, also shown on desktop for the bell */}
+        <div className="flex border-b h-14 items-center justify-between bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
+          <div className="flex items-center gap-2">
+            {isMobile && <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />}
+            {isMobile && (
+              <span className="tracking-tight text-foreground">
+                {activeMenuItem?.label ?? "Menu"}
+              </span>
+            )}
           </div>
-        )}
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+          </div>
+        </div>
         <main className="flex-1 p-4">{children}</main>
       </SidebarInset>
     </>

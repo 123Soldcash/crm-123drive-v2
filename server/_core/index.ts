@@ -638,6 +638,175 @@ async function startServer() {
       });
     }
   });
+  // ─── Slack Events API ────────────────────────────────────────────────────────
+  // Handles Slack url_verification challenge and incoming message events
+  // from #instantly and #autocalls-slack channels.
+  app.post("/api/oauth/slack/events", express.json(), async (req, res) => {
+    try {
+      const body = req.body;
+
+      // ── Step 1: Slack URL Verification (one-time handshake) ──
+      // Slack sends this when you first configure the Events API Request URL.
+      // Must respond with the challenge value immediately.
+      if (body.type === "url_verification") {
+        console.log("[Slack] URL verification challenge received");
+        return res.status(200).json({ challenge: body.challenge });
+      }
+
+      // ── Step 2: Acknowledge receipt immediately (Slack requires < 3s response) ──
+      res.status(200).send();
+
+      // ── Step 3: Process the event asynchronously ──
+      const event = body.event;
+      if (!event || event.type !== "message" || event.subtype) {
+        // Ignore non-message events and bot messages (subtype = bot_message, etc.)
+        return;
+      }
+
+      const messageText: string = event.text || "";
+      const channelId: string = event.channel || "";
+      const slackUserId: string = event.user || "";
+      const ts: string = event.ts || "";
+
+      console.log(`[Slack] Message received from channel ${channelId}: ${messageText.substring(0, 100)}`);
+
+      // ── Step 4: Determine source from channel ──
+      // Map channel IDs to sources — populated once bot is configured
+      const { getDb } = await import("../db");
+      const { ENV } = await import("./env");
+      const database = await getDb();
+      if (!database) {
+        console.error("[Slack] Database not available");
+        return;
+      }
+
+      // Determine source from channel name via Slack API
+      let source: "instantly" | "autocalls" | null = null;
+      const botToken = ENV.slackBotToken;
+      if (botToken) {
+        try {
+          const channelInfoRes = await fetch(`https://slack.com/api/conversations.info?channel=${channelId}`, {
+            headers: { Authorization: `Bearer ${botToken}` },
+          });
+          const channelInfo = await channelInfoRes.json() as any;
+          const channelName: string = channelInfo?.channel?.name || "";
+          if (channelName === "instantly") source = "instantly";
+          else if (channelName === "autocalls-slack") source = "autocalls";
+          else {
+            console.log(`[Slack] Ignoring message from unregistered channel: ${channelName}`);
+            return;
+          }
+          console.log(`[Slack] Source identified: ${source} (channel: #${channelName})`);
+        } catch (err) {
+          console.error("[Slack] Failed to resolve channel name:", err);
+          return;
+        }
+      } else {
+        console.warn("[Slack] SLACK_BOT_TOKEN not configured — cannot process events");
+        return;
+      }
+
+      // ── Step 5: Extract property_id and campaign (REQUIRED — if either missing, ignore) ──
+      const propertyIdMatch = messageText.match(/property[_\s-]?id[:\s#]*([\d]+)/i);
+      const campaignMatch = messageText.match(/campaign[:\s]+([^\n]+)/i);
+
+      if (!propertyIdMatch || !campaignMatch) {
+        console.log(`[Slack] Message ignored — missing property_id or campaign. Text: ${messageText.substring(0, 80)}`);
+        return;
+      }
+
+      const propertyId = parseInt(propertyIdMatch[1]);
+      const campaignName = campaignMatch[1].trim();
+
+      // ── Step 6: Verify property exists ──
+      const { properties, contacts, contactPhones, notes } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+
+      const property = await database
+        .select({ id: properties.id, addressLine1: properties.addressLine1, city: properties.city, state: properties.state })
+        .from(properties)
+        .where(eq(properties.id, propertyId))
+        .limit(1);
+
+      if (!property.length) {
+        console.log(`[Slack] Property #${propertyId} not found — ignoring message`);
+        // Optionally notify Slack that property was not found
+        if (botToken) {
+          await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${botToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              channel: channelId,
+              thread_ts: ts,
+              text: `⚠️ *CRM:* Property #${propertyId} not found in the database. No update was made.`,
+            }),
+          });
+        }
+        return;
+      }
+
+      const prop = property[0];
+      const propAddress = [prop.addressLine1, prop.city, prop.state].filter(Boolean).join(", ");
+
+      // ── Step 7: Save message as General Note ──
+      const noteContent = [
+        `=== ${source === "instantly" ? "Instantly" : "Autocalls"} Update ===`,
+        `Date: ${new Date().toLocaleDateString("en-US")} ${new Date().toLocaleTimeString("en-US")}`,
+        `Campaign: ${campaignName}`,
+        `Property: #${propertyId} — ${propAddress}`,
+        "",
+        messageText,
+      ].join("\n");
+
+      await database.insert(notes).values({
+        propertyId,
+        userId: 1,
+        content: noteContent,
+        noteType: "general",
+      });
+
+      console.log(`[Slack] Note saved for property #${propertyId}`);
+
+      // ── Step 8: Create internal CRM notification ──
+      try {
+        const { crmNotifications } = await import("../../drizzle/schema");
+        await database.insert(crmNotifications).values({
+          propertyId,
+          source,
+          campaignName,
+          eventType: "message",
+          messageText: messageText.substring(0, 1000),
+          rawPayload: JSON.stringify(body),
+          isRead: 0,
+        });
+        console.log(`[Slack] Internal notification created for property #${propertyId}`);
+      } catch (notifErr) {
+        console.error("[Slack] Failed to create internal notification:", notifErr);
+      }
+
+      // ── Step 9: Post confirmation back to Slack ──
+      if (botToken) {
+        try {
+          await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${botToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              channel: channelId,
+              thread_ts: ts,
+              text: `✅ *CRM Updated* — Property *#${propertyId}* (${propAddress})\n📣 Campaign: ${campaignName}\n📝 Note saved to General Notes.`,
+            }),
+          });
+          console.log(`[Slack] Confirmation sent back to Slack for property #${propertyId}`);
+        } catch (slackErr) {
+          console.error("[Slack] Failed to send confirmation:", slackErr);
+        }
+      }
+
+    } catch (error) {
+      console.error("[Slack Events] Error:", error);
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

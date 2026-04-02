@@ -2907,3 +2907,20 @@
 - [x] Map every incoming webhook field vs what is currently saved
 - [x] Fix handler to save ALL fields (no exceptions) to General Notes
 - [x] Test with a real/simulated webhook payload — 72/72 tests pass
+
+## Slack Integration + Internal Notification System
+- [x] DB: Create crmNotifications table (id, propertyId, source, campaignName, eventType, messageText, rawPayload, isRead, readAt, createdAt)
+- [x] DB: Run pnpm db:push
+- [x] Backend: POST /api/slack/events endpoint (url_verification + message events)
+- [x] Backend: Channel router (#instantly → source:instantly, #autocalls-slack → source:autocalls)
+- [x] Backend: Property matcher by property_id in message (required field)
+- [x] Backend: Property updater (add General Note with full message text + campaign + source)
+- [x] Backend: crmNotifications insert on every processed event
+- [x] Backend: Slack confirmation reply (bot posts back to channel confirming property updated)
+- [x] Backend: tRPC procedures for notifications (list, markRead, markAllRead, unreadCount)
+- [x] Frontend: Bell icon with unread badge in DashboardLayout nav (admin only)
+- [x] Frontend: Notifications drawer (slide-in panel, latest 30, mark as read on open)
+- [x] Frontend: /notifications full page (filters: source, read/unread)
+- [x] Frontend: Each notification shows property address, source badge, campaign, text preview, timestamp, View Property button
+- [x] Frontend: Bulk "Mark all as read" action
+- [x] ENV: SLACK_BOT_TOKEN + SLACK_SIGNING_SECRET added to env.ts

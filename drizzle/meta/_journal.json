@@ -288,6 +288,13 @@
       "when": 1775078720153,
       "tag": "0040_steep_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1775147566015,
+      "tag": "0041_outstanding_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }

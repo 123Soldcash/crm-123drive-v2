@@ -1632,3 +1632,22 @@ export const taxUrls = mysqlTable("taxUrls", {
 });
 export type TaxUrl = typeof taxUrls.$inferSelect;
 export type InsertTaxUrl = typeof taxUrls.$inferInsert;
+
+// ─── CRM Notifications (Slack → CRM events) ──────────────────────────────────
+// Created when Slack messages from #instantly or #autocalls-slack are processed.
+// Visible to admins only in the notification center.
+export const crmNotifications = mysqlTable("crmNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  source: mysqlEnum("source", ["instantly", "autocalls"]).notNull(),
+  campaignName: varchar("campaignName", { length: 255 }).notNull(),
+  eventType: varchar("eventType", { length: 100 }).default("message").notNull(),
+  messageText: text("messageText"),
+  rawPayload: text("rawPayload"),
+  isRead: int("isRead").default(0).notNull(), // 0=unread, 1=read
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CrmNotification = typeof crmNotifications.$inferSelect;
+export type InsertCrmNotification = typeof crmNotifications.$inferInsert;
