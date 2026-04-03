@@ -2964,3 +2964,8 @@
 - [x] Add more spacing between fields
 - [x] Keep changes balanced — not too large, just more comfortable
 - [x] Increase Edit Contact modal width by ~50% more (from max-w-5xl to near full screen)
+
+## Desk "List" + Tags for Recently Imported Leads
+- [x] Create desk called "List" in the database
+- [x] Assign all 3000+ recently imported leads to the "List" desk
+- [x] Add tags with insertion date and identifier to those leads for searchability
