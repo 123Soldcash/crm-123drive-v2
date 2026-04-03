@@ -2932,3 +2932,10 @@
 - [x] Toast auto-dismisses after 8 seconds
 - [x] Clicking the toast opens the property page
 - [x] Polling every 15s detects new notifications (compare unread count change)
+
+## Pre-Probate Broward Import (3,048 leads)
+- [x] Map 135 Excel columns to CRM DB fields (properties, contacts, financials, tags)
+- [x] Write import script with duplicate detection (by DM_Property_ID and address)
+- [x] Test import with 10 rows to validate mapping
+- [x] Run full import of all 3,048 leads (3,005 inserted, 43 skipped as duplicates)
+- [x] Verified: 4,026 total properties | 5,253 contacts | 7,613 phones | 8,136 emails | 5,987 tags
