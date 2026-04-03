@@ -2969,3 +2969,9 @@
 - [x] Create desk called "List" in the database
 - [x] Assign all 3000+ recently imported leads to the "List" desk
 - [x] Add tags with insertion date and identifier to those leads for searchability
+
+## Chris Notes Section
+- [x] Create chrisNotes database table (mirroring notes table structure) — reused existing notes table with noteType='desk-chris'
+- [x] Add backend tRPC procedures for Chris Notes CRUD — reused existing notes procedures with noteType filter
+- [x] Create ChrisNotesSection frontend component (duplicate of General Notes)
+- [x] Position Chris Notes above Tags on PropertyDetail page

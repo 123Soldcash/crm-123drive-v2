@@ -33,6 +33,7 @@ import { FamilyTreeEnhanced } from "@/components/FamilyTreeEnhanced";
 
 import { CallTrackingTable } from "@/components/CallTrackingTable";
 import { NotesSection } from "@/components/NotesSection";
+import { ChrisNotesSection } from "@/components/ChrisNotesSection";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { DeepSearchOverview } from "@/components/DeepSearchOverview";
 import { FinancialModule } from "@/components/FinancialModule";
@@ -459,6 +460,9 @@ export default function PropertyDetail() {
           </div>
         </div>
       )}
+
+      {/* Chris Notes - Above Tags */}
+      <ChrisNotesSection propertyId={propertyId} />
 
       {/* Tags Manager */}
       <PropertyTagsManager propertyId={propertyId} />
