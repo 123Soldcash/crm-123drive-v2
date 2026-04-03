@@ -2963,3 +2963,4 @@
 - [x] Increase font sizes slightly for elderly-friendly readability
 - [x] Add more spacing between fields
 - [x] Keep changes balanced — not too large, just more comfortable
+- [x] Increase Edit Contact modal width by ~50% more (from max-w-5xl to near full screen)

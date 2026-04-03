@@ -249,7 +249,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         {/* Wider modal (max-w-5xl ≈ 64rem), tall — fixed height with internal scroll */}
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-[90rem] w-[98vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
 
           {/* ── Header ─────────────────────────────────────────────────────── */}
           <DialogHeader className="px-8 pt-6 pb-4 border-b shrink-0">
