@@ -2957,3 +2957,9 @@
 - [x] Fixed Dashboard getStats to use efficient SQL COUNT queries instead of loading all 4,026 rows
 - [x] Dashboard now correctly shows Total Properties: 4,026
 - [x] Dashboard visited count now uses proper JOIN with visits table
+
+## Edit Contact Modal - Readability Improvements
+- [x] Widen the Edit Contact modal for better field visibility
+- [x] Increase font sizes slightly for elderly-friendly readability
+- [x] Add more spacing between fields
+- [x] Keep changes balanced — not too large, just more comfortable

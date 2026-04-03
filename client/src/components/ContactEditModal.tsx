@@ -248,41 +248,41 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        {/* Wide modal, tall — fixed height with internal scroll */}
-        <DialogContent className="max-w-3xl w-full h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        {/* Wider modal (max-w-5xl ≈ 64rem), tall — fixed height with internal scroll */}
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
 
           {/* ── Header ─────────────────────────────────────────────────────── */}
-          <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <User className="h-5 w-5 text-primary" />
+          <DialogHeader className="px-8 pt-6 pb-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-3 text-lg">
+              <User className="h-6 w-6 text-primary" />
               Edit Contact: <span className="font-bold">{contact.name || "Unknown"}</span>
             </DialogTitle>
           </DialogHeader>
 
           {/* ── Scrollable body ─────────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
 
             {/* ══ SECTION 1: Contact Details ══════════════════════════════════ */}
             <section>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5" /> Contact Details
+              <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <User className="h-4.5 w-4.5" /> Contact Details
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {/* Name + Relationship */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Name</Label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Contact name" className="h-9" />
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Name</Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Contact name" className="h-11 text-base" />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Relationship</Label>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Relationship</Label>
                     <Select value={relationship} onValueChange={setRelationship}>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-11 text-base">
                         <SelectValue placeholder="Select relationship" />
                       </SelectTrigger>
                       <SelectContent>
                         {RELATIONSHIP_OPTIONS.map((rel) => (
-                          <SelectItem key={rel} value={rel}>{rel}</SelectItem>
+                          <SelectItem key={rel} value={rel} className="text-base">{rel}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -290,25 +290,25 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                 </div>
 
                 {/* Age + Address */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Age</Label>
-                    <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" className="h-9" />
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Age</Label>
+                    <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="Age" className="h-11 text-base" />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Current Address</Label>
-                    <Input value={currentAddress} onChange={(e) => setCurrentAddress(e.target.value)} placeholder="Current address" className="h-9" />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Current Address</Label>
+                    <Input value={currentAddress} onChange={(e) => setCurrentAddress(e.target.value)} placeholder="Current address" className="h-11 text-base" />
                   </div>
                 </div>
 
                 {/* Flags text */}
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Flags / Tags</Label>
-                  <Input value={flags} onChange={(e) => setFlags(e.target.value)} placeholder="e.g., Likely Owner, Family, Resident" className="h-9" />
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Flags / Tags</Label>
+                  <Input value={flags} onChange={(e) => setFlags(e.target.value)} placeholder="e.g., Likely Owner, Family, Resident" className="h-11 text-base" />
                 </div>
 
                 {/* Status Flags grid */}
-                <div className="grid grid-cols-4 gap-2 p-3 bg-muted/30 rounded-lg border">
+                <div className="grid grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg border">
                   {[
                     { label: "✍ Decision Maker", value: isDecisionMaker, set: setIsDecisionMaker, color: "" },
                     { label: "🏠 Current Resident", value: currentResident, set: setCurrentResident, color: "" },
@@ -319,9 +319,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                     { label: "🗣 Litigator", value: isLitigator, set: setIsLitigator, color: "text-red-700 font-medium" },
                     { label: "🕊 Deceased", value: deceased, set: setDeceased, color: "text-purple-700 font-medium" },
                   ].map(({ label, value, set, color }) => (
-                    <label key={label} className="flex items-center gap-1.5 cursor-pointer">
-                      <Checkbox checked={value} onCheckedChange={(v) => set(v as boolean)} />
-                      <span className={`text-xs ${color}`}>{label}</span>
+                    <label key={label} className="flex items-center gap-2 cursor-pointer py-1">
+                      <Checkbox checked={value} onCheckedChange={(v) => set(v as boolean)} className="h-5 w-5" />
+                      <span className={`text-sm ${color}`}>{label}</span>
                     </label>
                   ))}
                 </div>
@@ -329,103 +329,103 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             </section>
 
             {/* ══ SECTION 2: Phones & Emails ══════════════════════════════════ */}
-            <section className="border-t pt-5">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5" /> Phones &amp; Emails
+            <section className="border-t pt-6">
+              <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Phone className="h-4.5 w-4.5" /> Phones &amp; Emails
               </h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 {/* ── Phones ── */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-medium">Phone Numbers</span>
-                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{phones.length}</Badge>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium">Phone Numbers</span>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">{phones.length}</Badge>
                   </div>
 
                   {phones.length > 0 ? (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {phones.map((phone, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 p-1.5 bg-muted/30 rounded border text-xs">
-                          <span className="font-mono flex-1 truncate">{formatPhone(phone.phoneNumber)}</span>
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 shrink-0">{phone.phoneType}</Badge>
-                          {phone.dnc === 1 && <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">DNC</Badge>}
-                          <button onClick={() => handleRemovePhone(idx)} className="text-red-400 hover:text-red-600 shrink-0">
-                            <Trash2 className="h-3 w-3" />
+                        <div key={idx} className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-lg border text-sm">
+                          <span className="font-mono flex-1 truncate text-sm">{formatPhone(phone.phoneNumber)}</span>
+                          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 shrink-0">{phone.phoneType}</Badge>
+                          {phone.dnc === 1 && <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">DNC</Badge>}
+                          <button onClick={() => handleRemovePhone(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">No phone numbers</p>
+                    <p className="text-sm text-muted-foreground italic">No phone numbers</p>
                   )}
 
                   {/* Add phone */}
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     <Input
                       value={newPhone}
                       onChange={(e) => setNewPhone(e.target.value)}
                       placeholder="Add phone"
-                      className="h-8 text-xs flex-1"
+                      className="h-10 text-sm flex-1"
                       onKeyDown={(e) => { if (e.key === "Enter") handleAddPhone(); }}
                     />
                     <Select value={newPhoneType} onValueChange={setNewPhoneType}>
-                      <SelectTrigger className="h-8 w-[90px] text-xs">
+                      <SelectTrigger className="h-10 w-[110px] text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {["Mobile", "Landline", "Work", "Home", "Other"].map(t => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                          <SelectItem key={t} value={t} className="text-sm">{t}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="sm" className="h-8 px-2" onClick={handleAddPhone} disabled={!newPhone.trim()}>
-                      <Plus className="h-3 w-3" />
+                    <Button variant="outline" size="sm" className="h-10 px-3" onClick={handleAddPhone} disabled={!newPhone.trim()}>
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   {phoneError && (
-                    <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1.5">
-                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
                       <span>{phoneError}</span>
                     </div>
                   )}
                 </div>
 
                 {/* ── Emails ── */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 text-green-600" />
-                    <span className="text-xs font-medium">Email Addresses</span>
-                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{emails.length}</Badge>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">Email Addresses</span>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">{emails.length}</Badge>
                   </div>
 
                   {emails.length > 0 ? (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {emails.map((email, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 p-1.5 bg-muted/30 rounded border text-xs">
-                          <span className="flex-1 truncate">{email.email}</span>
-                          <button onClick={() => handleRemoveEmail(idx)} className="text-red-400 hover:text-red-600 shrink-0">
-                            <Trash2 className="h-3 w-3" />
+                        <div key={idx} className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-lg border text-sm">
+                          <span className="flex-1 truncate text-sm">{email.email}</span>
+                          <button onClick={() => handleRemoveEmail(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">No email addresses</p>
+                    <p className="text-sm text-muted-foreground italic">No email addresses</p>
                   )}
 
                   {/* Add email */}
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     <Input
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       placeholder="Add email"
-                      className="h-8 text-xs flex-1"
+                      className="h-10 text-sm flex-1"
                       type="email"
                       onKeyDown={(e) => { if (e.key === "Enter") handleAddEmail(); }}
                     />
-                    <Button variant="outline" size="sm" className="h-8 px-2" onClick={handleAddEmail} disabled={!newEmail.trim()}>
-                      <Plus className="h-3 w-3" />
+                    <Button variant="outline" size="sm" className="h-10 px-3" onClick={handleAddEmail} disabled={!newEmail.trim()}>
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -433,35 +433,35 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             </section>
 
             {/* ══ SECTION 3: Call History (scrollable list) ═══════════════════ */}
-            <section className="border-t pt-5">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                <History className="h-3.5 w-3.5" />
+            <section className="border-t pt-6">
+              <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <History className="h-4.5 w-4.5" />
                 Call History
                 {contactCommunications.length > 0 && (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-1">
+                  <Badge variant="secondary" className="text-xs px-2 py-0 h-5 ml-1">
                     {contactCommunications.length}
                   </Badge>
                 )}
               </h3>
 
               {contactCommunications.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <History className="h-7 w-7 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">No call history for this contact yet</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No call history for this contact yet</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                   {contactCommunications.map((comm: any, idx: number) => (
-                    <div key={idx} className="p-2.5 bg-muted/30 rounded-lg border space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs text-muted-foreground">
+                    <div key={idx} className="p-3.5 bg-muted/30 rounded-lg border space-y-1.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-sm text-muted-foreground">
                             {new Date(comm.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                             {" "}
                             {new Date(comm.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                           </span>
                           {comm.phoneNumber && (
-                            <Badge variant="outline" className="text-[10px] font-mono px-1 py-0 h-4">
+                            <Badge variant="outline" className="text-xs font-mono px-1.5 py-0 h-5">
                               {formatPhone(comm.phoneNumber)}
                             </Badge>
                           )}
@@ -469,7 +469,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                         {comm.disposition && (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] px-1.5 py-0 h-4 shrink-0 ${
+                            className={`text-xs px-2 py-0 h-5 shrink-0 ${
                               comm.disposition.includes("HOT") ? "bg-red-100 text-red-800 border-red-300" :
                               comm.disposition.includes("WARM") ? "bg-orange-100 text-orange-800 border-orange-300" :
                               comm.disposition === "Left Message" ? "bg-green-100 text-green-800 border-green-300" :
@@ -482,9 +482,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                           </Badge>
                         )}
                       </div>
-                      {comm.notes && <p className="text-xs text-foreground">{comm.notes}</p>}
-                      {comm.mood && <p className="text-xs text-muted-foreground">Mood: {comm.mood}</p>}
-                      {comm.agentName && <p className="text-xs text-muted-foreground">Agent: {comm.agentName}</p>}
+                      {comm.notes && <p className="text-sm text-foreground">{comm.notes}</p>}
+                      {comm.mood && <p className="text-sm text-muted-foreground">Mood: {comm.mood}</p>}
+                      {comm.agentName && <p className="text-sm text-muted-foreground">Agent: {comm.agentName}</p>}
                     </div>
                   ))}
                 </div>
@@ -494,19 +494,19 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
           </div>
 
           {/* ── Footer: error + save/cancel ─────────────────────────────────── */}
-          <div className="px-6 py-3 border-t bg-background shrink-0 space-y-2">
+          <div className="px-8 py-4 border-t bg-background shrink-0 space-y-3">
             {saveError && (
-              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2.5">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{saveError}</span>
               </div>
             )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                <X className="h-4 w-4 mr-1" /> Cancel
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+                <X className="h-4 w-4 mr-2" /> Cancel
               </Button>
-              <Button onClick={handleSave} disabled={updateContactMutation.isPending}>
-                <Save className="h-4 w-4 mr-1" />
+              <Button size="lg" onClick={handleSave} disabled={updateContactMutation.isPending}>
+                <Save className="h-4 w-4 mr-2" />
                 {updateContactMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
