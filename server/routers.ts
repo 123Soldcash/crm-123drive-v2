@@ -141,7 +141,7 @@ export const appRouter = router({
       const allProperties = await db.getProperties({});
       const counts: Record<string, number> = {};
 
-      allProperties.forEach((property) => {
+      allProperties.forEach((property: any) => {
         // Parse dealMachineRawData to extract property_flags
         if (property.dealMachineRawData) {
           try {
@@ -179,6 +179,13 @@ export const appRouter = router({
             tag: z.string().optional(),
             leadSource: z.string().optional(),
             campaignName: z.string().optional(),
+            // Pagination
+            page: z.number().optional(),
+            pageSize: z.number().optional(),
+            // Server-side filters
+            assignedAgentId: z.number().nullable().optional(),
+            deskName: z.string().optional(),
+            dealStage: z.string().optional(),
           })
           .optional()
       )
@@ -528,7 +535,7 @@ export const appRouter = router({
         const allProperties = await db.getProperties({});
         
         // Transform to format expected by duplicate detection
-        const propertiesForMatching = allProperties.map((p) => ({
+        const propertiesForMatching = allProperties.map((p: any) => ({
           id: p.id,
           address: `${p.addressLine1}${p.addressLine2 ? ' ' + p.addressLine2 : ''}, ${p.city}, ${p.state} ${p.zipcode}`,
           ownerName: p.owner1Name,
@@ -1982,7 +1989,7 @@ export const appRouter = router({
             // Filter by status tags on the server side
             let filteredCount = properties.length;
             if (filters.statusTags && filters.statusTags.length > 0) {
-              const filtered = properties.filter((property) => {
+              const filtered = properties.filter((property: any) => {
                 if (!property.status) return false;
                 const propertyTags = property.status.split(",").map((t: string) => t.trim());
                 return filters.statusTags.every((tag: string) => propertyTags.includes(tag));
@@ -2922,7 +2929,7 @@ export const appRouter = router({
         });
 
         // Find current property index
-        const currentIndex = allProperties.findIndex(p => p.id === input.currentPropertyId);
+        const currentIndex = allProperties.findIndex((p: any) => p.id === input.currentPropertyId);
         
         if (currentIndex === -1) {
           return { previousId: null, nextId: null };

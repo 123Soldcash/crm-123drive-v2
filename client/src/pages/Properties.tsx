@@ -201,6 +201,8 @@ export default function Properties() {
 
   const [deskDialogOpen, setDeskDialogOpen] = useState(false);
   const [selectedPropertyForDesk, setSelectedPropertyForDesk] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   // Load filters from sessionStorage if navigated from dashboard widget
   useEffect(() => {
@@ -228,7 +230,7 @@ export default function Properties() {
     }
   }, []);
 
-  // Fetch properties with filters
+  // Fetch properties with filters + server-side pagination
   const { data: properties, isLoading } = trpc.properties.list.useQuery({
     search: filters.search || undefined,
     ownerLocation: (filters.ownerLocation && filters.ownerLocation !== "all" ? filters.ownerLocation : undefined),
@@ -240,6 +242,13 @@ export default function Properties() {
     tag: (filters.tag && filters.tag !== "all" ? filters.tag : undefined),
     leadSource: (filters.leadSource && filters.leadSource !== "all" ? filters.leadSource : undefined),
     campaignName: (filters.campaignName && filters.campaignName !== "all" ? filters.campaignName : undefined),
+    // Server-side filters (moved from client)
+    assignedAgentId: filters.assignedAgentId !== null ? filters.assignedAgentId : undefined,
+    deskName: (filters.deskName && filters.deskName !== "all" ? filters.deskName : undefined),
+    dealStage: (filters.dealStage && filters.dealStage !== "all" ? filters.dealStage : undefined),
+    // Pagination
+    page: currentPage,
+    pageSize: PAGE_SIZE,
   }) as { data: any[] | undefined; isLoading: boolean };
 
   // Fetch status counts
@@ -343,28 +352,12 @@ export default function Properties() {
     return [];
   };
 
-  // Filter properties by status tags and agent on the client side
+  // Filter properties by status tags on the client side (other filters are server-side)
   const filteredProperties = useMemo(() => {
     if (!properties) return [];
     let filtered = properties;
 
-    // Filter by agent (admin only)
-    if (filters.assignedAgentId !== null) {
-      if (filters.assignedAgentId === 0) {
-        // Show unassigned properties
-        filtered = filtered.filter((p) => !p.assignedAgentId);
-      } else {
-        // Show properties assigned to specific agent
-        filtered = filtered.filter((p) => p.assignedAgentId === filters.assignedAgentId);
-      }
-    }
-
-    // Filter by desk
-    if (filters.deskName) {
-      filtered = filtered.filter((p) => p.deskName === filters.deskName);
-    }
-
-    // Filter by property flags (parsed from dealMachineRawData)
+    // Filter by property flags (parsed from dealMachineRawData) — still client-side
     if (filters.statusTags.length > 0) {
       filtered = filtered.filter((property) => {
         const flags = getPropertyFlags(property);
@@ -372,11 +365,6 @@ export default function Properties() {
         // Property must have ALL selected tags
         return filters.statusTags.every((tag) => flags.includes(tag));
       });
-    }
-
-    // Filter by Pipeline stage
-    if (filters.dealStage) {
-      filtered = filtered.filter((p) => p.dealStage === filters.dealStage);
     }
 
     // Sort
@@ -405,7 +393,7 @@ export default function Properties() {
     }
 
     return sorted;
-  }, [properties, filters.statusTags, filters.assignedAgentId, filters.deskName, filters.dealStage, sortBy]);
+  }, [properties, filters.statusTags, sortBy]);
 
   // Store property IDs in localStorage for next/previous navigation
   useEffect(() => {
@@ -414,6 +402,11 @@ export default function Properties() {
       localStorage.setItem('propertyNavigationIds', JSON.stringify(propertyIds));
     }
   }, [filteredProperties]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.search, filters.ownerLocation, filters.minEquity, filters.marketStatus, filters.leadTemperature, filters.ownerVerified, filters.visited, filters.tag, filters.leadSource, filters.campaignName, filters.assignedAgentId, filters.deskName, filters.dealStage]);
 
   const toggleStatusTag = (tag: string) => {
     setFilters((prev) => ({
@@ -1233,6 +1226,35 @@ export default function Properties() {
             </Table>
             </div>
             </>
+          )}
+
+          {/* Pagination controls */}
+          {!isLoading && filteredProperties.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{((currentPage - 1) * PAGE_SIZE) + filteredProperties.length} of page {currentPage}
+                {filteredProperties.length === PAGE_SIZE && " (more available)"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  ← Previous
+                </Button>
+                <span className="text-sm font-medium px-2">Page {currentPage}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={filteredProperties.length < PAGE_SIZE}
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

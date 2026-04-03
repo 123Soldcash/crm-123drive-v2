@@ -157,7 +157,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
               <div className="space-y-2">
                 <p className="text-sm font-medium">Found {searchResults.length} properties:</p>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {searchResults.map((property) => {
+                  {searchResults.map((property: any) => {
                     const currentStageConfig = STAGE_CONFIGS.find((s) => s.id === property.dealStage);
                     return (
                       <Card key={property.id} className="p-3">

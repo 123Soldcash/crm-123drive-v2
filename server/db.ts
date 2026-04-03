@@ -136,9 +136,20 @@ export async function getProperties(filters?: {
   tag?: string;
   leadSource?: string;
   campaignName?: string;
+  // Pagination
+  page?: number;
+  pageSize?: number;
+  // Server-side filters (moved from client)
+  assignedAgentId?: number | null;
+  deskName?: string;
+  dealStage?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
+
+  const page = filters?.page ?? 1;
+  const pageSize = filters?.pageSize ?? 50;
+  const offset = (page - 1) * pageSize;
 
   let query = db.select({
     id: properties.id,
@@ -157,7 +168,7 @@ export async function getProperties(filters?: {
     ownerVerified: properties.ownerVerified,
     assignedAgentId: properties.assignedAgentId,
     marketStatus: properties.marketStatus,
-    dealMachineRawData: properties.dealMachineRawData,
+    // dealMachineRawData excluded from list — only loaded in detail view
     apnParcelId: properties.apnParcelId,
     propertyId: properties.propertyId,
     status: properties.status,
@@ -166,6 +177,10 @@ export async function getProperties(filters?: {
     dealStage: properties.dealStage,
     ownerLocation: properties.ownerLocation,
     createdAt: properties.createdAt,
+    source: properties.source,
+    listName: properties.listName,
+    leadSource: properties.leadSource,
+    campaignName: properties.campaignName,
   }).from(properties);
   const conditions = [];
 
@@ -272,11 +287,31 @@ export async function getProperties(filters?: {
     conditions.push(eq(properties.campaignName, filters.campaignName));
   }
 
+  // Server-side filters moved from client
+  if (filters?.assignedAgentId !== undefined && filters?.assignedAgentId !== null) {
+    if (filters.assignedAgentId === 0) {
+      conditions.push(isNull(properties.assignedAgentId));
+    } else {
+      conditions.push(eq(properties.assignedAgentId, filters.assignedAgentId));
+    }
+  }
+  if (filters?.deskName) {
+    conditions.push(eq(properties.deskName, filters.deskName));
+  }
+  if (filters?.dealStage) {
+    conditions.push(eq(properties.dealStage, filters.dealStage as any));
+  }
+
   if (conditions.length > 0) {
     query = query.where(and(...conditions)) as typeof query;
   }
 
-  const results = await query.orderBy(desc(properties.estimatedValue));
+  // Apply sort + pagination
+  const results = await (query as any)
+    .orderBy(desc(properties.createdAt))
+    .limit(pageSize)
+    .offset(offset);
+
   return results;
 }
 
@@ -296,6 +331,11 @@ export async function getPropertiesWithAgents(filters?: {
   tag?: string;
   leadSource?: string;
   campaignName?: string;
+  page?: number;
+  pageSize?: number;
+  assignedAgentId?: number | null;
+  deskName?: string;
+  dealStage?: string;
 }) {
   // Simply call getProperties - the agent filtering logic is already there
   return await getProperties(filters);

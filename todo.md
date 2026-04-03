@@ -2939,3 +2939,14 @@
 - [x] Test import with 10 rows to validate mapping
 - [x] Run full import of all 3,048 leads (3,005 inserted, 43 skipped as duplicates)
 - [x] Verified: 4,026 total properties | 5,253 contacts | 7,613 phones | 8,136 emails | 5,987 tags
+
+## DB Optimization + Properties Page Performance
+- [x] Analyzed current properties query — no LIMIT, fetching all 4,026 rows, 0 indexes
+- [x] Applied 20 indexes: properties (createdAt, leadTemperature, deskName, assignedAgentId, dealStage, source, leadId, addressLine1, zipcode, estimatedValue)
+- [x] Applied indexes: contacts (propertyId), contactPhones (contactId, phoneNumber), contactEmails (contactId, email)
+- [x] Applied indexes: propertyTags (propertyId, tag), notes (propertyId, createdAt), callLogs (propertyId, createdAt)
+- [x] Applied indexes: propertyAgents (propertyId, userId), skiptracingLogs (propertyId), tasks (propertyId, dueDate)
+- [x] Optimized properties list query: lean SELECT (removed dealMachineRawData), LIMIT 50 OFFSET
+- [x] Moved assignedAgentId, deskName, dealStage filters server-side
+- [x] Benchmark: 72ms (4,026 rows) → 17ms (50 rows) = 4.2x faster at DB level
+- [x] Added Previous/Next pagination controls to Properties.tsx
