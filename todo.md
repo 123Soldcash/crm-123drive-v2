@@ -2950,3 +2950,10 @@
 - [x] Moved assignedAgentId, deskName, dealStage filters server-side
 - [x] Benchmark: 72ms (4,026 rows) → 17ms (50 rows) = 4.2x faster at DB level
 - [x] Added Previous/Next pagination controls to Properties.tsx
+- [x] Fixed Properties.tsx to destructure {data, totalCount} from paginated API response
+- [x] Properties header now shows total count (4,026) instead of page count (50)
+- [x] Pagination shows "Showing 1-50 of 4,026 properties" with "Page 1 of 81"
+- [x] Next button correctly disabled on last page (based on totalPages)
+- [x] Fixed Dashboard getStats to use efficient SQL COUNT queries instead of loading all 4,026 rows
+- [x] Dashboard now correctly shows Total Properties: 4,026
+- [x] Dashboard visited count now uses proper JOIN with visits table

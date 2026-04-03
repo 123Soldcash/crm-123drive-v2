@@ -145,7 +145,7 @@ export async function getProperties(filters?: {
   dealStage?: string;
 }) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return { data: [], totalCount: 0 };
 
   const page = filters?.page ?? 1;
   const pageSize = filters?.pageSize ?? 50;
@@ -261,7 +261,7 @@ export async function getProperties(filters?: {
     ]));
     
     if (searchPropertyIds.length === 0) {
-      return []; // No matches found
+      return { data: [], totalCount: 0 }; // No matches found
     }
     conditions.push(sql`${properties.id} IN (${sql.join(searchPropertyIds.map(id => sql`${id}`), sql`, `)})`);
   }
@@ -273,7 +273,7 @@ export async function getProperties(filters?: {
       .from(propertyTags)
       .where(eq(propertyTags.tag, filters.tag));
     const tagPropertyIds = tagMatches.map(t => t.propertyId);
-    if (tagPropertyIds.length === 0) return [];
+    if (tagPropertyIds.length === 0) return { data: [], totalCount: 0 };
     conditions.push(sql`${properties.id} IN (${sql.join(tagPropertyIds.map(id => sql`${id}`), sql`, `)})`);
   }
 
@@ -306,13 +306,20 @@ export async function getProperties(filters?: {
     query = query.where(and(...conditions)) as typeof query;
   }
 
+  // Get total count (same conditions, no pagination)
+  let countQuery = db.select({ count: sql<number>`COUNT(*)` }).from(properties);
+  if (conditions.length > 0) {
+    countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
+  }
+  const [{ count: totalCount }] = await countQuery;
+
   // Apply sort + pagination
   const results = await (query as any)
     .orderBy(desc(properties.createdAt))
     .limit(pageSize)
     .offset(offset);
 
-  return results;
+  return { data: results, totalCount: Number(totalCount) };
 }
 
 
@@ -2440,7 +2447,8 @@ export async function toggleOwnerVerified(propertyId: number, verified: boolean)
 }
 
 export async function getPropertyStats(filters?: { userId?: number; userRole?: string }) {
-  const allProperties = await getProperties(filters);
+  const result = await getProperties({ ...filters, pageSize: 10000 });
+  const allProperties = result.data;
   return {
     total: allProperties.length,
     superHot: allProperties.filter((p: any) => p.leadTemperature === "SUPER HOT").length,
@@ -2517,12 +2525,13 @@ export async function getPropertiesWithFilters(filters: {
   userId?: number;
   userRole?: string;
 }) {
-  const allProperties = await getProperties({
+  const result = await getProperties({
     userId: filters.userId,
     userRole: filters.userRole,
+    pageSize: 10000,
   });
   
-  let filtered = allProperties;
+  let filtered = result.data;
   if (filters.leadTemperature) {
     filtered = filtered.filter((p: any) => p.leadTemperature === filters.leadTemperature);
   }

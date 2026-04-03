@@ -138,7 +138,8 @@ export const appRouter = router({
   properties: router({
     statusCounts: protectedProcedure.query(async () => {
       // Get all properties and count property flags from dealMachineRawData
-      const allProperties = await db.getProperties({});
+      const result = await db.getProperties({ pageSize: 10000 });
+      const allProperties = result.data;
       const counts: Record<string, number> = {};
 
       allProperties.forEach((property: any) => {
@@ -205,14 +206,15 @@ export const appRouter = router({
       )
       .query(async ({ input, ctx }) => {
         // Search properties by address
-        const properties = await db.getPropertiesWithAgents({
+        const result = await db.getPropertiesWithAgents({
           search: input.query,
           userId: ctx.user?.id,
           userRole: ctx.user?.role,
+          pageSize: 10,
         });
         
         // Return top 10 results
-        return properties.slice(0, 10);
+        return result.data;
       }),
 
     updateStatus: protectedProcedure
@@ -532,7 +534,8 @@ export const appRouter = router({
       )
       .query(async ({ input }) => {
         // Get all properties for duplicate detection
-        const allProperties = await db.getProperties({});
+        const result = await db.getProperties({ pageSize: 10000 });
+        const allProperties = result.data;
         
         // Transform to format expected by duplicate detection
         const propertiesForMatching = allProperties.map((p: any) => ({
@@ -1979,12 +1982,14 @@ export const appRouter = router({
         searches.map(async (search) => {
           try {
             const filters = JSON.parse(search.filters);
-            const properties = await db.getProperties({
+            const result = await db.getProperties({
               search: filters.search || undefined,
               ownerLocation: filters.ownerLocation || undefined,
               minEquity: filters.minEquity > 0 ? filters.minEquity : undefined,
               trackingStatus: filters.marketStatus || undefined,
+              pageSize: 10000,
             });
+            const properties = result.data;
 
             // Filter by status tags on the server side
             let filteredCount = properties.length;
@@ -2921,12 +2926,14 @@ export const appRouter = router({
         })
       )
       .query(async ({ input, ctx }) => {
-        // Get the filtered property list
-        const allProperties = await db.getPropertiesWithAgents({
+        // Get the filtered property list (no pagination for navigation)
+        const result = await db.getPropertiesWithAgents({
           ...input.filters,
           userId: ctx.user?.id,
           userRole: ctx.user?.role,
+          pageSize: 10000, // Get all for navigation
         });
+        const allProperties = result.data;
 
         // Find current property index
         const currentIndex = allProperties.findIndex((p: any) => p.id === input.currentPropertyId);
@@ -3804,31 +3811,59 @@ export const appRouter = router({
     getStats: protectedProcedure
       .input(z.number().optional())
       .query(async ({ input: agentId, ctx }) => {
-        // Get all properties
-        const allProperties = await db.getProperties({
-          userId: ctx.user?.id,
-          userRole: ctx.user?.role,
-        });
+        const dbInstance = await db.getDb();
+        if (!dbInstance) throw new Error("Database not available");
 
-        // Filter by agent if admin selected one
-        const filtered = agentId && ctx.user?.role === 'admin' 
-          ? allProperties.filter((p: any) => p.assignedAgentId === agentId)
-          : allProperties;
+        // Build base condition: agent filtering
+        const conditions: any[] = [];
+        if (ctx.user?.role !== 'admin' && ctx.user?.id) {
+          conditions.push(eq(properties.assignedAgentId, ctx.user.id));
+        } else if (agentId && ctx.user?.role === 'admin') {
+          conditions.push(eq(properties.assignedAgentId, agentId));
+        }
 
-        // Calculate stats
-        const stats = {
-          total: filtered.length,
-          newLeads: filtered.filter((p: any) => p.deskName === "NEW_LEAD").length,
-          superHot: filtered.filter((p: any) => p.leadTemperature === "SUPER HOT").length,
-          hot: filtered.filter((p: any) => p.leadTemperature === "HOT").length,
-          warm: filtered.filter((p: any) => p.leadTemperature === "WARM").length,
-          cold: filtered.filter((p: any) => p.leadTemperature === "COLD").length,
-          dead: filtered.filter((p: any) => p.leadTemperature === "DEAD").length,
-          ownerVerified: filtered.filter((p: any) => p.ownerVerified).length,
-          visited: 0,
+        const baseWhere = conditions.length > 0 ? and(...conditions) : undefined;
+
+        // Use efficient SQL COUNT queries instead of loading all rows
+        const countQuery = (extraCondition?: any) => {
+          const allConditions = extraCondition 
+            ? (baseWhere ? and(baseWhere, extraCondition) : extraCondition)
+            : baseWhere;
+          const q = dbInstance.select({ count: sql<number>`COUNT(*)` }).from(properties);
+          return allConditions ? q.where(allConditions) : q;
         };
 
-        return stats;
+        const [totalResult] = await countQuery();
+        const [newLeadsResult] = await countQuery(eq(properties.deskName, 'NEW_LEAD'));
+        const [superHotResult] = await countQuery(eq(properties.leadTemperature, 'SUPER HOT'));
+        const [hotResult] = await countQuery(eq(properties.leadTemperature, 'HOT'));
+        const [warmResult] = await countQuery(eq(properties.leadTemperature, 'WARM'));
+        const [coldResult] = await countQuery(eq(properties.leadTemperature, 'COLD'));
+        const [deadResult] = await countQuery(eq(properties.leadTemperature, 'DEAD'));
+        const [ownerVerifiedResult] = await countQuery(eq(properties.ownerVerified, 1));
+
+        // Visited count (requires join with visits table)
+        let visitedCount = 0;
+        try {
+          const visitedQuery = dbInstance
+            .select({ count: sql<number>`COUNT(DISTINCT ${properties.id})` })
+            .from(properties)
+            .innerJoin(visits, eq(visits.propertyId, properties.id));
+          const [visitedResult] = baseWhere ? await visitedQuery.where(baseWhere) : await visitedQuery;
+          visitedCount = Number(visitedResult?.count || 0);
+        } catch { visitedCount = 0; }
+
+        return {
+          total: Number(totalResult?.count || 0),
+          newLeads: Number(newLeadsResult?.count || 0),
+          superHot: Number(superHotResult?.count || 0),
+          hot: Number(hotResult?.count || 0),
+          warm: Number(warmResult?.count || 0),
+          cold: Number(coldResult?.count || 0),
+          dead: Number(deadResult?.count || 0),
+          ownerVerified: Number(ownerVerifiedResult?.count || 0),
+          visited: visitedCount,
+        };
       }),
     importDealMachine: protectedProcedure
       .input(

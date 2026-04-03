@@ -231,7 +231,7 @@ export default function Properties() {
   }, []);
 
   // Fetch properties with filters + server-side pagination
-  const { data: properties, isLoading } = trpc.properties.list.useQuery({
+  const { data: queryResult, isLoading } = trpc.properties.list.useQuery({
     search: filters.search || undefined,
     ownerLocation: (filters.ownerLocation && filters.ownerLocation !== "all" ? filters.ownerLocation : undefined),
     minEquity: filters.minEquity > 0 ? filters.minEquity : undefined,
@@ -249,7 +249,10 @@ export default function Properties() {
     // Pagination
     page: currentPage,
     pageSize: PAGE_SIZE,
-  }) as { data: any[] | undefined; isLoading: boolean };
+  });
+  const properties = (queryResult as any)?.data as any[] | undefined;
+  const totalCount = (queryResult as any)?.totalCount as number ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // Fetch status counts
   const { data: statusCounts = {} } = trpc.properties.statusCounts.useQuery();
@@ -476,7 +479,7 @@ export default function Properties() {
         <div>
           <h1 className="text-3xl font-bold">Properties</h1>
           <p className="text-muted-foreground">
-            Browse and filter your property leads ({filteredProperties?.length || 0} properties)
+            Browse and filter your property leads ({totalCount.toLocaleString()} properties)
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1232,8 +1235,7 @@ export default function Properties() {
           {!isLoading && filteredProperties.length > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{((currentPage - 1) * PAGE_SIZE) + filteredProperties.length} of page {currentPage}
-                {filteredProperties.length === PAGE_SIZE && " (more available)"}
+                Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, totalCount)} of {totalCount.toLocaleString()} properties
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -1244,12 +1246,12 @@ export default function Properties() {
                 >
                   ← Previous
                 </Button>
-                <span className="text-sm font-medium px-2">Page {currentPage}</span>
+                <span className="text-sm font-medium px-2">Page {currentPage} of {totalPages}</span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(p => p + 1)}
-                  disabled={filteredProperties.length < PAGE_SIZE}
+                  disabled={currentPage >= totalPages}
                 >
                   Next →
                 </Button>
