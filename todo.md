@@ -2975,3 +2975,8 @@
 - [x] Add backend tRPC procedures for Chris Notes CRUD — reused existing notes procedures with noteType filter
 - [x] Create ChrisNotesSection frontend component (duplicate of General Notes)
 - [x] Position Chris Notes above Tags on PropertyDetail page
+
+## Website Lead Source Update
+- [x] Identify leads from website (steps 1 and 2 filled) — 20 leads found (12 Complete + 8 Step 1), all already had leadSource=Website
+- [x] Retroactively update leadSource to "Website" for those leads — already correct, 113 total with Website source
+- [x] Ensure future website leads auto-get leadSource = "Website" — added to webhook submitLead mutation

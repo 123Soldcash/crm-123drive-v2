@@ -3775,6 +3775,8 @@ export const appRouter = router({
             deskName: 'NEW_LEAD',
             deskStatus: 'BIN',
             status: input.source ? `WordPress Form - ${input.source}` : 'WordPress Form',
+            leadSource: 'Website',
+            source: 'Manual',
           });
 
           // If contact info provided, add contact
