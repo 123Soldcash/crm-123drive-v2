@@ -2980,3 +2980,6 @@
 - [x] Identify leads from website (steps 1 and 2 filled) — 20 leads found (12 Complete + 8 Step 1), all already had leadSource=Website
 - [x] Retroactively update leadSource to "Website" for those leads — already correct, 113 total with Website source
 - [x] Ensure future website leads auto-get leadSource = "Website" — added to webhook submitLead mutation
+
+## Phone Number Normalization in Database
+- [x] Update all contactPhones in DB: remove +, remove trailing 0 for + numbers, normalize to 1XXXXXXXXXX format — 9,098 updated, 9,107 now 11 digits
