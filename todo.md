@@ -2983,3 +2983,6 @@
 
 ## Phone Number Normalization in Database
 - [x] Update all contactPhones in DB: remove +, remove trailing 0 for + numbers, normalize to 1XXXXXXXXXX format — 9,098 updated, 9,107 now 11 digits
+
+## Chris Notes - Paste Screenshot Fix
+- [x] Fix Ctrl+V paste screenshot not working in Chris Notes — added missing global paste event listener

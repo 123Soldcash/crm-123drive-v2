@@ -134,6 +134,34 @@ export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
     }
   }, []);
 
+  // ─── GLOBAL paste listener (works even without textarea focus) ───────────────
+  useEffect(() => {
+    const handleGlobalPaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const blobs = extractImageBlobs(items);
+      if (blobs.length === 0) return;
+
+      // Only intercept if the active element is not an input/textarea
+      // (to avoid stealing paste from other fields on the page)
+      const active = document.activeElement;
+      const isTypingElsewhere =
+        active &&
+        active !== textareaRef.current &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA") &&
+        !formAreaRef.current?.contains(active);
+
+      if (isTypingElsewhere) return;
+
+      e.preventDefault();
+      await processImageBlobs(blobs);
+    };
+
+    document.addEventListener("paste", handleGlobalPaste);
+    return () => document.removeEventListener("paste", handleGlobalPaste);
+  }, [processImageBlobs]);
+
   // ─── Drag & Drop handlers ────────────────────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
