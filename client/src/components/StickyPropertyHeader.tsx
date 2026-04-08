@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -49,20 +50,35 @@ import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig
 import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 import { PropertyImage } from "@/components/PropertyImage";
 
-// Desk options with colors
+// Desk options - fetched dynamically from DB
 const NOT_ASSIGNED_DESK = { value: "NOT_ASSIGNED", label: "⚪ Not Assigned", color: "bg-gray-100 text-gray-500 border-gray-300" };
-const DESK_OPTIONS = [
+const DEFAULT_DESK_COLORS: Record<string, string> = {
+  NEW_LEAD: "bg-green-200 text-green-800 border-green-300",
+  DESK_CHRIS: "bg-orange-200 text-orange-800 border-orange-300",
+  DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800 border-purple-300",
+  DESK_1: "bg-sky-200 text-sky-800 border-sky-300",
+  DESK_2: "bg-emerald-200 text-emerald-800 border-emerald-300",
+  DESK_3: "bg-pink-200 text-pink-800 border-pink-300",
+  DESK_4: "bg-blue-600 text-white border-blue-700",
+  DESK_5: "bg-amber-200 text-amber-800 border-amber-300",
+  BIN: "bg-gray-200 text-gray-700 border-gray-300",
+  DEAD: "bg-gray-800 text-white border-gray-900",
+};
+const FALLBACK_DESK_OPTIONS = [
   { value: "NEW_LEAD", label: "🆕 New Lead", color: "bg-green-200 text-green-800 border-green-300" },
-  { value: "DESK_CHRIS", label: "🏀 Chris", color: "bg-orange-200 text-orange-800 border-orange-300" },
-  { value: "DESK_DEEP_SEARCH", label: "🔍 Deep Search", color: "bg-purple-200 text-purple-800 border-purple-300" },
-  { value: "DESK_1", label: "🟦 Manager", color: "bg-sky-200 text-sky-800 border-sky-300" },
-  { value: "DESK_2", label: "🟩 Edsel", color: "bg-emerald-200 text-emerald-800 border-emerald-300" },
-  { value: "DESK_3", label: "🟧 Zach", color: "bg-pink-200 text-pink-800 border-pink-300" },
-  { value: "DESK_4", label: "🔵 Rodolfo", color: "bg-blue-600 text-white border-blue-700" },
-  { value: "DESK_5", label: "🟨 Lucas", color: "bg-amber-200 text-amber-800 border-amber-300" },
   { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
   { value: "DEAD", label: "💀 Dead", color: "bg-gray-800 text-white border-gray-900" },
 ];
+function buildDeskLabel(name: string): string {
+  if (name === "BIN") return "🗑️ BIN";
+  if (name === "DEAD") return "💀 Dead";
+  if (name === "NEW_LEAD") return "🆕 New Lead";
+  return `📁 ${name}`;
+}
+function buildDeskColor(name: string, dbColor?: string | null): string {
+  if (dbColor) return dbColor;
+  return DEFAULT_DESK_COLORS[name] || "bg-slate-200 text-slate-800 border-slate-300";
+}
 
 interface StickyPropertyHeaderProps {
   property: any;
@@ -108,6 +124,17 @@ export function StickyPropertyHeader({
   const [deadReason, setDeadReason] = useState("");
   const [deadReasonError, setDeadReasonError] = useState("");
   const [deadCategoryError, setDeadCategoryError] = useState("");
+
+  // Fetch desks from DB
+  const { data: desksData } = trpc.desks.list.useQuery(undefined, { staleTime: 30_000 });
+  const DESK_OPTIONS = useMemo(() => {
+    if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
+    return desksData.map((d: any) => ({
+      value: d.name,
+      label: buildDeskLabel(d.name),
+      color: buildDeskColor(d.name, d.color),
+    }));
+  }, [desksData]);
 
   const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || NOT_ASSIGNED_DESK;
 

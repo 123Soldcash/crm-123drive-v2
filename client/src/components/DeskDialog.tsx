@@ -16,22 +16,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 
-// Fixed desk options with colors
-const DESK_OPTIONS = [
+// Fallback static options (used while DB loads or if query fails)
+const FALLBACK_DESK_OPTIONS = [
   { value: "NEW_LEAD", label: "🆕 New Lead", description: "Novos leads - entrada padrão", color: "bg-green-200 text-green-800" },
-  { value: "DESK_CHRIS", label: "🏀 Desk Chris", description: "Leads do Chris", color: "bg-orange-200 text-orange-800" },
-  { value: "DESK_DEEP_SEARCH", label: "🔍 Deep Search", description: "Leads para pesquisa aprofundada", color: "bg-purple-200 text-purple-800" },
-  { value: "DESK_1", label: "🟦 Manager", description: "Desk 1 - Manager", color: "bg-sky-200 text-sky-800" },
-  { value: "DESK_2", label: "🟩 Edsel", description: "Desk 2 - Edsel", color: "bg-emerald-200 text-emerald-800" },
-  { value: "DESK_3", label: "🟧 Zach", description: "Desk 3 - Zach", color: "bg-pink-200 text-pink-800" },
-  { value: "DESK_4", label: "🔵 Rodolfo", description: "Desk 4 - Rodolfo", color: "bg-blue-600 text-white" },
-  { value: "DESK_5", label: "🟨 Lucas", description: "Desk 5 - Lucas", color: "bg-amber-200 text-amber-800" },
   { value: "BIN", label: "🗑️ BIN", description: "Leads descartadas", color: "bg-gray-200 text-gray-700" },
   { value: "DEAD", label: "💀 Dead", description: "Dead leads - finalizadas", color: "bg-gray-800 text-white" },
 ];
+
+// Default color mapping for known desk names
+const DEFAULT_COLORS: Record<string, string> = {
+  NEW_LEAD: "bg-green-200 text-green-800",
+  DESK_CHRIS: "bg-orange-200 text-orange-800",
+  DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800",
+  DESK_1: "bg-sky-200 text-sky-800",
+  DESK_2: "bg-emerald-200 text-emerald-800",
+  DESK_3: "bg-pink-200 text-pink-800",
+  DESK_4: "bg-blue-600 text-white",
+  DESK_5: "bg-amber-200 text-amber-800",
+  BIN: "bg-gray-200 text-gray-700",
+  DEAD: "bg-gray-800 text-white",
+};
+
+function getDeskColor(name: string, dbColor?: string | null): string {
+  if (dbColor) return dbColor;
+  return DEFAULT_COLORS[name] || "bg-slate-200 text-slate-800";
+}
 
 interface DeskDialogProps {
   open: boolean;
@@ -54,6 +67,26 @@ export function DeskDialog({
   const [deadReason, setDeadReason] = useState("");
   const [deadReasonError, setDeadReasonError] = useState("");
 
+  // Fetch desks from database
+  const { data: desksData, isLoading: desksLoading } = trpc.desks.list.useQuery(undefined, {
+    enabled: open,
+    staleTime: 30_000,
+  });
+
+  // Build desk options from DB data
+  const deskOptions = useMemo(() => {
+    if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
+    return desksData.map((desk: any) => ({
+      value: desk.name,
+      label: desk.name === "BIN" ? "🗑️ BIN"
+           : desk.name === "DEAD" ? "💀 Dead"
+           : desk.name === "NEW_LEAD" ? "🆕 New Lead"
+           : `📁 ${desk.name}`,
+      description: desk.description || "",
+      color: getDeskColor(desk.name, desk.color),
+    }));
+  }, [desksData]);
+
   // Update state when dialog opens with new property
   useEffect(() => {
     setSelectedDesk(currentDeskName || "BIN");
@@ -62,7 +95,6 @@ export function DeskDialog({
   }, [currentDeskName, open]);
 
   const handleSave = () => {
-    // Map desk selection to deskName and deskStatus
     let deskName: string | undefined;
     let deskStatus: "BIN" | "ACTIVE" | "DEAD";
 
@@ -75,7 +107,6 @@ export function DeskDialog({
     } else if (selectedDesk === "DEAD") {
       deskName = "DEAD";
       deskStatus = "DEAD";
-      // Require justification for Dead
       if (!deadReason.trim()) {
         setDeadReasonError("A justification is required when marking a lead as Dead.");
         return;
@@ -89,7 +120,7 @@ export function DeskDialog({
     onOpenChange(false);
   };
 
-  const currentDeskOption = DESK_OPTIONS.find(d => d.value === selectedDesk);
+  const currentDeskOption = deskOptions.find((d: any) => d.value === selectedDesk);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,23 +134,30 @@ export function DeskDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="desk-select">Selecione a Desk</Label>
-            <Select value={selectedDesk} onValueChange={(v) => { setSelectedDesk(v); setDeadReasonError(""); }}>
-              <SelectTrigger id="desk-select" className="w-full">
-                <SelectValue placeholder="Selecione uma desk..." />
-              </SelectTrigger>
-              <SelectContent>
-                {DESK_OPTIONS.map((desk) => (
-                  <SelectItem key={desk.value} value={desk.value}>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-xs ${desk.color}`}>
-                        {desk.label}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {currentDeskOption && (
+            {desksLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading desks...
+              </div>
+            ) : (
+              <Select value={selectedDesk} onValueChange={(v) => { setSelectedDesk(v); setDeadReasonError(""); }}>
+                <SelectTrigger id="desk-select" className="w-full">
+                  <SelectValue placeholder="Selecione uma desk..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {deskOptions.map((desk: any) => (
+                    <SelectItem key={desk.value} value={desk.value}>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-xs ${desk.color}`}>
+                          {desk.label}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {currentDeskOption && currentDeskOption.description && (
               <p className="text-xs text-muted-foreground mt-1">
                 {currentDeskOption.description}
               </p>

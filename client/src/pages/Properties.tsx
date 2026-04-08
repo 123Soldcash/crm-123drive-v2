@@ -81,45 +81,44 @@ interface FilterState {
   campaignName: string;
 }
 
-const DESK_OPTIONS = ["NEW_LEAD", "DESK_CHRIS", "DESK_DEEP_SEARCH", "DESK_1", "DESK_2", "DESK_3", "DESK_4", "DESK_5", "BIN", "ARCHIVED"];
-
-// Helper to get desk display label
-const getDeskLabel = (desk: string) => {
-  const labels: Record<string, string> = {
-    NEW_LEAD: "🆕 New Lead",
-    NOT_ASSIGNED: "⚪ Not Assigned",
-    DESK_CHRIS: "🏀 Chris",
-    DESK_DEEP_SEARCH: "🔍 Deep Search",
-    DESK_1: "🟦 Manager",
-    DESK_2: "🟩 Edsel",
-    DESK_3: "🟧 Zach",
-    DESK_4: "🔵 Rodolfo",
-    DESK_5: "🟨 Lucas",
-    BIN: "🗑️ BIN",
-    ARCHIVED: "⬛ Archived",
-  };
-  return labels[desk] || desk;
+// Hardcoded fallback desk labels & colors (used before DB loads)
+const FALLBACK_DESK_LABELS: Record<string, string> = {
+  NEW_LEAD: "🆕 New Lead",
+  NOT_ASSIGNED: "⚪ Not Assigned",
+  DESK_CHRIS: "🏀 Chris",
+  DESK_DEEP_SEARCH: "🔍 Deep Search",
+  DESK_1: "🟦 Manager",
+  DESK_2: "🟩 Edsel",
+  DESK_3: "🟧 Zach",
+  DESK_4: "🔵 Rodolfo",
+  DESK_5: "🟨 Lucas",
+  BIN: "🗑️ BIN",
+  ARCHIVED: "⬛ Archived",
 };
-
-const getDeskColor = (desk: string | null | undefined) => {
-  const colors: Record<string, string> = {
-    NEW_LEAD: "bg-green-200 text-green-800",
-    NOT_ASSIGNED: "bg-gray-100 text-gray-500",
-    DESK_CHRIS: "bg-orange-200 text-orange-800",
-    DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800",
-    DESK_1: "bg-sky-200 text-sky-800",
-    DESK_2: "bg-emerald-200 text-emerald-800",
-    DESK_3: "bg-pink-200 text-pink-800",
-    DESK_4: "bg-blue-600 text-white",
-    DESK_5: "bg-amber-200 text-amber-800",
-    BIN: "bg-gray-200 text-gray-700",
-    ARCHIVED: "bg-gray-800 text-white",
-  };
-  return colors[desk || ""] || "bg-gray-200 text-gray-700";
+const FALLBACK_DESK_COLORS: Record<string, string> = {
+  NEW_LEAD: "bg-green-200 text-green-800",
+  NOT_ASSIGNED: "bg-gray-100 text-gray-500",
+  DESK_CHRIS: "bg-orange-200 text-orange-800",
+  DESK_DEEP_SEARCH: "bg-purple-200 text-purple-800",
+  DESK_1: "bg-sky-200 text-sky-800",
+  DESK_2: "bg-emerald-200 text-emerald-800",
+  DESK_3: "bg-pink-200 text-pink-800",
+  DESK_4: "bg-blue-600 text-white",
+  DESK_5: "bg-amber-200 text-amber-800",
+  BIN: "bg-gray-200 text-gray-700",
+  ARCHIVED: "bg-gray-800 text-white",
 };
+const getDeskLabel = (desk: string) => FALLBACK_DESK_LABELS[desk] || desk;
+const getDeskColor = (desk: string | null | undefined) => FALLBACK_DESK_COLORS[desk || ""] || "bg-gray-200 text-gray-700";
 
 export default function Properties() {
   const { user } = useAuth();
+  // Fetch desks dynamically from DB
+  const { data: desksFromDb } = trpc.desks.list.useQuery(undefined, { staleTime: 30_000 });
+  const deskOptions = useMemo(() => {
+    if (!desksFromDb || desksFromDb.length === 0) return Object.keys(FALLBACK_DESK_LABELS);
+    return desksFromDb.map((d: any) => d.name as string);
+  }, [desksFromDb]);
   const [, setLocationNav] = useLocation();
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [filters, setFilters] = useState<FilterState>(() => {
@@ -676,7 +675,7 @@ export default function Properties() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Desks</SelectItem>
-                {DESK_OPTIONS.map((desk) => (
+                {deskOptions.map((desk: string) => (
                   <SelectItem key={desk} value={desk}>
                     {getDeskLabel(desk)}
                   </SelectItem>

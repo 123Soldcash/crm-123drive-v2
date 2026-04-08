@@ -3012,3 +3012,6 @@
 
 ## TrestleIQ Score + Button in Contacts Table
 - [x] Add TrestleIQ score display and lookup button to the Call Tracking table next to Notes column
+
+## Desk Dropdown Fix
+- [x] Fix desk dropdown in Properties, StickyPropertyHeader, and DeskDialog to show desks dynamically from Desk Management (DB) instead of hardcoded values
