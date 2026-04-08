@@ -133,7 +133,7 @@ export function StickyPropertyHeader({
     if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
     return desksData.map((d: any) => ({
       value: d.name,
-      label: d.name,
+      label: d.description || d.name,
       color: buildDeskColor(d.name, d.color),
       hexColor: d.color || null,
       icon: d.icon || null,

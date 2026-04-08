@@ -98,7 +98,10 @@ export function DeskBadge({ deskName, desksMap, onClick, className, size = "xs" 
     }
   }
 
-  const label = name === "NOT_ASSIGNED" ? "Not Assigned" : name;
+  // Prefer the human-readable description from DB, fall back to the raw key
+  const label = name === "NOT_ASSIGNED"
+    ? "Not Assigned"
+    : desk?.description || name;
 
   const sizeClass = SIZE_CLASSES[size];
   const iconSize = size === "xs" ? "h-3 w-3" : size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";

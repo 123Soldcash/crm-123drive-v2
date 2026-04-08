@@ -686,7 +686,7 @@ export default function Properties() {
                     <SelectItem key={desk} value={desk}>
                       <span className="inline-flex items-center gap-1.5">
                         <IconComp className="h-3.5 w-3.5 shrink-0" style={{ color: hexColor }} />
-                        {desk}
+                        {deskData?.description || desk}
                       </span>
                     </SelectItem>
                   );

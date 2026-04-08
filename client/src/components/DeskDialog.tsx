@@ -79,7 +79,7 @@ export function DeskDialog({
     if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
     return desksData.map((desk: any) => ({
       value: desk.name,
-      label: desk.name,
+      label: desk.description || desk.name,
       description: desk.description || "",
       color: getDeskColor(desk.name, desk.color),
       hexColor: desk.color || null,

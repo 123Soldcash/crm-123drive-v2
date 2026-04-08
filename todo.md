@@ -3030,3 +3030,10 @@
 - [x] Updated DeskDialog.tsx with icon + color in dropdown options
 - [x] Updated StickyPropertyHeader.tsx desk button and dropdown with icons + colors
 - [x] All 12 vitest tests passing (getIconComponent + buildDeskMap)
+
+## Restore Desk Names to Original Human-Readable Names
+- [x] Check current desk names in DB
+- [x] Restore original names (DESK_3→Zach, DESK_CHRIS→Chris, DESK_2→Edsel, DESK_4→Rodolfo, DESK_5→Lucas, DESK_DEEP_SEARCH→Deep Search, DESK_1→Manager)
+- [x] Update all properties referencing old names (Desk_Deep_Search→DESK_DEEP_SEARCH: 12 props, Manager→DESK_1: 1 prop)
+- [x] Fix system desk descriptions (List, BIN, NEW_LEAD, DEAD, Drip_Campaing, Referral)
+- [x] Update DeskBadge, Properties filter, DeskDialog, StickyPropertyHeader to show description instead of raw key
