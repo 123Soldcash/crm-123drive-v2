@@ -38,7 +38,7 @@ export async function getDeskByName(name: string) {
 /**
  * Create a new desk
  */
-export async function createDesk(data: { name: string; description?: string; color?: string }) {
+export async function createDesk(data: { name: string; description?: string; color?: string; icon?: string }) {
   const db = await requireDb();
   // Get max sortOrder to place new desk at end
   const [maxRow] = await db.select({ maxSort: sql<number>`COALESCE(MAX(sortOrder), 0)` }).from(desks);
@@ -48,6 +48,7 @@ export async function createDesk(data: { name: string; description?: string; col
     name: data.name,
     description: data.description || null,
     color: data.color || null,
+    icon: data.icon || null,
     sortOrder: nextSort,
     isSystem: 0,
   }).$returningId();
@@ -58,7 +59,7 @@ export async function createDesk(data: { name: string; description?: string; col
 /**
  * Update a desk (rename, change description/color)
  */
-export async function updateDesk(id: number, data: { name?: string; description?: string; color?: string }) {
+export async function updateDesk(id: number, data: { name?: string; description?: string; color?: string; icon?: string }) {
   const db = await requireDb();
   
   // Get the current desk
@@ -70,6 +71,7 @@ export async function updateDesk(id: number, data: { name?: string; description?
   if (data.name !== undefined) updates.name = data.name;
   if (data.description !== undefined) updates.description = data.description;
   if (data.color !== undefined) updates.color = data.color;
+  if (data.icon !== undefined) updates.icon = data.icon;
   
   if (Object.keys(updates).length === 0) return { success: true };
   

@@ -26,6 +26,7 @@ export const desksRouter = router({
         name: z.string().min(1).max(100),
         description: z.string().optional(),
         color: z.string().optional(),
+        icon: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -47,6 +48,7 @@ export const desksRouter = router({
         name: z.string().min(1).max(100).optional(),
         description: z.string().optional(),
         color: z.string().optional(),
+        icon: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {

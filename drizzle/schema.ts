@@ -1581,7 +1581,8 @@ export const desks = mysqlTable("desks", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 100 }).notNull().unique(),
   description: text("description"),
-  color: varchar("color", { length: 20 }), // Optional color for UI display
+  color: varchar("color", { length: 50 }), // Tailwind color classes or hex for UI display
+  icon: varchar("icon", { length: 50 }), // Emoji or icon identifier for UI display
   sortOrder: int("sortOrder").default(0).notNull(),
   isSystem: int("isSystem").default(0).notNull(), // 1 = system desk (cannot be deleted)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
