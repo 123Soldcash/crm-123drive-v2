@@ -1651,3 +1651,22 @@ export const crmNotifications = mysqlTable("crmNotifications", {
 
 export type CrmNotification = typeof crmNotifications.$inferSelect;
 export type InsertCrmNotification = typeof crmNotifications.$inferInsert;
+
+// ─── Integration Settings (API keys, tokens, config stored in DB) ────────────
+// Allows admin to manage integration credentials via the UI instead of env vars.
+// Each row is one key-value pair belonging to a named integration.
+export const integrationSettings = mysqlTable("integrationSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  integration: varchar("integration", { length: 100 }).notNull(), // e.g. "twilio", "slack", "zapier"
+  settingKey: varchar("settingKey", { length: 255 }).notNull(),   // e.g. "accountSid", "authToken"
+  settingValue: text("settingValue"),                              // encrypted/plain value
+  label: varchar("label", { length: 255 }),                        // human-readable label for UI
+  description: text("description"),                                // help text for UI
+  isSecret: int("isSecret").default(0).notNull(),                  // 1=mask in UI, 0=show plaintext
+  updatedBy: int("updatedBy"),                                     // user ID who last updated
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type IntegrationSetting = typeof integrationSettings.$inferSelect;
+export type InsertIntegrationSetting = typeof integrationSettings.$inferInsert;

@@ -31,6 +31,7 @@ import { desksRouter } from "./routers/desks";
 import { sectionNotesRouter } from "./routers/section-notes";
 import { taxUrlsRouter } from "./routers/tax-urls";
 import { notificationsRouter } from "./routers/notifications";
+import { integrationsRouter } from "./routers/integrations";
 
 // ─── Helper: format offer data into a readable General Note ──────────
 function formatOfferNote(offer: {
@@ -120,6 +121,7 @@ export const appRouter = router({
   sectionNotes: sectionNotesRouter,
   taxUrls: taxUrlsRouter,
   notifications: notificationsRouter,
+  integrations: integrationsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

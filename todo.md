@@ -2986,3 +2986,13 @@
 
 ## Chris Notes - Paste Screenshot Fix
 - [x] Fix Ctrl+V paste screenshot not working in Chris Notes — added missing global paste event listener
+
+## Integrations Settings Page
+- [x] Create integrationSettings database table to store API keys and config
+- [x] Create seed script to migrate current env vars into the DB
+- [x] Create tRPC procedures for reading/updating integration settings (admin only)
+- [x] Update Twilio, Slack, Zapier integration code to read from DB with env fallback
+- [x] Create Integrations Settings page with cards for each integration (Twilio, Slack, Zapier, etc.)
+- [x] Add connection test buttons for each integration
+- [x] Add Integrations link to sidebar navigation
+- [x] Mask sensitive values (API keys) in the UI with reveal toggle

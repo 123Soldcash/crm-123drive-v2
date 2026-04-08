@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers, Link2 } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -44,6 +44,7 @@ const menuItems = [
   { icon: Phone, label: "Twilio Numbers", path: "/twilio-numbers", adminOnly: true },
   { icon: Zap, label: "Bulk Assign Agents", path: "/bulk-assign-agents", adminOnly: true },
   { icon: Layers, label: "Desk Management", path: "/desk-management", adminOnly: true },
+  { icon: Link2, label: "Integrations", path: "/integrations", adminOnly: true },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
