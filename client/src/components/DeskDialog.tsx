@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { getIconComponent } from "@/lib/deskUtils";
 
 // Fallback static options (used while DB loads or if query fails)
 const FALLBACK_DESK_OPTIONS = [
@@ -78,12 +79,11 @@ export function DeskDialog({
     if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
     return desksData.map((desk: any) => ({
       value: desk.name,
-      label: desk.name === "BIN" ? "🗑️ BIN"
-           : desk.name === "DEAD" ? "💀 Dead"
-           : desk.name === "NEW_LEAD" ? "🆕 New Lead"
-           : `📁 ${desk.name}`,
+      label: desk.name,
       description: desk.description || "",
       color: getDeskColor(desk.name, desk.color),
+      hexColor: desk.color || null,
+      icon: desk.icon || null,
     }));
   }, [desksData]);
 
@@ -145,15 +145,18 @@ export function DeskDialog({
                   <SelectValue placeholder="Selecione uma desk..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {deskOptions.map((desk: any) => (
-                    <SelectItem key={desk.value} value={desk.value}>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${desk.color}`}>
-                          {desk.label}
+                  {deskOptions.map((desk: any) => {
+                    const IconComp = getIconComponent(desk.icon);
+                    const hexColor = desk.hexColor || "#9ca3af";
+                    return (
+                      <SelectItem key={desk.value} value={desk.value}>
+                        <span className="inline-flex items-center gap-1.5">
+                          <IconComp className="h-3.5 w-3.5 shrink-0" style={{ color: hexColor }} />
+                          <span>{desk.label}</span>
                         </span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}

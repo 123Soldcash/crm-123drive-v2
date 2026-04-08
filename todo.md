@@ -3021,3 +3021,12 @@
 - [x] Audit: verify no leads lost their desk association — zero orphans
 - [x] Add icon customization to Desk Management — 32 Lucide icons available
 - [x] Add color/tag color customization to Desk Management — 18 preset colors + custom hex picker
+
+## Desk Badge in Properties List - Use Dynamic Icon/Color
+- [x] Update Desk column badge in Properties list to use icon and color from Desk Management DB instead of old hardcoded style
+- [x] Created shared deskUtils.ts with icon registry and buildDeskMap helper
+- [x] Created reusable DeskBadge component with dynamic hex color + Lucide icon
+- [x] Updated Properties.tsx table view, card view, and filter dropdown
+- [x] Updated DeskDialog.tsx with icon + color in dropdown options
+- [x] Updated StickyPropertyHeader.tsx desk button and dropdown with icons + colors
+- [x] All 12 vitest tests passing (getIconComponent + buildDeskMap)

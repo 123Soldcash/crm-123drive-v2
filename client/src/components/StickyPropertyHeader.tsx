@@ -49,9 +49,11 @@ const DEAD_REASON_OPTIONS = [
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
 import { DistressScoreBadge } from "@/components/DistressScoreBadge";
 import { PropertyImage } from "@/components/PropertyImage";
+import { getIconComponent, buildDeskMap, type DeskFromDb } from "@/lib/deskUtils";
+import { DeskBadge } from "@/components/DeskBadge";
 
 // Desk options - fetched dynamically from DB
-const NOT_ASSIGNED_DESK = { value: "NOT_ASSIGNED", label: "⚪ Not Assigned", color: "bg-gray-100 text-gray-500 border-gray-300" };
+const NOT_ASSIGNED_DESK = { value: "NOT_ASSIGNED", label: "Not Assigned", color: "bg-gray-100 text-gray-500 border-gray-300", hexColor: "#9ca3af" as string | null, icon: "folder" as string | null };
 const DEFAULT_DESK_COLORS: Record<string, string> = {
   NEW_LEAD: "bg-green-200 text-green-800 border-green-300",
   DESK_CHRIS: "bg-orange-200 text-orange-800 border-orange-300",
@@ -64,10 +66,10 @@ const DEFAULT_DESK_COLORS: Record<string, string> = {
   BIN: "bg-gray-200 text-gray-700 border-gray-300",
   DEAD: "bg-gray-800 text-white border-gray-900",
 };
-const FALLBACK_DESK_OPTIONS = [
-  { value: "NEW_LEAD", label: "🆕 New Lead", color: "bg-green-200 text-green-800 border-green-300" },
-  { value: "BIN", label: "🗑️ BIN", color: "bg-gray-200 text-gray-700 border-gray-300" },
-  { value: "DEAD", label: "💀 Dead", color: "bg-gray-800 text-white border-gray-900" },
+const FALLBACK_DESK_OPTIONS: { value: string; label: string; color: string; hexColor: string | null; icon: string | null }[] = [
+  { value: "NEW_LEAD", label: "New Lead", color: "bg-green-200 text-green-800 border-green-300", hexColor: "#22c55e", icon: "star" },
+  { value: "BIN", label: "BIN", color: "bg-gray-200 text-gray-700 border-gray-300", hexColor: "#9ca3af", icon: "inbox" },
+  { value: "DEAD", label: "Dead", color: "bg-gray-800 text-white border-gray-900", hexColor: "#374151", icon: "layers" },
 ];
 function buildDeskLabel(name: string): string {
   if (name === "BIN") return "🗑️ BIN";
@@ -131,10 +133,13 @@ export function StickyPropertyHeader({
     if (!desksData || !Array.isArray(desksData) || desksData.length === 0) return FALLBACK_DESK_OPTIONS;
     return desksData.map((d: any) => ({
       value: d.name,
-      label: buildDeskLabel(d.name),
+      label: d.name,
       color: buildDeskColor(d.name, d.color),
+      hexColor: d.color || null,
+      icon: d.icon || null,
     }));
   }, [desksData]);
+  const desksMap = useMemo(() => buildDeskMap(desksData as DeskFromDb[] | undefined), [desksData]);
 
   const currentDesk = DESK_OPTIONS.find(d => d.value === property.deskName) || NOT_ASSIGNED_DESK;
 
@@ -398,16 +403,28 @@ export function StickyPropertyHeader({
 
               {/* Desk Selector */}
               <div className="relative">
-                <Button
-                  ref={deskButtonRef}
-                  variant="outline"
-                  size="sm"
-                  className={cn("h-7 text-[10px] font-bold border-2 min-h-0 min-w-0 px-2", currentDesk.color)}
-                  onClick={() => deskDropdownOpen ? setDeskDropdownOpen(false) : openDeskDropdown()}
-                >
-                  {currentDesk.label}
-                  <ChevronRight className={cn("h-3 w-3 ml-0.5 transition-transform", deskDropdownOpen && "rotate-90")} />
-                </Button>
+                {(() => {
+                  const CurrentIcon = getIconComponent(currentDesk.icon || (desksMap[property.deskName]?.icon));
+                  const hexCol = currentDesk.hexColor || desksMap[property.deskName]?.color || "#9ca3af";
+                  return (
+                    <Button
+                      ref={deskButtonRef}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[10px] font-bold border-2 min-h-0 min-w-0 px-2 gap-1"
+                      style={{
+                        backgroundColor: `${hexCol}20`,
+                        color: hexCol,
+                        borderColor: `${hexCol}50`,
+                      }}
+                      onClick={() => deskDropdownOpen ? setDeskDropdownOpen(false) : openDeskDropdown()}
+                    >
+                      <CurrentIcon className="h-3 w-3 shrink-0" />
+                      {currentDesk.label || property.deskName || "Not Assigned"}
+                      <ChevronRight className={cn("h-3 w-3 ml-0.5 transition-transform", deskDropdownOpen && "rotate-90")} />
+                    </Button>
+                  );
+                })()}
               </div>
               {deskDropdownOpen && createPortal(
                 <>
@@ -417,28 +434,33 @@ export function StickyPropertyHeader({
                     className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-xl p-1 min-w-[150px]"
                     style={{ top: deskDropdownPos.top, left: deskDropdownPos.left }}
                   >
-                    {DESK_OPTIONS.map((desk) => (
-                      <button
-                        key={desk.value}
-                        className={cn(
-                          "w-full text-left px-2 py-1.5 text-[11px] font-semibold rounded-md transition-colors hover:bg-slate-50",
-                          desk.value === property.deskName && "bg-slate-100"
-                        )}
-                        onClick={() => {
-                          if (desk.value === "DEAD") {
-                            setDeskDropdownOpen(false);
-                            setDeadReason("");
-                            setDeadReasonError("");
-                            setShowDeadReasonDialog(true);
-                          } else {
-                            onUpdateDesk(desk.value);
-                            setDeskDropdownOpen(false);
-                          }
-                        }}
-                      >
-                        {desk.label}
-                      </button>
-                    ))}
+                    {DESK_OPTIONS.map((desk) => {
+                      const DeskIcon = getIconComponent(desk.icon);
+                      const dHex = desk.hexColor || "#9ca3af";
+                      return (
+                        <button
+                          key={desk.value}
+                          className={cn(
+                            "w-full text-left px-2 py-1.5 text-[11px] font-semibold rounded-md transition-colors hover:bg-slate-50 flex items-center gap-1.5",
+                            desk.value === property.deskName && "bg-slate-100"
+                          )}
+                          onClick={() => {
+                            if (desk.value === "DEAD") {
+                              setDeskDropdownOpen(false);
+                              setDeadReason("");
+                              setDeadReasonError("");
+                              setShowDeadReasonDialog(true);
+                            } else {
+                              onUpdateDesk(desk.value);
+                              setDeskDropdownOpen(false);
+                            }
+                          }}
+                        >
+                          <DeskIcon className="h-3.5 w-3.5 shrink-0" style={{ color: dHex }} />
+                          {desk.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </>,
                 document.body

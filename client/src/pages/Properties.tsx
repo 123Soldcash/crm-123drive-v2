@@ -39,6 +39,8 @@ import { DeskDialog } from "@/components/DeskDialog";
 import { AddressAutocompleteWithCRM, type AddressDetails } from "@/components/AddressAutocompleteWithCRM";
 import { DuplicateDetectionAlert } from "@/components/DuplicateDetectionAlert";
 import { STAGE_CONFIGS, type DealStage } from "@/lib/stageConfig";
+import { DeskBadge } from "@/components/DeskBadge";
+import { buildDeskMap, getIconComponent, type DeskFromDb } from "@/lib/deskUtils";
 
 // Common status tags found in the data
 const STATUS_TAGS = [
@@ -119,6 +121,7 @@ export default function Properties() {
     if (!desksFromDb || desksFromDb.length === 0) return Object.keys(FALLBACK_DESK_LABELS);
     return desksFromDb.map((d: any) => d.name as string);
   }, [desksFromDb]);
+  const desksMap = useMemo(() => buildDeskMap(desksFromDb as DeskFromDb[] | undefined), [desksFromDb]);
   const [, setLocationNav] = useLocation();
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [filters, setFilters] = useState<FilterState>(() => {
@@ -675,11 +678,19 @@ export default function Properties() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Desks</SelectItem>
-                {deskOptions.map((desk: string) => (
-                  <SelectItem key={desk} value={desk}>
-                    {getDeskLabel(desk)}
-                  </SelectItem>
-                ))}
+                {deskOptions.map((desk: string) => {
+                  const deskData = desksMap[desk];
+                  const IconComp = getIconComponent(deskData?.icon);
+                  const hexColor = deskData?.color || "#9ca3af";
+                  return (
+                    <SelectItem key={desk} value={desk}>
+                      <span className="inline-flex items-center gap-1.5">
+                        <IconComp className="h-3.5 w-3.5 shrink-0" style={{ color: hexColor }} />
+                        {desk}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -973,9 +984,7 @@ export default function Properties() {
                             </Badge>
                           )}
                           {property.deskName && (
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getDeskColor(property.deskName)}`}>
-                              {getDeskLabel(property.deskName)}
-                            </span>
+                            <DeskBadge deskName={property.deskName} desksMap={desksMap} size="xs" />
                           )}
                         </div>
                       )}
@@ -1147,15 +1156,15 @@ export default function Properties() {
                   )}
                   {columns.deskName && (
                     <TableCell>
-                      <button
+                      <DeskBadge
+                        deskName={property.deskName || 'NOT_ASSIGNED'}
+                        desksMap={desksMap}
+                        size="sm"
                         onClick={() => {
                           setSelectedPropertyForDesk(property);
                           setDeskDialogOpen(true);
                         }}
-                        className={`text-xs px-2 py-1 rounded hover:opacity-80 cursor-pointer transition ${getDeskColor(property.deskName)}`}
-                      >
-                        {getDeskLabel(property.deskName || 'NOT_ASSIGNED')}
-                      </button>
+                      />
                     </TableCell>
                   )}
                   {columns.statusTags && (
