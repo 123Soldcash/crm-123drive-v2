@@ -411,6 +411,10 @@ export const contactPhones = mysqlTable("contactPhones", {
   isPrepaid: int("isPrepaid").default(0).notNull(),
   usage2Months: varchar("usage2Months", { length: 50 }),
   usage12Months: varchar("usage12Months", { length: 50 }),
+  trestleScore: int("trestleScore"),
+  isLitigator: int("isLitigator").default(0).notNull(),
+  trestleLineType: varchar("trestleLineType", { length: 50 }),
+  trestleLastChecked: timestamp("trestleLastChecked"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

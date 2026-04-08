@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  User, Phone, Mail, Save, X, Plus, Trash2, History, AlertCircle, AlertTriangle,
+  User, Phone, Mail, Save, X, Plus, Trash2, History, AlertCircle, AlertTriangle, Search, Loader2, ShieldAlert, Activity,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -68,7 +68,8 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const [notOnBoard, setNotOnBoard] = useState(false);
 
   // Phones
-  const [phones, setPhones] = useState<Array<{ phoneNumber: string; phoneType: string; isPrimary: number; dnc: number }>>([]);
+  const [phones, setPhones] = useState<Array<{ id?: number; phoneNumber: string; phoneType: string; isPrimary: number; dnc: number; trestleScore?: number | null; isLitigator?: number; trestleLineType?: string | null; trestleLastChecked?: string | null }>>([]); 
+  const [lookingUpPhone, setLookingUpPhone] = useState<number | null>(null);
   const [newPhone, setNewPhone] = useState("");
   const [newPhoneType, setNewPhoneType] = useState("Mobile");
 
@@ -111,10 +112,15 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
       setNotOnBoard(contact.notOnBoard === 1);
       setPhones(
         (contact.phones || []).map((p: any) => ({
+          id: p.id,
           phoneNumber: p.phoneNumber || "",
           phoneType: p.phoneType || "Mobile",
           isPrimary: p.isPrimary || 0,
           dnc: p.dnc || 0,
+          trestleScore: p.trestleScore ?? null,
+          isLitigator: p.isLitigator ?? 0,
+          trestleLineType: p.trestleLineType ?? null,
+          trestleLastChecked: p.trestleLastChecked ?? null,
         }))
       );
       setEmails(
@@ -346,13 +352,81 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                   {phones.length > 0 ? (
                     <div className="space-y-2">
                       {phones.map((phone, idx) => (
-                        <div key={idx} className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-lg border text-sm">
-                          <span className="font-mono flex-1 truncate text-sm">{formatPhone(phone.phoneNumber)}</span>
-                          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 shrink-0">{phone.phoneType}</Badge>
-                          {phone.dnc === 1 && <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">DNC</Badge>}
-                          <button onClick={() => handleRemovePhone(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                        <div key={idx} className="p-2.5 bg-muted/30 rounded-lg border text-sm space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono flex-1 truncate text-sm">{formatPhone(phone.phoneNumber)}</span>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 shrink-0">{phone.phoneType}</Badge>
+                            {phone.dnc === 1 && <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">DNC</Badge>}
+                            {phone.isLitigator === 1 && <Badge className="bg-red-600 text-white text-xs px-1.5 py-0 h-5"><ShieldAlert className="h-3 w-3 mr-0.5" />Litigator</Badge>}
+                            <button onClick={() => handleRemovePhone(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                          {/* TrestleIQ Score & Lookup */}
+                          <div className="flex items-center gap-2 pl-1">
+                            {phone.trestleScore != null && (
+                              <div className="flex items-center gap-1">
+                                <Activity className={`h-3.5 w-3.5 ${
+                                  phone.trestleScore >= 70 ? 'text-green-600' :
+                                  phone.trestleScore >= 30 ? 'text-amber-500' : 'text-red-500'
+                                }`} />
+                                <span className={`text-xs font-semibold ${
+                                  phone.trestleScore >= 70 ? 'text-green-700' :
+                                  phone.trestleScore >= 30 ? 'text-amber-600' : 'text-red-600'
+                                }`}>
+                                  Score: {phone.trestleScore}/100
+                                </span>
+                              </div>
+                            )}
+                            {phone.trestleLineType && (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">{phone.trestleLineType}</Badge>
+                            )}
+                            {phone.trestleLastChecked && (
+                              <span className="text-xs text-muted-foreground">
+                                Checked: {new Date(phone.trestleLastChecked).toLocaleDateString()}
+                              </span>
+                            )}
+                            {phone.id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs ml-auto"
+                                disabled={lookingUpPhone === phone.id}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!phone.id) return;
+                                  setLookingUpPhone(phone.id);
+                                  try {
+                                    const result = await utils.client.trestleiq.lookupPhone.mutate({ phoneId: phone.id });
+                                    // Update the local phone state with the result
+                                    setPhones(prev => prev.map((p, i) => i === idx ? {
+                                      ...p,
+                                      trestleScore: result.activityScore,
+                                      isLitigator: result.isLitigator ? 1 : 0,
+                                      trestleLineType: result.lineType,
+                                      trestleLastChecked: new Date().toISOString(),
+                                    } : p));
+                                    if (result.isLitigator) {
+                                      toast.error(`⚠️ LITIGATOR RISK: ${formatPhone(phone.phoneNumber)} — Score: ${result.activityScore}/100`);
+                                    } else {
+                                      toast.success(`TrestleIQ: Score ${result.activityScore}/100, ${result.lineType || 'Unknown'} — ${result.carrier || ''}`);
+                                    }
+                                  } catch (err: any) {
+                                    toast.error(`TrestleIQ error: ${err.message}`);
+                                  } finally {
+                                    setLookingUpPhone(null);
+                                  }
+                                }}
+                              >
+                                {lookingUpPhone === phone.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <Search className="h-3 w-3 mr-1" />
+                                )}
+                                TrestleIQ
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

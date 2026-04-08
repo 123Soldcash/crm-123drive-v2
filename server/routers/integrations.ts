@@ -182,6 +182,53 @@ export const integrationsRouter = router({
   }),
 
   /**
+   * Test TrestleIQ connection
+   */
+  testTrestleIQ: adminProcedure.mutation(async () => {
+    const db = await getDb();
+    const rows = await db!
+      .select()
+      .from(integrationSettings)
+      .where(eq(integrationSettings.integration, "trestleiq"));
+
+    const config: Record<string, string> = {};
+    for (const r of rows) config[r.settingKey] = r.settingValue ?? "";
+
+    if (!config.api_key) {
+      return { success: false, message: "API Key is required. Get one from developer.trestleiq.com" };
+    }
+
+    try {
+      const baseUrl = config.base_url || "https://api.trestleiq.com";
+      // Test with a known US number
+      const response = await fetch(
+        `${baseUrl}/3.0/phone_intel?phone=2069735100`,
+        {
+          headers: { "x-api-key": config.api_key },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.is_valid !== undefined) {
+          return {
+            success: true,
+            message: `Connected! Test phone valid: ${data.is_valid}, activity score: ${data.activity_score ?? "N/A"}, line type: ${data.line_type ?? "N/A"}`,
+          };
+        }
+        return { success: true, message: "Connected! API responded successfully." };
+      } else if (response.status === 403) {
+        return { success: false, message: "Invalid API Key or key expired. Check your TrestleIQ developer portal." };
+      } else {
+        const errorText = await response.text();
+        return { success: false, message: `HTTP ${response.status}: ${errorText.substring(0, 200)}` };
+      }
+    } catch (err: any) {
+      return { success: false, message: `Connection failed: ${err.message}` };
+    }
+  }),
+
+  /**
    * Test Slack connection
    */
   testSlack: adminProcedure.mutation(async () => {

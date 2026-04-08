@@ -28,6 +28,7 @@ import {
   Shield,
   RefreshCw,
   Link2,
+  Search,
 } from "lucide-react";
 
 // Integration metadata for UI rendering
@@ -89,6 +90,16 @@ const INTEGRATION_META: Record<
     color: "text-green-600",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
+  },
+  trestleiq: {
+    title: "TrestleIQ",
+    description: "Phone validation, activity score, and TCPA litigator risk checks",
+    icon: Search,
+    color: "text-teal-600",
+    bgColor: "bg-teal-50",
+    borderColor: "border-teal-200",
+    docsUrl: "https://developer.trestleiq.com",
+    hasTest: true,
   },
 };
 
@@ -170,6 +181,17 @@ function IntegrationCard({
     },
   });
 
+  const testTrestleIQMutation = trpc.integrations.testTrestleIQ.useMutation({
+    onSuccess: (result) => {
+      setTestResult(result);
+      setIsTesting(false);
+    },
+    onError: (err) => {
+      setTestResult({ success: false, message: err.message });
+      setIsTesting(false);
+    },
+  });
+
   const hasChanges = Object.keys(editedValues).length > 0;
 
   const handleSave = () => {
@@ -192,6 +214,8 @@ function IntegrationCard({
       testTwilioMutation.mutate();
     } else if (integration === "slack") {
       testSlackMutation.mutate();
+    } else if (integration === "trestleiq") {
+      testTrestleIQMutation.mutate();
     }
   };
 
@@ -377,7 +401,7 @@ export default function Integrations() {
   const { data: allSettings, isLoading, refetch } = trpc.integrations.list.useQuery();
 
   // Order integrations
-  const integrationOrder = ["twilio", "slack", "zapier", "instantly", "autocalls"];
+  const integrationOrder = ["twilio", "slack", "zapier", "trestleiq", "instantly", "autocalls"];
 
   const sortedIntegrations = useMemo(() => {
     if (!allSettings) return [];

@@ -2996,3 +2996,12 @@
 - [x] Add connection test buttons for each integration
 - [x] Add Integrations link to sidebar navigation
 - [x] Mask sensitive values (API keys) in the UI with reveal toggle
+
+## TrestleIQ Integration
+- [x] Research TrestleIQ API (phone validation, litigator check, spam score)
+- [x] Add TrestleIQ card to Integrations page with API key field
+- [x] Add trestleScore (0-100), isLitigator, trestleLineType, trestleLastChecked fields to contactPhones table
+- [x] Create backend tRPC procedure to query TrestleIQ API per phone number (single + bulk)
+- [x] Add lookup button in contact phone UI that triggers TrestleIQ query
+- [x] Display score badge (color-coded) and litigator status on each phone number
+- [x] Update litigator flag on contact when TrestleIQ confirms litigator
