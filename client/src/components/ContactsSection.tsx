@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Phone, Mail, Plus, Edit2, Trash2, Eye, EyeOff, Clock } from "lucide-react";
+import { Phone, Mail, Plus, Edit2, Trash2, Eye, EyeOff, Clock, Search, Shield, ShieldAlert, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
 import { SMSChatButton } from "./SMSChatButton";
@@ -409,45 +409,67 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                       </div>
 
                       <div className="mt-2 space-y-1 text-sm">
-                        {primaryPhone && (() => {
-                          const normalizedPhone = (primaryPhone.phoneNumber || "").replace(/\D/g, "");
+                        {(contact.phones || []).map((phone: any) => {
+                          const normalizedPhone = (phone.phoneNumber || "").replace(/\D/g, "");
                           const isPhoneDup = duplicatePhones.has(normalizedPhone);
+                          const scoreColor = phone.trestleScore != null
+                            ? phone.trestleScore >= 70 ? 'bg-green-100 text-green-800 border-green-300'
+                            : phone.trestleScore >= 30 ? 'bg-amber-100 text-amber-800 border-amber-300'
+                            : 'bg-red-100 text-red-800 border-red-300'
+                            : '';
                           return (
-                            <div className={`flex items-center gap-2 ${isPhoneDup ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
-                              <Phone className={`w-4 h-4 ${isPhoneDup ? 'text-amber-600' : ''}`} />
-                              <span className={`${hiddenPhones.has(primaryPhone.phoneNumber) ? 'blur-sm' : ''} ${isPhoneDup ? 'text-amber-800 font-medium' : ''}`}>
-                                {formatPhone(primaryPhone.phoneNumber)}
+                            <div key={phone.id || phone.phoneNumber} className={`flex items-center gap-2 flex-wrap ${isPhoneDup ? 'bg-amber-50 rounded px-1.5 py-0.5 border border-amber-300' : ''}`}>
+                              <Phone className={`w-4 h-4 flex-shrink-0 ${isPhoneDup ? 'text-amber-600' : ''}`} />
+                              <span className={`${hiddenPhones.has(phone.phoneNumber) ? 'blur-sm' : ''} ${isPhoneDup ? 'text-amber-800 font-medium' : ''}`}>
+                                {formatPhone(phone.phoneNumber)}
                               </span>
+                              {phone.isPrimary === 1 && <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">Primary</Badge>}
                               {isPhoneDup && <Badge className="bg-amber-500 text-white text-xs">Duplicate</Badge>}
+                              {phone.dnc === 1 && <Badge variant="destructive" className="text-xs">📵 DNC</Badge>}
+                              {phone.isLitigator === 1 && <Badge className="bg-red-600 text-white text-xs"><ShieldAlert className="w-3 h-3 mr-1" />Litigator</Badge>}
+                              {phone.trestleScore != null && (
+                                <Badge className={`text-xs border ${scoreColor}`}>
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  Score: {phone.trestleScore}
+                                </Badge>
+                              )}
+                              {phone.trestleLineType && (
+                                <span className="text-xs text-muted-foreground">{phone.trestleLineType}</span>
+                              )}
+                              <TrestleLookupButton phoneId={phone.id} phoneNumber={phone.phoneNumber} propertyId={propertyId} />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  togglePhoneVisibility(primaryPhone.phoneNumber);
+                                  togglePhoneVisibility(phone.phoneNumber);
                                 }}
                                 className="text-gray-400 hover:text-gray-600"
                               >
-                                {hiddenPhones.has(primaryPhone.phoneNumber) ? (
+                                {hiddenPhones.has(phone.phoneNumber) ? (
                                   <Eye className="w-4 h-4" />
                                 ) : (
                                   <EyeOff className="w-4 h-4" />
                                 )}
                               </button>
-                              <TwilioBrowserCallButton
-                                phoneNumber={primaryPhone.phoneNumber}
-                                contactName={contact.name}
-                                contactId={contact.id}
-                                propertyId={propertyId}
-                                primaryTwilioNumber={primaryTwilioNumber}
-                              />
-                              <SMSChatButton
-                                phoneNumber={primaryPhone.phoneNumber}
-                                contactName={contact.name}
-                                contactId={contact.id}
-                                propertyId={propertyId}
-                              />
+                              {phone.isPrimary === 1 && (
+                                <>
+                                  <TwilioBrowserCallButton
+                                    phoneNumber={phone.phoneNumber}
+                                    contactName={contact.name}
+                                    contactId={contact.id}
+                                    propertyId={propertyId}
+                                    primaryTwilioNumber={primaryTwilioNumber}
+                                  />
+                                  <SMSChatButton
+                                    phoneNumber={phone.phoneNumber}
+                                    contactName={contact.name}
+                                    contactId={contact.id}
+                                    propertyId={propertyId}
+                                  />
+                                </>
+                              )}
                             </div>
                           );
-                        })()}
+                        })}
                         {primaryEmail && (() => {
                           const normalizedEmail = (primaryEmail.email || "").trim().toLowerCase();
                           const isEmailDup = duplicateEmails.has(normalizedEmail);
@@ -669,6 +691,37 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
   );
 }
 
+
+/**
+ * TrestleLookupButton - Inline button to query TrestleIQ for a phone number
+ */
+function TrestleLookupButton({ phoneId, phoneNumber, propertyId }: { phoneId: number; phoneNumber: string; propertyId: number }) {
+  const utils = trpc.useUtils();
+  const lookupMutation = (trpc as any).trestleiq.lookupPhone.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`TrestleIQ: Score ${data.activityScore ?? 'N/A'}${data.isLitigator ? ' - LITIGATOR!' : ''}`);
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`TrestleIQ lookup failed: ${error.message}`);
+    },
+  });
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        lookupMutation.mutate({ phoneId });
+      }}
+      disabled={lookupMutation.isPending}
+      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition disabled:opacity-50"
+      title="Query TrestleIQ for this phone number"
+    >
+      <Search className="w-3 h-3" />
+      {lookupMutation.isPending ? 'Checking...' : 'TrestleIQ'}
+    </button>
+  );
+}
 
 /**
  * PrimaryTwilioNumberSelector - Property-level default Twilio number

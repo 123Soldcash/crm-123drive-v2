@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -116,6 +116,38 @@ const DISPOSITION_OPTIONS = [
   "Not Interested - Hang-up - FU in 4 months",
   "Not Interested - NICE - FU in 2 Months",
 ];
+
+function TrestleLookupBtn({ phoneId, propertyId }: { phoneId: number; propertyId: number }) {
+  const utils = trpc.useUtils();
+  const lookupMutation = (trpc as any).trestleiq.lookupPhone.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`TrestleIQ: Score ${data.activityScore ?? 'N/A'}${data.isLitigator ? ' - LITIGATOR!' : ''}`);
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+    },
+    onError: (error: any) => {
+      toast.error(`TrestleIQ: ${error.message}`);
+    },
+  });
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        lookupMutation.mutate({ phoneId });
+      }}
+      disabled={lookupMutation.isPending}
+      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition disabled:opacity-50"
+      title="Query TrestleIQ"
+    >
+      {lookupMutation.isPending ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : (
+        <Search className="w-3 h-3" />
+      )}
+      {lookupMutation.isPending ? '...' : 'Check'}
+    </button>
+  );
+}
 
 export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const utils = trpc.useUtils();
@@ -1172,6 +1204,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <TableHead className="w-[60px] text-center">Attempts</TableHead>
                   <TableHead className="w-[180px]">Disposition</TableHead>
                   <TableHead className="min-w-[300px]">Notes</TableHead>
+                  <TableHead className="w-[80px] text-center">Score</TableHead>
+                  <TableHead className="w-[100px] text-center">TrestleIQ</TableHead>
                   <TableHead className="w-[80px] text-center">Call Notes</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1467,6 +1501,31 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                             )}
                           </TableCell>
 
+                          {/* TrestleIQ Score */}
+                          <TableCell className="text-center align-middle">
+                            {phone.trestleScore != null ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={`text-sm font-bold ${
+                                  phone.trestleScore >= 70 ? 'text-green-600' :
+                                  phone.trestleScore >= 30 ? 'text-amber-600' :
+                                  'text-red-600'
+                                }`}>
+                                  {phone.trestleScore}
+                                </span>
+                                {phone.isLitigator && (
+                                  <span className="text-[10px] font-semibold text-red-700 bg-red-100 px-1 rounded">LIT</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+
+                          {/* TrestleIQ Lookup Button */}
+                          <TableCell className="text-center align-middle">
+                            <TrestleLookupBtn phoneId={phone.id} propertyId={propertyId} />
+                          </TableCell>
+
                           {/* Call Notes Button */}
                           <TableCell className="text-center align-middle">
                             <Button
@@ -1537,9 +1596,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           aria-label="Decision Maker"
                         />
                       </TableCell>
-                      <TableCell colSpan={6} className="text-center align-middle text-sm text-muted-foreground">
-                        No phone numbers
-                      </TableCell>
+<TableCell colSpan={8} className="text-center align-middle text-sm text-muted-foreground">
+                         No phone numbers
+                       </TableCell>
                       <TableCell className="text-center align-middle">
                         <Button
                           variant="ghost"

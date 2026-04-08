@@ -3005,3 +3005,10 @@
 - [x] Add lookup button in contact phone UI that triggers TrestleIQ query
 - [x] Display score badge (color-coded) and litigator status on each phone number
 - [x] Update litigator flag on contact when TrestleIQ confirms litigator
+
+## Enriched DNC/Litigator/Score Data Update
+- [x] Parse enriched_dnc_result CSV and update contactPhones with DNC, litigator, and score data — 7,979 records updated
+- [x] Generate list of phone numbers missing litigator/score info — 23 numbers missing
+
+## TrestleIQ Score + Button in Contacts Table
+- [x] Add TrestleIQ score display and lookup button to the Call Tracking table next to Notes column
