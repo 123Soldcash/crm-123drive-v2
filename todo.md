@@ -3115,3 +3115,8 @@
 
 ## Task List Auto-Refresh
 - [x] Auto-refresh tasks list on property detail page after creating a new task (no page reload needed)
+
+## Chris Notes Redesign
+- [x] Remove history, file uploads, and screenshots from Chris Notes
+- [x] Replace with simple quick-note input + deletable list (tag-style, plain text only)
+- [x] Update backend to support per-note add/delete
