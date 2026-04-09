@@ -3037,3 +3037,15 @@
 - [x] Update all properties referencing old names (Desk_Deep_Search→DESK_DEEP_SEARCH: 12 props, Manager→DESK_1: 1 prop)
 - [x] Fix system desk descriptions (List, BIN, NEW_LEAD, DEAD, Drip_Campaing, Referral)
 - [x] Update DeskBadge, Properties filter, DeskDialog, StickyPropertyHeader to show description instead of raw key
+
+## DNC + Litigator Call Blocking & Visual Update
+
+- [x] Block calls to Litigator numbers in handlePhoneCallClick (CallTrackingTable)
+- [x] Block call button rendering for Litigator same as DNC (CallTrackingTable)
+- [x] Show tooltip "LITIGATOR - Calls blocked" when hovering blocked litigator number
+- [x] Add isLitigator to phones query in communication.ts (server)
+- [x] Block calls server-side in makeCall if phone is DNC or Litigator (Drizzle ORM guard)
+- [x] Show DNC phone numbers in RED text in contact list (number visible, not hidden)
+- [x] Show Litigator phone numbers in RED text in contact list (number visible, not hidden)
+- [x] Update CallModal.tsx to detect and block litigator numbers with orange warning banner
+- [x] 15 vitest tests passing for DNC + Litigator blocking logic

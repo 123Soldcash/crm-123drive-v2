@@ -57,7 +57,7 @@ export async function getContactsByProperty(propertyId: number) {
       
       // Fetch phones - table should exist
       try {
-        phones = await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType, dnc: contactPhones.dnc }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
+        phones = await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType, dnc: contactPhones.dnc, isLitigator: contactPhones.isLitigator }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
       } catch (e) {
         console.error('Error fetching phones:', e);
       }

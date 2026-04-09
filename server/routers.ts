@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { mergeLeads, getMergeHistory } from "./db-merge";
@@ -3487,6 +3488,40 @@ export const appRouter = router({
         const config = validateTwilioConfig();
         if (!config.valid) {
           throw new Error(`Twilio not configured. Missing: ${config.missing.join(", ")}`);
+        }
+
+        // Server-side DNC + Litigator guard — block call regardless of frontend state
+        if (input.contactId) {
+          const db = await getDb();
+          if (db) {
+            const toDigits = input.to.replace(/\D/g, "");
+            const toVariants = [input.to, toDigits, toDigits.startsWith("1") ? toDigits.slice(1) : `1${toDigits}`];
+            const phoneRows = await db
+              .select({
+                dnc: contactPhones.dnc,
+                isLitigator: contactPhones.isLitigator,
+                contactDnc: contacts.dnc,
+                contactLitigator: contacts.isLitigator,
+              })
+              .from(contactPhones)
+              .innerJoin(contacts, eq(contacts.id, contactPhones.contactId))
+              .where(
+                and(
+                  eq(contactPhones.contactId, input.contactId),
+                  sql`${contactPhones.phoneNumber} IN (${sql.join(toVariants.map(v => sql`${v}`), sql`, `)})`
+                )
+              )
+              .limit(1);
+            const phoneRow = phoneRows[0] ?? null;
+            if (phoneRow) {
+              if (phoneRow.dnc || phoneRow.contactDnc) {
+                throw new TRPCError({ code: "FORBIDDEN", message: "This number is marked as DNC. Call blocked." });
+              }
+              if (phoneRow.isLitigator || phoneRow.contactLitigator) {
+                throw new TRPCError({ code: "FORBIDDEN", message: "This number is flagged as a Litigator. Call blocked." });
+              }
+            }
+          }
         }
 
         const userTwilioPhone = ctx.user.twilioPhone || undefined;

@@ -378,7 +378,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
   // Click on phone number: start call directly (skip Log Call dialog)
   const handlePhoneCallClick = (contact: any, phone: any) => {
-    if (phone.dnc || contact.dnc) return; // DNC blocked
+    if (phone.dnc || contact.dnc || phone.isLitigator || contact.isLitigator) return; // DNC or Litigator blocked
     if (primaryTwilioNumber) {
       // Auto-dial with primary number
       setCallModalPhone({
@@ -1339,20 +1339,26 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 </Tooltip>
                               </TooltipProvider>
 
-                              {/* Call & SMS buttons - disabled if phone is DNC */}
-                              {phone.dnc || contact.dnc ? (
+                              {/* Call & SMS buttons - disabled if phone is DNC or Litigator */}
+                              {phone.dnc || contact.dnc || phone.isLitigator || contact.isLitigator ? (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="inline-flex items-center gap-1 opacity-40 cursor-not-allowed">
-                                        <PhoneOff className="h-4 w-4 text-red-400" />
-                                        <Ban className="h-3 w-3 text-red-400" />
+                                      <span className="inline-flex items-center gap-1.5 cursor-not-allowed">
+                                        <PhoneOff className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium text-red-600">
+                                          {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
+                                        </span>
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="bg-red-50 border-red-200 text-red-800">
                                       <div className="flex items-center gap-1.5">
                                         <ShieldAlert className="h-4 w-4" />
-                                        <span>This number is marked as DNC. Calls are blocked.</span>
+                                        <span>
+                                          {phone.isLitigator || contact.isLitigator
+                                            ? "⚖️ LITIGATOR — Calls are blocked. Remove litigator flag to enable."
+                                            : "📵 DNC — Calls are blocked."}
+                                        </span>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>

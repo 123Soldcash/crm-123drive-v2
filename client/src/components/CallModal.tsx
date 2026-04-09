@@ -273,8 +273,12 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   const currentPhoneData = contactsForDNC
     ?.flatMap((c: any) => c.phones || [])
     ?.find((p: any) => p.phoneNumber === phoneNumber || p.phoneNumber === phoneNumber.replace(/^\+1/, ''));
+  const currentContactData = contactsForDNC
+    ?.find((c: any) => (c.phones || []).some((p: any) => p.phoneNumber === phoneNumber || p.phoneNumber === phoneNumber.replace(/^\+1/, '')));
   const currentPhoneId = currentPhoneData?.id || 0;
   const phoneDNC = !!currentPhoneData?.dnc;
+  const phoneIsLitigator = !!currentPhoneData?.isLitigator || !!currentContactData?.isLitigator;
+  const isCallBlocked = phoneDNC || phoneIsLitigator;
 
   // Fetch notes
   const { data: notesData, refetch: refetchNotes } = trpc.callNotes.getByContact.useQuery(
@@ -837,8 +841,14 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                     </div>
                   )}
 
-                  {/* Disposition + DNC */}
+                  {/* Disposition + DNC + Litigator warning */}
                   <div className="space-y-1.5">
+                    {phoneIsLitigator && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-50 border border-orange-300 text-orange-800 text-xs font-semibold">
+                        <ShieldAlert className="h-4 w-4 text-orange-600" />
+                        ⚖️ LITIGATOR — Calls are blocked for this number. Remove litigator flag to enable calling.
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <Label className="text-base font-semibold">Disposition *</Label>
                       <button
