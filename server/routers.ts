@@ -4346,7 +4346,7 @@ export const appRouter = router({
         if (!database) throw new Error("Database not available");
         await database.insert(smsTable).values({
           contactPhone: toPhone,
-          twilioPhone: messagingServiceSid ? `MS:${messagingServiceSid}` : fromPhone,
+          twilioPhone: fromPhone || "",
           direction: "outbound",
           body: input.body,
           twilioSid,

@@ -3109,3 +3109,6 @@
 - [x] Add TWILIO_MESSAGING_SERVICE_SID to Integrations Settings page (Twilio card)
 - [x] Update SMS send code to use messagingServiceSid from integrationConfig for A2P 10DLC compliance
 - [x] Update tests for messaging service SID changes
+
+## Bug Fix - SMS DB Insert Error
+- [x] Fix twilioPhone field storing MS:MGec... prefix causing DB insert failure — store fromPhone instead of messaging service SID
