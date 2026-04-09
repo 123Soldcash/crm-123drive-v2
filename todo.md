@@ -3112,3 +3112,6 @@
 
 ## Bug Fix - SMS DB Insert Error
 - [x] Fix twilioPhone field storing MS:MGec... prefix causing DB insert failure — store fromPhone instead of messaging service SID
+
+## Task List Auto-Refresh
+- [x] Auto-refresh tasks list on property detail page after creating a new task (no page reload needed)

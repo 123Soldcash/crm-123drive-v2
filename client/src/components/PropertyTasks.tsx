@@ -266,6 +266,10 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
         }}
         defaultPropertyId={propertyId}
         editingTask={editingTask}
+        onSuccess={() => {
+          utils.tasks.byProperty.invalidate({ propertyId });
+          utils.tasks.list.invalidate();
+        }}
       />
     </>
   );
