@@ -3074,3 +3074,12 @@
 - [x] Remove red phone icon (PhoneOff) next to the phone number when DNC is marked
 - [x] Remove red row background when DNC checkbox is checked (only Litigator and Deceased still color rows)
 - [x] Keep only the DNC checkbox in the Contact Relationship column — no duplicate icon
+
+## Bug: DNC phone-level vs contact-level migration
+
+- [x] Investigate: 2,828 phones with phone.dnc=1, only 2 contacts with contact.dnc=1, 2,827 orphaned
+- [x] Replaced contact-level DNC checkbox with per-phone DNC checkbox (clickable, toggles phone.dnc)
+- [x] Each phone number now has its own DNC toggle — can be checked/unchecked individually
+- [x] Tooltip shows "Click to remove DNC" or "Click to mark as DNC" on hover
+- [x] DNC toggle in Quick Call Log dialog kept as backup toggle
+- [x] All 52 related tests passing

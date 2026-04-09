@@ -1250,14 +1250,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   {contact.relationship || "N/A"}
                                 </Badge>
                               </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
-                                <Checkbox
-                                  checked={!!contact.dnc}
-                                  disabled
-                                  className="pointer-events-none data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
-                                  aria-label="DNC"
-                                />
-                              </TableCell>
+                              {/* DNC column is now per-phone, rendered below */}
                               <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
                                 <Checkbox
                                   checked={!!contact.isLitigator}
@@ -1311,6 +1304,27 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                             />
                           </TableCell>
                           
+                          {/* Per-phone DNC checkbox */}
+                          <TableCell className="text-center align-middle px-0">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div>
+                                    <Checkbox
+                                      checked={!!phone.dnc}
+                                      onCheckedChange={(checked) => togglePhoneDNCMutation.mutate({ phoneId: phone.id, dnc: !!checked })}
+                                      className="data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600 cursor-pointer"
+                                      aria-label="DNC"
+                                    />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  {phone.dnc ? "Click to remove DNC from this number" : "Click to mark this number as DNC"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+
                           {/* Phone Number */}
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
