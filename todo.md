@@ -3090,3 +3090,10 @@
 - [x] When contact DNC is checked in modal, all phone.dnc values are set to 1 in doSave (frontend sync)
 - [x] Ensure the per-phone DNC checkbox in the table reflects the correct state after modal toggle
 - [x] All 39 DNC tests passing
+
+## Bug: DNC not synced from phone checkbox back to contact modal
+
+- [x] When phone.dnc is toggled ON in table, also update contact.dnc=1 (server-side togglePhoneDNC)
+- [x] When phone.dnc is toggled OFF in table, check if ALL phones are now non-DNC and set contact.dnc=0
+- [x] Modal initializes DNC checkbox from contact.dnc which is now kept in sync bidirectionally
+- [x] All 39 DNC tests passing
