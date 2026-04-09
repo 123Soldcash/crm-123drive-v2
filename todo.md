@@ -3125,3 +3125,8 @@
 - [x] Fix call disposition not being saved after call ends
 - [x] Fix contact not being updated with last disposition and notes
 - [x] Fix contact preview card not showing last disposition and notes
+
+## AI Extract Contact from Text
+- [x] Add backend LLM procedure to extract contact data (name, phones, emails, address) from raw text
+- [x] Add AI Extract panel to Add Contact List page with paste area + auto-fill form
+- [x] User validates extracted data before adding contact

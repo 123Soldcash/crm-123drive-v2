@@ -1932,6 +1932,84 @@ export const appRouter = router({
           .where(eq(contacts.id, input.id));
         return { success: true };
       }),
+    // AI: Extract contact data from raw text
+    aiExtract: protectedProcedure
+      .input(z.object({ text: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const { invokeLLM } = await import("./_core/llm.js");
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a contact data extractor. Given raw text (website forms, emails, notes, etc.), extract all contact information and return structured JSON. Always return valid JSON matching the schema exactly. For phone numbers, normalize to E.164 format if possible (e.g. +1XXXXXXXXXX for US numbers). If the country code is missing and the number has 10 digits, assume +1 (US). For addresses, extract street, city, state, and zip separately if available.`,
+            },
+            {
+              role: "user",
+              content: `Extract all contact information from this text and return JSON:\n\n${input.text}`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "extracted_contacts",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  contacts: {
+                    type: "array",
+                    description: "List of contacts extracted from the text",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Full name of the contact" },
+                        firstName: { type: "string", description: "First name" },
+                        lastName: { type: "string", description: "Last name" },
+                        phones: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              phoneNumber: { type: "string" },
+                              phoneType: { type: "string", description: "Mobile, Landline, Work, Home, or Other" },
+                            },
+                            required: ["phoneNumber", "phoneType"],
+                            additionalProperties: false,
+                          },
+                        },
+                        emails: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              email: { type: "string" },
+                            },
+                            required: ["email"],
+                            additionalProperties: false,
+                          },
+                        },
+                        address: { type: "string", description: "Full street address" },
+                        city: { type: "string" },
+                        state: { type: "string" },
+                        zip: { type: "string" },
+                        notes: { type: "string", description: "Any additional info like property condition, reason to sell, etc." },
+                        relationship: { type: "string", description: "Owner, Spouse, Son, Daughter, Heir, or Other" },
+                      },
+                      required: ["name", "firstName", "lastName", "phones", "emails", "address", "city", "state", "zip", "notes", "relationship"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["contacts"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        const content = response.choices[0].message.content;
+        const parsed = JSON.parse(typeof content === "string" ? content : JSON.stringify(content));
+        return parsed as { contacts: Array<{ name: string; firstName: string; lastName: string; phones: Array<{ phoneNumber: string; phoneType: string }>; emails: Array<{ email: string }>; address: string; city: string; state: string; zip: string; notes: string; relationship: string }> };
+      }),
   }),
 
   visits: router({
@@ -2399,8 +2477,85 @@ export const appRouter = router({
           totalRows: data.length,
         };
       }),
+    // AI: Extract contact data from raw text
+    aiExtract: protectedProcedure
+      .input(z.object({ text: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const { invokeLLM } = await import("./_core/llm.js");
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a contact data extractor. Given raw text (website forms, emails, notes, etc.), extract all contact information and return structured JSON. Always return valid JSON matching the schema exactly. For phone numbers, keep the original digits but normalize to E.164 format if possible (e.g. +1XXXXXXXXXX for US numbers). If the country code is missing and the number has 10 digits, assume +1 (US). For addresses, extract street, city, state, and zip separately if available.`,
+            },
+            {
+              role: "user",
+              content: `Extract all contact information from this text and return JSON:\n\n${input.text}`,
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "extracted_contacts",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  contacts: {
+                    type: "array",
+                    description: "List of contacts extracted from the text",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Full name of the contact" },
+                        firstName: { type: "string", description: "First name" },
+                        lastName: { type: "string", description: "Last name" },
+                        phones: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              phoneNumber: { type: "string" },
+                              phoneType: { type: "string", description: "Mobile, Landline, Work, Home, or Other" },
+                            },
+                            required: ["phoneNumber", "phoneType"],
+                            additionalProperties: false,
+                          },
+                        },
+                        emails: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              email: { type: "string" },
+                            },
+                            required: ["email"],
+                            additionalProperties: false,
+                          },
+                        },
+                        address: { type: "string", description: "Full street address" },
+                        city: { type: "string" },
+                        state: { type: "string" },
+                        zip: { type: "string" },
+                        notes: { type: "string", description: "Any additional info like property condition, reason to sell, etc." },
+                        relationship: { type: "string", description: "Owner, Spouse, Son, Daughter, Heir, or Other" },
+                      },
+                      required: ["name", "firstName", "lastName", "phones", "emails", "address", "city", "state", "zip", "notes", "relationship"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["contacts"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        const content = response.choices[0].message.content;
+        const parsed = JSON.parse(typeof content === "string" ? content : JSON.stringify(content));
+        return parsed as { contacts: Array<{ name: string; firstName: string; lastName: string; phones: Array<{ phoneNumber: string; phoneType: string }>; emails: Array<{ email: string }>; address: string; city: string; state: string; zip: string; notes: string; relationship: string }> };
+      }),
   }),
-
   // Communication Tracking
   communication: router({
     // Contact Management

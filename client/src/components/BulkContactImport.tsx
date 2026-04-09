@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
-import { ListPlus, Upload, AlertCircle, CheckCircle2, Phone, Mail, User, AlertTriangle } from "lucide-react";
+import { ListPlus, Upload, AlertCircle, CheckCircle2, Phone, Mail, User, AlertTriangle, Sparkles, Loader2, MapPin, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -98,9 +99,27 @@ interface BulkContactImportProps {
   onSuccess?: () => void;
 }
 
+interface AIExtractedContact {
+  name: string;
+  firstName: string;
+  lastName: string;
+  phones: Array<{ phoneNumber: string; phoneType: string }>;
+  emails: Array<{ email: string }>;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  notes: string;
+  relationship: string;
+}
+
 export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportProps) {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"manual" | "ai">("manual");
   const [text, setText] = useState("");
+  const [aiRawText, setAiRawText] = useState("");
+  const [aiExtracted, setAiExtracted] = useState<AIExtractedContact[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     imported: number;
@@ -109,6 +128,7 @@ export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportPr
   } | null>(null);
 
   const bulkCreate = trpc.communication.bulkCreateContacts.useMutation();
+  const aiExtractMutation = trpc.contacts.aiExtract.useMutation();
   const utils = trpc.useUtils();
   const [crossPropertyWarnings, setCrossPropertyWarnings] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }>>([]);
   const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
@@ -187,6 +207,53 @@ export function BulkContactImport({ propertyId, onSuccess }: BulkContactImportPr
     if (!isOpen) {
       setText("");
       setImportResult(null);
+      setAiRawText("");
+      setAiExtracted(null);
+      setActiveTab("manual");
+    }
+  };
+
+  const handleAIExtract = async () => {
+    if (!aiRawText.trim()) return;
+    setAiLoading(true);
+    setAiExtracted(null);
+    try {
+      const result = await aiExtractMutation.mutateAsync({ text: aiRawText });
+      if (result.contacts && result.contacts.length > 0) {
+        setAiExtracted(result.contacts);
+        toast.success(`AI extracted ${result.contacts.length} contact(s)!`);
+      } else {
+        toast.error("No contacts found in the text. Try pasting more details.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "AI extraction failed");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAIImport = async () => {
+    if (!aiExtracted || aiExtracted.length === 0) return;
+    setImporting(true);
+    try {
+      const contactsToCreate = aiExtracted.map((c) => ({
+        name: c.name,
+        phones: c.phones.map((p) => ({ phoneNumber: p.phoneNumber, phoneType: (p.phoneType || "Mobile") as any })),
+        emails: c.emails.map((e) => ({ email: e.email })),
+      }));
+      const result = await bulkCreate.mutateAsync({ propertyId, contacts: contactsToCreate });
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
+      toast.success(`${result.imported} of ${result.total} contacts imported!`);
+      if (result.imported === result.total) {
+        setTimeout(() => {
+          handleClose(false);
+          onSuccess?.();
+        }, 1200);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Import failed");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -212,7 +279,111 @@ Maria Garcia, 3055551234`;
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="manual">
+              <ListPlus className="h-4 w-4 mr-2" />
+              Manual List
+            </TabsTrigger>
+            <TabsTrigger value="ai">
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Extract
+            </TabsTrigger>
+          </TabsList>
+
+          {/* AI Extract Tab */}
+          <TabsContent value="ai" className="space-y-4">
+            <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4 text-sm">
+              <p className="font-medium text-purple-800 dark:text-purple-300 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                AI Contact Extractor
+              </p>
+              <p className="text-muted-foreground mt-1">
+                Paste any raw text — website forms, emails, notes — and AI will extract name, phones, emails, and address automatically.
+              </p>
+            </div>
+            <Textarea
+              placeholder={`Paste raw text here, for example:\n\n=== Website Form ===\nName: Richard Weatherstone\nPhone: 447761505213\nEmail: richardw697@gmail.com\nAddress: 10710 Falling Leaf Court, Parrish, Florida, 34219`}
+              value={aiRawText}
+              onChange={(e) => { setAiRawText(e.target.value); setAiExtracted(null); }}
+              rows={8}
+              className="font-mono text-sm"
+            />
+            <Button
+              onClick={handleAIExtract}
+              disabled={!aiRawText.trim() || aiLoading}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {aiLoading ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Extracting...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-2" />Extract with AI</>
+              )}
+            </Button>
+
+            {/* AI Results Preview */}
+            {aiExtracted && aiExtracted.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {aiExtracted.length} contact(s) extracted — review and import:
+                </h4>
+                {aiExtracted.map((c, i) => (
+                  <div key={i} className="border rounded-lg p-3 space-y-2 bg-muted/30">
+                    <div className="flex items-center gap-2 font-medium">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      {c.name}
+                      {c.relationship && <Badge variant="outline" className="text-xs">{c.relationship}</Badge>}
+                    </div>
+                    {c.phones.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                        {c.phones.map((p, j) => (
+                          <Badge key={j} variant="secondary" className="text-xs font-mono">
+                            {p.phoneNumber} <span className="text-muted-foreground ml-1">({p.phoneType})</span>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {c.emails.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                        {c.emails.map((e, j) => (
+                          <Badge key={j} variant="outline" className="text-xs font-mono">{e.email}</Badge>
+                        ))}
+                      </div>
+                    )}
+                    {(c.address || c.city) && (
+                      <div className="flex items-start gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        <span>{[c.address, c.city, c.state, c.zip].filter(Boolean).join(", ")}</span>
+                      </div>
+                    )}
+                    {c.notes && (
+                      <div className="flex items-start gap-1 text-xs text-muted-foreground">
+                        <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        <span className="italic">{c.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  onClick={handleAIImport}
+                  disabled={importing}
+                  className="w-full"
+                >
+                  {importing ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Importing...</>
+                  ) : (
+                    <><Upload className="h-4 w-4 mr-2" />Import {aiExtracted.length} Contact(s)</>
+                  )}
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Manual Tab */}
+          <TabsContent value="manual" className="space-y-4">
           {/* Instructions */}
           <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
             <p className="font-medium">Paste your contact list below — one contact per line.</p>
@@ -328,8 +499,10 @@ Maria Garcia, 3055551234`;
               <span>No valid contacts detected. Make sure each line has a name and at least one phone number or email.</span>
             </div>
           )}
-        </div>
+          </TabsContent>
+        </Tabs>
 
+        {activeTab === "manual" && (
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
             Cancel
@@ -348,6 +521,7 @@ Maria Garcia, 3055551234`;
             )}
           </Button>
         </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
 
