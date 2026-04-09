@@ -3068,3 +3068,9 @@
 - [x] Auto-substitute {{ownerName}} variable with contact name
 - [x] Templates grouped by category with search filter
 - [x] 13 vitest tests passing for template picker logic
+
+## Bug: DNC duplication in CallTrackingTable
+
+- [x] Remove red phone icon (PhoneOff) next to the phone number when DNC is marked
+- [x] Remove red row background when DNC checkbox is checked (only Litigator and Deceased still color rows)
+- [x] Keep only the DNC checkbox in the Contact Relationship column — no duplicate icon

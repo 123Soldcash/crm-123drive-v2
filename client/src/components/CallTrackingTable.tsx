@@ -1217,11 +1217,10 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       const attempts = getCallAttempts(contact.id, phone.phoneNumber);
                       const lastDisposition = getLastDisposition(contact.id, phone.phoneNumber);
                       
-                      // Determine row background color based on flags (priority: Litigator > DNC > Deceased)
+                      // Determine row background color based on flags (priority: Litigator > Deceased)
+                      // DNC no longer colors the row — it's shown only via the DNC checkbox
                       const rowBgClass = contact.isLitigator 
                         ? "bg-red-50 hover:bg-red-100" 
-                        : contact.dnc 
-                        ? "bg-pink-50 hover:bg-pink-100" 
                         : contact.deceased 
                         ? "bg-purple-50 hover:bg-purple-100" 
                         : "hover:bg-muted/50";
@@ -1315,37 +1314,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           {/* Phone Number */}
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
-                              {/* DNC Toggle per phone */}
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={() => togglePhoneDNCMutation.mutate({ phoneId: phone.id, dnc: !phone.dnc })}
-                                      className={`flex-shrink-0 p-0.5 rounded transition-colors ${
-                                        phone.dnc 
-                                          ? "text-red-600 hover:text-red-800" 
-                                          : "text-gray-300 hover:text-red-400"
-                                      }`}
-                                      title={phone.dnc ? "Remove DNC from this number" : "Mark this number as DNC"}
-                                    >
-                                      <PhoneOff className="h-3.5 w-3.5" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    {phone.dnc 
-                                      ? "This number is marked as DNC. Click to remove." 
-                                      : "Click to mark this number as Do Not Call"}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
                               {/* Call & SMS buttons - disabled if phone is DNC or Litigator */}
                               {phone.dnc || contact.dnc || phone.isLitigator || contact.isLitigator ? (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span className="inline-flex items-center gap-1.5 cursor-not-allowed">
-                                        <PhoneOff className="h-3 w-3 text-red-500 flex-shrink-0" />
                                         <span className="text-sm font-medium text-red-600">
                                           {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
                                         </span>
