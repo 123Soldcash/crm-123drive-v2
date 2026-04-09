@@ -3083,3 +3083,10 @@
 - [x] Tooltip shows "Click to remove DNC" or "Click to mark as DNC" on hover
 - [x] DNC toggle in Quick Call Log dialog kept as backup toggle
 - [x] All 52 related tests passing
+
+## Bug: DNC not synced between contact modal and phone checkbox
+
+- [x] When contact.dnc is toggled in modal, also update all contactPhones.dnc for that contact (server-side sync in updateContact)
+- [x] When contact DNC is checked in modal, all phone.dnc values are set to 1 in doSave (frontend sync)
+- [x] Ensure the per-phone DNC checkbox in the table reflects the correct state after modal toggle
+- [x] All 39 DNC tests passing

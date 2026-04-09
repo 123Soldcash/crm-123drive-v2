@@ -295,6 +295,12 @@ export async function updateContact(contactId: number, contactData: any) {
   // Update base contact info
   if (Object.keys(updates).length > 0) {
     await db.update(contacts).set(updates).where(eq(contacts.id, contactId));
+    
+    // Sync DNC: when contact.dnc is toggled, also update ALL phones for this contact
+    if ('dnc' in updates) {
+      const dncValue = updates.dnc ? 1 : 0;
+      await db.update(contactPhones).set({ dnc: dncValue }).where(eq(contactPhones.contactId, contactId));
+    }
   }
   
   // Update phones (simple approach: delete and recreate)
