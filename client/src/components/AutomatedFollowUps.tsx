@@ -334,42 +334,76 @@ export function AutomatedFollowUps({ propertyId }: AutomatedFollowUpsProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          {followUps.map((fu) => (
-            <div key={fu.id} className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg border border-slate-100 bg-slate-50/30 hover:bg-slate-50 transition-colors gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="p-2 rounded-full bg-white border border-slate-100 shadow-sm">
-                  {fu.status === "Active" ? <Clock className="h-3.5 w-3.5 text-blue-500" /> : 
-                   fu.status === "Paused" ? <AlertCircle className="h-3.5 w-3.5 text-amber-500" /> : 
-                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-slate-900 truncate">{fu.trigger}</span>
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold shrink-0">
-                      {fu.action}
-                    </Badge>
+          {followUps.map((fu) => {
+            const actionColor = fu.action === "Send SMS" ? "blue" : fu.action === "Send Email" ? "amber" : fu.action === "Change Stage" ? "purple" : "slate";
+            const ActionIcon = fu.action === "Send SMS" ? MessageSquare : fu.action === "Send Email" ? Mail : fu.action === "Change Stage" ? Zap : FileText;
+            return (
+              <div key={fu.id} className={`p-2.5 sm:p-3 rounded-lg border transition-colors gap-2 ${
+                fu.status === "Active" ? "border-blue-100 bg-blue-50/20 hover:bg-blue-50/40" :
+                fu.status === "Paused" ? "border-amber-100 bg-amber-50/20" :
+                "border-green-100 bg-green-50/20"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className={`p-2 rounded-full bg-white border shadow-sm border-${actionColor}-100`}>
+                      <ActionIcon className={`h-3.5 w-3.5 text-${actionColor}-500`} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-slate-900 truncate">{fu.trigger}</span>
+                        <Badge variant="outline" className={`text-[10px] h-4 px-1.5 uppercase tracking-wider font-bold shrink-0 border-${actionColor}-200 text-${actionColor}-700 bg-${actionColor}-50`}>
+                          {fu.action}
+                        </Badge>
+                        <Badge variant="outline" className={`text-[10px] h-4 px-1.5 shrink-0 ${
+                          fu.status === "Active" ? "border-green-200 text-green-700 bg-green-50" :
+                          fu.status === "Paused" ? "border-amber-200 text-amber-700 bg-amber-50" :
+                          "border-slate-200 text-slate-600 bg-slate-50"
+                        }`}>
+                          {fu.status === "Active" ? "● Active" : fu.status === "Paused" ? "⏸ Paused" : "✓ Done"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <p className="text-[11px] text-slate-500">
+                          Next: {fu.nextRunAt ? format(new Date(fu.nextRunAt), "MMM d, yyyy 'at' h:mm a") : "N/A"}
+                        </p>
+                        {fu.lastTriggeredAt && (
+                          <p className="text-[11px] text-emerald-600">
+                            Last run: {format(new Date(fu.lastTriggeredAt), "MMM d, yyyy")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Next run: {fu.nextRunAt ? format(new Date(fu.nextRunAt), "MMM d, yyyy") : "N/A"}
-                  </p>
+                  <div className="flex items-center gap-1">
+                    {fu.status === "Active" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                        onClick={() => handleExecute(fu.id)}
+                        disabled={executeMutation.isPending}
+                      >
+                        <Zap className="h-3.5 w-3.5 mr-1" />
+                        Run Now
+                      </Button>
+                    )}
+                    {fu.status === "Active" ? (
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-amber-600" onClick={() => handlePause(fu.id)}>
+                        <Pause className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : fu.status === "Paused" ? (
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-emerald-600" onClick={() => handleResume(fu.id)}>
+                        <Play className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : null}
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-rose-600" onClick={() => handleDelete(fu.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                {fu.status === "Active" ? (
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-amber-600" onClick={() => handlePause(fu.id)}>
-                    <Pause className="h-3.5 w-3.5" />
-                  </Button>
-                ) : fu.status === "Paused" ? (
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-emerald-600" onClick={() => handleResume(fu.id)}>
-                    <Play className="h-3.5 w-3.5" />
-                  </Button>
-                ) : null}
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-rose-600" onClick={() => handleDelete(fu.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </CollapsibleSection>

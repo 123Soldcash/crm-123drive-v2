@@ -831,6 +831,13 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+
+    // Start the automated follow-up scheduler
+    import("../db-automated-followups").then(({ startFollowUpScheduler }) => {
+      startFollowUpScheduler();
+    }).catch((err) => {
+      console.error("[FollowUp Scheduler] Failed to start:", err);
+    });
   });
 }
 

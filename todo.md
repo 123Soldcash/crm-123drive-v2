@@ -3130,3 +3130,12 @@
 - [x] Add backend LLM procedure to extract contact data (name, phones, emails, address) from raw text
 - [x] Add AI Extract panel to Add Contact List page with paste area + auto-fill form
 - [x] User validates extracted data before adding contact
+
+## Automated Follow-ups - Full Integration
+- [x] Add Instantly API Key and AutoCalls API Key fields to Integrations Settings page
+- [x] Implement real SMS follow-up using existing Twilio Messaging Service
+- [x] Implement real Email follow-up via Instantly API (add lead to campaign)
+- [x] Implement real AutoCalls follow-up via API (trigger call campaign)
+- [x] Implement background scheduler that checks pending follow-ups every 5 minutes
+- [x] Update follow-up UI to support SMS/Email/AutoCall/Stage Change channels with real status
+- [x] All API keys manageable via Integrations page (no code changes needed)

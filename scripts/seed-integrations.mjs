@@ -173,21 +173,39 @@ const settings = [
     isSecret: 0,
   },
 
+  // ─── Instantly (additional fields) ─────────────────────────────────────
+  {
+    integration: "instantly",
+    settingKey: "campaignId",
+    settingValue: "",
+    label: "Follow-up Campaign ID",
+    description: "Instantly campaign UUID used for automated email follow-ups. Find it in Instantly → Campaigns → click campaign → copy ID from URL.",
+    isSecret: 0,
+  },
+
   // ─── AutoCalls ─────────────────────────────────────────────────────────
   {
     integration: "autocalls",
     settingKey: "apiKey",
     settingValue: "",
     label: "API Key",
-    description: "AutoCalls API Key — for future direct API integration",
+    description: "AutoCalls API Key — for triggering call campaigns via API",
     isSecret: 1,
+  },
+  {
+    integration: "autocalls",
+    settingKey: "baseUrl",
+    settingValue: "",
+    label: "API Base URL",
+    description: "AutoCalls API base URL (e.g., https://api.autocalls.ai or your provider URL)",
+    isSecret: 0,
   },
   {
     integration: "autocalls",
     settingKey: "campaignId",
     settingValue: "",
     label: "Default Campaign ID",
-    description: "Default campaign ID for new lead uploads",
+    description: "Default campaign ID for automated follow-up calls",
     isSecret: 0,
   },
 ];

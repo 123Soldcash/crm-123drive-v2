@@ -4153,6 +4153,12 @@ export const appRouter = router({
         const { deleteFollowUp } = await import("./db-automated-followups");
         return await deleteFollowUp(input.followUpId);
       }),
+
+    // Manual trigger: run the scheduler cycle now
+    runSchedulerNow: protectedProcedure.mutation(async () => {
+      const { runSchedulerCycle } = await import("./db-automated-followups");
+      return await runSchedulerCycle();
+    }),
   }),
 
   dealCalculator: router({
