@@ -1,19 +1,41 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { MapView } from "@/components/Map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { ArrowLeft, Navigation } from "lucide-react";
 import { toast } from "sonner";
 
+/**
+ * Returns true only if the address has enough real data to geocode.
+ * Skips entries where street, city, or state are missing/placeholder.
+ */
+function isValidAddress(street: string, city: string, state: string): boolean {
+  const bad = ["unknown", "xx", "", "n/a", "null", "undefined"];
+  const normalize = (s: string) => (s ?? "").trim().toLowerCase();
+  if (bad.includes(normalize(street))) return false;
+  if (bad.includes(normalize(city))) return false;
+  if (bad.includes(normalize(state))) return false;
+  // Street must look like a real address (contains a digit)
+  if (!/\d/.test(street)) return false;
+  return true;
+}
+
 export default function MapViewPage() {
-  const [, setLocation] = useLocation();
   const { data: properties, isLoading } = trpc.properties.forMap.useQuery();
   const [selectedProperties, setSelectedProperties] = useState<number[]>([]);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
+  const unmounted = useRef(false);
+
+  useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
+    };
+  }, []);
 
   const handleMapReady = useCallback(
     async (mapInstance: google.maps.Map) => {
@@ -22,19 +44,32 @@ export default function MapViewPage() {
       if (!properties || properties.length === 0) return;
 
       // Clear existing markers
-      markers.forEach((marker) => marker.map = null);
+      markers.forEach((marker) => (marker.map = null));
       setMarkers([]);
 
       const bounds = new google.maps.LatLngBounds();
       const geocoder = new google.maps.Geocoder();
       const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
 
-      // Geocode and create markers for each property
       for (const property of properties) {
-        const address = `${property.addressLine1}, ${property.city}, ${property.state} ${property.zipcode}`;
+        // Stop if user navigated away
+        if (unmounted.current) break;
+
+        const street = property.addressLine1 ?? "";
+        const city = property.city ?? "";
+        const state = property.state ?? "";
+        const zip = property.zipcode ?? "";
+
+        // Skip properties with invalid/incomplete addresses
+        if (!isValidAddress(street, city, state)) continue;
+
+        const address = `${street}, ${city}, ${state} ${zip}`.trim();
 
         try {
           const result = await geocoder.geocode({ address });
+          // Check again after async wait
+          if (unmounted.current) break;
+
           if (result.results[0]) {
             const position = result.results[0].geometry.location;
             bounds.extend(position);
@@ -64,14 +99,14 @@ export default function MapViewPage() {
               map: mapInstance,
               position,
               content: markerContent,
-              title: property.addressLine1,
+              title: street,
             });
 
             const infoWindow = new google.maps.InfoWindow({
               content: `
                 <div style="padding: 8px; max-width: 250px;">
-                  <h3 style="font-weight: bold; margin-bottom: 8px;">${property.addressLine1}</h3>
-                  <p style="margin: 4px 0; font-size: 14px;">${property.city}, ${property.state}</p>
+                  <h3 style="font-weight: bold; margin-bottom: 8px;">${street}</h3>
+                  <p style="margin: 4px 0; font-size: 14px;">${city}, ${state}</p>
                   <p style="margin: 4px 0; font-size: 14px;">Owner: ${property.owner1Name || "N/A"}</p>
                   <p style="margin: 4px 0; font-size: 14px;">Value: $${property.estimatedValue?.toLocaleString() || "N/A"}</p>
                   <p style="margin: 4px 0; font-size: 14px;">Equity: ${property.equityPercent || 0}%</p>
@@ -100,14 +135,16 @@ export default function MapViewPage() {
 
             newMarkers.push(marker);
           }
-        } catch (error) {
-          console.error(`Failed to geocode ${address}:`, error);
+        } catch {
+          // Silently skip addresses that can't be geocoded (ZERO_RESULTS, etc.)
         }
       }
 
-      setMarkers(newMarkers);
-      if (newMarkers.length > 0) {
-        mapInstance.fitBounds(bounds);
+      if (!unmounted.current) {
+        setMarkers(newMarkers);
+        if (newMarkers.length > 0) {
+          mapInstance.fitBounds(bounds);
+        }
       }
     },
     [properties, markers]
@@ -131,7 +168,7 @@ export default function MapViewPage() {
     const destination = selectedProps[selectedProps.length - 1];
 
     const directionsService = new google.maps.DirectionsService();
-    
+
     if (directionsRenderer) {
       directionsRenderer.setMap(null);
     }

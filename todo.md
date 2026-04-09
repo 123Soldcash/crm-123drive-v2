@@ -3053,3 +3053,9 @@
 ## Bug: Map container not found on /message-templates
 
 - [x] Fix "Map container not found" error on /message-templates page — added unmount guard (unmounted.current ref) so async script load callback silently exits if component navigated away
+
+## Bug: Geocoding errors on /message-templates
+
+- [x] Fix MapView geocoding: skip properties with missing/invalid addresses (Unknown, XX Unknown, owner names instead of addresses)
+- [x] Fix MapView geocoding: stop geocoding loop when component unmounts (navigating away)
+- [x] 12 vitest tests passing for isValidAddress helper
