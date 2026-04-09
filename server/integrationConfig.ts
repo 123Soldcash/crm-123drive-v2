@@ -69,6 +69,7 @@ function getEnvFallback(integration: string): Record<string, string> {
         apiKey: ENV.twilioApiKey,
         apiSecret: ENV.twilioApiSecret,
         twimlAppSid: ENV.twilioTwimlAppSid,
+        messagingServiceSid: ENV.twilioMessagingServiceSid,
       };
     case "slack":
       return {

@@ -3097,3 +3097,15 @@
 - [x] When phone.dnc is toggled OFF in table, check if ALL phones are now non-DNC and set contact.dnc=0
 - [x] Modal initializes DNC checkbox from contact.dnc which is now kept in sync bidirectionally
 - [x] All 39 DNC tests passing
+
+## Bug: SMS not sending — Twilio integration issue
+
+- [ ] Diagnose why SMS messages are not being sent
+- [ ] Check Twilio credentials and configuration
+- [ ] Check server-side SMS sending code for errors
+- [ ] Fix the root cause and verify SMS delivery
+
+## SMS Fix - Messaging Service SID (A2P 10DLC Compliance)
+- [x] Add TWILIO_MESSAGING_SERVICE_SID to Integrations Settings page (Twilio card)
+- [x] Update SMS send code to use messagingServiceSid from integrationConfig for A2P 10DLC compliance
+- [x] Update tests for messaging service SID changes

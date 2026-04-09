@@ -78,6 +78,22 @@ const settings = [
     description: "URL for call status updates (ringing, answered, completed)",
     isSecret: 0,
   },
+  {
+    integration: "twilio",
+    settingKey: "messagingServiceSid",
+    settingValue: process.env.TWILIO_MESSAGING_SERVICE_SID || "",
+    label: "Messaging Service SID",
+    description: "Twilio Messaging Service SID (starts with MG...) — required for A2P 10DLC compliant SMS sending. Messages sent without this will be blocked by carriers.",
+    isSecret: 0,
+  },
+  {
+    integration: "twilio",
+    settingKey: "smsWebhookUrl",
+    settingValue: "https://crmv3.manus.space/api/twilio/sms/incoming",
+    label: "SMS Webhook URL",
+    description: "URL configured in your Twilio Messaging Service for incoming SMS messages",
+    isSecret: 0,
+  },
 
   // ─── Slack ─────────────────────────────────────────────────────────────
   {

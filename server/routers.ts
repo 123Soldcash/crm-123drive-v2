@@ -4309,10 +4309,16 @@ export const appRouter = router({
         fromNumber: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        const { getIntegrationConfig } = await import("./integrationConfig");
+        const twilioConfig = await getIntegrationConfig("twilio");
         const twilio = await import("twilio");
-        const client = twilio.default(ENV.twilioAccountSid, ENV.twilioAuthToken);
-        const fromPhone = input.fromNumber || ENV.twilioPhoneNumber;
-        if (!fromPhone) throw new Error("No Twilio phone number configured. Please select a number or ask admin to add one.");
+        const client = twilio.default(
+          twilioConfig.accountSid || ENV.twilioAccountSid,
+          twilioConfig.authToken || ENV.twilioAuthToken
+        );
+        const fromPhone = input.fromNumber || twilioConfig.phoneNumber || ENV.twilioPhoneNumber;
+        const messagingServiceSid = twilioConfig.messagingServiceSid || ENV.twilioMessagingServiceSid;
+        if (!messagingServiceSid && !fromPhone) throw new Error("No Twilio Messaging Service or phone number configured. Go to Settings → Integrations → Twilio to add your Messaging Service SID.");
         // Format to E.164
         const rawDigits = input.to.replace(/\D/g, "");
         const toPhone = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.to.startsWith("+") ? input.to : `+1${rawDigits}`;
@@ -4320,7 +4326,14 @@ export const appRouter = router({
         let msgStatus: "queued" | "sent" | "delivered" | "failed" | "received" | "undelivered" = "queued";
         let errorMessage: string | undefined;
         try {
-          const msg = await client.messages.create({ to: toPhone, from: fromPhone, body: input.body });
+          // Use Messaging Service SID (A2P 10DLC compliant) when available, fallback to direct number
+          const twilioParams: any = { to: toPhone, body: input.body };
+          if (messagingServiceSid) {
+            twilioParams.messagingServiceSid = messagingServiceSid;
+          } else {
+            twilioParams.from = fromPhone;
+          }
+          const msg = await client.messages.create(twilioParams);
           twilioSid = msg.sid;
           msgStatus = "sent";
         } catch (err: any) {
@@ -4333,7 +4346,7 @@ export const appRouter = router({
         if (!database) throw new Error("Database not available");
         await database.insert(smsTable).values({
           contactPhone: toPhone,
-          twilioPhone: fromPhone,
+          twilioPhone: messagingServiceSid ? `MS:${messagingServiceSid}` : fromPhone,
           direction: "outbound",
           body: input.body,
           twilioSid,

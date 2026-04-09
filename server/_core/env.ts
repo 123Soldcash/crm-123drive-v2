@@ -14,6 +14,7 @@ export const ENV = {
   twilioApiKey: process.env.TWILIO_API_KEY ?? "",
   twilioApiSecret: process.env.TWILIO_API_SECRET ?? "",
   twilioTwimlAppSid: process.env.TWILIO_TWIML_APP_SID ?? "",
+  twilioMessagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID ?? "",
   // Zapier Webhook Security
   zapierWebhookToken: process.env.ZAPIER_WEBHOOK_TOKEN ?? "",
   // Slack Bot Integration

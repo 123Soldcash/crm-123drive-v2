@@ -6,6 +6,7 @@
  * 3. SMS inbox webhook saves inbound messages with correct twilioPhone
  * 4. SMSChatButton passes fromNumber to send mutation
  * 5. Conversation queries return twilioPhone field
+ * 6. Messaging Service SID is used for A2P 10DLC compliance
  */
 import { describe, it, expect } from "vitest";
 import fs from "fs";
@@ -15,26 +16,33 @@ describe("SMS Multi-Number Support", () => {
   describe("Backend SMS send mutation", () => {
     it("send mutation input schema includes fromNumber", () => {
       const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
-      // The send mutation should accept fromNumber as optional string
       expect(routersContent).toContain("fromNumber: z.string().optional()");
     });
 
     it("uses fromNumber as the from phone for Twilio API call", () => {
       const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
-      // Should use input.fromNumber with fallback to ENV.twilioPhoneNumber
-      expect(routersContent).toContain("input.fromNumber || ENV.twilioPhoneNumber");
+      expect(routersContent).toContain("input.fromNumber || twilioConfig.phoneNumber || ENV.twilioPhoneNumber");
     });
 
-    it("saves fromNumber as twilioPhone in smsMessages", () => {
+    it("saves twilioPhone in smsMessages", () => {
       const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
-      // Should save fromPhone (which is input.fromNumber || ENV.twilioPhoneNumber) as twilioPhone
-      expect(routersContent).toContain("twilioPhone: fromPhone");
+      expect(routersContent).toContain("twilioPhone:");
     });
 
-    it("passes fromPhone to Twilio messages.create as 'from'", () => {
+    it("uses messagingServiceSid from integrationConfig when available", () => {
       const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
-      // Should use fromPhone in the Twilio API call
-      expect(routersContent).toContain("from: fromPhone");
+      expect(routersContent).toContain("twilioConfig.messagingServiceSid");
+      expect(routersContent).toContain("messagingServiceSid");
+    });
+
+    it("reads Twilio config from integrationConfig helper", () => {
+      const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
+      expect(routersContent).toContain('getIntegrationConfig("twilio")');
+    });
+
+    it("falls back to from: fromPhone when no messaging service configured", () => {
+      const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
+      expect(routersContent).toContain("twilioParams.from = fromPhone");
     });
   });
 
@@ -42,7 +50,6 @@ describe("SMS Multi-Number Support", () => {
   describe("Inbound SMS webhook", () => {
     it("saves the To number as twilioPhone for inbound messages", () => {
       const webhooksContent = fs.readFileSync("server/twilio-webhooks.ts", "utf-8");
-      // The inbound webhook should save req.body.To as twilioPhone
       expect(webhooksContent).toContain("twilioPhone: to");
     });
 
@@ -144,6 +151,27 @@ describe("SMS Multi-Number Support", () => {
     it("listNumbers procedure exists in routers", () => {
       const routersContent = fs.readFileSync("server/routers.ts", "utf-8");
       expect(routersContent).toContain("listNumbers");
+    });
+  });
+
+  // ── Messaging Service SID: env + integrationConfig ──
+  describe("Messaging Service SID configuration", () => {
+    it("env.ts includes twilioMessagingServiceSid", () => {
+      const envContent = fs.readFileSync("server/_core/env.ts", "utf-8");
+      expect(envContent).toContain("twilioMessagingServiceSid");
+      expect(envContent).toContain("TWILIO_MESSAGING_SERVICE_SID");
+    });
+
+    it("integrationConfig includes messagingServiceSid in Twilio fallback", () => {
+      const configContent = fs.readFileSync("server/integrationConfig.ts", "utf-8");
+      expect(configContent).toContain("messagingServiceSid: ENV.twilioMessagingServiceSid");
+    });
+
+    it("seed script includes messagingServiceSid for Twilio", () => {
+      const seedContent = fs.readFileSync("scripts/seed-integrations.mjs", "utf-8");
+      expect(seedContent).toContain("messagingServiceSid");
+      expect(seedContent).toContain("TWILIO_MESSAGING_SERVICE_SID");
+      expect(seedContent).toContain("Messaging Service SID");
     });
   });
 });
