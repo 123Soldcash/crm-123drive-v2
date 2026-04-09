@@ -485,27 +485,33 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
 
 
 
-                      {contactCalls.length > 0 && (
-                        <div className="mt-3 pt-3 border-t">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                            <Clock className="w-4 h-4" />
-                            Call History ({contactCalls.length})
-                          </div>
-                          <div className="space-y-1">
-                            {contactCalls.slice(0, 2).map((call: any) => (
-                              <div key={call.id} className="text-xs text-gray-600 flex items-center gap-2">
-                                <span className={`px-2 py-1 rounded ${getDispositionBadgeColor(call.disposition)}`}>
-                                  {call.disposition}
-                                </span>
-                                <span>{new Date(call.callDate).toLocaleDateString()}</span>
-                              </div>
-                            ))}
-                            {contactCalls.length > 2 && (
-                              <div className="text-xs text-gray-500">+{contactCalls.length - 2} more calls</div>
+                      {contactCalls.length > 0 && (() => {
+                        const lastCall = contactCalls[0];
+                        const lastDisp = lastCall.disposition || lastCall.callResult || "";
+                        const lastDate = lastCall.communicationDate || lastCall.callDate;
+                        // Extract user notes: strip the auto-prefix "Called +1xxx - "
+                        const rawNotes = lastCall.notes || "";
+                        const userNotes = rawNotes.replace(/^Called [^-]+-?\s*/, "").trim();
+                        return (
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                              <Clock className="w-4 h-4" />
+                              Last Call — {lastDate ? new Date(lastDate).toLocaleDateString() : "—"}
+                              {contactCalls.length > 1 && <span className="text-xs text-gray-400 font-normal">({contactCalls.length} total)</span>}
+                            </div>
+                            {lastDisp && (
+                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-1 ${getDispositionBadgeColor(lastDisp)}`}>
+                                {lastDisp}
+                              </span>
+                            )}
+                            {userNotes && (
+                              <p className="text-xs text-gray-600 mt-1 italic truncate" title={userNotes}>
+                                {userNotes}
+                              </p>
                             )}
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
 
                     <Button
@@ -664,21 +670,27 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                     </TableHeader>
                     <TableBody>
                       {selectedContact &&
-                        getContactCallHistory(selectedContact.id).map((call: any) => (
-                          <TableRow key={call.id}>
-                            <TableCell className="text-sm">
-                              {new Date(call.callDate).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getDispositionBadgeColor(call.disposition)}>
-                                {call.disposition}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm max-w-xs truncate">
-                              {call.notes || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        getContactCallHistory(selectedContact.id).map((call: any) => {
+                          const disp = call.disposition || call.callResult || "-";
+                          const callDate = call.communicationDate || call.callDate;
+                          const rawNotes = call.notes || "";
+                          const userNotes = rawNotes.replace(/^Called [^-]+-?\s*/, "").trim() || rawNotes;
+                          return (
+                            <TableRow key={call.id}>
+                              <TableCell className="text-sm">
+                                {callDate ? new Date(callDate).toLocaleDateString() : "—"}
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={getDispositionBadgeColor(disp)}>
+                                  {disp}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm max-w-xs truncate" title={userNotes}>
+                                {userNotes || "-"}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                     </TableBody>
                   </Table>
                 </div>

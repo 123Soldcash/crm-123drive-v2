@@ -303,10 +303,14 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   });
   const createNoteMutation = trpc.callNotes.create.useMutation();
   const deleteNoteMutation = trpc.callNotes.delete.useMutation();
+  const utils = trpc.useUtils();
   const logCommunicationMutation = trpc.communication.addCommunicationLog.useMutation({
     onSuccess: () => {
       toast.success("Call log saved!");
       setLogSaved(true);
+      // Refresh the contact preview and communication log
+      utils.communication.getCommunicationLog.invalidate({ propertyId });
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
     },
     onError: (error: any) => {
       toast.error(`Failed to save call log: ${error.message}`);
@@ -314,8 +318,6 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
   });
   const updateContactMutation = trpc.contacts.updateContact.useMutation();
   const updatePropertyMutation = trpc.properties.updateProperty.useMutation();
-
-  const utils = trpc.useUtils();
 
   // Initialize Twilio Device
   const initializeDevice = useCallback(async (token: string): Promise<Device | null> => {

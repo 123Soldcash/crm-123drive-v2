@@ -3120,3 +3120,8 @@
 - [x] Remove history, file uploads, and screenshots from Chris Notes
 - [x] Replace with simple quick-note input + deletable list (tag-style, plain text only)
 - [x] Update backend to support per-note add/delete
+
+## Call Disposition Fix
+- [x] Fix call disposition not being saved after call ends
+- [x] Fix contact not being updated with last disposition and notes
+- [x] Fix contact preview card not showing last disposition and notes
