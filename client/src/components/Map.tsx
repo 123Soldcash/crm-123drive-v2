@@ -124,11 +124,14 @@ export function MapView({
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
+  const unmounted = useRef(false);
 
   const init = usePersistFn(async () => {
     await loadMapScript();
+    // Guard: component may have unmounted while the script was loading
+    if (unmounted.current) return;
     if (!mapContainer.current) {
-      console.error("Map container not found");
+      // Silently skip — component navigated away before map could initialize
       return;
     }
     map.current = new window.google.maps.Map(mapContainer.current, {
@@ -146,7 +149,11 @@ export function MapView({
   });
 
   useEffect(() => {
+    unmounted.current = false;
     init();
+    return () => {
+      unmounted.current = true;
+    };
   }, [init]);
 
   return (

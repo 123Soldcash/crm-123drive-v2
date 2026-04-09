@@ -3049,3 +3049,7 @@
 - [x] Show Litigator phone numbers in RED text in contact list (number visible, not hidden)
 - [x] Update CallModal.tsx to detect and block litigator numbers with orange warning banner
 - [x] 15 vitest tests passing for DNC + Litigator blocking logic
+
+## Bug: Map container not found on /message-templates
+
+- [x] Fix "Map container not found" error on /message-templates page — added unmount guard (unmounted.current ref) so async script load callback silently exits if component navigated away
