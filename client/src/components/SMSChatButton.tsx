@@ -13,7 +13,7 @@
  * to select which Twilio number to send from, then opens the SMS chat drawer.
  */
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, RefreshCw, CheckCheck, AlertCircle, Clock, Loader2, Phone } from "lucide-react";
+import { MessageSquare, Send, RefreshCw, CheckCheck, AlertCircle, Clock, Loader2, Phone, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -92,6 +92,8 @@ export function SMSChatButton({
 }: SMSChatButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
   const [message, setMessage] = useState("");
   const [selectedFromNumber, setSelectedFromNumber] = useState<string | null>(null);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
@@ -103,6 +105,36 @@ export function SMSChatButton({
   const numbersQuery = trpc.twilio.listNumbers.useQuery({ activeOnly: true }, {
     enabled: selectorOpen,
   });
+
+  // Fetch SMS templates for picker
+  const { data: templates = [] } = trpc.smsTemplates.list.useQuery(
+    { channel: "sms" },
+    { enabled: open, staleTime: 60_000 }
+  );
+
+  /** Apply a template — substitute {{ownerName}} and {{address}} if available */
+  function applyTemplate(body: string) {
+    let text = body;
+    if (contactName) text = text.replace(/\{\{ownerName\}\}/gi, contactName);
+    setMessage(text);
+    setTemplatePickerOpen(false);
+    setTemplateSearch("");
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }
+
+  const filteredTemplates = templates.filter((t: any) =>
+    !templateSearch ||
+    t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+    t.body.toLowerCase().includes(templateSearch.toLowerCase())
+  );
+
+  // Group templates by category
+  const templatesByCategory = filteredTemplates.reduce((acc: Record<string, any[]>, t: any) => {
+    const cat = t.category || "General";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(t);
+    return acc;
+  }, {});
 
   // Fetch conversation — auto-refresh every 10 seconds when drawer is open
   const { data: messages = [], refetch, isLoading } = trpc.sms.getConversation.useQuery(
@@ -377,6 +409,64 @@ export function SMSChatButton({
               </div>
             )}
             <div className="flex gap-2 items-end">
+              {/* Template picker button */}
+              <Popover open={templatePickerOpen} onOpenChange={setTemplatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-[44px] w-[44px] p-0 flex-shrink-0 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                    title="Insert template"
+                    disabled={sendMutation.isPending}
+                  >
+                    <FileText className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start" side="top">
+                  <div className="p-2 border-b">
+                    <p className="text-xs font-semibold text-gray-700 mb-1.5">Insert Template</p>
+                    <input
+                      type="text"
+                      placeholder="Search templates..."
+                      value={templateSearch}
+                      onChange={(e) => setTemplateSearch(e.target.value)}
+                      className="w-full text-xs px-2 py-1.5 rounded border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {filteredTemplates.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-gray-400">
+                        {templates.length === 0 ? "No SMS templates yet" : "No templates match your search"}
+                      </div>
+                    ) : (
+                      Object.entries(templatesByCategory).map(([category, items]: [string, any[]]) => (
+                        <div key={category}>
+                          <div className="px-3 py-1 bg-gray-50 border-b border-t">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{category}</span>
+                          </div>
+                          {items.map((t: any) => (
+                            <button
+                              key={t.id}
+                              onClick={() => applyTemplate(t.body)}
+                              className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0 group"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-gray-800 truncate group-hover:text-blue-700">{t.name}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-2 leading-relaxed">{t.body}</p>
+                                </div>
+                                <ChevronRight className="h-3 w-3 text-gray-300 group-hover:text-blue-500 flex-shrink-0 mt-0.5" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               <Textarea
                 ref={textareaRef}
                 value={message}

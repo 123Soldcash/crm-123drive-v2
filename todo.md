@@ -3059,3 +3059,12 @@
 - [x] Fix MapView geocoding: skip properties with missing/invalid addresses (Unknown, XX Unknown, owner names instead of addresses)
 - [x] Fix MapView geocoding: stop geocoding loop when component unmounts (navigating away)
 - [x] 12 vitest tests passing for isValidAddress helper
+
+## Feature: Template Picker in SMS Chat Window
+
+- [x] Add template picker button (FileText icon) next to the message input in the SMS chat window
+- [x] Show a popover/dropdown with available templates (filtered by SMS channel)
+- [x] On template select, insert the template body into the input field
+- [x] Auto-substitute {{ownerName}} variable with contact name
+- [x] Templates grouped by category with search filter
+- [x] 13 vitest tests passing for template picker logic
