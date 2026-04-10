@@ -639,14 +639,21 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   };
 
   // Get last communication for a phone number
+  // Normalize phone to last 10 digits for consistent comparison
+  const normalizePhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    return digits.length >= 10 ? digits.slice(-10) : digits;
+  };
+
   // Match communications by contactPhoneNumber field (primary) or fallback to notes-based matching for old logs
   const matchPhoneCalls = (contactId: number, phoneNumber: string) => {
     if (!communications) return [];
+    const normalizedInput = normalizePhone(phoneNumber);
     return communications.filter(
       (c: any) => 
         c.contactId === contactId && 
         c.communicationType === "Phone" &&
-        (c.contactPhoneNumber === phoneNumber || (!c.contactPhoneNumber && c.notes?.includes(phoneNumber)))
+        (normalizePhone(c.contactPhoneNumber || "") === normalizedInput || (!c.contactPhoneNumber && c.notes?.includes(phoneNumber)))
     );
   };
 
@@ -736,9 +743,26 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
   const handleNoteSave = (contactId: number, phoneNumber: string) => {
     const log = getLastCommunicationLog(contactId, phoneNumber);
+    
     if (!log) {
-      toast.error("No communication log found to update");
+      // No existing log found — create a new one with the note
+      if (!noteValue.trim()) {
+        setEditingNote(null);
+        return;
+      }
+      logCommunicationMutation.mutate({
+        propertyId,
+        contactId,
+        communicationType: "Phone",
+        callResult: "See Notes" as any,
+        direction: "Outbound",
+        twilioNumber: primaryTwilioNumber || undefined,
+        contactPhoneNumber: phoneNumber,
+        notes: `Called ${phoneNumber} - ${noteValue.trim()}`,
+        nextStep: "",
+      });
       setEditingNote(null);
+      setNoteValue("");
       return;
     }
 

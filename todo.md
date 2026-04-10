@@ -3144,3 +3144,13 @@
 ## Default Caller ID Fix
 - [x] Auto-select Default Caller ID when making a call (skip number selection if defaultCallerId is set on the property)
 - [x] Only show number picker when no Default Caller ID is configured
+
+## Call Log & Notes Save Fix
+- [x] Fix Call Log & Notes inside CallModal not saving information correctly
+- [x] Validate all fields are properly sent to backend and persisted
+- [x] Fix phone number format mismatch in matchPhoneCalls (normalize to last 10 digits)
+- [x] Add fallback to create new log when editing notes inline and no log exists
+
+## Call Tracking Table - Notes Bugs
+- [x] Fix notes saved via Call Log not appearing in the Call Tracking Table notes column
+- [x] Fix inline note editing error "No communication log found to update" — phone number format mismatch
