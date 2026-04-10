@@ -3050,6 +3050,7 @@
 - [x] Update CallModal.tsx to detect and block litigator numbers with orange warning banner
 - [x] 15 vitest tests passing for DNC + Litigator blocking logic
 
+<<<<<<< Updated upstream
 ## Bug: Map container not found on /message-templates
 
 - [x] Fix "Map container not found" error on /message-templates page — added unmount guard (unmounted.current ref) so async script load callback silently exits if component navigated away
@@ -3139,3 +3140,7 @@
 - [x] Implement background scheduler that checks pending follow-ups every 5 minutes
 - [x] Update follow-up UI to support SMS/Email/AutoCall/Stage Change channels with real status
 - [x] All API keys manageable via Integrations page (no code changes needed)
+
+## Default Caller ID Fix
+- [x] Auto-select Default Caller ID when making a call (skip number selection if defaultCallerId is set on the property)
+- [x] Only show number picker when no Default Caller ID is configured

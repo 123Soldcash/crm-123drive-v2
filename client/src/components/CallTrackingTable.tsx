@@ -1353,46 +1353,57 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                 </TooltipProvider>
                               ) : (
                                 <>
-                                  {/* Clickable phone number starts call directly */}
-                                  <Popover 
-                                    open={callSelectorOpen === phone.phoneNumber} 
-                                    onOpenChange={(open) => setCallSelectorOpen(open ? phone.phoneNumber : null)}
-                                  >
-                                    <PopoverTrigger asChild>
-                                      <button
-                                        onClick={() => handlePhoneCallClick(contact, phone)}
-                                        className="text-sm font-medium text-green-700 hover:text-green-900 hover:underline cursor-pointer flex items-center gap-1"
-                                        title={primaryTwilioNumber ? `Call ${contact.name} (using default: ${formatPhone(primaryTwilioNumber)})` : `Click to call ${contact.name}`}
-                                      >
-                                        <Phone className="h-3 w-3 text-green-600" />
-                                        {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
-                                      </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-64 p-2" align="start">
-                                      <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select caller number:</p>
-                                      {(twilioNumbersList as any[]).length === 0 ? (
-                                        <div className="text-center py-3 px-2">
-                                          <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
-                                        </div>
-                                      ) : (
-                                        <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
-                                          {(twilioNumbersList as any[]).map((num: any) => (
-                                            <button
-                                              key={num.id}
-                                              onClick={() => handleSelectTwilioNumber(contact, phone, num.phoneNumber)}
-                                              className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
-                                            >
-                                              <Phone className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                                              <div className="min-w-0">
-                                                <p className="text-sm font-medium truncate">{num.label}</p>
-                                                <p className="text-xs text-muted-foreground font-mono">{formatPhone(num.phoneNumber)}</p>
-                                              </div>
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </PopoverContent>
-                                  </Popover>
+                                  {/* When primaryTwilioNumber is set, click goes straight to CallModal — no popover */}
+                                  {primaryTwilioNumber ? (
+                                    <button
+                                      onClick={() => handlePhoneCallClick(contact, phone)}
+                                      className="text-sm font-medium text-green-700 hover:text-green-900 hover:underline cursor-pointer flex items-center gap-1"
+                                      title={`Call ${contact.name} (using default: ${formatPhone(primaryTwilioNumber)})`}
+                                    >
+                                      <Phone className="h-3 w-3 text-green-600" />
+                                      {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
+                                    </button>
+                                  ) : (
+                                    <Popover 
+                                      open={callSelectorOpen === phone.phoneNumber} 
+                                      onOpenChange={(open) => setCallSelectorOpen(open ? phone.phoneNumber : null)}
+                                    >
+                                      <PopoverTrigger asChild>
+                                        <button
+                                          onClick={() => handlePhoneCallClick(contact, phone)}
+                                          className="text-sm font-medium text-green-700 hover:text-green-900 hover:underline cursor-pointer flex items-center gap-1"
+                                          title={`Click to call ${contact.name} — select a number`}
+                                        >
+                                          <Phone className="h-3 w-3 text-green-600" />
+                                          {hiddenPhones.has(phone.phoneNumber) ? "****" : formatPhone(phone.phoneNumber)}
+                                        </button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-64 p-2" align="start">
+                                        <p className="text-xs font-medium text-muted-foreground px-2 pb-2">Select caller number:</p>
+                                        {(twilioNumbersList as any[]).length === 0 ? (
+                                          <div className="text-center py-3 px-2">
+                                            <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
+                                          </div>
+                                        ) : (
+                                          <div className="space-y-0.5 max-h-[300px] overflow-y-auto">
+                                            {(twilioNumbersList as any[]).map((num: any) => (
+                                              <button
+                                                key={num.id}
+                                                onClick={() => handleSelectTwilioNumber(contact, phone, num.phoneNumber)}
+                                                className="w-full text-left px-2 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-2"
+                                              >
+                                                <Phone className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                                                <div className="min-w-0">
+                                                  <p className="text-sm font-medium truncate">{num.label}</p>
+                                                  <p className="text-xs text-muted-foreground font-mono">{formatPhone(num.phoneNumber)}</p>
+                                                </div>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
                                   <SMSChatButton
                                     phoneNumber={phone.phoneNumber}
                                     contactName={contact.name}
