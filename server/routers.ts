@@ -3973,6 +3973,9 @@ export const appRouter = router({
           const trackingStatus = (input.marketStatus && validTrackingStatuses.includes(input.marketStatus as any)) ? (input.marketStatus as any) : 'Not Visited';
           const validLeadTemps = ['SUPER HOT', 'HOT', 'WARM', 'COLD', 'TBD', 'DEAD'];
           const leadTemp = (input.leadTemperature && validLeadTemps.includes(input.leadTemperature as any)) ? (input.leadTemperature as any) : 'TBD';
+          // Web leads always use the website Twilio number as default caller
+          const WEB_CALLER_ID = '+17869041444';
+
           const result = await database.insert(properties).values({
             addressLine1,
             city,
@@ -3992,6 +3995,7 @@ export const appRouter = router({
             status: input.source ? `WordPress Form - ${input.source}` : 'WordPress Form',
             leadSource: 'Website',
             source: 'Manual',
+            primaryTwilioNumber: WEB_CALLER_ID, // Auto-assign web number for all website leads
           });
 
           // If contact info provided, add contact

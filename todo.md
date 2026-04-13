@@ -3175,3 +3175,7 @@
 ## DNC Per-Phone Bug Fix
 - [x] Fix DNC toggle: marking one phone as DNC should NOT affect other phones of the same contact
 - [x] DNC must be stored and read per phone number (contactPhones.isDnc), not per contact
+
+## Web Lead Default Caller ID
+- [x] Auto-set Default Caller ID to (786) 904-1444 for leads coming from the website (Zapier webhook)
+- [x] Apply to both form step 1 and step 2 submissions
