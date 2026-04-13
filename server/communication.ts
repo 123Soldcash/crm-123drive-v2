@@ -650,40 +650,11 @@ export async function togglePhoneDNC(phoneId: number, dnc: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Update the phone's DNC flag
+  // Update ONLY the individual phone's DNC flag — do NOT touch contact.dnc
+  // contact.dnc is only set via markPropertyDNC (bulk) or direct admin action
   await db.update(contactPhones)
     .set({ dnc: dnc ? 1 : 0 })
     .where(eq(contactPhones.id, phoneId));
-  
-  // Sync contact.dnc: find the contact that owns this phone
-  const phoneRow = await db.select({ contactId: contactPhones.contactId })
-    .from(contactPhones)
-    .where(eq(contactPhones.id, phoneId))
-    .limit(1);
-  
-  if (phoneRow.length > 0) {
-    const contactId = phoneRow[0].contactId;
-    
-    if (dnc) {
-      // If marking a phone as DNC, also mark the contact as DNC
-      await db.update(contacts)
-        .set({ dnc: 1 })
-        .where(eq(contacts.id, contactId));
-    } else {
-      // If unmarking a phone, check if ALL phones for this contact are now non-DNC
-      const allPhones = await db.select({ dnc: contactPhones.dnc })
-        .from(contactPhones)
-        .where(eq(contactPhones.contactId, contactId));
-      
-      const anyStillDNC = allPhones.some(p => p.dnc === 1);
-      if (!anyStillDNC) {
-        // All phones are non-DNC, so unmark the contact too
-        await db.update(contacts)
-          .set({ dnc: 0 })
-          .where(eq(contacts.id, contactId));
-      }
-    }
-  }
 }
 
 /**

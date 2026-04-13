@@ -3171,3 +3171,7 @@
 ## Integrations Page Layout Fix
 - [x] Fix card layout - buttons overflowing outside cards (Test Connection, Console buttons)
 - [x] Remodel Integrations page for clean, contained card design
+
+## DNC Per-Phone Bug Fix
+- [x] Fix DNC toggle: marking one phone as DNC should NOT affect other phones of the same contact
+- [x] DNC must be stored and read per phone number (contactPhones.isDnc), not per contact

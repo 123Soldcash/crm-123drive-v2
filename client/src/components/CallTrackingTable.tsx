@@ -421,7 +421,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
   // Click on phone number: start call directly (skip Log Call dialog)
   const handlePhoneCallClick = (contact: any, phone: any) => {
-    if (phone.dnc || contact.dnc || phone.isLitigator || contact.isLitigator) return; // DNC or Litigator blocked
+    if (phone.dnc || phone.isLitigator || contact.isLitigator) return; // DNC or Litigator blocked (per-phone check)
     if (primaryTwilioNumber) {
       // Auto-dial with primary number
       setCallModalPhone({
@@ -513,8 +513,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     { value: "OTHER", label: "Other (Notes)" },
   ];
 
-  // Check if ALL contacts are DNC (for DNC Geral toggle)
-  const allContactsDNC = contacts && contacts.length > 0 && contacts.every((c: any) => !!c.dnc);
+  // Check if ALL phones across ALL contacts are DNC (for DNC Geral toggle)
+  // Uses phone-level dnc flag, not contact-level, since DNC is now per-phone
+  const allContactsDNC = contacts && contacts.length > 0 && contacts.every((c: any) => 
+    c.phones && c.phones.length > 0 && c.phones.every((p: any) => !!p.dnc)
+  );
 
   const togglePhoneDNCMutation = trpc.communication.togglePhoneDNC.useMutation({
     onSuccess: () => {
@@ -822,7 +825,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   // Filter contacts based on disposition, flags, date, agent, and phone type
   const filteredContacts = contacts?.filter((contact: any) => {
     // Flag filters
-    if (flagFilters.dnc && !contact.dnc) return false;
+    // DNC filter: show contact if ANY of its phones is marked DNC
+    if (flagFilters.dnc && !contact.phones?.some((p: any) => !!p.dnc)) return false;
     if (flagFilters.litigator && !contact.litigator) return false;
     if (flagFilters.deceased && !contact.deceased) return false;
     if (flagFilters.decisionMaker && !contact.decisionMaker) return false;
@@ -1450,7 +1454,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           <TableCell className="align-middle">
                             <div className="flex items-center gap-1.5">
                               {/* Call & SMS buttons - disabled if phone is DNC or Litigator */}
-                              {phone.dnc || contact.dnc || phone.isLitigator || contact.isLitigator ? (
+                              {phone.dnc || phone.isLitigator || contact.isLitigator ? (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1691,8 +1695,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center align-middle px-0">
+                        {/* Contact-row DNC indicator: true if ANY phone of this contact is DNC */}
                         <Checkbox
-                          checked={!!contact.dnc}
+                          checked={contact.phones?.some((p: any) => !!p.dnc) || false}
                           disabled
                           className="pointer-events-none data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
                           aria-label="DNC"
