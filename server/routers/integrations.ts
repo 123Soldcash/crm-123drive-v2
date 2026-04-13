@@ -229,6 +229,55 @@ export const integrationsRouter = router({
   }),
 
   /**
+   * Test Supabase DNC connection — calls the RPC function with a test number
+   */
+  testSupabaseDNC: adminProcedure.mutation(async () => {
+    const db = await getDb();
+    const rows = await db!
+      .select()
+      .from(integrationSettings)
+      .where(eq(integrationSettings.integration, "supabase_dnc"));
+
+    const config: Record<string, string> = {};
+    for (const r of rows) config[r.settingKey] = r.settingValue ?? "";
+
+    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+      return { success: false, message: "Supabase URL and API Key are required" };
+    }
+
+    const rpcName = config.rpcFunctionName || "check_dnc";
+
+    try {
+      const url = `${config.supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/${rpcName}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ p_number: "0000000000" }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          message: `Connected! Test number "0000000000" returned: ${JSON.stringify(data)}. Function "${rpcName}" is working.`,
+        };
+      } else {
+        const errorText = await response.text();
+        return {
+          success: false,
+          message: `HTTP ${response.status}: ${errorText.substring(0, 300)}`,
+        };
+      }
+    } catch (err: any) {
+      return { success: false, message: `Connection failed: ${err.message}` };
+    }
+  }),
+
+  /**
    * Test Slack connection
    */
   testSlack: adminProcedure.mutation(async () => {

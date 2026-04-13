@@ -3067,6 +3067,27 @@ export const appRouter = router({
         return { success: true, count: input.contactIds.length };
       }),
 
+    /**
+     * Check DNC status for all phone numbers of a property via Supabase.
+     * Updates contactPhones.dnc and contacts.dnc in the database.
+     */
+    checkDNCForProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { checkDNCForProperty } = await import("./supabase-dnc.js");
+        return await checkDNCForProperty(input.propertyId);
+      }),
+
+    /**
+     * Check DNC status for specific phone IDs (used after adding a contact).
+     */
+    checkDNCForPhones: protectedProcedure
+      .input(z.object({ phoneIds: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        const { checkDNCForPhoneIds } = await import("./supabase-dnc.js");
+        return await checkDNCForPhoneIds(input.phoneIds);
+      }),
+
     getAdjacentProperties: protectedProcedure
       .input(
         z.object({

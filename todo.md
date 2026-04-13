@@ -3157,3 +3157,13 @@
 
 ## OAuth Rate Limit Retry
 - [x] Add friendly retry screen with 2-second auto-retry when OAuth returns "Rate exceeded"
+
+## DNC Verification via Supabase
+- [x] Add Supabase DNC API fields (URL, API Key, Function Name) to Integrations settings
+- [x] Create backend DNC verification service that calls Supabase and returns true/false per number
+- [x] Auto-check DNC for all phone numbers when opening a property
+- [x] Auto-check DNC when adding a new contact and update DNC flag
+- [x] Show DNC validation banner/badge in property UI
+- [x] Write vitest tests for DNC verification logic (32 tests passing)
+- [x] Add test connection button for Supabase DNC in Integrations page
+- [x] Add API request example documentation in Integrations settings

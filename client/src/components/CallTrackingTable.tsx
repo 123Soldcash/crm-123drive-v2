@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -213,11 +213,51 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [callModalPhone, setCallModalPhone] = useState<{ phoneNumber: string; contactName: string; contactId: number; callerPhone: string } | null>(null);
 
+  // DNC auto-check state
+  const [dncCheckResult, setDncCheckResult] = useState<{ checked: number; flagged: number; error?: string } | null>(null);
+  const [dncCheckRunning, setDncCheckRunning] = useState(false);
+  const [dncCheckDone, setDncCheckDone] = useState(false);
+
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
   });
 
   const { data: customTemplates = [] } = trpc.noteTemplates.list.useQuery();
+
+  // DNC auto-check mutation
+  const checkDNCMutation = trpc.communication.checkDNCForProperty.useMutation({
+    onSuccess: (result) => {
+      setDncCheckResult({ checked: result.checked, flagged: result.flagged, error: result.error });
+      setDncCheckRunning(false);
+      setDncCheckDone(true);
+      if (result.error) {
+        // Don't show error toast for "not configured" — just show the banner
+      } else if (result.flagged > 0) {
+        toast.warning(`DNC Check: ${result.flagged} of ${result.checked} numbers flagged as DNC`);
+        // Refresh contacts to show updated DNC flags
+        utils.communication.getContactsByProperty.invalidate({ propertyId });
+      } else if (result.checked > 0) {
+        toast.success(`DNC Check: All ${result.checked} numbers are clean`);
+      }
+    },
+    onError: (err) => {
+      setDncCheckResult({ checked: 0, flagged: 0, error: err.message });
+      setDncCheckRunning(false);
+      setDncCheckDone(true);
+    },
+  });
+
+  // Auto-run DNC check when property loads and contacts are available
+  useEffect(() => {
+    if (contacts && contacts.length > 0 && !dncCheckDone && !dncCheckRunning) {
+      // Check if any contact has phones
+      const hasPhones = contacts.some((c: any) => c.phones && c.phones.length > 0);
+      if (hasPhones) {
+        setDncCheckRunning(true);
+        checkDNCMutation.mutate({ propertyId });
+      }
+    }
+  }, [contacts, dncCheckDone, dncCheckRunning, propertyId]);
 
   // Fetch property to get primaryTwilioNumber for auto-dial
   const { data: propertyData } = trpc.properties.getById.useQuery(
@@ -309,6 +349,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setNewContactPhoneType("Mobile");
       setNewContactEmail("");
       setAddContactError(null);
+      // Re-run DNC check for the new contact's phones
+      setDncCheckDone(false);
+      setDncCheckResult(null);
     },
     onError: (error: any) => {
       const msg = error.message || "Failed to add contact";
@@ -872,7 +915,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <UserPlus className="h-4 w-4" />
                   Add Contact
                 </Button>
-                <BulkContactImport propertyId={propertyId} />
+                <BulkContactImport propertyId={propertyId} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
               </div>
             )}
           </div>
@@ -1031,6 +1074,60 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               When set, clicking the call button will use this number automatically instead of showing the number selector.
             </p>
           </div>
+
+          {/* DNC Auto-Check Banner */}
+          {dncCheckRunning && (
+            <div className="mt-3 p-3 rounded-lg border bg-amber-50 border-amber-200 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+              <span className="text-sm text-amber-800 font-medium">Checking DNC status for all phone numbers via Supabase...</span>
+            </div>
+          )}
+          {dncCheckResult && !dncCheckRunning && (
+            <div className={`mt-3 p-3 rounded-lg border flex items-center justify-between gap-2 ${
+              dncCheckResult.error
+                ? 'bg-gray-50 border-gray-200'
+                : dncCheckResult.flagged > 0
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                {dncCheckResult.error ? (
+                  <AlertCircle className="h-4 w-4 text-gray-500" />
+                ) : dncCheckResult.flagged > 0 ? (
+                  <ShieldBan className="h-4 w-4 text-red-600" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4 text-green-600" />
+                )}
+                <span className={`text-sm font-medium ${
+                  dncCheckResult.error
+                    ? 'text-gray-600'
+                    : dncCheckResult.flagged > 0
+                      ? 'text-red-800'
+                      : 'text-green-800'
+                }`}>
+                  {dncCheckResult.error
+                    ? `DNC Check: ${dncCheckResult.error}`
+                    : dncCheckResult.flagged > 0
+                      ? `DNC Check: ${dncCheckResult.flagged} of ${dncCheckResult.checked} numbers flagged as DNC`
+                      : `DNC Check: All ${dncCheckResult.checked} numbers are clean`
+                  }
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => {
+                  setDncCheckDone(false);
+                  setDncCheckResult(null);
+                  setDncCheckRunning(true);
+                  checkDNCMutation.mutate({ propertyId });
+                }}
+              >
+                Re-check
+              </Button>
+            </div>
+          )}
           
           {/* Filters */}
           <div className="flex items-center gap-3 mt-4 flex-wrap">
@@ -1659,7 +1756,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <UserPlus className="h-4 w-4" />
                   Add Contact
                 </Button>
-                <BulkContactImport propertyId={propertyId} />
+                <BulkContactImport propertyId={propertyId} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
               </div>
             ) : (
               <div className="bg-muted/30 border rounded-lg p-4 space-y-3">

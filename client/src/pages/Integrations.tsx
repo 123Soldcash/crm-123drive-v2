@@ -29,6 +29,8 @@ import {
   RefreshCw,
   Link2,
   Search,
+  Database,
+  ShieldBan,
 } from "lucide-react";
 
 // Integration metadata for UI rendering
@@ -99,6 +101,16 @@ const INTEGRATION_META: Record<
     bgColor: "bg-teal-50",
     borderColor: "border-teal-200",
     docsUrl: "https://developer.trestleiq.com",
+    hasTest: true,
+  },
+  supabase_dnc: {
+    title: "Supabase DNC",
+    description: "Automatic Do-Not-Call verification via Supabase RPC. Checks all phone numbers when opening a property.",
+    icon: ShieldBan,
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    docsUrl: "https://supabase.com/dashboard",
     hasTest: true,
   },
 };
@@ -192,6 +204,17 @@ function IntegrationCard({
     },
   });
 
+  const testSupabaseDNCMutation = trpc.integrations.testSupabaseDNC.useMutation({
+    onSuccess: (result) => {
+      setTestResult(result);
+      setIsTesting(false);
+    },
+    onError: (err) => {
+      setTestResult({ success: false, message: err.message });
+      setIsTesting(false);
+    },
+  });
+
   const hasChanges = Object.keys(editedValues).length > 0;
 
   const handleSave = () => {
@@ -216,6 +239,8 @@ function IntegrationCard({
       testSlackMutation.mutate();
     } else if (integration === "trestleiq") {
       testTrestleIQMutation.mutate();
+    } else if (integration === "supabase_dnc") {
+      testSupabaseDNCMutation.mutate();
     }
   };
 
@@ -401,7 +426,7 @@ export default function Integrations() {
   const { data: allSettings, isLoading, refetch } = trpc.integrations.list.useQuery();
 
   // Order integrations
-  const integrationOrder = ["twilio", "slack", "zapier", "trestleiq", "instantly", "autocalls"];
+  const integrationOrder = ["twilio", "slack", "zapier", "trestleiq", "supabase_dnc", "instantly", "autocalls"];
 
   const sortedIntegrations = useMemo(() => {
     if (!allSettings) return [];
