@@ -886,6 +886,7 @@ export async function getUnifiedCommunications(filters: {
   dateFrom?: Date;
   dateTo?: Date;
   userId?: number;
+  twilioNumber?: string; // Filter by specific Twilio number (E.164)
   limit?: number;
   offset?: number;
 }): Promise<UnifiedCommRecord[]> {
@@ -913,6 +914,10 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.userId) {
       callConditions.push(eq(communicationLog.userId, filters.userId));
+    }
+
+    if (filters.twilioNumber) {
+      callConditions.push(eq(communicationLog.twilioNumber, filters.twilioNumber));
     }
 
     if (filters.dateFrom) {
@@ -979,6 +984,10 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.userId) {
       smsConditions.push(eq(smsMessages.sentByUserId, filters.userId));
+    }
+
+    if (filters.twilioNumber) {
+      smsConditions.push(eq(smsMessages.twilioPhone, filters.twilioNumber));
     }
 
     if (filters.dateFrom) {

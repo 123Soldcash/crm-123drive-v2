@@ -3179,3 +3179,9 @@
 ## Web Lead Default Caller ID
 - [x] Auto-set Default Caller ID to (786) 904-1444 for leads coming from the website (Zapier webhook)
 - [x] Apply to both form step 1 and step 2 submissions
+
+## Communication Channels - Twilio Number Filter
+- [x] Add Twilio number filter dropdown to Communication Channels page
+- [x] Filter calls tab by selected Twilio number (twilioNumber field)
+- [x] Filter SMS tab by selected Twilio number (twilioPhone field)
+- [x] Populate filter options from Twilio numbers registered in the database

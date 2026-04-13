@@ -4827,6 +4827,7 @@ export const appRouter = router({
           dateFrom: z.date().optional(),
           dateTo: z.date().optional(),
           userId: z.number().optional(),
+          twilioNumber: z.string().optional(), // Filter by specific Twilio number
           limit: z.number().optional().default(200),
           offset: z.number().optional().default(0),
         })
@@ -4837,6 +4838,23 @@ export const appRouter = router({
 
     unifiedStats: protectedProcedure.query(async () => {
       return await communication.getUnifiedCommStats();
+    }),
+
+    // Returns all active Twilio numbers for filter dropdown
+    getTwilioNumbers: protectedProcedure.query(async () => {
+      const dbInstance = await db.getDb();
+      if (!dbInstance) throw new Error("Database not available");
+      const { twilioNumbers } = await import("../drizzle/schema.js");
+      const nums = await dbInstance
+        .select({
+          id: twilioNumbers.id,
+          phoneNumber: twilioNumbers.phoneNumber,
+          label: twilioNumbers.label,
+          isActive: twilioNumbers.isActive,
+        })
+        .from(twilioNumbers)
+        .orderBy(twilioNumbers.sortOrder, twilioNumbers.label);
+      return nums;
     }),
   }),
 });

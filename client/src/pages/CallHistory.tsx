@@ -40,6 +40,7 @@ import {
   RefreshCw,
   ArrowDownLeft,
   ArrowUpRight,
+  Hash,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -115,13 +116,18 @@ export default function CallHistory() {
   const [commType, setCommType] = useState<CommType>("all");
   const [direction, setDirection] = useState<"all" | "Inbound" | "Outbound">("all");
   const [search, setSearch] = useState("");
+  const [twilioNumberFilter, setTwilioNumberFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  // Fetch all Twilio numbers for the filter dropdown
+  const { data: twilioNumbers } = trpc.callHistory.getTwilioNumbers.useQuery();
 
   const { data: records, isLoading, refetch } = trpc.callHistory.unified.useQuery({
     commType,
     direction: direction as any,
     search: search || undefined,
+    twilioNumber: twilioNumberFilter !== "all" ? twilioNumberFilter : undefined,
     limit: 500,
     offset: 0,
   });
@@ -172,7 +178,7 @@ export default function CallHistory() {
     </TableHead>
   );
 
-  const hasFilters = search || direction !== "all" || commType !== "all";
+  const hasFilters = search || direction !== "all" || commType !== "all" || twilioNumberFilter !== "all";
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -290,6 +296,22 @@ export default function CallHistory() {
                 <SelectItem value="Outbound">Outbound</SelectItem>
               </SelectContent>
             </Select>
+            {/* Twilio Number filter */}
+            <Select value={twilioNumberFilter} onValueChange={setTwilioNumberFilter}>
+              <SelectTrigger className="w-[200px]">
+                <Hash className="h-4 w-4 mr-1 text-muted-foreground" />
+                <SelectValue placeholder="All Numbers" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Numbers</SelectItem>
+                {twilioNumbers?.map((num) => (
+                  <SelectItem key={num.id} value={num.phoneNumber}>
+                    <span className="font-medium">{num.label}</span>
+                    <span className="text-muted-foreground ml-1.5 text-xs">{num.phoneNumber}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {hasFilters && (
               <Button
                 variant="ghost"
@@ -298,6 +320,7 @@ export default function CallHistory() {
                   setSearch("");
                   setDirection("all");
                   setCommType("all");
+                  setTwilioNumberFilter("all");
                 }}
               >
                 Clear Filters
