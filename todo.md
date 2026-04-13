@@ -3154,3 +3154,6 @@
 ## Call Tracking Table - Notes Bugs
 - [x] Fix notes saved via Call Log not appearing in the Call Tracking Table notes column
 - [x] Fix inline note editing error "No communication log found to update" — phone number format mismatch
+
+## OAuth Rate Limit Retry
+- [x] Add friendly retry screen with 2-second auto-retry when OAuth returns "Rate exceeded"
