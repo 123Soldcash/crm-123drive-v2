@@ -265,35 +265,38 @@ function IntegrationCard({
 
   return (
     <Card className={`${meta.borderColor} border-2 transition-all hover:shadow-md`}>
-      <CardHeader className={`${meta.bgColor} rounded-t-lg`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg bg-white shadow-sm`}>
-              <Icon className={`h-6 w-6 ${meta.color}`} />
-            </div>
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {meta.title}
-                {isFullyConfigured ? (
-                  <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 text-xs">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
-                    {configuredCount}/{totalCount} configured
-                  </Badge>
-                )}
-              </CardTitle>
-              <CardDescription className="mt-0.5">{meta.description}</CardDescription>
-            </div>
+      <CardHeader className={`${meta.bgColor} rounded-t-lg pb-3`}>
+        {/* Top row: icon + title/description */}
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 rounded-lg bg-white shadow-sm shrink-0">
+            <Icon className={`h-6 w-6 ${meta.color}`} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+              {meta.title}
+              {isFullyConfigured ? (
+                <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 text-xs">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Connected
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                  {configuredCount}/{totalCount} configured
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription className="mt-0.5 text-xs leading-snug">{meta.description}</CardDescription>
+          </div>
+        </div>
+
+        {/* Bottom row: action buttons always inside card */}
+        {(meta.docsUrl || meta.hasTest) && (
+          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-black/5 flex-wrap">
             {meta.docsUrl && (
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs"
+                className="text-xs h-7 bg-white"
                 onClick={() => window.open(meta.docsUrl, "_blank")}
               >
                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
@@ -304,7 +307,7 @@ function IntegrationCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs"
+                className="text-xs h-7 bg-white"
                 onClick={handleTest}
                 disabled={isTesting}
               >
@@ -317,7 +320,7 @@ function IntegrationCard({
               </Button>
             )}
           </div>
-        </div>
+        )}
 
         {/* Test result banner */}
         {testResult && (

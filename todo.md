@@ -3167,3 +3167,7 @@
 - [x] Write vitest tests for DNC verification logic (32 tests passing)
 - [x] Add test connection button for Supabase DNC in Integrations page
 - [x] Add API request example documentation in Integrations settings
+
+## Integrations Page Layout Fix
+- [x] Fix card layout - buttons overflowing outside cards (Test Connection, Console buttons)
+- [x] Remodel Integrations page for clean, contained card design
