@@ -28,6 +28,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
+import { useNotificationPolling } from "@/hooks/useNotificationPolling";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -177,6 +178,9 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+
+  // Global notification polling — fires toasts for new SMS and missed calls
+  useNotificationPolling();
 
   // Unread SMS count badge
   const { data: unreadSmsData } = trpc.sms.unreadCount.useQuery(undefined, {

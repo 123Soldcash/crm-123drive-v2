@@ -44,7 +44,10 @@ import {
   PhoneCall,
   CheckCircle2,
   Mail,
+  MailOpen,
+  BellOff,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 type CommType = "all" | "call" | "sms";
@@ -142,6 +145,15 @@ export default function CallHistory() {
     onSuccess: () => {
       refetch();
       utils.callHistory.needsCallbackCount.invalidate();
+      toast.success("Call marked as returned", { description: "Removed from callback queue" });
+    },
+  });
+
+  const markSmsRead = trpc.callHistory.markSingleSmsRead.useMutation({
+    onSuccess: () => {
+      refetch();
+      utils.sms.unreadCount.invalidate();
+      toast.success("SMS marked as read");
     },
   });
 
@@ -376,6 +388,7 @@ export default function CallHistory() {
                       <SortHeader field="direction">Direction</SortHeader>
                       <SortHeader field="phoneNumber">Phone Number</SortHeader>
                       <TableHead>Details</TableHead>
+                      <TableHead className="w-[130px]">Status</TableHead>
                       <SortHeader field="property">Property</SortHeader>
                       <SortHeader field="agent">Agent</SortHeader>
                       <TableHead className="w-[60px]">Actions</TableHead>
@@ -441,15 +454,6 @@ export default function CallHistory() {
 
                         {/* Details — SMS body preview or call disposition */}
                         <TableCell>
-                          {/* Needs Callback badge for missed inbound calls */}
-                          {rec.type === "call" && rec.needsCallback ? (
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300 gap-1 text-[10px] font-semibold animate-pulse">
-                                <PhoneCall className="h-2.5 w-2.5" />
-                                Needs Callback
-                              </Badge>
-                            </div>
-                          ) : null}
                           {rec.type === "sms" && rec.messageBody ? (
                             <div className="max-w-[250px]">
                               <Tooltip>
@@ -470,6 +474,41 @@ export default function CallHistory() {
                             <span className="text-xs text-muted-foreground">{rec.disposition}</span>
                           ) : (
                             <span className="text-xs text-muted-foreground">&mdash;</span>
+                          )}
+                        </TableCell>
+
+                        {/* Status column */}
+                        <TableCell>
+                          {rec.type === "call" && rec.needsCallback ? (
+                            <button
+                              onClick={() => markCallbackDone.mutate({ logId: rec.id })}
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-[10px] font-semibold hover:bg-orange-200 transition-colors cursor-pointer animate-pulse"
+                              title="Click to mark as returned"
+                            >
+                              <PhoneCall className="h-2.5 w-2.5 shrink-0" />
+                              Needs Callback
+                            </button>
+                          ) : rec.type === "sms" && rec.direction === "Inbound" && rec.isRead === 0 ? (
+                            <button
+                              onClick={() => markSmsRead.mutate({ smsId: rec.id })}
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-[10px] font-semibold hover:bg-blue-200 transition-colors cursor-pointer"
+                              title="Click to mark as read"
+                            >
+                              <Mail className="h-2.5 w-2.5 shrink-0" />
+                              Unread
+                            </button>
+                          ) : rec.type === "call" && rec.direction === "Inbound" ? (
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <CheckCircle2 className="h-3 w-3 text-green-500" />
+                              Returned
+                            </span>
+                          ) : rec.type === "sms" && rec.direction === "Inbound" ? (
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <MailOpen className="h-3 w-3 text-green-500" />
+                              Read
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">—</span>
                           )}
                         </TableCell>
 

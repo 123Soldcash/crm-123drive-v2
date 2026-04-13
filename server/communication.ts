@@ -875,6 +875,7 @@ export type UnifiedCommRecord = {
   callResult: string | null;
   disposition: string | null;
   needsCallback?: number | null; // 1 = missed inbound call needing callback
+  isRead?: number | null; // 0 = unread inbound SMS
 };
 
 /**
@@ -1020,6 +1021,7 @@ export async function getUnifiedCommunications(filters: {
         date: smsMessages.createdAt,
         body: smsMessages.body,
         status: smsMessages.status,
+        isRead: smsMessages.isRead,
       })
       .from(smsMessages)
       .leftJoin(properties, eq(smsMessages.propertyId, properties.id))
@@ -1044,6 +1046,7 @@ export async function getUnifiedCommunications(filters: {
       callResult: null,
       disposition: null,
       needsCallback: null,
+      isRead: s.isRead,
     }));
   }
 

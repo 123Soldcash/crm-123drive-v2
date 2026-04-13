@@ -3199,3 +3199,11 @@
 - [x] Show "Needs Callback" badge on missed calls in Communication Channels
 - [x] Auto-mark as returned (needsCallback=0) when agent calls that number back
 - [x] Show callback queue count badge on sidebar
+
+## Communications Log - Status Column & Toast Notifications
+- [x] Add Status column to Communications Log (Unread SMS / Needs Callback / Read / Returned)
+- [x] Mark SMS as read directly from Communications Log row (inline action)
+- [x] Mark call as returned directly from Communications Log row (inline action)
+- [x] Status column updates in real-time after action
+- [x] Toast notification when new inbound SMS arrives (polling every 20s)
+- [x] Toast notification when a missed call is detected (polling every 20s)
