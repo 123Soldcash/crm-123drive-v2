@@ -874,6 +874,7 @@ export type UnifiedCommRecord = {
   // Call-specific
   callResult: string | null;
   disposition: string | null;
+  needsCallback?: number | null; // 1 = missed inbound call needing callback
 };
 
 /**
@@ -945,6 +946,7 @@ export async function getUnifiedCommunications(filters: {
         date: communicationLog.communicationDate,
         callResult: communicationLog.callResult,
         disposition: communicationLog.disposition,
+        needsCallback: communicationLog.needsCallback,
       })
       .from(communicationLog)
       .leftJoin(users, eq(communicationLog.userId, users.id))
@@ -969,6 +971,7 @@ export async function getUnifiedCommunications(filters: {
       messageStatus: null,
       callResult: c.callResult,
       disposition: c.disposition,
+      needsCallback: c.needsCallback,
     }));
   }
 
@@ -1040,6 +1043,7 @@ export async function getUnifiedCommunications(filters: {
       messageStatus: s.status,
       callResult: null,
       disposition: null,
+      needsCallback: null,
     }));
   }
 

@@ -27,6 +27,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { trpc } from "@/lib/trpc";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -177,6 +178,23 @@ function DashboardLayoutContent({
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
+  // Unread SMS count badge
+  const { data: unreadSmsData } = trpc.sms.unreadCount.useQuery(undefined, {
+    refetchInterval: 30_000, // poll every 30s
+    enabled: !!user,
+  });
+  const unreadSmsCount = unreadSmsData?.count ?? 0;
+
+  // Needs-callback count badge
+  const { data: callbackData } = trpc.callHistory.needsCallbackCount.useQuery(undefined, {
+    refetchInterval: 30_000,
+    enabled: !!user,
+  });
+  const needsCallbackCount = callbackData?.count ?? 0;
+
+  // Total badge for Communication Channels sidebar item
+  const commBadgeCount = unreadSmsCount + needsCallbackCount;
+
   useEffect(() => {
     if (isCollapsed) {
       setIsResizing(false);
@@ -254,10 +272,22 @@ function DashboardLayoutContent({
                       tooltip={item.label}
                       className={`h-10 transition-all font-normal`}
                     >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
-                      <span>{item.label}</span>
+                      <div className="relative shrink-0">
+                        <item.icon
+                          className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                        />
+                        {item.path === "/call-history" && commBadgeCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                            {commBadgeCount > 9 ? "9+" : commBadgeCount}
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {item.path === "/call-history" && commBadgeCount > 0 && !isCollapsed && (
+                        <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                          {commBadgeCount > 99 ? "99+" : commBadgeCount}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

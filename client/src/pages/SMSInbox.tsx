@@ -34,12 +34,15 @@ function formatRelativeTime(date: Date | string): string {
 
 export default function SMSInbox() {
   const [search, setSearch] = useState("");
+  const utils = trpc.useUtils();
 
-  // Get all conversations
+  // Get all conversations (now includes unreadCount per conversation)
   const { data: conversations = [], isLoading, refetch } = trpc.sms.getConversationList.useQuery(
     undefined,
     { refetchInterval: 15_000 }
   );
+
+  const totalUnread = conversations.reduce((sum: number, c: any) => sum + (Number(c.unreadCount) || 0), 0);
 
   const filteredConversations = conversations.filter((conv: any) =>
     conv.contactPhone.includes(search.replace(/\D/g, "")) ||
@@ -55,7 +58,14 @@ export default function SMSInbox() {
             <MessageSquare className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">SMS Inbox</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-900">SMS Inbox</h1>
+              {totalUnread > 0 && (
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                  {totalUnread > 99 ? "99+" : totalUnread} unread
+                </span>
+              )}
+            </div>
             <p className="text-sm text-gray-500">
               {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
             </p>
@@ -132,7 +142,16 @@ export default function SMSInbox() {
 
       <div className="space-y-2">
         {filteredConversations.map((conv: any) => (
-          <ConversationRow key={conv.contactPhone} contactPhone={conv.contactPhone} lastMessageTime={conv.lastMessage} />
+          <ConversationRow
+            key={conv.contactPhone}
+            contactPhone={conv.contactPhone}
+            lastMessageTime={conv.lastMessage}
+            unreadCount={Number(conv.unreadCount) || 0}
+            onRead={() => {
+              refetch();
+              utils.sms.unreadCount.invalidate();
+            }}
+          />
         ))}
       </div>
     </div>
@@ -143,29 +162,46 @@ export default function SMSInbox() {
 function ConversationRow({
   contactPhone,
   lastMessageTime,
+  unreadCount,
+  onRead,
 }: {
   contactPhone: string;
   lastMessageTime: string;
+  unreadCount: number;
+  onRead: () => void;
 }) {
   const { data: messages = [] } = trpc.sms.getConversation.useQuery(
     { contactPhone, limit: 1 },
     { staleTime: 10_000 }
   );
+  const markRead = trpc.sms.markConversationRead.useMutation({ onSuccess: onRead });
 
   const lastMsg = messages[0] as any;
   const isInbound = lastMsg?.direction === "inbound";
+  const hasUnread = unreadCount > 0;
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all group">
-      {/* Avatar */}
-      <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+    <div
+      className={`flex items-center gap-3 p-3 border rounded-xl hover:border-blue-200 hover:shadow-sm transition-all group ${
+        hasUnread
+          ? "bg-blue-50 border-blue-200 shadow-sm"
+          : "bg-white border-gray-100"
+      }`}
+    >
+      {/* Avatar with unread dot */}
+      <div className="relative w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
         <Phone className="w-5 h-5 text-gray-500" />
+        {hasUnread && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold text-sm text-gray-900 font-mono">
+          <span className={`font-semibold text-sm font-mono ${ hasUnread ? "text-blue-900" : "text-gray-900" }`}>
             {formatPhone(contactPhone)}
           </span>
           <span className="text-xs text-gray-400 flex-shrink-0">
@@ -176,6 +212,11 @@ function ConversationRow({
           {isInbound && (
             <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-green-50 text-green-700 border-green-200">
               Received
+            </Badge>
+          )}
+          {hasUnread && (
+            <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-red-50 text-red-700 border-red-200">
+              {unreadCount} unread
             </Badge>
           )}
           <p className="text-xs text-gray-500 truncate">
@@ -191,8 +232,17 @@ function ConversationRow({
         </div>
       </div>
 
-      {/* Open chat button */}
-      <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Open chat button + Mark as read */}
+      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {hasUnread && (
+          <button
+            onClick={(e) => { e.stopPropagation(); markRead.mutate({ contactPhone }); }}
+            className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+            title="Mark as read"
+          >
+            ✓ Read
+          </button>
+        )}
         <SMSChatButton
           phoneNumber={contactPhone}
           iconOnly={true}

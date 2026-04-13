@@ -3185,3 +3185,17 @@
 - [x] Filter calls tab by selected Twilio number (twilioNumber field)
 - [x] Filter SMS tab by selected Twilio number (twilioPhone field)
 - [x] Populate filter options from Twilio numbers registered in the database
+
+## Unread SMS Indicator
+- [x] Add isRead field to smsMessages schema
+- [x] Mark inbound SMS as unread (isRead=0) on arrival
+- [x] Mark SMS as read when conversation is opened
+- [x] Show unread count badge on sidebar "Communication Channels" link
+- [x] Show unread dot/badge on each unread conversation in SMSInbox
+
+## Missed Call Callback Tracking
+- [x] Add needsCallback field to communicationLog schema
+- [x] Auto-flag missed inbound calls as needsCallback=1
+- [x] Show "Needs Callback" badge on missed calls in Communication Channels
+- [x] Auto-mark as returned (needsCallback=0) when agent calls that number back
+- [x] Show callback queue count badge on sidebar

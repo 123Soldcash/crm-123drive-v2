@@ -41,6 +41,9 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   Hash,
+  PhoneCall,
+  CheckCircle2,
+  Mail,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -133,6 +136,14 @@ export default function CallHistory() {
   });
 
   const { data: stats } = trpc.callHistory.unifiedStats.useQuery();
+  const utils = trpc.useUtils();
+
+  const markCallbackDone = trpc.callHistory.markCallbackDone.useMutation({
+    onSuccess: () => {
+      refetch();
+      utils.callHistory.needsCallbackCount.invalidate();
+    },
+  });
 
   const sortedRecords = useMemo(() => {
     if (!records) return [];
@@ -375,7 +386,9 @@ export default function CallHistory() {
                       <TableRow
                         key={`${rec.type}-${rec.id}`}
                         className={`hover:bg-muted/30 ${
-                          rec.type === "sms"
+                          rec.type === "call" && rec.needsCallback
+                            ? "border-l-4 border-l-orange-500 bg-orange-50/40"
+                            : rec.type === "sms"
                             ? "border-l-2 border-l-emerald-400"
                             : "border-l-2 border-l-violet-400"
                         }`}
@@ -428,6 +441,15 @@ export default function CallHistory() {
 
                         {/* Details — SMS body preview or call disposition */}
                         <TableCell>
+                          {/* Needs Callback badge for missed inbound calls */}
+                          {rec.type === "call" && rec.needsCallback ? (
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300 gap-1 text-[10px] font-semibold animate-pulse">
+                                <PhoneCall className="h-2.5 w-2.5" />
+                                Needs Callback
+                              </Badge>
+                            </div>
+                          ) : null}
                           {rec.type === "sms" && rec.messageBody ? (
                             <div className="max-w-[250px]">
                               <Tooltip>
@@ -478,17 +500,30 @@ export default function CallHistory() {
 
                         {/* Actions */}
                         <TableCell>
-                          {rec.propertyLeadId && rec.propertyLeadId > 0 ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => navigate(`/properties/${rec.propertyLeadId}`)}
-                              title="View Property"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </Button>
-                          ) : null}
+                          <div className="flex items-center gap-1">
+                            {rec.type === "call" && rec.needsCallback ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-orange-600 hover:text-green-600 hover:bg-green-50"
+                                onClick={() => markCallbackDone.mutate({ logId: rec.id })}
+                                title="Mark as Called Back"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : null}
+                            {rec.propertyLeadId && rec.propertyLeadId > 0 ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => navigate(`/properties/${rec.propertyLeadId}`)}
+                                title="View Property"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : null}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

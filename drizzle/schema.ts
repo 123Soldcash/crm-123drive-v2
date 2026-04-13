@@ -531,6 +531,9 @@ export const communicationLog = mysqlTable("communicationLog", {
   // Phone number of the contact that was called/received
   contactPhoneNumber: varchar("contactPhoneNumber", { length: 20 }),
   
+  // Callback tracking: 1 = missed inbound call that needs a callback, 0 = normal
+  needsCallback: int("needsCallback").default(0).notNull(),
+  
   // Attribution
   userId: int("userId").notNull(), // Who made the contact attempt
   
@@ -1471,6 +1474,8 @@ export const smsMessages = mysqlTable("smsMessages", {
   sentByName: varchar("sentByName", { length: 255 }),
   // Error info if delivery failed
   errorMessage: text("errorMessage"),
+  // Read tracking: 0 = unread (inbound only), 1 = read
+  isRead: int("isRead").default(1).notNull(), // outbound defaults to read; inbound set to 0 on arrival
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

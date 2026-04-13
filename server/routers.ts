@@ -2909,6 +2909,29 @@ export const appRouter = router({
           userId: ctx.user!.id,
         });
 
+        // Auto-clear needsCallback: if this is an outbound call to a phone number
+        // that had a missed inbound call, mark those as returned
+        if (input.communicationType === "Phone" && (!input.direction || input.direction === "Outbound") && input.contactPhoneNumber) {
+          try {
+            const { communicationLog: commLog } = await import("../drizzle/schema");
+            const { eq, and } = await import("drizzle-orm");
+            const dbInst = await db.getDb();
+            if (dbInst) {
+              await dbInst
+                .update(commLog)
+                .set({ needsCallback: 0 })
+                .where(
+                  and(
+                    eq(commLog.contactPhoneNumber, input.contactPhoneNumber),
+                    eq(commLog.needsCallback, 1)
+                  )
+                );
+            }
+          } catch (cbClearErr) {
+            console.error("[CommunicationLog] Error clearing needsCallback:", cbClearErr);
+          }
+        }
+
         // Auto-update lead temperature based on call result
         if (input.callResult) {
           let newTemperature: "HOT" | "WARM" | "COLD" | "DEAD" | null = null;
@@ -4579,19 +4602,51 @@ export const appRouter = router({
     getConversationList: protectedProcedure
       .query(async () => {
         const { smsMessages: smsTable } = await import("../drizzle/schema");
-        const { desc, sql: sqlFn } = await import("drizzle-orm");
+        const { desc, sql: sqlFn, eq: eqFn, and: andFn } = await import("drizzle-orm");
         const database = await getDb();
         if (!database) throw new Error("Database not available");
-        // Get last message per contact phone
+        // Get last message per contact phone with unread count
         const rows = await database
           .select({
             contactPhone: smsTable.contactPhone,
             lastMessage: sqlFn<string>`MAX(${smsTable.createdAt})`,
+            unreadCount: sqlFn<number>`SUM(CASE WHEN ${smsTable.direction} = 'inbound' AND ${smsTable.isRead} = 0 THEN 1 ELSE 0 END)`,
           })
           .from(smsTable)
           .groupBy(smsTable.contactPhone)
           .orderBy(desc(sqlFn`MAX(${smsTable.createdAt})`));
         return rows;
+      }),
+
+    /** Returns total count of unread inbound SMS across all conversations */
+    unreadCount: protectedProcedure.query(async () => {
+      const { smsMessages: smsTable } = await import("../drizzle/schema");
+      const { eq: eqFn, and: andFn, sql: sqlFn } = await import("drizzle-orm");
+      const database = await getDb();
+      if (!database) throw new Error("Database not available");
+      const result = await database
+        .select({ count: sqlFn<number>`COUNT(*)` })
+        .from(smsTable)
+        .where(andFn(eqFn(smsTable.direction, "inbound"), eqFn(smsTable.isRead, 0)));
+      return { count: Number(result[0]?.count ?? 0) };
+    }),
+
+    /** Mark all inbound SMS from a contact phone as read */
+    markConversationRead: protectedProcedure
+      .input(z.object({ contactPhone: z.string() }))
+      .mutation(async ({ input }) => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const { eq: eqFn, and: andFn } = await import("drizzle-orm");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Normalize phone
+        const rawDigits = input.contactPhone.replace(/\D/g, "");
+        const normalized = rawDigits.length === 10 ? `+1${rawDigits}` : rawDigits.length === 11 && rawDigits.startsWith("1") ? `+${rawDigits}` : input.contactPhone.startsWith("+") ? input.contactPhone : `+1${rawDigits}`;
+        await database
+          .update(smsTable)
+          .set({ isRead: 1 })
+          .where(andFn(eqFn(smsTable.contactPhone, normalized), eqFn(smsTable.direction, "inbound"), eqFn(smsTable.isRead, 0)));
+        return { success: true };
       }),
   }),
 
@@ -4839,6 +4894,31 @@ export const appRouter = router({
     unifiedStats: protectedProcedure.query(async () => {
       return await communication.getUnifiedCommStats();
     }),
+
+    /** Returns count of calls that need callback */
+    needsCallbackCount: protectedProcedure.query(async () => {
+      const { communicationLog: commLog } = await import("../drizzle/schema");
+      const { eq: eqFn, sql: sqlFn } = await import("drizzle-orm");
+      const dbInst = await db.getDb();
+      if (!dbInst) throw new Error("Database not available");
+      const result = await dbInst
+        .select({ count: sqlFn<number>`COUNT(*)` })
+        .from(commLog)
+        .where(eqFn(commLog.needsCallback, 1));
+      return { count: Number(result[0]?.count ?? 0) };
+    }),
+
+    /** Manually mark a call as callback done (needsCallback=0) */
+    markCallbackDone: protectedProcedure
+      .input(z.object({ logId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { communicationLog: commLog } = await import("../drizzle/schema");
+        const { eq: eqFn } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+        await dbInst.update(commLog).set({ needsCallback: 0 }).where(eqFn(commLog.id, input.logId));
+        return { success: true };
+      }),
 
     // Returns all active Twilio numbers for filter dropdown
     getTwilioNumbers: protectedProcedure.query(async () => {

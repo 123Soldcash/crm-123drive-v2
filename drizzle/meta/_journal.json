@@ -316,6 +316,13 @@
       "when": 1775688041256,
       "tag": "0044_boring_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "5",
+      "when": 1776120131208,
+      "tag": "0045_tricky_human_cannonball",
+      "breakpoints": true
     }
   ]
 }

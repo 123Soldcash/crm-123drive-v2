@@ -276,10 +276,42 @@ export function registerTwilioWebhooks(app: Express) {
     const VoiceResponse = twilio.default.twiml.VoiceResponse;
     const response = new VoiceResponse();
 
-    // If no one answered, play a message
+    // If no one answered, play a message and flag for callback
     if (dialCallStatus === "no-answer" || dialCallStatus === "busy" || dialCallStatus === "failed") {
       response.say("We're sorry, no agents are available right now. Please try again later.");
       response.hangup();
+
+      // Flag the most recent inbound call log entry for this CallSid as needsCallback
+      try {
+        const { getDb } = await import("./db");
+        const { communicationLog } = await import("../drizzle/schema");
+        const { eq, and, desc } = await import("drizzle-orm");
+        const database = await getDb();
+        if (database) {
+          // Find the inbound call log entry by CallSid in notes
+          const recent = await database
+            .select({ id: communicationLog.id })
+            .from(communicationLog)
+            .where(
+              and(
+                eq(communicationLog.direction, "Inbound"),
+                eq(communicationLog.communicationType, "Phone")
+              )
+            )
+            .orderBy(desc(communicationLog.createdAt))
+            .limit(5);
+          // Mark the most recent inbound call as needing callback
+          if (recent.length > 0) {
+            await database
+              .update(communicationLog)
+              .set({ needsCallback: 1 })
+              .where(eq(communicationLog.id, recent[0].id));
+            console.log(`[Twilio Inbound Status] Flagged call ${recent[0].id} as needsCallback (${dialCallStatus})`);
+          }
+        }
+      } catch (cbErr) {
+        console.error("[Twilio Inbound Status] Error flagging needsCallback:", cbErr);
+      }
     }
     // If completed (someone answered and hung up), just end
 
@@ -329,6 +361,7 @@ export function registerTwilioWebhooks(app: Express) {
           body,
           twilioSid: messageSid || undefined,
           status: "received",
+          isRead: 0, // Mark as unread until an agent opens the conversation
         });
         console.log("[Twilio SMS Inbound] Saved inbound message from", from);
       }
