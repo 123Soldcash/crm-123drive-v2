@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray, aliasedTable } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames, twilioNumbers } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2798,4 +2798,20 @@ export async function setPropertyCampaignName(propertyId: number, campaignName: 
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(properties).set({ campaignName, updatedAt: new Date() }).where(eq(properties.id, propertyId));
+}
+
+/**
+ * Look up the Twilio phone number linked to a campaign name.
+ * Returns the E.164 phone number string (e.g. "+17869041444") or null if not found.
+ */
+export async function getTwilioNumberByCampaign(campaignName: string): Promise<string | null> {
+  if (!campaignName) return null;
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({ phoneNumber: twilioNumbers.phoneNumber })
+    .from(twilioNumbers)
+    .where(and(eq(twilioNumbers.campaignName, campaignName), eq(twilioNumbers.isActive, 1)))
+    .limit(1);
+  return rows.length > 0 ? rows[0].phoneNumber : null;
 }

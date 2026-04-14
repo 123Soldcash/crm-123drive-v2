@@ -3235,3 +3235,9 @@
 ## Properties Page - Property ID Filter
 - [x] Add Property ID search/filter field to Properties page
 - [x] Backend: support filtering by exact property ID (numeric)
+
+## Twilio Numbers - Campaign Name Column
+- [ ] Add campaignName column to twilioNumbers schema and run migration
+- [ ] Add Campaign Name field to Twilio Numbers UI (editable inline or modal)
+- [ ] Auto-assign Default Caller ID on DealMachine import: match property.campaignName to twilioNumbers.campaignName
+- [ ] Auto-assign Default Caller ID on manual property add: same campaign name lookup

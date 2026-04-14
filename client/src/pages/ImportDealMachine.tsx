@@ -27,6 +27,7 @@ export default function ImportDealMachine() {
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>("");
   const [listName, setListName] = useState<string>("");
+  const [campaignName, setCampaignName] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
 
@@ -94,6 +95,7 @@ export default function ImportDealMachine() {
             rows: rows as any[],
             assignedAgentId: selectedAgent ? parseInt(selectedAgent) : null,
             listName: listName || null,
+            campaignName: campaignName || null,
           });
 
           setImportResult(result);
@@ -218,6 +220,19 @@ export default function ImportDealMachine() {
                 value={listName}
                 onChange={(e) => setListName(e.target.value)}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="campaign-name">Campaign Name (Optional)</Label>
+              <Input
+                id="campaign-name"
+                placeholder="e.g., 'DealMachine-TV' — must match a Twilio number campaign"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                If a Twilio number is linked to this campaign, it will be auto-set as Default Caller ID for all imported properties.
+              </p>
             </div>
 
             <Button

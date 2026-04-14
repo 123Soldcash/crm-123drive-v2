@@ -192,6 +192,8 @@ async function startServer() {
       }
 
       // Insert new property
+      // Website leads always use the web Twilio number as Default Caller ID
+      const WEB_CALLER_ID = '+17869041444';
       const result = await database.insert(properties).values({
         addressLine1: address,
         city: "TBD",
@@ -205,6 +207,7 @@ async function startServer() {
         deskName: "NEW_LEAD",
         deskStatus: "BIN",
         status: "Website Lead - Step 1",
+        primaryTwilioNumber: WEB_CALLER_ID,
       });
 
       const propertyId = (result as any)[0]?.insertId;

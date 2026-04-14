@@ -3834,6 +3834,7 @@ export const appRouter = router({
         phoneNumber: z.string().min(10, "Phone number is required"),
         label: z.string().min(1, "Label is required"),
         description: z.string().optional(),
+        campaignName: z.string().optional(),
         sortOrder: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -3846,6 +3847,7 @@ export const appRouter = router({
           phoneNumber: phone,
           label: input.label,
           description: input.description || null,
+          campaignName: input.campaignName || null,
           sortOrder: input.sortOrder ?? 0,
         });
         return { success: true, id: result[0].insertId };
@@ -3858,6 +3860,7 @@ export const appRouter = router({
         phoneNumber: z.string().min(10).optional(),
         label: z.string().min(1).optional(),
         description: z.string().optional(),
+        campaignName: z.string().nullable().optional(),
         isActive: z.number().min(0).max(1).optional(),
         sortOrder: z.number().optional(),
       }))
@@ -3871,6 +3874,7 @@ export const appRouter = router({
         }
         if (input.label !== undefined) updates.label = input.label;
         if (input.description !== undefined) updates.description = input.description;
+        if (input.campaignName !== undefined) updates.campaignName = input.campaignName || null;
         if (input.isActive !== undefined) updates.isActive = input.isActive;
         if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
         await database.update(twilioNumbers).set(updates).where(eq(twilioNumbers.id, input.id));
@@ -4111,31 +4115,29 @@ export const appRouter = router({
           visited: visitedCount,
         };
       }),
-    importDealMachine: protectedProcedure
+        importDealMachine: protectedProcedure
       .input(
         z.object({
           rows: z.array(z.record(z.string(), z.any())),
           assignedAgentId: z.number().nullable().optional(),
           listName: z.string().nullable().optional(),
+          campaignName: z.string().nullable().optional(),
         })
       )
       .mutation(async ({ input }) => {
         const { mapDealMachineRow, validateProperty } = await import("./lib/dealmachine-mapper");
         const { importDealMachineProperties } = await import("./db-dealmachine-import");
-
         const mappedProperties = input.rows.map((row) => mapDealMachineRow(row));
-
         const validProperties = mappedProperties.filter((prop) => {
           const errors = validateProperty(prop);
           return errors.length === 0;
         });
-
         const result = await importDealMachineProperties(
           validProperties,
           input.assignedAgentId ?? undefined,
-          input.listName ?? undefined
+          input.listName ?? undefined,
+          input.campaignName ?? undefined
         );
-
         return result;
       }),
   }),

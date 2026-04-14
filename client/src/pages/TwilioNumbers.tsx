@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Phone, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Phone, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Loader2, Tag } from "lucide-react";
 
 export default function TwilioNumbers() {
   const { user } = useAuth();
@@ -24,6 +24,7 @@ export default function TwilioNumbers() {
     phoneNumber: "",
     label: "",
     description: "",
+    campaignName: "",
     sortOrder: 0,
   });
 
@@ -68,12 +69,12 @@ export default function TwilioNumbers() {
   function closeDialog() {
     setDialogOpen(false);
     setEditingId(null);
-    setForm({ phoneNumber: "", label: "", description: "", sortOrder: 0 });
+    setForm({ phoneNumber: "", label: "", description: "", campaignName: "", sortOrder: 0 });
   }
 
   function openAdd() {
     setEditingId(null);
-    setForm({ phoneNumber: "", label: "", description: "", sortOrder: 0 });
+    setForm({ phoneNumber: "", label: "", description: "", campaignName: "", sortOrder: 0 });
     setDialogOpen(true);
   }
 
@@ -83,6 +84,7 @@ export default function TwilioNumbers() {
       phoneNumber: num.phoneNumber,
       label: num.label,
       description: num.description || "",
+      campaignName: num.campaignName || "",
       sortOrder: num.sortOrder || 0,
     });
     setDialogOpen(true);
@@ -99,6 +101,7 @@ export default function TwilioNumbers() {
         phoneNumber: form.phoneNumber,
         label: form.label,
         description: form.description || undefined,
+        campaignName: form.campaignName || null,
         sortOrder: form.sortOrder,
       });
     } else {
@@ -106,6 +109,7 @@ export default function TwilioNumbers() {
         phoneNumber: form.phoneNumber,
         label: form.label,
         description: form.description || undefined,
+        campaignName: form.campaignName || undefined,
         sortOrder: form.sortOrder,
       });
     }
@@ -130,7 +134,7 @@ export default function TwilioNumbers() {
   const isSaving = addMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="container max-w-4xl py-6 space-y-6">
+    <div className="container max-w-5xl py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -138,13 +142,21 @@ export default function TwilioNumbers() {
             Twilio Numbers
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage your Twilio phone numbers. Agents select which number to use when making calls or sending SMS.
+            Manage your Twilio phone numbers. Link each number to a campaign so leads are automatically assigned the correct Caller ID.
           </p>
         </div>
         <Button onClick={openAdd} className="gap-2">
           <Plus className="h-4 w-4" />
           Add Number
         </Button>
+      </div>
+
+      {/* Info banner explaining campaign linking */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-2">
+        <Tag className="h-4 w-4 mt-0.5 shrink-0" />
+        <div>
+          <strong>Campaign Linking:</strong> When a lead arrives with a matching <em>Campaign Name</em>, the system automatically sets that number as the Default Caller ID for the property. Leave blank if you don't use campaign-based routing.
+        </div>
       </div>
 
       <Card>
@@ -170,7 +182,13 @@ export default function TwilioNumbers() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Phone Number</TableHead>
-                  <TableHead>Label / Campaign</TableHead>
+                  <TableHead>Label</TableHead>
+                  <TableHead>
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5" />
+                      Campaign Name
+                    </span>
+                  </TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Order</TableHead>
@@ -186,7 +204,17 @@ export default function TwilioNumbers() {
                         {num.label}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                    <TableCell>
+                      {num.campaignName ? (
+                        <Badge className="bg-purple-100 text-purple-700 border-purple-200 font-medium">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {num.campaignName}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Not linked</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
                       {num.description || "—"}
                     </TableCell>
                     <TableCell className="text-center">
@@ -235,7 +263,7 @@ export default function TwilioNumbers() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Twilio Number" : "Add Twilio Number"}</DialogTitle>
             <DialogDescription>
@@ -255,13 +283,30 @@ export default function TwilioNumbers() {
               <p className="text-xs text-muted-foreground">E.164 format (e.g., +15551234567). Must be a verified Twilio number.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="label">Label / Campaign *</Label>
+              <Label htmlFor="label">Label *</Label>
               <Input
                 id="label"
                 placeholder="e.g., TV Campaign, WhatsApp, Main Line"
                 value={form.label}
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
               />
+              <p className="text-xs text-muted-foreground">Short display name shown to agents when selecting a caller ID.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaignName" className="flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-purple-600" />
+                Campaign Name
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Input
+                id="campaignName"
+                placeholder="e.g., DealMachine-TV, Driving4Dollars"
+                value={form.campaignName}
+                onChange={(e) => setForm({ ...form, campaignName: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                When a lead arrives with this exact campaign name, this number is automatically set as the Default Caller ID.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>

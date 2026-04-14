@@ -1,6 +1,6 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
+import { getDb, getTwilioNumberByCampaign } from "../db";
 import { properties, contacts, contactPhones, contactEmails, contactAddresses } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { makeRequest } from "../_core/map";
@@ -69,6 +69,7 @@ export const importDealMachineRouter = router({
       z.object({
         fileData: z.string(), // Base64 encoded Excel file
         assignedAgentId: z.number().nullable(),
+        campaignName: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -104,6 +105,14 @@ export const importDealMachineRouter = router({
       const debug: string[] = [];
       
       debug.push(`Starting import: ${data.length} rows found in Excel file`);
+
+      // Look up Twilio number linked to this campaign (once, before the loop)
+      const campaignTwilioNumber = input.campaignName
+        ? await getTwilioNumberByCampaign(input.campaignName)
+        : null;
+      if (input.campaignName && campaignTwilioNumber) {
+        debug.push(`Campaign "${input.campaignName}" → Default Caller ID: ${campaignTwilioNumber}`);
+      }
       
       // PHASE 1: Import all properties and contacts with ALL 393 fields
       for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
@@ -399,6 +408,8 @@ export const importDealMachineRouter = router({
             trackingStatus: 'Not Visited',
             ownerVerified: 0,
             dealStage: 'NEW_LEAD',
+            campaignName: input.campaignName || null,
+            primaryTwilioNumber: campaignTwilioNumber || null,
             
             // Timestamp fields (required with defaults)
             entryDate: new Date(),

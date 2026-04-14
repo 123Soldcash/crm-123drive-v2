@@ -3,7 +3,7 @@
  * Handles importing properties and contacts from DealMachine Excel files
  */
 
-import { getDb } from "./db";
+import { getDb, getTwilioNumberByCampaign } from "./db";
 import { properties, contacts, contactPhones, contactEmails } from "../drizzle/schema";
 import { MappedProperty, MappedContact, parseContactFlags, getRelationshipType } from "./lib/dealmachine-mapper";
 
@@ -23,7 +23,8 @@ export interface ImportResult {
 export async function importDealMachineProperty(
   mappedProperty: MappedProperty,
   assignedAgentId?: number | null,
-  listName?: string
+  listName?: string,
+  campaignName?: string
 ): Promise<{ propertyId: number; errors: string[] }> {
   const db = await getDb();
   if (!db) {
@@ -47,6 +48,9 @@ export async function importDealMachineProperty(
       throw new Error(`Property already exists: ${mappedProperty.propertyId}`);
     }
 
+    // Look up Twilio number linked to this campaign (if any)
+    const primaryTwilioNumber = campaignName ? await getTwilioNumberByCampaign(campaignName) : null;
+
     // Insert property
     const result = await db.insert(properties).values({
       propertyId: mappedProperty.propertyId,
@@ -64,6 +68,8 @@ export async function importDealMachineProperty(
       deskStatus: "BIN",
       source: "DealMachine",
       listName: listName || null,
+      campaignName: campaignName || null,
+      primaryTwilioNumber: primaryTwilioNumber || null,
       entryDate: new Date(),
       // Property details
       totalBedrooms: mappedProperty.totalBedrooms || null,
@@ -158,7 +164,8 @@ async function importDealMachineContact(
 export async function importDealMachineProperties(
   mappedProperties: MappedProperty[],
   assignedAgentId?: number | null,
-  listName?: string
+  listName?: string,
+  campaignName?: string
 ): Promise<ImportResult> {
   const result: ImportResult = {
     success: true,
@@ -175,7 +182,8 @@ export async function importDealMachineProperties(
       const importResult = await importDealMachineProperty(
         mappedProperty,
         assignedAgentId,
-        listName
+        listName,
+        campaignName
       );
 
       result.propertiesImported++;

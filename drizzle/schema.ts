@@ -1528,6 +1528,7 @@ export const twilioNumbers = mysqlTable("twilioNumbers", {
   label: varchar("label", { length: 255 }).notNull(), // Campaign or purpose label
   description: text("description"), // Optional longer description
   isActive: int("isActive").default(1).notNull(), // 1 = active, 0 = disabled
+  campaignName: varchar("campaignName", { length: 255 }), // Optional: links this number to a campaign for auto Default Caller ID assignment
   sortOrder: int("sortOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

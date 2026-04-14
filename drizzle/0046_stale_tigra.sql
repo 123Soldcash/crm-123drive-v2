@@ -1,0 +1,1 @@
+ALTER TABLE `twilioNumbers` ADD `campaignName` varchar(255);
