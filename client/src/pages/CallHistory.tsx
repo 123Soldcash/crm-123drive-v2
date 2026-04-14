@@ -123,6 +123,7 @@ export default function CallHistory() {
   const [direction, setDirection] = useState<"all" | "Inbound" | "Outbound">("all");
   const [search, setSearch] = useState("");
   const [twilioNumberFilter, setTwilioNumberFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"unread_sms" | "needs_callback" | "all">("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
@@ -134,11 +135,14 @@ export default function CallHistory() {
     direction: direction as any,
     search: search || undefined,
     twilioNumber: twilioNumberFilter !== "all" ? twilioNumberFilter : undefined,
+    statusFilter: statusFilter !== "all" ? statusFilter : undefined,
     limit: 500,
     offset: 0,
   });
 
   const { data: stats } = trpc.callHistory.unifiedStats.useQuery();
+  const { data: unreadSmsData } = trpc.sms.unreadCount.useQuery(undefined, { refetchInterval: 20_000 });
+  const { data: callbackData } = trpc.callHistory.needsCallbackCount.useQuery(undefined, { refetchInterval: 20_000 });
   const utils = trpc.useUtils();
 
   const markCallbackDone = trpc.callHistory.markCallbackDone.useMutation({
@@ -201,7 +205,7 @@ export default function CallHistory() {
     </TableHead>
   );
 
-  const hasFilters = search || direction !== "all" || commType !== "all" || twilioNumberFilter !== "all";
+  const hasFilters = search || direction !== "all" || commType !== "all" || twilioNumberFilter !== "all" || statusFilter !== "all";
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -283,6 +287,62 @@ export default function CallHistory() {
         </Card>
       </div>
 
+      {/* Quick Filter Buttons */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => {
+            setStatusFilter(statusFilter === "unread_sms" ? "all" : "unread_sms");
+            setCommType("all");
+            setDirection("all");
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
+            statusFilter === "unread_sms"
+              ? "bg-blue-600 border-blue-600 text-white shadow-md scale-[1.02]"
+              : "bg-white border-blue-200 text-blue-700 hover:border-blue-400 hover:bg-blue-50"
+          }`}
+        >
+          <Mail className="h-4 w-4" />
+          Unread SMS
+          {(unreadSmsData?.count ?? 0) > 0 && (
+            <span className={`inline-flex items-center justify-center rounded-full text-xs font-bold min-w-[20px] h-5 px-1.5 ${
+              statusFilter === "unread_sms" ? "bg-white text-blue-700" : "bg-blue-600 text-white"
+            }`}>
+              {unreadSmsData?.count}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => {
+            setStatusFilter(statusFilter === "needs_callback" ? "all" : "needs_callback");
+            setCommType("all");
+            setDirection("all");
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
+            statusFilter === "needs_callback"
+              ? "bg-orange-500 border-orange-500 text-white shadow-md scale-[1.02]"
+              : "bg-white border-orange-200 text-orange-700 hover:border-orange-400 hover:bg-orange-50"
+          }`}
+        >
+          <PhoneMissed className="h-4 w-4" />
+          Needs Callback
+          {(callbackData?.count ?? 0) > 0 && (
+            <span className={`inline-flex items-center justify-center rounded-full text-xs font-bold min-w-[20px] h-5 px-1.5 ${
+              statusFilter === "needs_callback" ? "bg-white text-orange-600" : "bg-orange-500 text-white"
+            }`}>
+              {callbackData?.count}
+            </span>
+          )}
+        </button>
+        {statusFilter !== "all" && (
+          <button
+            onClick={() => setStatusFilter("all")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-all"
+          >
+            ✕ Clear quick filter
+          </button>
+        )}
+      </div>
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -344,6 +404,7 @@ export default function CallHistory() {
                   setDirection("all");
                   setCommType("all");
                   setTwilioNumberFilter("all");
+                  setStatusFilter("all");
                 }}
               >
                 Clear Filters

@@ -889,6 +889,7 @@ export async function getUnifiedCommunications(filters: {
   dateTo?: Date;
   userId?: number;
   twilioNumber?: string; // Filter by specific Twilio number (E.164)
+  statusFilter?: "unread_sms" | "needs_callback"; // Quick filter: unread SMS or calls needing callback
   limit?: number;
   offset?: number;
 }): Promise<UnifiedCommRecord[]> {
@@ -920,6 +921,15 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.twilioNumber) {
       callConditions.push(eq(communicationLog.twilioNumber, filters.twilioNumber));
+    }
+
+    // statusFilter: needs_callback → only show calls with needsCallback=1
+    // statusFilter: unread_sms → skip all calls (handled in SMS section)
+    if (filters.statusFilter === "needs_callback") {
+      callConditions.push(eq(communicationLog.needsCallback, 1));
+    } else if (filters.statusFilter === "unread_sms") {
+      // When filtering for unread SMS, skip call records entirely
+      callConditions.push(eq(communicationLog.id, -1)); // impossible condition = no results
     }
 
     if (filters.dateFrom) {
@@ -992,6 +1002,16 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.twilioNumber) {
       smsConditions.push(eq(smsMessages.twilioPhone, filters.twilioNumber));
+    }
+
+    // statusFilter: unread_sms → only show inbound unread SMS
+    // statusFilter: needs_callback → skip all SMS (handled in call section)
+    if (filters.statusFilter === "unread_sms") {
+      smsConditions.push(eq(smsMessages.direction, "inbound"));
+      smsConditions.push(eq(smsMessages.isRead, 0));
+    } else if (filters.statusFilter === "needs_callback") {
+      // When filtering for needs_callback, skip SMS records entirely
+      smsConditions.push(eq(smsMessages.id, -1)); // impossible condition = no results
     }
 
     if (filters.dateFrom) {

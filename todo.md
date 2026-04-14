@@ -3207,3 +3207,9 @@
 - [x] Status column updates in real-time after action
 - [x] Toast notification when new inbound SMS arrives (polling every 20s)
 - [x] Toast notification when a missed call is detected (polling every 20s)
+
+## Communication Channels - Quick Filters
+- [x] Add "Unread SMS" quick filter button to Communication Channels
+- [x] Add "Needs Callback" quick filter button to Communication Channels
+- [x] Show count badge on each quick filter button
+- [x] Filters update the table in real-time without page reload
