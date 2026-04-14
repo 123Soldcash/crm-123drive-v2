@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus, Workflow, Phone, Mail } from "lucide-react";
+import { Search, MapPin, X, Save, FolderOpen, Users, CheckSquare, Plus, Workflow, Phone, Mail, Hash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -81,6 +81,7 @@ interface FilterState {
   tag: string;
   leadSource: string;
   campaignName: string;
+  propertyIdFilter: string;
 }
 
 // Hardcoded fallback desk labels & colors (used before DB loads)
@@ -142,6 +143,7 @@ export default function Properties() {
       tag: params.get('tag') || "",
       leadSource: "",
       campaignName: "",
+      propertyIdFilter: "",
     };
   });
 
@@ -248,6 +250,7 @@ export default function Properties() {
     assignedAgentId: filters.assignedAgentId !== null ? filters.assignedAgentId : undefined,
     deskName: (filters.deskName && filters.deskName !== "all" ? filters.deskName : undefined),
     dealStage: (filters.dealStage && filters.dealStage !== "all" ? filters.dealStage : undefined),
+    propertyIdFilter: (filters.propertyIdFilter && !isNaN(Number(filters.propertyIdFilter)) ? Number(filters.propertyIdFilter) : undefined),
     // Pagination
     page: currentPage,
     pageSize: PAGE_SIZE,
@@ -438,6 +441,7 @@ export default function Properties() {
       tag: "",
       leadSource: "",
       campaignName: "",
+      propertyIdFilter: "",
     });
   };
 
@@ -616,6 +620,23 @@ export default function Properties() {
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 className="pl-10"
+              />
+            </div>
+
+            {/* Property ID Filter */}
+            <div className="relative">
+              <Hash className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Filter by Property ID..."
+                value={filters.propertyIdFilter}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, ""); // digits only
+                  setFilters({ ...filters, propertyIdFilter: val });
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+                type="text"
+                inputMode="numeric"
               />
             </div>
 

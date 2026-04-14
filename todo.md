@@ -3231,3 +3231,7 @@
 - [x] contact_phone sent with +1 prefix must match numbers stored without +1 in the database
 - [x] Use LIKE/contains matching to find the phone regardless of formatting
 - [x] Matched phone/contact ID included in note and Slack confirmation reply
+
+## Properties Page - Property ID Filter
+- [x] Add Property ID search/filter field to Properties page
+- [x] Backend: support filtering by exact property ID (numeric)

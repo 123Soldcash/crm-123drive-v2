@@ -143,6 +143,8 @@ export async function getProperties(filters?: {
   assignedAgentId?: number | null;
   deskName?: string;
   dealStage?: string;
+  // Filter by exact property DB id
+  propertyIdFilter?: number;
 }) {
   const db = await getDb();
   if (!db) return { data: [], totalCount: 0 };
@@ -302,6 +304,12 @@ export async function getProperties(filters?: {
     conditions.push(eq(properties.dealStage, filters.dealStage as any));
   }
 
+  // Filter by exact property DB id
+  if (filters?.propertyIdFilter) {
+    conditions.push(eq(properties.id, filters.propertyIdFilter));
+  }
+
+  // Build the final query
   if (conditions.length > 0) {
     query = query.where(and(...conditions)) as typeof query;
   }
@@ -343,6 +351,7 @@ export async function getPropertiesWithAgents(filters?: {
   assignedAgentId?: number | null;
   deskName?: string;
   dealStage?: string;
+  propertyIdFilter?: number;
 }) {
   // Simply call getProperties - the agent filtering logic is already there
   return await getProperties(filters);

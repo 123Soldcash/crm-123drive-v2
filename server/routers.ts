@@ -192,6 +192,8 @@ export const appRouter = router({
             assignedAgentId: z.number().nullable().optional(),
             deskName: z.string().optional(),
             dealStage: z.string().optional(),
+            // Filter by exact property DB id
+            propertyIdFilter: z.number().optional(),
           })
           .optional()
       )
