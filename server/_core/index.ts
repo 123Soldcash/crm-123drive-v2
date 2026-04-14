@@ -681,19 +681,27 @@ async function startServer() {
       }
 
       // Determine source from channel name via Slack API
+      // Channel names are read from integrationSettings DB (instantlyChannel / autocallsChannel)
       let source: "instantly" | "autocalls" | null = null;
       const botToken = ENV.slackBotToken;
       if (botToken) {
         try {
+          // ── Read configured channel names from DB ──
+          const { getIntegrationConfig } = await import("../integrationConfig");
+          const slackConfig = await getIntegrationConfig("slack");
+          // Strip leading # if present, default to legacy hardcoded names
+          const instantlyChannelName = (slackConfig.instantlyChannel || "instantly").replace(/^#/, "");
+          const autocallsChannelName = (slackConfig.autocallsChannel || "autocalls-slack").replace(/^#/, "");
+
           const channelInfoRes = await fetch(`https://slack.com/api/conversations.info?channel=${channelId}`, {
             headers: { Authorization: `Bearer ${botToken}` },
           });
           const channelInfo = await channelInfoRes.json() as any;
           const channelName: string = channelInfo?.channel?.name || "";
-          if (channelName === "instantly") source = "instantly";
-          else if (channelName === "autocalls-slack") source = "autocalls";
+          if (channelName === instantlyChannelName) source = "instantly";
+          else if (channelName === autocallsChannelName) source = "autocalls";
           else {
-            console.log(`[Slack] Ignoring message from unregistered channel: ${channelName}`);
+            console.log(`[Slack] Ignoring message from unregistered channel: #${channelName} (expected #${instantlyChannelName} or #${autocallsChannelName})`);
             return;
           }
           console.log(`[Slack] Source identified: ${source} (channel: #${channelName})`);

@@ -3218,3 +3218,8 @@
 - [x] Add markSmsUnread backend procedure (set isRead=0)
 - [x] Show undo toast when SMS is marked as read in Communications Log
 - [x] Clicking "Desfazer/Undo" in toast reverts isRead back to 0
+
+## Integration Settings Bug Fix
+- [x] Investigate why updated integration settings are not being read by the integration logic
+- [x] Fix settings read path so live DB values are used (not stale cache or seed defaults) — Slack event handler now reads instantlyChannel and autocallsChannel from DB instead of hardcoded strings
+- [ ] Verify leads are received after fix (requires live Slack message test)
