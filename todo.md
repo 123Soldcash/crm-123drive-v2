@@ -3260,3 +3260,10 @@
 - [x] Update Twilio voice webhook to route inbound calls only to users in matching desk(s)
 - [x] Backend tRPC procedures for managing desk assignments
 - [x] Fallback: if no desks assigned to a number, ring all active users
+
+## Desk Column in Communication Channels
+- [x] Add deskName column to communicationLog schema
+- [x] Update Twilio voice webhook to store desk name when logging inbound/outbound calls
+- [x] Update outbound call logging to store desk name
+- [x] Add Desk column to Communication Channels table UI
+- [x] Add Desk filter dropdown to Communication Channels page

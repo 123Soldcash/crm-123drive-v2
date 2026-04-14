@@ -1,0 +1,1 @@
+ALTER TABLE `communicationLog` ADD `deskName` varchar(100);

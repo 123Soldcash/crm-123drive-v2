@@ -4996,6 +4996,7 @@ export const appRouter = router({
           userId: z.number().optional(),
           twilioNumber: z.string().optional(), // Filter by specific Twilio number
           statusFilter: z.enum(["unread_sms", "needs_callback"]).optional(), // Quick filter
+          deskFilter: z.string().optional(), // Filter by desk name
           limit: z.number().optional().default(200),
           offset: z.number().optional().default(0),
         })

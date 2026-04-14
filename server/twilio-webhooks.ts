@@ -80,9 +80,12 @@ export function registerTwilioWebhooks(app: Express) {
         // We ring all users with identity pattern "crm-user-{id}"
         try {
           const { getDb } = await import("./db");
-          const { users: usersTable, twilioNumbers: twilioNumbersTable, twilioNumberDesks, userDesks } = await import("../drizzle/schema");
+          const { users: usersTable, twilioNumbers: twilioNumbersTable, twilioNumberDesks, userDesks, desks: desksTable } = await import("../drizzle/schema");
           const { eq, and, inArray } = await import("drizzle-orm");
           const database = await getDb();
+
+          // Store matched desk names for logging later
+          let matchedDeskNames: string[] = [];
 
           if (database) {
             // ─── DESK-BASED ROUTING ───
@@ -112,6 +115,15 @@ export function registerTwilioWebhooks(app: Express) {
                 .where(eq(twilioNumberDesks.twilioNumberId, matchedTwilioNumber.id));
               deskIds = numberDeskRows.map(r => r.deskId);
               console.log(`[Twilio Voice] Matched Twilio number ID ${matchedTwilioNumber.id} (${matchedTwilioNumber.label}), desks: [${deskIds.join(", ")}]`);
+
+              // Resolve desk names for logging
+              if (deskIds.length > 0) {
+                const deskRows = await database
+                  .select({ id: desksTable.id, name: desksTable.name, description: desksTable.description })
+                  .from(desksTable)
+                  .where(inArray(desksTable.id, deskIds));
+                matchedDeskNames = deskRows.map(d => d.description || d.name);
+              }
             }
 
             if (deskIds.length > 0) {
@@ -253,6 +265,7 @@ export function registerTwilioWebhooks(app: Express) {
                 direction: "Inbound",
                 twilioNumber: to || undefined, // The Twilio number that received the call
                 contactPhoneNumber: from, // The caller's phone number
+                deskName: matchedDeskNames.length > 0 ? matchedDeskNames.join(", ") : null,
                 userId: 1, // System user
                 notes: `Inbound call from ${from} to ${to}. CallSid: ${callSid || "unknown"}`,
               });

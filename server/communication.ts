@@ -876,6 +876,7 @@ export type UnifiedCommRecord = {
   disposition: string | null;
   needsCallback?: number | null; // 1 = missed inbound call needing callback
   isRead?: number | null; // 0 = unread inbound SMS
+  deskName?: string | null; // Desk this communication was routed to
 };
 
 /**
@@ -890,6 +891,7 @@ export async function getUnifiedCommunications(filters: {
   userId?: number;
   twilioNumber?: string; // Filter by specific Twilio number (E.164)
   statusFilter?: "unread_sms" | "needs_callback"; // Quick filter: unread SMS or calls needing callback
+  deskFilter?: string; // Filter by desk name
   limit?: number;
   offset?: number;
 }): Promise<UnifiedCommRecord[]> {
@@ -921,6 +923,11 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.twilioNumber) {
       callConditions.push(eq(communicationLog.twilioNumber, filters.twilioNumber));
+    }
+
+    if (filters.deskFilter) {
+      const { like } = await import("drizzle-orm");
+      callConditions.push(like(communicationLog.deskName, `%${filters.deskFilter}%`));
     }
 
     // statusFilter: needs_callback → only show calls with needsCallback=1
@@ -958,6 +965,7 @@ export async function getUnifiedCommunications(filters: {
         callResult: communicationLog.callResult,
         disposition: communicationLog.disposition,
         needsCallback: communicationLog.needsCallback,
+        deskName: communicationLog.deskName,
       })
       .from(communicationLog)
       .leftJoin(users, eq(communicationLog.userId, users.id))
@@ -983,6 +991,7 @@ export async function getUnifiedCommunications(filters: {
       callResult: c.callResult,
       disposition: c.disposition,
       needsCallback: c.needsCallback,
+      deskName: c.deskName,
     }));
   }
 
@@ -1067,6 +1076,7 @@ export async function getUnifiedCommunications(filters: {
       disposition: null,
       needsCallback: null,
       isRead: s.isRead,
+      deskName: null, // SMS doesn't have desk routing yet
     }));
   }
 

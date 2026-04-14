@@ -51,7 +51,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 type CommType = "all" | "call" | "sms";
-type SortField = "date" | "type" | "direction" | "property" | "agent" | "phoneNumber";
+type SortField = "date" | "type" | "direction" | "property" | "agent" | "phoneNumber" | "desk";
 type SortOrder = "asc" | "desc";
 
 function getTypeBadge(type: "call" | "sms") {
@@ -123,18 +123,22 @@ export default function CallHistory() {
   const [direction, setDirection] = useState<"all" | "Inbound" | "Outbound">("all");
   const [search, setSearch] = useState("");
   const [twilioNumberFilter, setTwilioNumberFilter] = useState<string>("all");
+  const [deskFilter, setDeskFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"unread_sms" | "needs_callback" | "all">("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // Fetch all Twilio numbers for the filter dropdown
   const { data: twilioNumbers } = trpc.callHistory.getTwilioNumbers.useQuery();
+  // Fetch all desks for the filter dropdown
+  const { data: desksList } = trpc.desks.list.useQuery();
 
   const { data: records, isLoading, refetch } = trpc.callHistory.unified.useQuery({
     commType,
     direction: direction as any,
     search: search || undefined,
     twilioNumber: twilioNumberFilter !== "all" ? twilioNumberFilter : undefined,
+    deskFilter: deskFilter !== "all" ? deskFilter : undefined,
     statusFilter: statusFilter !== "all" ? statusFilter : undefined,
     limit: 500,
     offset: 0,
@@ -194,6 +198,8 @@ export default function CallHistory() {
           return mult * ((a.agentName || "").localeCompare(b.agentName || ""));
         case "phoneNumber":
           return mult * ((a.phoneNumber || "").localeCompare(b.phoneNumber || ""));
+        case "desk":
+          return mult * ((a.deskName || "").localeCompare(b.deskName || ""));
         default:
           return 0;
       }
@@ -221,7 +227,7 @@ export default function CallHistory() {
     </TableHead>
   );
 
-  const hasFilters = search || direction !== "all" || commType !== "all" || twilioNumberFilter !== "all" || statusFilter !== "all";
+  const hasFilters = search || direction !== "all" || commType !== "all" || twilioNumberFilter !== "all" || deskFilter !== "all" || statusFilter !== "all";
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -411,6 +417,20 @@ export default function CallHistory() {
                 ))}
               </SelectContent>
             </Select>
+            {/* Desk filter */}
+            <Select value={deskFilter} onValueChange={setDeskFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Desks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Desks</SelectItem>
+                {desksList?.map((desk) => (
+                  <SelectItem key={desk.id} value={desk.description || desk.name}>
+                    {desk.description || desk.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {hasFilters && (
               <Button
                 variant="ghost"
@@ -420,6 +440,7 @@ export default function CallHistory() {
                   setDirection("all");
                   setCommType("all");
                   setTwilioNumberFilter("all");
+                  setDeskFilter("all");
                   setStatusFilter("all");
                 }}
               >
@@ -467,6 +488,7 @@ export default function CallHistory() {
                       <TableHead>Details</TableHead>
                       <TableHead className="w-[130px]">Status</TableHead>
                       <SortHeader field="property">Property</SortHeader>
+                      <SortHeader field="desk">Desk</SortHeader>
                       <SortHeader field="agent">Agent</SortHeader>
                       <TableHead className="w-[60px]">Actions</TableHead>
                     </TableRow>
@@ -606,6 +628,17 @@ export default function CallHistory() {
                             </div>
                           ) : (
                             <span className="text-xs text-muted-foreground italic">No property</span>
+                          )}
+                        </TableCell>
+
+                        {/* Desk */}
+                        <TableCell>
+                          {rec.deskName ? (
+                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-xs">
+                              {rec.deskName}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">&mdash;</span>
                           )}
                         </TableCell>
 

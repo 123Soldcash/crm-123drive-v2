@@ -534,6 +534,9 @@ export const communicationLog = mysqlTable("communicationLog", {
   // Callback tracking: 1 = missed inbound call that needs a callback, 0 = normal
   needsCallback: int("needsCallback").default(0).notNull(),
   
+  // Desk routing — which desk this communication was routed to
+  deskName: varchar("deskName", { length: 100 }),
+  
   // Attribution
   userId: int("userId").notNull(), // Who made the contact attempt
   

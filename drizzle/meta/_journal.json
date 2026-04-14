@@ -337,6 +337,13 @@
       "when": 1776205510163,
       "tag": "0047_fresh_magus",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "5",
+      "when": 1776206376143,
+      "tag": "0048_shocking_the_professor",
+      "breakpoints": true
     }
   ]
 }
