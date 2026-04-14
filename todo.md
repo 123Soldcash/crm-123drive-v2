@@ -3272,3 +3272,12 @@
 - [x] Update desk filter to resolve Twilio numbers assigned to the selected desk
 - [x] Filter calls by twilioNumber (from junction table) OR deskName field so historical calls are included
 - [x] Also populate the Desk column for historical calls based on twilioNumber-to-desk mapping
+
+## Review & Validate Desk-Based Call Routing
+- [x] Audit full Twilio voice webhook inbound routing logic
+- [x] Verify desk lookup from twilioNumberDesks junction table is correct
+- [x] Verify only users in matching desk(s) are rung
+- [x] Verify fallback behavior when no desk is assigned
+- [x] Fix matchedDeskNames scoping bug (was declared inside try block, moved outside)
+- [x] Add detailed logging for every step of desk routing
+- [x] Write comprehensive vitest tests for the routing flow (33 tests passing)
