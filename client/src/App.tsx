@@ -30,6 +30,7 @@ import CallHistory from "./pages/CallHistory";
 import DeskManagement from "./pages/DeskManagement";
 import Integrations from "./pages/Integrations";
 import NotificationsPage from "./pages/Notifications";
+import CommsHistory from "./pages/CommsHistory";
 import { IncomingCallNotification } from "./components/IncomingCallNotification";
 import { FloatingDialer } from "./components/FloatingDialer";
 
@@ -104,6 +105,9 @@ function DeskManagementPage() {
 function IntegrationsPage() {
   return <DashboardLayout><Integrations /></DashboardLayout>;
 }
+function CommsHistoryPage() {
+  return <DashboardLayout><CommsHistory /></DashboardLayout>;
+}
 
 function Router() {
   return (
@@ -133,6 +137,7 @@ function Router() {
       <Route path="/call-history" component={CallHistoryPage} />
       <Route path="/desk-management" component={DeskManagementPage} />
       <Route path="/integrations" component={IntegrationsPage} />
+      <Route path="/comms-history" component={CommsHistoryPage} />
       <Route path="/notifications" component={NotificationsPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />

@@ -124,7 +124,7 @@ export default function NotificationsPage() {
             </Button>
           </div>
           <div className="ml-auto text-xs text-muted-foreground">
-            {notifications?.length ?? 0} results
+            {notifications?.rows.length ?? 0} results
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export default function NotificationsPage() {
             </div>
           )}
 
-          {!isLoading && (!notifications || notifications.length === 0) && (
+          {!isLoading && (!notifications || notifications.rows.length === 0) && (
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
               <Bell className="h-12 w-12 opacity-20" />
               <p className="text-sm font-medium">No notifications found</p>
@@ -148,7 +148,7 @@ export default function NotificationsPage() {
             </div>
           )}
 
-          {notifications?.map((n) => {
+          {notifications?.rows.map((n: any) => {
             const src = SOURCE_CONFIG[n.source as keyof typeof SOURCE_CONFIG];
             const SrcIcon = src?.icon ?? Building2;
             const address = [n.addressLine1, n.city, n.state].filter(Boolean).join(", ");

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers, Link2 } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers, Link2, History } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -40,6 +40,7 @@ const menuItems = [
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Activity, label: "Activity Tracking", path: "/activity" },
   { icon: Phone, label: "Communication Channels", path: "/call-history" },
+  { icon: History, label: "Comms History", path: "/comms-history", adminOnly: true },
   { icon: Upload, label: "Import Properties", path: "/import", adminOnly: true },
   { icon: TrendingUp, label: "Agent Performance", path: "/agent-performance", adminOnly: true },
   { icon: Users, label: "User Management", path: "/users", adminOnly: true },

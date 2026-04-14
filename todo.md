@@ -3241,3 +3241,9 @@
 - [ ] Add Campaign Name field to Twilio Numbers UI (editable inline or modal)
 - [ ] Auto-assign Default Caller ID on DealMachine import: match property.campaignName to twilioNumbers.campaignName
 - [ ] Auto-assign Default Caller ID on manual property add: same campaign name lookup
+
+## Communication History - Instantly & Autocalls
+- [x] Communication History page - Instantly tab showing all Slack-sourced Instantly notifications
+- [x] Communication History page - Autocalls tab showing all Slack-sourced Autocalls notifications
+- [x] Each entry shows: timestamp, property ID/link, campaign name, message content, source
+- [x] Sidebar navigation item for Communication History

@@ -97,10 +97,10 @@ export default function NotificationBell() {
     }
 
     const prev = prevCountRef.current ?? 0;
-    if (currentCount > prev && latestNotifications && latestNotifications.length > 0) {
+    if (currentCount > prev && latestNotifications && latestNotifications.rows.length > 0) {
       // Show toast for the newest notification(s)
       const newCount = currentCount - prev;
-      const newest = latestNotifications[0];
+      const newest = latestNotifications.rows[0];
       const src = SOURCE_CONFIG[newest.source as keyof typeof SOURCE_CONFIG];
       const address = [newest.addressLine1, newest.city, newest.state].filter(Boolean).join(", ");
       const propertyLabel = address || `Property #${newest.propertyId}`;
@@ -240,13 +240,13 @@ export default function NotificationBell() {
                   Loading...
                 </div>
               )}
-              {!isLoading && (!notifications || notifications.length === 0) && (
+              {!isLoading && (!notifications || notifications.rows.length === 0) && (
                 <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
                   <Bell className="h-8 w-8 opacity-30" />
                   <span className="text-sm">No notifications yet</span>
                 </div>
               )}
-              {notifications?.map((n) => {
+              {notifications?.rows.map((n: any) => {
                 const src = SOURCE_CONFIG[n.source as keyof typeof SOURCE_CONFIG];
                 const SrcIcon = src?.icon ?? Building2;
                 const address = [n.addressLine1, n.city, n.state].filter(Boolean).join(", ");
