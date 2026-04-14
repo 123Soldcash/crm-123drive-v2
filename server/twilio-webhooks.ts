@@ -189,23 +189,28 @@ export function registerTwilioWebhooks(app: Express) {
         }
 
         // Log the inbound call in communication log
-        try {
-          const { getDb } = await import("./db");
-          const { communicationLog } = await import("../drizzle/schema");
-          const database = await getDb();
-          if (database) {
-            await database.insert(communicationLog).values({
-              propertyId: 0, // Unknown property for inbound calls
-              communicationType: "Phone",
-              direction: "Inbound",
-              twilioNumber: to || undefined, // The Twilio number that received the call
-              contactPhoneNumber: from || undefined, // The caller's phone number
-              userId: 1, // System user
-              notes: `Inbound call from ${from} to ${to}. CallSid: ${callSid || "unknown"}`,
-            });
+        // Guard: skip logging if the caller's phone number is missing (robocall probes, carrier pings, etc.)
+        if (from && from !== "undefined" && !from.startsWith("client:")) {
+          try {
+            const { getDb } = await import("./db");
+            const { communicationLog } = await import("../drizzle/schema");
+            const database = await getDb();
+            if (database) {
+              await database.insert(communicationLog).values({
+                propertyId: 0, // Unknown property for inbound calls
+                communicationType: "Phone",
+                direction: "Inbound",
+                twilioNumber: to || undefined, // The Twilio number that received the call
+                contactPhoneNumber: from, // The caller's phone number
+                userId: 1, // System user
+                notes: `Inbound call from ${from} to ${to}. CallSid: ${callSid || "unknown"}`,
+              });
+            }
+          } catch (logError) {
+            console.error("[Twilio Voice] Error logging inbound call:", logError);
           }
-        } catch (logError) {
-          console.error("[Twilio Voice] Error logging inbound call:", logError);
+        } else {
+          console.log("[Twilio Voice] Skipping log for inbound call with no caller ID (from:", from, ")");
         }
 
         res.set("Content-Type", "text/xml");

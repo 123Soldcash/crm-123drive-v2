@@ -3247,3 +3247,7 @@
 - [x] Communication History page - Autocalls tab showing all Slack-sourced Autocalls notifications
 - [x] Each entry shows: timestamp, property ID/link, campaign name, message content, source
 - [x] Sidebar navigation item for Communication History
+
+## Ghost Inbound Call Cleanup
+- [x] Delete 154 ghost inbound call entries (no phone number, propertyId=0, from=undefined)
+- [x] Add guard in Twilio voice webhook to skip logging when caller phone is undefined/empty
