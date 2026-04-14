@@ -3223,3 +3223,11 @@
 - [x] Investigate why updated integration settings are not being read by the integration logic
 - [x] Fix settings read path so live DB values are used (not stale cache or seed defaults) — Slack event handler now reads instantlyChannel and autocallsChannel from DB instead of hardcoded strings
 - [ ] Verify leads are received after fix (requires live Slack message test)
+
+## Slack Integration - Campaign Field Optional
+- [x] Remove campaign as required field in Slack event handler — only property_id required (applies to both Instantly and AutoCalls)
+
+## Slack Integration - contact_phone Flexible Matching
+- [x] contact_phone sent with +1 prefix must match numbers stored without +1 in the database
+- [x] Use LIKE/contains matching to find the phone regardless of formatting
+- [x] Matched phone/contact ID included in note and Slack confirmation reply

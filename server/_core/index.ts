@@ -714,17 +714,22 @@ async function startServer() {
         return;
       }
 
-      // ── Step 5: Extract property_id and campaign (REQUIRED — if either missing, ignore) ──
+      // ── Step 5: Extract property_id (REQUIRED), campaign and contact_phone (OPTIONAL) ──
       const propertyIdMatch = messageText.match(/property[_\s-]?id[:\s#]*([\d]+)/i);
       const campaignMatch = messageText.match(/campaign[:\s]+([^\n]+)/i);
+      const contactPhoneMatch = messageText.match(/contact[_\s-]?phone[:\s]+([\+\d\s\(\)\-]+)/i);
 
-      if (!propertyIdMatch || !campaignMatch) {
-        console.log(`[Slack] Message ignored — missing property_id or campaign. Text: ${messageText.substring(0, 80)}`);
+      // Only property_id is required — campaign and contact_phone are optional
+      if (!propertyIdMatch) {
+        console.log(`[Slack] Message ignored — missing property_id. Text: ${messageText.substring(0, 80)}`);
         return;
       }
 
       const propertyId = parseInt(propertyIdMatch[1]);
-      const campaignName = campaignMatch[1].trim();
+      const campaignName = campaignMatch ? campaignMatch[1].trim() : "";
+      // Normalize contact_phone: strip +1 country code and all non-digits, keep last 10 digits
+      const rawContactPhone = contactPhoneMatch ? contactPhoneMatch[1].replace(/\D/g, "") : "";
+      const contactPhoneDigits = rawContactPhone.length > 10 ? rawContactPhone.slice(-10) : rawContactPhone;
 
       // ── Step 6: Verify property exists ──
       const { properties, contacts, contactPhones, notes } = await import("../../drizzle/schema");
@@ -756,15 +761,42 @@ async function startServer() {
       const prop = property[0];
       const propAddress = [prop.addressLine1, prop.city, prop.state].filter(Boolean).join(", ");
 
+      // ── Step 6b: Flexible contact_phone lookup ──
+      // Phone numbers in DB are stored as digits only (e.g. "9545601923").
+      // Incoming contact_phone may include +1 country code or formatting.
+      // We strip to last 10 digits and use LIKE '%digits%' to find the match.
+      let matchedPhoneId: number | null = null;
+      let matchedContactId: number | null = null;
+      if (contactPhoneDigits.length >= 7) {
+        try {
+          const { like } = await import("drizzle-orm");
+          const phoneRows = await database
+            .select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
+            .from(contactPhones)
+            .where(like(contactPhones.phoneNumber, `%${contactPhoneDigits}%`))
+            .limit(5);
+          if (phoneRows.length > 0) {
+            matchedPhoneId = phoneRows[0].id;
+            matchedContactId = phoneRows[0].contactId;
+            console.log(`[Slack] contact_phone ${contactPhoneDigits} matched DB phone #${matchedPhoneId} (contact #${matchedContactId})`);
+          } else {
+            console.log(`[Slack] contact_phone ${contactPhoneDigits} not found in DB — continuing without phone match`);
+          }
+        } catch (phoneErr) {
+          console.error("[Slack] Error looking up contact_phone:", phoneErr);
+        }
+      }
+
       // ── Step 7: Save message as General Note ──
       const noteContent = [
         `=== ${source === "instantly" ? "Instantly" : "Autocalls"} Update ===`,
         `Date: ${new Date().toLocaleDateString("en-US")} ${new Date().toLocaleTimeString("en-US")}`,
-        `Campaign: ${campaignName}`,
+        campaignName ? `Campaign: ${campaignName}` : null,
         `Property: #${propertyId} — ${propAddress}`,
+        matchedPhoneId ? `Matched Phone: ${contactPhoneDigits} (DB Phone #${matchedPhoneId}, Contact #${matchedContactId})` : (contactPhoneDigits ? `Contact Phone: ${contactPhoneDigits} (not found in DB)` : null),
         "",
         messageText,
-      ].join("\n");
+      ].filter(Boolean).join("\n");
 
       await database.insert(notes).values({
         propertyId,
@@ -801,7 +833,7 @@ async function startServer() {
             body: JSON.stringify({
               channel: channelId,
               thread_ts: ts,
-              text: `✅ *CRM Updated* — Property *#${propertyId}* (${propAddress})\n📣 Campaign: ${campaignName}\n📝 Note saved to General Notes.`,
+              text: `✅ *CRM Updated* — Property *#${propertyId}* (${propAddress})${campaignName ? `\n📣 Campaign: ${campaignName}` : ""}${matchedPhoneId ? `\n📞 Phone matched: ${contactPhoneDigits} → Contact #${matchedContactId}` : (contactPhoneDigits ? `\n⚠️ Phone ${contactPhoneDigits} not found in DB` : "")}\n📝 Note saved to General Notes.`,
             }),
           });
           console.log(`[Slack] Confirmation sent back to Slack for property #${propertyId}`);
