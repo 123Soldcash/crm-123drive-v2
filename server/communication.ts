@@ -898,8 +898,44 @@ export async function getUnifiedCommunications(filters: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const { users, smsMessages } = await import("../drizzle/schema.js");
-  const { gte, lte } = await import("drizzle-orm");
+  const { users, smsMessages, twilioNumbers, twilioNumberDesks, desks: desksTable } = await import("../drizzle/schema.js");
+  const { gte, lte, inArray, or } = await import("drizzle-orm");
+
+  // ── Build desk-to-twilioNumber lookup map ──
+  // This maps each desk name to the set of Twilio phone numbers assigned to it.
+  // Used for: (1) filtering by desk even on historical records without deskName,
+  //           (2) enriching the deskName column for records that only have twilioNumber.
+  const allDeskMappings = await db
+    .select({
+      deskId: desksTable.id,
+      deskName: desksTable.description,
+      deskShortName: desksTable.name,
+      phoneNumber: twilioNumbers.phoneNumber,
+    })
+    .from(twilioNumberDesks)
+    .innerJoin(desksTable, eq(twilioNumberDesks.deskId, desksTable.id))
+    .innerJoin(twilioNumbers, eq(twilioNumberDesks.twilioNumberId, twilioNumbers.id));
+
+  // Map: phoneNumber -> desk name(s)
+  const phoneToDesks = new Map<string, string[]>();
+  for (const row of allDeskMappings) {
+    const name = row.deskName || row.deskShortName;
+    if (!phoneToDesks.has(row.phoneNumber)) phoneToDesks.set(row.phoneNumber, []);
+    if (!phoneToDesks.get(row.phoneNumber)!.includes(name)) {
+      phoneToDesks.get(row.phoneNumber)!.push(name);
+    }
+  }
+
+  // If deskFilter is active, find all Twilio phone numbers assigned to that desk
+  let deskTwilioPhones: string[] = [];
+  if (filters.deskFilter) {
+    for (const row of allDeskMappings) {
+      const name = row.deskName || row.deskShortName;
+      if (name === filters.deskFilter && !deskTwilioPhones.includes(row.phoneNumber)) {
+        deskTwilioPhones.push(row.phoneNumber);
+      }
+    }
+  }
 
   const limit = filters.limit || 200;
   const offset = filters.offset || 0;
@@ -926,8 +962,18 @@ export async function getUnifiedCommunications(filters: {
     }
 
     if (filters.deskFilter) {
-      const { like } = await import("drizzle-orm");
-      callConditions.push(like(communicationLog.deskName, `%${filters.deskFilter}%`));
+      // Filter by desk: match either the saved deskName OR the twilioNumber belonging to that desk
+      if (deskTwilioPhones.length > 0) {
+        callConditions.push(
+          or(
+            eq(communicationLog.deskName, filters.deskFilter),
+            inArray(communicationLog.twilioNumber, deskTwilioPhones)
+          )!
+        );
+      } else {
+        // No Twilio numbers assigned to this desk, fall back to deskName only
+        callConditions.push(eq(communicationLog.deskName, filters.deskFilter));
+      }
     }
 
     // statusFilter: needs_callback → only show calls with needsCallback=1
@@ -973,26 +1019,34 @@ export async function getUnifiedCommunications(filters: {
       .where(callWhere)
       .orderBy(desc(communicationLog.communicationDate));
 
-    callRecords = rawCalls.map((c) => ({
-      id: c.id,
-      type: "call" as const,
-      direction: (c.direction || "Outbound") as "Inbound" | "Outbound",
-      phoneNumber: c.phoneNumber,
-      twilioNumber: c.twilioNumber,
-      propertyAddress: c.propertyAddress,
-      propertyCity: c.propertyCity,
-      propertyState: c.propertyState,
-      propertyLeadId: c.propertyLeadId,
-      propertyId: c.propertyId,
-      agentName: c.agentName,
-      date: c.date,
-      messageBody: null,
-      messageStatus: null,
-      callResult: c.callResult,
-      disposition: c.disposition,
-      needsCallback: c.needsCallback,
-      deskName: c.deskName,
-    }));
+    callRecords = rawCalls.map((c) => {
+      // Enrich deskName: if the record doesn't have a saved deskName,
+      // resolve it from the twilioNumber-to-desk mapping
+      let resolvedDeskName = c.deskName;
+      if (!resolvedDeskName && c.twilioNumber && phoneToDesks.has(c.twilioNumber)) {
+        resolvedDeskName = phoneToDesks.get(c.twilioNumber)!.join(", ");
+      }
+      return {
+        id: c.id,
+        type: "call" as const,
+        direction: (c.direction || "Outbound") as "Inbound" | "Outbound",
+        phoneNumber: c.phoneNumber,
+        twilioNumber: c.twilioNumber,
+        propertyAddress: c.propertyAddress,
+        propertyCity: c.propertyCity,
+        propertyState: c.propertyState,
+        propertyLeadId: c.propertyLeadId,
+        propertyId: c.propertyId,
+        agentName: c.agentName,
+        date: c.date,
+        messageBody: null,
+        messageStatus: null,
+        callResult: c.callResult,
+        disposition: c.disposition,
+        needsCallback: c.needsCallback,
+        deskName: resolvedDeskName,
+      };
+    });
   }
 
   // ── Fetch SMS records ──
@@ -1011,6 +1065,13 @@ export async function getUnifiedCommunications(filters: {
 
     if (filters.twilioNumber) {
       smsConditions.push(eq(smsMessages.twilioPhone, filters.twilioNumber));
+    }
+
+    if (filters.deskFilter && deskTwilioPhones.length > 0) {
+      smsConditions.push(inArray(smsMessages.twilioPhone, deskTwilioPhones));
+    } else if (filters.deskFilter) {
+      // No Twilio numbers assigned to this desk, skip SMS entirely
+      smsConditions.push(eq(smsMessages.id, -1));
     }
 
     // statusFilter: unread_sms → only show inbound unread SMS
@@ -1057,27 +1118,34 @@ export async function getUnifiedCommunications(filters: {
       .where(smsWhere)
       .orderBy(desc(smsMessages.createdAt));
 
-    smsRecords = rawSms.map((s) => ({
-      id: s.id,
-      type: "sms" as const,
-      direction: (s.direction === "inbound" ? "Inbound" : "Outbound") as "Inbound" | "Outbound",
-      phoneNumber: s.phoneNumber,
-      twilioNumber: s.twilioNumber,
-      propertyAddress: s.propertyAddress,
-      propertyCity: s.propertyCity,
-      propertyState: s.propertyState,
-      propertyLeadId: s.propertyLeadId,
-      propertyId: s.propertyId,
-      agentName: s.agentName,
-      date: s.date,
-      messageBody: s.body,
-      messageStatus: s.status,
-      callResult: null,
-      disposition: null,
-      needsCallback: null,
-      isRead: s.isRead,
-      deskName: null, // SMS doesn't have desk routing yet
-    }));
+    smsRecords = rawSms.map((s) => {
+      // Enrich deskName for SMS from twilioNumber-to-desk mapping
+      let resolvedDeskName: string | null = null;
+      if (s.twilioNumber && phoneToDesks.has(s.twilioNumber)) {
+        resolvedDeskName = phoneToDesks.get(s.twilioNumber)!.join(", ");
+      }
+      return {
+        id: s.id,
+        type: "sms" as const,
+        direction: (s.direction === "inbound" ? "Inbound" : "Outbound") as "Inbound" | "Outbound",
+        phoneNumber: s.phoneNumber,
+        twilioNumber: s.twilioNumber,
+        propertyAddress: s.propertyAddress,
+        propertyCity: s.propertyCity,
+        propertyState: s.propertyState,
+        propertyLeadId: s.propertyLeadId,
+        propertyId: s.propertyId,
+        agentName: s.agentName,
+        date: s.date,
+        messageBody: s.body,
+        messageStatus: s.status,
+        callResult: null,
+        disposition: null,
+        needsCallback: null,
+        isRead: s.isRead,
+        deskName: resolvedDeskName,
+      };
+    });
   }
 
   // ── Merge and sort by date DESC ──

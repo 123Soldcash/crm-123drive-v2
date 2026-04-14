@@ -3267,3 +3267,8 @@
 - [x] Update outbound call logging to store desk name
 - [x] Add Desk column to Communication Channels table UI
 - [x] Add Desk filter dropdown to Communication Channels page
+
+## Fix Desk Filter to Use Twilio Number Mapping
+- [x] Update desk filter to resolve Twilio numbers assigned to the selected desk
+- [x] Filter calls by twilioNumber (from junction table) OR deskName field so historical calls are included
+- [x] Also populate the Desk column for historical calls based on twilioNumber-to-desk mapping
