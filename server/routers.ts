@@ -4933,6 +4933,18 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    /** Undo: mark a single SMS back as unread (isRead=0) */
+    markSmsUnread: protectedProcedure
+      .input(z.object({ smsId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const { eq: eqFn } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+        await dbInst.update(smsTable).set({ isRead: 0 }).where(eqFn(smsTable.id, input.smsId));
+        return { success: true };
+      }),
+
     // Returns all active Twilio numbers for filter dropdown
     getTwilioNumbers: protectedProcedure.query(async () => {
       const dbInstance = await db.getDb();

@@ -3213,3 +3213,8 @@
 - [x] Add "Needs Callback" quick filter button to Communication Channels
 - [x] Show count badge on each quick filter button
 - [x] Filters update the table in real-time without page reload
+
+## Undo SMS Read Action
+- [x] Add markSmsUnread backend procedure (set isRead=0)
+- [x] Show undo toast when SMS is marked as read in Communications Log
+- [x] Clicking "Desfazer/Undo" in toast reverts isRead back to 0

@@ -153,11 +153,27 @@ export default function CallHistory() {
     },
   });
 
-  const markSmsRead = trpc.callHistory.markSingleSmsRead.useMutation({
+  const markSmsUnread = trpc.callHistory.markSmsUnread.useMutation({
     onSuccess: () => {
       refetch();
       utils.sms.unreadCount.invalidate();
-      toast.success("SMS marked as read");
+    },
+  });
+
+  const markSmsRead = trpc.callHistory.markSingleSmsRead.useMutation({
+    onSuccess: (_, variables) => {
+      refetch();
+      utils.sms.unreadCount.invalidate();
+      toast("SMS marked as read", {
+        description: "Tap Undo to revert",
+        duration: 6000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            markSmsUnread.mutate({ smsId: variables.smsId });
+          },
+        },
+      });
     },
   });
 
