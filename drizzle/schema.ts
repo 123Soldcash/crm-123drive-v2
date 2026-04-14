@@ -1681,3 +1681,28 @@ export const integrationSettings = mysqlTable("integrationSettings", {
 
 export type IntegrationSetting = typeof integrationSettings.$inferSelect;
 export type InsertIntegrationSetting = typeof integrationSettings.$inferInsert;
+
+
+// ─── Desk ↔ Twilio Number junction (many-to-many) ────────────────────────────
+// Each Twilio number can be assigned to one or more desks.
+// When an inbound call arrives on a number, only users in the matching desk(s) are rung.
+export const twilioNumberDesks = mysqlTable("twilioNumberDesks", {
+  id: int("id").autoincrement().primaryKey(),
+  twilioNumberId: int("twilioNumberId").notNull(),
+  deskId: int("deskId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TwilioNumberDesk = typeof twilioNumberDesks.$inferSelect;
+export type InsertTwilioNumberDesk = typeof twilioNumberDesks.$inferInsert;
+
+// ─── Desk ↔ User junction (many-to-many) ─────────────────────────────────────
+// Each user can belong to one or more desks.
+// Inbound calls are routed to users whose desk matches the called Twilio number's desk.
+export const userDesks = mysqlTable("userDesks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  deskId: int("deskId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserDesk = typeof userDesks.$inferSelect;
+export type InsertUserDesk = typeof userDesks.$inferInsert;

@@ -3251,3 +3251,12 @@
 ## Ghost Inbound Call Cleanup
 - [x] Delete 154 ghost inbound call entries (no phone number, propertyId=0, from=undefined)
 - [x] Add guard in Twilio voice webhook to skip logging when caller phone is undefined/empty
+
+## Desk-Based Call Routing
+- [x] Create twilioNumberDesks junction table (many-to-many: twilioNumbers <-> desks)
+- [x] Create userDesks junction table (many-to-many: users <-> desks)
+- [x] Update Twilio Numbers UI to assign desks to each number (multi-select)
+- [x] Update User Management UI to show/assign desks to users (edit dialog + table column)
+- [x] Update Twilio voice webhook to route inbound calls only to users in matching desk(s)
+- [x] Backend tRPC procedures for managing desk assignments
+- [x] Fallback: if no desks assigned to a number, ring all active users

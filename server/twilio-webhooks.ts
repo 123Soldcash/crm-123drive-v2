@@ -80,18 +80,69 @@ export function registerTwilioWebhooks(app: Express) {
         // We ring all users with identity pattern "crm-user-{id}"
         try {
           const { getDb } = await import("./db");
-          const { users: usersTable } = await import("../drizzle/schema");
-          const { eq } = await import("drizzle-orm");
+          const { users: usersTable, twilioNumbers: twilioNumbersTable, twilioNumberDesks, userDesks } = await import("../drizzle/schema");
+          const { eq, and, inArray } = await import("drizzle-orm");
           const database = await getDb();
 
           if (database) {
-            const activeUsers = await database
-              .select({ id: usersTable.id })
-              .from(usersTable)
-              .where(eq(usersTable.status, "Active"));
+            // ─── DESK-BASED ROUTING ───
+            // 1. Find the Twilio number record by matching the "to" phone number
+            // 2. Look up which desks are assigned to that number
+            // 3. Find users assigned to those desks
+            // 4. Ring only those users (or all active users if no desk is assigned)
+            let usersToRing: { id: number }[] = [];
 
-            if (activeUsers.length > 0) {
-              // Ring all active users simultaneously with a 30-second timeout
+            // Normalize the called number for matching
+            const calledNumber = to ? (to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`) : "";
+            const calledDigits = calledNumber.replace(/\D/g, "");
+
+            // Find the Twilio number record
+            const allTwilioNumbers = await database.select().from(twilioNumbersTable);
+            const matchedTwilioNumber = allTwilioNumbers.find((tn) => {
+              const tnDigits = tn.phoneNumber.replace(/\D/g, "");
+              return tnDigits === calledDigits || tn.phoneNumber === calledNumber;
+            });
+
+            let deskIds: number[] = [];
+            if (matchedTwilioNumber) {
+              // Get desks assigned to this Twilio number
+              const numberDeskRows = await database
+                .select({ deskId: twilioNumberDesks.deskId })
+                .from(twilioNumberDesks)
+                .where(eq(twilioNumberDesks.twilioNumberId, matchedTwilioNumber.id));
+              deskIds = numberDeskRows.map(r => r.deskId);
+              console.log(`[Twilio Voice] Matched Twilio number ID ${matchedTwilioNumber.id} (${matchedTwilioNumber.label}), desks: [${deskIds.join(", ")}]`);
+            }
+
+            if (deskIds.length > 0) {
+              // Find users assigned to these desks
+              const userDeskRows = await database
+                .select({ userId: userDesks.userId })
+                .from(userDesks)
+                .where(inArray(userDesks.deskId, deskIds));
+              const deskUserIds = Array.from(new Set(userDeskRows.map(r => r.userId)));
+
+              if (deskUserIds.length > 0) {
+                // Only ring active users that are in the matching desks
+                usersToRing = await database
+                  .select({ id: usersTable.id })
+                  .from(usersTable)
+                  .where(and(eq(usersTable.status, "Active"), inArray(usersTable.id, deskUserIds)));
+                console.log(`[Twilio Voice] Desk routing: ${usersToRing.length} users in desks [${deskIds.join(", ")}]`);
+              }
+            }
+
+            // Fallback: if no desk routing or no users found in desks, ring all active users
+            if (usersToRing.length === 0) {
+              usersToRing = await database
+                .select({ id: usersTable.id })
+                .from(usersTable)
+                .where(eq(usersTable.status, "Active"));
+              console.log(`[Twilio Voice] No desk routing — ringing all ${usersToRing.length} active users`);
+            }
+
+            if (usersToRing.length > 0) {
+              // Ring the selected users simultaneously with a 30-second timeout
               // The first user to accept gets the call
               const dial = response.dial({
                 callerId: from, // Show the external caller's number
@@ -100,11 +151,11 @@ export function registerTwilioWebhooks(app: Express) {
                 method: "POST",
               });
 
-              for (const user of activeUsers) {
+              for (const user of usersToRing) {
                 dial.client(`crm-user-${user.id}`);
               }
 
-              console.log(`[Twilio Voice] Ringing ${activeUsers.length} CRM users for inbound call from ${from}`);
+              console.log(`[Twilio Voice] Ringing ${usersToRing.length} CRM users for inbound call from ${from}`);
             } else {
               // No active users — send to voicemail message
               response.say("Thank you for calling. No agents are currently available. Please try again later.");

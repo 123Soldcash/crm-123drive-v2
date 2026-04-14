@@ -330,6 +330,13 @@
       "when": 1776199849109,
       "tag": "0046_stale_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1776205510163,
+      "tag": "0047_fresh_magus",
+      "breakpoints": true
     }
   ]
 }

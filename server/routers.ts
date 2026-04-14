@@ -15,8 +15,8 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers } from "../drizzle/schema";
-import { eq, sql, and, isNull, desc } from "drizzle-orm";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks } from "../drizzle/schema";
+import { eq, sql, and, isNull, desc, inArray } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
@@ -3887,7 +3887,115 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new Error("Database not available");
+        // Also remove desk assignments
+        await database.delete(twilioNumberDesks).where(eq(twilioNumberDesks.twilioNumberId, input.id));
         await database.delete(twilioNumbers).where(eq(twilioNumbers.id, input.id));
+        return { success: true };
+      }),
+
+    // ─── Desk ↔ Twilio Number assignments ─────────────────────────
+    /** Get desk IDs assigned to a Twilio number */
+    getNumberDesks: protectedProcedure
+      .input(z.object({ twilioNumberId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const rows = await database
+          .select({ deskId: twilioNumberDesks.deskId })
+          .from(twilioNumberDesks)
+          .where(eq(twilioNumberDesks.twilioNumberId, input.twilioNumberId));
+        return rows.map(r => r.deskId);
+      }),
+
+    /** Get all desk assignments for all Twilio numbers (batch) */
+    getAllNumberDesks: protectedProcedure.query(async () => {
+      const database = await getDb();
+      if (!database) throw new Error("Database not available");
+      const rows = await database
+        .select({
+          twilioNumberId: twilioNumberDesks.twilioNumberId,
+          deskId: twilioNumberDesks.deskId,
+        })
+        .from(twilioNumberDesks);
+      // Group by twilioNumberId
+      const map: Record<number, number[]> = {};
+      for (const r of rows) {
+        if (!map[r.twilioNumberId]) map[r.twilioNumberId] = [];
+        map[r.twilioNumberId].push(r.deskId);
+      }
+      return map;
+    }),
+
+    /** Set desk assignments for a Twilio number (replace all) */
+    setNumberDesks: adminProcedure
+      .input(z.object({
+        twilioNumberId: z.number(),
+        deskIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Delete existing
+        await database.delete(twilioNumberDesks).where(eq(twilioNumberDesks.twilioNumberId, input.twilioNumberId));
+        // Insert new
+        if (input.deskIds.length > 0) {
+          await database.insert(twilioNumberDesks).values(
+            input.deskIds.map(deskId => ({ twilioNumberId: input.twilioNumberId, deskId }))
+          );
+        }
+        return { success: true };
+      }),
+
+    // ─── Desk ↔ User assignments ──────────────────────────────────
+    /** Get desk IDs assigned to a user */
+    getUserDesks: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        const rows = await database
+          .select({ deskId: userDesks.deskId })
+          .from(userDesks)
+          .where(eq(userDesks.userId, input.userId));
+        return rows.map(r => r.deskId);
+      }),
+
+    /** Get all desk assignments for all users (batch) */
+    getAllUserDesks: protectedProcedure.query(async () => {
+      const database = await getDb();
+      if (!database) throw new Error("Database not available");
+      const rows = await database
+        .select({
+          userId: userDesks.userId,
+          deskId: userDesks.deskId,
+        })
+        .from(userDesks);
+      // Group by userId
+      const map: Record<number, number[]> = {};
+      for (const r of rows) {
+        if (!map[r.userId]) map[r.userId] = [];
+        map[r.userId].push(r.deskId);
+      }
+      return map;
+    }),
+
+    /** Set desk assignments for a user (replace all) */
+    setUserDesks: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        deskIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+        // Delete existing
+        await database.delete(userDesks).where(eq(userDesks.userId, input.userId));
+        // Insert new
+        if (input.deskIds.length > 0) {
+          await database.insert(userDesks).values(
+            input.deskIds.map(deskId => ({ userId: input.userId, deskId }))
+          );
+        }
         return { success: true };
       }),
   }),

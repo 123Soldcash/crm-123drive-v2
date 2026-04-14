@@ -40,7 +40,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Edit, Plus, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter, KeyRound, Eye, EyeOff, ListChecks, Mail } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Users, Edit, Plus, Copy, Check, Trash2, ArrowRightLeft, Shield, UserCheck, Search, Filter, KeyRound, Eye, EyeOff, ListChecks, Mail, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 type UserRow = {
@@ -87,11 +88,21 @@ export default function UserManagement() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedUserDeskIds, setSelectedUserDeskIds] = useState<number[]>([]);
 
 
   // Fetch all users (agents + admins) using the unified endpoint
   const { data: allUsers = [], isLoading } = trpc.agents.listAllUsers.useQuery();
+  const desksQuery = trpc.desks.list.useQuery();
+  const allUserDesksQuery = trpc.twilio.getAllUserDesks.useQuery();
   const utils = trpc.useUtils();
+
+  const setUserDesksMutation = trpc.twilio.setUserDesks.useMutation({
+    onSuccess: () => {
+      utils.twilio.getAllUserDesks.invalidate();
+    },
+    onError: (err: any) => toast.error("Failed to save desk assignments: " + err.message),
+  });
 
   // Update user mutation
   const updateUser = trpc.agents.update.useMutation({
@@ -183,6 +194,9 @@ export default function UserManagement() {
       notes: user.notes || "",
       twilioPhone: user.twilioPhone || "",
     });
+    // Load existing desk assignments for this user
+    const deskMap = allUserDesksQuery.data || {};
+    setSelectedUserDeskIds(deskMap[user.id] || []);
     setEditDialogOpen(true);
   };
 
@@ -243,7 +257,18 @@ export default function UserManagement() {
       notes: editForm.notes || undefined,
       twilioPhone: editForm.twilioPhone || undefined,
     });
+    // Save desk assignments
+    setUserDesksMutation.mutate({ userId: selectedUser.id, deskIds: selectedUserDeskIds });
   };
+
+  function toggleUserDesk(deskId: number) {
+    setSelectedUserDeskIds((prev) =>
+      prev.includes(deskId) ? prev.filter((id) => id !== deskId) : [...prev, deskId]
+    );
+  }
+
+  const allDesks = desksQuery.data || [];
+  const userDesksMap = allUserDesksQuery.data || {};
 
   // Whitelist queries and mutations
   const { data: whitelistEntries = [] } = trpc.agents.whitelistList.useQuery();
@@ -457,6 +482,7 @@ export default function UserManagement() {
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
 
+                <TableHead>Desks</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Active</TableHead>
@@ -466,7 +492,7 @@ export default function UserManagement() {
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     {searchQuery || roleFilter !== "all" || statusFilter !== "all"
                       ? "No users match the current filters."
                       : "No users found. Invite users to get started."}
@@ -486,6 +512,34 @@ export default function UserManagement() {
                     <TableCell className="text-sm">{user.email || "—"}</TableCell>
                     <TableCell className="text-sm">{user.phone ? formatPhone(user.phone) : "—"}</TableCell>
 
+                    <TableCell>
+                      {(() => {
+                        const dIds = userDesksMap[user.id] || [];
+                        if (dIds.length === 0) return <span className="text-xs text-muted-foreground italic">None</span>;
+                        return (
+                          <div className="flex flex-wrap gap-1">
+                            {dIds.map((dId: number) => {
+                              const desk = allDesks.find((d: any) => d.id === dId);
+                              if (!desk) return null;
+                              return (
+                                <Badge
+                                  key={dId}
+                                  className="text-xs"
+                                  style={{
+                                    backgroundColor: (desk as any).color ? `${(desk as any).color}20` : "#e5e7eb",
+                                    color: (desk as any).color || "#374151",
+                                    borderColor: (desk as any).color || "#d1d5db",
+                                  }}
+                                  variant="outline"
+                                >
+                                  {(desk as any).description || (desk as any).name}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -620,6 +674,44 @@ export default function UserManagement() {
                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                 rows={3}
               />
+            </div>
+
+            {/* Desk Assignment */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                Desk Assignment
+                <span className="text-muted-foreground font-normal text-xs">(select one or more)</span>
+              </Label>
+              <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-1 bg-muted/30">
+                {allDesks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No desks available.</p>
+                ) : (
+                  allDesks.map((desk: any) => (
+                    <label
+                      key={desk.id}
+                      className="flex items-center gap-3 p-1.5 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedUserDeskIds.includes(desk.id)}
+                        onCheckedChange={() => toggleUserDesk(desk.id)}
+                      />
+                      <div className="flex items-center gap-2">
+                        {desk.color && (
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{ backgroundColor: desk.color }}
+                          />
+                        )}
+                        <span className="text-sm font-medium">{desk.description || desk.name}</span>
+                      </div>
+                    </label>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Inbound calls to numbers assigned to these desks will ring this user.
+              </p>
             </div>
           </div>
           <DialogFooter>

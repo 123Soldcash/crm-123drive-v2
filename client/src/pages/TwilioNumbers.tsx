@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Phone, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Loader2, Tag } from "lucide-react";
+import { Phone, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Loader2, Tag, Building2 } from "lucide-react";
 
 export default function TwilioNumbers() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function TwilioNumbers() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [selectedDeskIds, setSelectedDeskIds] = useState<number[]>([]);
   const [form, setForm] = useState({
     phoneNumber: "",
     label: "",
@@ -29,12 +31,19 @@ export default function TwilioNumbers() {
   });
 
   const numbersQuery = trpc.twilio.listNumbers.useQuery();
+  const desksQuery = trpc.desks.list.useQuery();
+  const allNumberDesksQuery = trpc.twilio.getAllNumberDesks.useQuery();
   const utils = trpc.useUtils();
 
   const addMutation = trpc.twilio.addNumber.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // After adding, set desk assignments
+      if (selectedDeskIds.length > 0 && data.id) {
+        setDesksMutation.mutate({ twilioNumberId: data.id, deskIds: selectedDeskIds });
+      }
       toast.success("Twilio number added successfully");
       utils.twilio.listNumbers.invalidate();
+      utils.twilio.getAllNumberDesks.invalidate();
       closeDialog();
     },
     onError: (err) => toast.error(err.message),
@@ -42,8 +51,13 @@ export default function TwilioNumbers() {
 
   const updateMutation = trpc.twilio.updateNumber.useMutation({
     onSuccess: () => {
+      // After updating, set desk assignments
+      if (editingId) {
+        setDesksMutation.mutate({ twilioNumberId: editingId, deskIds: selectedDeskIds });
+      }
       toast.success("Twilio number updated");
       utils.twilio.listNumbers.invalidate();
+      utils.twilio.getAllNumberDesks.invalidate();
       closeDialog();
     },
     onError: (err) => toast.error(err.message),
@@ -53,6 +67,7 @@ export default function TwilioNumbers() {
     onSuccess: () => {
       toast.success("Twilio number deleted");
       utils.twilio.listNumbers.invalidate();
+      utils.twilio.getAllNumberDesks.invalidate();
       setDeleteDialogOpen(false);
       setDeleteId(null);
     },
@@ -66,14 +81,23 @@ export default function TwilioNumbers() {
     onError: (err) => toast.error(err.message),
   });
 
+  const setDesksMutation = trpc.twilio.setNumberDesks.useMutation({
+    onSuccess: () => {
+      utils.twilio.getAllNumberDesks.invalidate();
+    },
+    onError: (err) => toast.error("Failed to save desk assignments: " + err.message),
+  });
+
   function closeDialog() {
     setDialogOpen(false);
     setEditingId(null);
+    setSelectedDeskIds([]);
     setForm({ phoneNumber: "", label: "", description: "", campaignName: "", sortOrder: 0 });
   }
 
   function openAdd() {
     setEditingId(null);
+    setSelectedDeskIds([]);
     setForm({ phoneNumber: "", label: "", description: "", campaignName: "", sortOrder: 0 });
     setDialogOpen(true);
   }
@@ -87,6 +111,9 @@ export default function TwilioNumbers() {
       campaignName: num.campaignName || "",
       sortOrder: num.sortOrder || 0,
     });
+    // Load existing desk assignments for this number
+    const deskMap = allNumberDesksQuery.data || {};
+    setSelectedDeskIds(deskMap[num.id] || []);
     setDialogOpen(true);
   }
 
@@ -122,6 +149,12 @@ export default function TwilioNumbers() {
     });
   }
 
+  function toggleDesk(deskId: number) {
+    setSelectedDeskIds((prev) =>
+      prev.includes(deskId) ? prev.filter((id) => id !== deskId) : [...prev, deskId]
+    );
+  }
+
   if (user?.role !== "admin") {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -131,10 +164,41 @@ export default function TwilioNumbers() {
   }
 
   const numbers = numbersQuery.data || [];
+  const allDesks = desksQuery.data || [];
+  const numberDesksMap = allNumberDesksQuery.data || {};
   const isSaving = addMutation.isPending || updateMutation.isPending;
 
+  // Helper to get desk names for a number
+  function getDeskBadges(numId: number) {
+    const deskIds = numberDesksMap[numId] || [];
+    if (deskIds.length === 0) return <span className="text-xs text-muted-foreground italic">No desks</span>;
+    return (
+      <div className="flex flex-wrap gap-1">
+        {deskIds.map((dId) => {
+          const desk = allDesks.find((d: any) => d.id === dId);
+          if (!desk) return null;
+          return (
+            <Badge
+              key={dId}
+              className="text-xs font-medium"
+              style={{
+                backgroundColor: (desk as any).color ? `${(desk as any).color}20` : "#e5e7eb",
+                color: (desk as any).color || "#374151",
+                borderColor: (desk as any).color || "#d1d5db",
+              }}
+              variant="outline"
+            >
+              <Building2 className="h-3 w-3 mr-1" />
+              {(desk as any).description || (desk as any).name}
+            </Badge>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="container max-w-5xl py-6 space-y-6">
+    <div className="container max-w-6xl py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -142,7 +206,7 @@ export default function TwilioNumbers() {
             Twilio Numbers
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage your Twilio phone numbers. Link each number to a campaign so leads are automatically assigned the correct Caller ID.
+            Manage your Twilio phone numbers. Assign desks so inbound calls ring only the right agents.
           </p>
         </div>
         <Button onClick={openAdd} className="gap-2">
@@ -151,11 +215,19 @@ export default function TwilioNumbers() {
         </Button>
       </div>
 
-      {/* Info banner explaining campaign linking */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-2">
-        <Tag className="h-4 w-4 mt-0.5 shrink-0" />
-        <div>
-          <strong>Campaign Linking:</strong> When a lead arrives with a matching <em>Campaign Name</em>, the system automatically sets that number as the Default Caller ID for the property. Leave blank if you don't use campaign-based routing.
+      {/* Info banners */}
+      <div className="space-y-2">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-2">
+          <Building2 className="h-4 w-4 mt-0.5 shrink-0" />
+          <div>
+            <strong>Desk Routing:</strong> Assign desks to each number. When a lead calls, only users assigned to the same desk(s) will be rung. If no desks are assigned, all active users are rung (default behavior).
+          </div>
+        </div>
+        <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-800 flex items-start gap-2">
+          <Tag className="h-4 w-4 mt-0.5 shrink-0" />
+          <div>
+            <strong>Campaign Linking:</strong> When a lead arrives with a matching <em>Campaign Name</em>, the system automatically sets that number as the Default Caller ID.
+          </div>
         </div>
       </div>
 
@@ -185,13 +257,17 @@ export default function TwilioNumbers() {
                   <TableHead>Label</TableHead>
                   <TableHead>
                     <span className="flex items-center gap-1">
-                      <Tag className="h-3.5 w-3.5" />
-                      Campaign Name
+                      <Building2 className="h-3.5 w-3.5" />
+                      Desks
                     </span>
                   </TableHead>
-                  <TableHead>Description</TableHead>
+                  <TableHead>
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5" />
+                      Campaign
+                    </span>
+                  </TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Order</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -204,6 +280,7 @@ export default function TwilioNumbers() {
                         {num.label}
                       </Badge>
                     </TableCell>
+                    <TableCell>{getDeskBadges(num.id)}</TableCell>
                     <TableCell>
                       {num.campaignName ? (
                         <Badge className="bg-purple-100 text-purple-700 border-purple-200 font-medium">
@@ -211,11 +288,8 @@ export default function TwilioNumbers() {
                           {num.campaignName}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">Not linked</span>
+                        <span className="text-xs text-muted-foreground italic">—</span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
-                      {num.description || "—"}
                     </TableCell>
                     <TableCell className="text-center">
                       <button
@@ -233,9 +307,6 @@ export default function TwilioNumbers() {
                           </Badge>
                         )}
                       </button>
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {num.sortOrder}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -263,11 +334,11 @@ export default function TwilioNumbers() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Twilio Number" : "Add Twilio Number"}</DialogTitle>
             <DialogDescription>
-              {editingId ? "Update the phone number details." : "Register a new Twilio phone number for agents to use."}
+              {editingId ? "Update the phone number details and desk assignments." : "Register a new Twilio phone number and assign it to desks."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -280,7 +351,7 @@ export default function TwilioNumbers() {
                 value={form.phoneNumber}
                 onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
               />
-              <p className="text-xs text-muted-foreground">E.164 format (e.g., +15551234567). Must be a verified Twilio number.</p>
+              <p className="text-xs text-muted-foreground">E.164 format preferred (e.g., +15551234567). US numbers auto-formatted.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="label">Label *</Label>
@@ -292,6 +363,46 @@ export default function TwilioNumbers() {
               />
               <p className="text-xs text-muted-foreground">Short display name shown to agents when selecting a caller ID.</p>
             </div>
+
+            {/* Desk Assignment - Multi-select with checkboxes */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                Desk Assignment
+                <span className="text-muted-foreground font-normal">(select one or more)</span>
+              </Label>
+              <div className="border rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 bg-muted/30">
+                {allDesks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">No desks available. Create desks in Desk Management first.</p>
+                ) : (
+                  allDesks.map((desk: any) => (
+                    <label
+                      key={desk.id}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedDeskIds.includes(desk.id)}
+                        onCheckedChange={() => toggleDesk(desk.id)}
+                      />
+                      <div className="flex items-center gap-2">
+                        {desk.color && (
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{ backgroundColor: desk.color }}
+                          />
+                        )}
+                        <span className="text-sm font-medium">{desk.description || desk.name}</span>
+                        <span className="text-xs text-muted-foreground">({desk.name})</span>
+                      </div>
+                    </label>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Inbound calls to this number will only ring users assigned to the selected desk(s). If no desk is selected, all active users are rung.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="campaignName" className="flex items-center gap-1">
                 <Tag className="h-3.5 w-3.5 text-purple-600" />
@@ -345,7 +456,7 @@ export default function TwilioNumbers() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Twilio Number?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove this number from the system. Agents will no longer be able to use it for calls or SMS.
+              This will permanently remove this number and its desk assignments from the system. Agents will no longer be able to use it for calls or SMS.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
