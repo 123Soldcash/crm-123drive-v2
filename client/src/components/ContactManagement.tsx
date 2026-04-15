@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Phone, Mail, MessageSquare, Facebook, Instagram, Star, AlertTriangle, Scale, Plus, Edit, Trash2, Eye, EyeOff, MapPin } from "lucide-react";
 import { PhoneDuplicateAlert } from "./PhoneDuplicateAlert";
 import { BulkContactImport } from "./BulkContactImport";
+import { RELATIONSHIP_OPTIONS } from "@/lib/contactRelationships";
 import { toast } from "sonner";
 
 interface ContactManagementProps {
@@ -321,16 +322,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                         className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm"
                       >
                         <option value="">Select relationship...</option>
-                        <option value="Owner">Owner</option>
-                        <option value="Co-Owner">Co-Owner</option>
-                        <option value="Spouse">Spouse</option>
-                        <option value="Son">Son</option>
-                        <option value="Daughter">Daughter</option>
-                        <option value="Family Member">Family Member</option>
-                        <option value="Heir">Heir</option>
-                        <option value="Attorney">Attorney</option>
-                        <option value="Tenant">Tenant</option>
-                        <option value="Current Resident - NOT on Board">🔴 Current Resident - NOT on Board</option>
+                        {RELATIONSHIP_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -774,16 +768,9 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                       className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm"
                     >
                       <option value="">Select relationship...</option>
-                      <option value="Owner">Owner</option>
-                      <option value="Co-Owner">Co-Owner</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Son">Son</option>
-                      <option value="Daughter">Daughter</option>
-                      <option value="Family Member">Family Member</option>
-                      <option value="Heir">Heir</option>
-                      <option value="Attorney">Attorney</option>
-                      <option value="Tenant">Tenant</option>
-                      <option value="Current Resident - NOT on Board">🔴 Current Resident - NOT on Board</option>
+                      {RELATIONSHIP_OPTIONS.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

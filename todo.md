@@ -3287,3 +3287,7 @@
 - [x] Preserve existing tag-based notes in new layout (same noteType filter)
 - [x] Create simple notes UI: list format with date, time, text, delete button
 - [x] Backend unchanged - already supports add/remove notes with timestamps
+
+## Sync Relationship Field Options Across All Contact Modals
+- [x] Create shared RELATIONSHIP_OPTIONS constant in client/src/lib/contactRelationships.ts
+- [x] Apply to ContactManagement (add + edit), ContactsSection (add + edit), CallTrackingTable
