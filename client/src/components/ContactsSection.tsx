@@ -22,7 +22,6 @@ import { Phone, Mail, Plus, Edit2, Trash2, Eye, EyeOff, Clock, Search, Shield, S
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
 import { SMSChatButton } from "./SMSChatButton";
-import { RELATIONSHIP_OPTIONS } from "@/lib/contactRelationships";
 
 interface ContactsSectionProps {
   propertyId: number;
@@ -292,9 +291,13 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                       <SelectValue placeholder="Select relationship" />
                     </SelectTrigger>
                     <SelectContent>
-                      {RELATIONSHIP_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                      ))}
+                      <SelectItem value="Owner">Owner</SelectItem>
+                      <SelectItem value="Spouse">Spouse</SelectItem>
+                      <SelectItem value="Child">Child</SelectItem>
+                      <SelectItem value="Parent">Parent</SelectItem>
+                      <SelectItem value="Sibling">Sibling</SelectItem>
+                      <SelectItem value="Tenant">Tenant</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -559,9 +562,13 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                     <SelectValue placeholder="Select relationship" />
                   </SelectTrigger>
                   <SelectContent>
-                    {RELATIONSHIP_OPTIONS.map((opt) => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
+                    <SelectItem value="Owner">Owner</SelectItem>
+                    <SelectItem value="Spouse">Spouse</SelectItem>
+                    <SelectItem value="Child">Child</SelectItem>
+                    <SelectItem value="Parent">Parent</SelectItem>
+                    <SelectItem value="Sibling">Sibling</SelectItem>
+                    <SelectItem value="Tenant">Tenant</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

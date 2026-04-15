@@ -54,7 +54,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ContactEditModal } from "./ContactEditModal";
 import { ContactNotesDialog } from "./ContactNotesDialog";
 import { BulkContactImport } from "./BulkContactImport";
-import { RELATIONSHIP_OPTIONS } from "@/lib/contactRelationships";
 
 interface CallTrackingTableProps {
   propertyId: number;
@@ -1804,9 +1803,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         <SelectValue placeholder="Select relationship" />
                       </SelectTrigger>
                       <SelectContent>
-                        {RELATIONSHIP_OPTIONS.map((opt) => (
-                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                        ))}
+                        <SelectItem value="Owner">Owner</SelectItem>
+                        <SelectItem value="Spouse">Spouse</SelectItem>
+                        <SelectItem value="Relative">Relative</SelectItem>
+                        <SelectItem value="Tenant">Tenant</SelectItem>
+                        <SelectItem value="Neighbor">Neighbor</SelectItem>
+                        <SelectItem value="Attorney">Attorney</SelectItem>
+                        <SelectItem value="Personal Representative">Personal Representative</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

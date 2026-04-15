@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
-import { RELATIONSHIP_OPTIONS } from "@/lib/contactRelationships";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +41,11 @@ interface ContactEditModalProps {
   propertyId: number;
 }
 
-// RELATIONSHIP_OPTIONS imported from @/lib/contactRelationships
+const RELATIONSHIP_OPTIONS = [
+  "Owner", "Spouse", "Son", "Daughter", "Heir", "Attorney", "Tenant",
+  "Neighbor", "Family", "Resident", "Likely Owner", "Potential Owner",
+  "Renting", "Current Resident - NOT on Board", "Representative", "Other",
+];
 
 export function ContactEditModal({ open, onOpenChange, contact, propertyId }: ContactEditModalProps) {
   const utils = trpc.useUtils();
