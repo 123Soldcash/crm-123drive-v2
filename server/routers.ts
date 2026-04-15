@@ -2710,6 +2710,24 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    reorderContacts: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        orderedIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new Error("Database unavailable");
+        await Promise.all(
+          input.orderedIds.map((id, index) =>
+            database.update(contacts)
+              .set({ sortOrder: index } as any)
+              .where(eq(contacts.id, id))
+          )
+        );
+        return { success: true };
+      }),
+
     // Primary Twilio Number Management (Property-level)
     updatePrimaryTwilioNumber: protectedProcedure
       .input(z.object({

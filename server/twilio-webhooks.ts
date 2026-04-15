@@ -76,6 +76,9 @@ export function registerTwilioWebhooks(app: Express) {
 
         const response = new VoiceResponse();
 
+        // Shared state accessible across try blocks
+        let matchedDeskNames: string[] = [];
+
         // Get all active CRM users to ring them
         // We ring all users with identity pattern "crm-user-{id}"
         try {
@@ -84,8 +87,6 @@ export function registerTwilioWebhooks(app: Express) {
           const { eq, and, inArray } = await import("drizzle-orm");
           const database = await getDb();
 
-          // Store matched desk names for logging later
-          let matchedDeskNames: string[] = [];
 
           if (database) {
             // ─── DESK-BASED ROUTING ───

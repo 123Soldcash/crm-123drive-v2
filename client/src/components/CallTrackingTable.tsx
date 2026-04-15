@@ -1,4 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
 import { Button } from "@/components/ui/button";
@@ -38,7 +55,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan, GripVertical } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -149,6 +166,37 @@ function TrestleLookupBtn({ phoneId, propertyId }: { phoneId: number; propertyId
   );
 }
 
+// Sortable wrapper for contact rows (handles drag-and-drop per contact)
+function SortableContactRow({ id, phoneIdx, phonesCount, rowBgClass, children }: {
+  id: number;
+  phoneIdx: number;
+  phonesCount: number;
+  rowBgClass: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = phoneIdx === 0 ? {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  } : undefined;
+
+  return (
+    <TableRow
+      ref={phoneIdx === 0 ? setNodeRef : undefined}
+      style={style}
+      className={`border-b ${rowBgClass} ${phoneIdx === 0 ? 'border-t-2 border-t-muted' : ''}`}
+    >
+      {phoneIdx === 0 && (
+        <TableCell rowSpan={phonesCount} className="px-1 align-middle cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+          <GripVertical className="h-4 w-4 text-muted-foreground/50 hover:text-muted-foreground mx-auto" />
+        </TableCell>
+      )}
+      {children}
+    </TableRow>
+  );
+}
+
 export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const utils = trpc.useUtils();
   const [selectedPhone, setSelectedPhone] = useState<{
@@ -221,6 +269,40 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const { data: contacts, isLoading } = trpc.communication.getContactsByProperty.useQuery({ 
     propertyId 
   });
+
+  // Drag-and-drop ordering state
+  const [orderedContactIds, setOrderedContactIds] = useState<number[]>([]);
+
+  // Sync orderedContactIds when contacts data loads or changes
+  useEffect(() => {
+    if (contacts && contacts.length > 0) {
+      setOrderedContactIds(contacts.map((c: any) => c.id));
+    }
+  }, [contacts]);
+
+  const reorderMutation = trpc.communication.reorderContacts.useMutation({
+    onError: () => {
+      // Revert on error
+      if (contacts) setOrderedContactIds(contacts.map((c: any) => c.id));
+    },
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrderedContactIds((prev) => {
+      const oldIndex = prev.indexOf(active.id as number);
+      const newIndex = prev.indexOf(over.id as number);
+      const newOrder = arrayMove(prev, oldIndex, newIndex);
+      reorderMutation.mutate({ propertyId, orderedIds: newOrder });
+      return newOrder;
+    });
+  }, [propertyId, reorderMutation]);
 
   const { data: customTemplates = [] } = trpc.noteTemplates.list.useQuery();
 
@@ -823,7 +905,17 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   };
 
   // Filter contacts based on disposition, flags, date, agent, and phone type
-  const filteredContacts = contacts?.filter((contact: any) => {
+  // Build ordered contacts list based on drag-and-drop order
+  const orderedContacts = useMemo(() => {
+    if (!contacts || orderedContactIds.length === 0) return contacts || [];
+    const contactMap = new Map(contacts.map((c: any) => [c.id, c]));
+    const ordered = orderedContactIds.map(id => contactMap.get(id)).filter(Boolean);
+    // Add any contacts not in orderedContactIds at the end
+    const missing = contacts.filter((c: any) => !orderedContactIds.includes(c.id));
+    return [...ordered, ...missing];
+  }, [contacts, orderedContactIds]);
+
+  const filteredContacts = orderedContacts?.filter((contact: any) => {
     // Flag filters
     // DNC filter: show contact if ANY of its phones is marked DNC
     if (flagFilters.dnc && !contact.phones?.some((p: any) => !!p.dnc)) return false;
@@ -1306,9 +1398,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedContactIds} strategy={verticalListSortingStrategy}>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[28px] px-1" title="Drag to reorder"><GripVertical className="h-3.5 w-3.5 text-muted-foreground mx-auto" /></TableHead>
                   <TableHead className="w-[50px] text-center">
                     <Checkbox
                       checked={selectAll}
@@ -1351,7 +1446,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         : "hover:bg-muted/50";
                       
                       return (
-                        <TableRow key={`${contact.id}-${phoneIdx}`} className={`border-b ${rowBgClass} ${phoneIdx === 0 ? 'border-t-2 border-t-muted' : ''}`}>
+                        <SortableContactRow key={`${contact.id}-${phoneIdx}`} id={contact.id} phoneIdx={phoneIdx} phonesCount={contact.phones.length} rowBgClass={rowBgClass}>
                           {phoneIdx === 0 && (
                             <>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-middle">
@@ -1668,11 +1763,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               <FileText className="h-3.5 w-3.5 text-blue-600" />
                             </Button>
                           </TableCell>
-                        </TableRow>
+                        </SortableContactRow>
                       );
                     })
                   ) : (
                     <TableRow key={contact.id} className="hover:bg-muted/50 border-t-2 border-t-muted">
+                      <TableCell className="text-center align-middle px-1">
+                        <GripVertical className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                      </TableCell>
                       <TableCell className="text-center align-middle">
                         <Checkbox
                           checked={selectedContacts.has(contact.id)}
@@ -1746,6 +1844,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 ))}
               </TableBody>
             </Table>
+            </SortableContext>
+            </DndContext>
           </div>
 
           {/* Add Contact Section */}

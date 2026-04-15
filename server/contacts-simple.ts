@@ -4,7 +4,7 @@
  */
 
 import { getDb } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import {
   contacts,
   contactPhones,
@@ -55,11 +55,12 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
     return [];
   }
 
-  // Step 2: Get all contacts for this property
+  // Step 2: Get all contacts for this property, ordered by sortOrder
   const contactsList = await db
     .select()
     .from(contacts)
-    .where(eq(contacts.propertyId, propertyDbId));
+    .where(eq(contacts.propertyId, propertyDbId))
+    .orderBy(asc(contacts.sortOrder), asc(contacts.id));
 
 
 

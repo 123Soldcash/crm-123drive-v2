@@ -369,6 +369,7 @@ export const contacts = mysqlTable("contacts", {
   // Metadata
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(), // for drag-and-drop ordering
 });
 
 export type Contact = typeof contacts.$inferSelect;

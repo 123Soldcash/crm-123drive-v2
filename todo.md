@@ -3272,3 +3272,32 @@
 - [x] Update desk filter to resolve Twilio numbers assigned to the selected desk
 - [x] Filter calls by twilioNumber (from junction table) OR deskName field so historical calls are included
 - [x] Also populate the Desk column for historical calls based on twilioNumber-to-desk mapping
+
+## Drag-and-Drop Contact Reordering
+- [x] Add sortOrder column to contacts schema and push migration
+- [x] Install @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities
+- [x] Add reorderContacts tRPC procedure
+- [x] Update contacts query to sort by sortOrder (asc)
+- [x] Implement SortableContactRow component with GripVertical drag handle
+- [x] Wrap CallTrackingTable body with DndContext + SortableContext
+- [x] Persist new order to database on drag end via reorderContacts mutation
+- [x] 10 vitest tests passing for reorder logic
+
+## Remodel Chris Notes to Simple Notes List
+- [x] Analyze current Chris Notes field (schema, backend, frontend)
+- [x] Preserve existing tag-based notes in new layout (same noteType filter)
+- [x] Create simple notes UI: list format with date, time, text, delete button
+- [x] Backend unchanged - already supports add/remove notes with timestamps
+
+## Sync Relationship Field Options
+- [x] Create shared RELATIONSHIP_OPTIONS constant in client/src/lib/contactRelationships.ts
+- [x] Apply to ContactManagement (add + edit), ContactsSection (add + edit), CallTrackingTable
+
+## Review & Validate Desk-Based Call Routing
+- [x] Audit full Twilio voice webhook inbound routing logic
+- [x] Verify desk lookup from twilioNumberDesks junction table is correct
+- [x] Verify only users in matching desk(s) are rung
+- [x] Verify fallback behavior when no desk is assigned
+- [x] Fix matchedDeskNames scoping bug (was declared inside try block, moved outside)
+- [x] Add detailed logging for every step of desk routing
+- [x] Write comprehensive vitest tests for the routing flow (33 tests passing)
