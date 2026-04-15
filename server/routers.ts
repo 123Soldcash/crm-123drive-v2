@@ -15,7 +15,7 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks, smsMessages, callLogs } from "../drizzle/schema";
 import { eq, sql, and, isNull, desc, inArray } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -429,12 +429,144 @@ export const appRouter = router({
           });
         }
 
+        // ── Phone calls from communicationLog ─────────────────────────────
+        const callEntries = await dbInstance
+          .select({
+            id: communicationLog.id,
+            communicationType: communicationLog.communicationType,
+            direction: communicationLog.direction,
+            callResult: communicationLog.callResult,
+            twilioNumber: communicationLog.twilioNumber,
+            contactPhoneNumber: communicationLog.contactPhoneNumber,
+            notes: communicationLog.notes,
+            communicationDate: communicationLog.communicationDate,
+            userId: communicationLog.userId,
+            deskName: communicationLog.deskName,
+            needsCallback: communicationLog.needsCallback,
+            userName: users.name,
+          })
+          .from(communicationLog)
+          .leftJoin(users, eq(communicationLog.userId, users.id))
+          .where(
+            and(
+              eq(communicationLog.propertyId, input.propertyId),
+              eq(communicationLog.communicationType, "Phone")
+            )
+          )
+          .orderBy(desc(communicationLog.communicationDate));
+
+        for (const call of callEntries) {
+          const isInbound = call.direction === "Inbound";
+          const fromNum = isInbound ? (call.contactPhoneNumber || "Unknown") : (call.twilioNumber || "CRM");
+          const toNum = isInbound ? (call.twilioNumber || "CRM") : (call.contactPhoneNumber || "Unknown");
+          const isMissed = call.needsCallback === 1;
+          activities.push({
+            id: `call-${call.id}`,
+            type: 'call',
+            timestamp: call.communicationDate,
+            user: call.userName || 'Unknown User',
+            details: call.callResult || (isMissed ? 'Missed Call' : 'Call'),
+            metadata: {
+              direction: call.direction || 'Outbound',
+              from: fromNum,
+              to: toNum,
+              callResult: call.callResult,
+              deskName: call.deskName,
+              notes: call.notes,
+              isMissed,
+            },
+          });
+        }
+
+        // ── SMS messages from smsMessages (direct propertyId link) ──────────
+        const directSmsEntries = await dbInstance
+          .select()
+          .from(smsMessages)
+          .where(eq(smsMessages.propertyId, input.propertyId))
+          .orderBy(desc(smsMessages.createdAt));
+
+        const seenSmsIds = new Set<number>();
+        for (const sms of directSmsEntries) {
+          seenSmsIds.add(sms.id);
+          const isInbound = sms.direction === "inbound";
+          activities.push({
+            id: `sms-${sms.id}`,
+            type: 'sms',
+            timestamp: sms.createdAt,
+            user: sms.sentByName || (isInbound ? 'Contact' : 'Agent'),
+            details: sms.body ? (sms.body.length > 120 ? sms.body.substring(0, 120) + '…' : sms.body) : '',
+            metadata: {
+              direction: sms.direction,
+              from: isInbound ? sms.contactPhone : sms.twilioPhone,
+              to: isInbound ? sms.twilioPhone : sms.contactPhone,
+              status: sms.status,
+              fullBody: sms.body,
+              contactId: sms.contactId,
+            },
+          });
+        }
+
+        // ── SMS messages linked via contacts of this property (no direct propertyId) ──
+        // Find all contact phones for this property
+        const propertyContacts = await dbInstance
+          .select({ id: contacts.id })
+          .from(contacts)
+          .where(eq(contacts.propertyId, input.propertyId));
+
+        if (propertyContacts.length > 0) {
+          const contactIds = propertyContacts.map(c => c.id);
+          const contactPhonesRows = await dbInstance
+            .select({ phoneNumber: contactPhones.phoneNumber, contactId: contactPhones.contactId })
+            .from(contactPhones)
+            .where(inArray(contactPhones.contactId, contactIds));
+
+          if (contactPhonesRows.length > 0) {
+            const phoneNumbers = contactPhonesRows.map(cp => cp.phoneNumber);
+            // Build a map: phone → contactId
+            const phoneToContactId: Record<string, number> = {};
+            for (const cp of contactPhonesRows) {
+              phoneToContactId[cp.phoneNumber] = cp.contactId;
+            }
+
+            // Find SMS where contactPhone matches any of these phone numbers and no propertyId set
+            const linkedSmsEntries = await dbInstance
+              .select()
+              .from(smsMessages)
+              .where(
+                and(
+                  inArray(smsMessages.contactPhone, phoneNumbers),
+                  isNull(smsMessages.propertyId)
+                )
+              )
+              .orderBy(desc(smsMessages.createdAt));
+
+            for (const sms of linkedSmsEntries) {
+              if (seenSmsIds.has(sms.id)) continue;
+              seenSmsIds.add(sms.id);
+              const isInbound = sms.direction === "inbound";
+              activities.push({
+                id: `sms-${sms.id}`,
+                type: 'sms',
+                timestamp: sms.createdAt,
+                user: sms.sentByName || (isInbound ? 'Contact' : 'Agent'),
+                details: sms.body ? (sms.body.length > 120 ? sms.body.substring(0, 120) + '…' : sms.body) : '',
+                metadata: {
+                  direction: sms.direction,
+                  from: isInbound ? sms.contactPhone : sms.twilioPhone,
+                  to: isInbound ? sms.twilioPhone : sms.contactPhone,
+                  status: sms.status,
+                  fullBody: sms.body,
+                  contactId: sms.contactId || phoneToContactId[sms.contactPhone],
+                },
+              });
+            }
+          }
+        }
+
         // Sort by timestamp descending (most recent first)
         activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
         return activities;
       }),
-
     getStats: protectedProcedure.query(async ({ ctx }) => {
       const dbInstance = await db.getDb();
       if (!dbInstance) throw new Error("Database not available");
