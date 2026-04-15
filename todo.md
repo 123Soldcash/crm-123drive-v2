@@ -3281,3 +3281,9 @@
 - [x] Fix matchedDeskNames scoping bug (was declared inside try block, moved outside)
 - [x] Add detailed logging for every step of desk routing
 - [x] Write comprehensive vitest tests for the routing flow (33 tests passing)
+
+## Remodel Chris Notes to Simple Notes System
+- [x] Analyze current Chris Notes field (schema, backend, frontend)
+- [x] Preserve existing tag-based notes in new layout (same noteType filter)
+- [x] Create simple notes UI: list format with date, time, text, delete button
+- [x] Backend unchanged - already supports add/remove notes with timestamps
