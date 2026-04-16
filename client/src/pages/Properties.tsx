@@ -82,6 +82,7 @@ interface FilterState {
   leadSource: string;
   campaignName: string;
   propertyIdFilter: string;
+  city: string;
 }
 
 // Hardcoded fallback desk labels & colors (used before DB loads)
@@ -144,6 +145,7 @@ export default function Properties() {
       leadSource: "",
       campaignName: "",
       propertyIdFilter: "",
+      city: "",
     };
   });
 
@@ -251,6 +253,7 @@ export default function Properties() {
     deskName: (filters.deskName && filters.deskName !== "all" ? filters.deskName : undefined),
     dealStage: (filters.dealStage && filters.dealStage !== "all" ? filters.dealStage : undefined),
     propertyIdFilter: (filters.propertyIdFilter && !isNaN(Number(filters.propertyIdFilter)) ? Number(filters.propertyIdFilter) : undefined),
+    city: (filters.city && filters.city !== "all" ? filters.city : undefined),
     // Pagination
     page: currentPage,
     pageSize: PAGE_SIZE,
@@ -270,6 +273,9 @@ export default function Properties() {
 
   // Fetch campaign names for filter dropdown
   const { data: allCampaignNames = [] } = trpc.campaignName.list.useQuery();
+
+  // Fetch unique cities for city filter dropdown
+  const { data: allCities = [] } = trpc.properties.getCities.useQuery(undefined, { staleTime: 60_000 });
 
   // Fetch saved searches
   const { data: savedSearches = [] } = trpc.savedSearches.list.useQuery();
@@ -442,6 +448,7 @@ export default function Properties() {
       leadSource: "",
       campaignName: "",
       propertyIdFilter: "",
+      city: "",
     });
   };
 
@@ -454,7 +461,8 @@ export default function Properties() {
     (filters.tag ? 1 : 0) +
     (filters.leadSource ? 1 : 0) +
     (filters.campaignName ? 1 : 0) +
-    filters.statusTags.length;
+    filters.statusTags.length +
+    (filters.city ? 1 : 0);
 
   const handleSaveSearch = () => {
     if (!searchName.trim()) {
@@ -842,6 +850,26 @@ export default function Properties() {
                 {allCampaignNames.map((c: any) => (
                   <SelectItem key={c.id} value={c.name}>
                     {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* City Filter */}
+            <Select
+              value={filters.city || "all"}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, city: value === "all" ? "" : value }))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by City" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                <SelectItem value="all">All Cities</SelectItem>
+                {(allCities as string[]).map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
                   </SelectItem>
                 ))}
               </SelectContent>

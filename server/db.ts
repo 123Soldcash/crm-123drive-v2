@@ -145,6 +145,8 @@ export async function getProperties(filters?: {
   dealStage?: string;
   // Filter by exact property DB id
   propertyIdFilter?: number;
+  // Filter by city
+  city?: string;
 }) {
   const db = await getDb();
   if (!db) return { data: [], totalCount: 0 };
@@ -308,6 +310,10 @@ export async function getProperties(filters?: {
   if (filters?.propertyIdFilter) {
     conditions.push(eq(properties.id, filters.propertyIdFilter));
   }
+  // Filter by city (exact match)
+  if (filters?.city) {
+    conditions.push(eq(properties.city, filters.city));
+  }
 
   // Build the final query
   if (conditions.length > 0) {
@@ -352,6 +358,7 @@ export async function getPropertiesWithAgents(filters?: {
   deskName?: string;
   dealStage?: string;
   propertyIdFilter?: number;
+  city?: string;
 }) {
   // Simply call getProperties - the agent filtering logic is already there
   return await getProperties(filters);
@@ -2814,4 +2821,18 @@ export async function getTwilioNumberByCampaign(campaignName: string): Promise<s
     .where(and(eq(twilioNumbers.campaignName, campaignName), eq(twilioNumbers.isActive, 1)))
     .limit(1);
   return rows.length > 0 ? rows[0].phoneNumber : null;
+}
+
+/**
+ * Returns all unique city values from the properties table, sorted alphabetically.
+ * Used to populate the city filter dropdown in the Properties page.
+ */
+export async function getUniqueCities(): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const results = await db
+    .selectDistinct({ city: properties.city })
+    .from(properties)
+    .orderBy(properties.city);
+  return results.map(r => r.city).filter(Boolean);
 }

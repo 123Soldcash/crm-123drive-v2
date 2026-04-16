@@ -194,6 +194,8 @@ export const appRouter = router({
             dealStage: z.string().optional(),
             // Filter by exact property DB id
             propertyIdFilter: z.number().optional(),
+            // Filter by city
+            city: z.string().optional(),
           })
           .optional()
       )
@@ -283,6 +285,10 @@ export const appRouter = router({
       .input(z.object({ propertyId: z.number() }))
       .query(async ({ input }) => {
         return await db.getPropertyTags(input.propertyId);
+      }),
+    getCities: protectedProcedure
+      .query(async () => {
+        return await db.getUniqueCities();
       }),
     getAllTags: protectedProcedure
       .query(async () => {
