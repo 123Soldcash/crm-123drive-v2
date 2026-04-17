@@ -22,6 +22,7 @@ import { Phone, Mail, Plus, Edit2, Trash2, Eye, EyeOff, Clock, Search, Shield, S
 import { toast } from "sonner";
 import { TwilioBrowserCallButton } from "./TwilioBrowserCallButton";
 import { SMSChatButton } from "./SMSChatButton";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface ContactsSectionProps {
   propertyId: number;
@@ -66,6 +67,7 @@ interface CallHistoryEntry {
 
 export function ContactsSection({ propertyId }: ContactsSectionProps) {
   const utils = trpc.useUtils();
+  const { user } = useAuth();
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
@@ -104,6 +106,9 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
   const primaryTwilioNumber = property?.primaryTwilioNumber || null;
+  const propertyAddress = (property as any)?.addressLine1 || undefined;
+  const propertyCity = (property as any)?.city || undefined;
+  const agentName = user?.name || undefined;
 
   // Detect duplicate phones and emails across all contacts in this property
   const { duplicatePhones, duplicateEmails } = useMemo(() => {
@@ -464,6 +469,9 @@ export function ContactsSection({ propertyId }: ContactsSectionProps) {
                                     contactName={contact.name}
                                     contactId={contact.id}
                                     propertyId={propertyId}
+                                    propertyAddress={propertyAddress}
+                                    propertyCity={propertyCity}
+                                    agentName={agentName}
                                   />
                                 </>
                               )}

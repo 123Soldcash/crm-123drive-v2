@@ -33,6 +33,12 @@ interface SMSChatButtonProps {
   contactName?: string;
   contactId?: number;
   propertyId?: number;
+  /** Property address line 1 for {{address}} variable */
+  propertyAddress?: string;
+  /** Property city for {{city}} variable */
+  propertyCity?: string;
+  /** Logged-in agent name for {{agent}} variable */
+  agentName?: string;
   /** If true, show a compact icon-only button (default: true) */
   iconOnly?: boolean;
 }
@@ -88,6 +94,9 @@ export function SMSChatButton({
   contactName,
   contactId,
   propertyId,
+  propertyAddress,
+  propertyCity,
+  agentName,
   iconOnly = true,
 }: SMSChatButtonProps) {
   const [open, setOpen] = useState(false);
@@ -112,10 +121,28 @@ export function SMSChatButton({
     { enabled: open, staleTime: 60_000 }
   );
 
-  /** Apply a template — substitute {{ownerName}} and {{address}} if available */
+  /** Apply a template — substitute all known variables with real data */
   function applyTemplate(body: string) {
     let text = body;
-    if (contactName) text = text.replace(/\{\{ownerName\}\}/gi, contactName);
+    // Contact name: {{name}}, {{ownerName}}, {{contactName}}
+    if (contactName) {
+      text = text.replace(/\{\{name\}\}/gi, contactName);
+      text = text.replace(/\{\{ownerName\}\}/gi, contactName);
+      text = text.replace(/\{\{contactName\}\}/gi, contactName);
+    }
+    // Property address: {{address}}
+    if (propertyAddress) {
+      text = text.replace(/\{\{address\}\}/gi, propertyAddress);
+    }
+    // Property city: {{city}}
+    if (propertyCity) {
+      text = text.replace(/\{\{city\}\}/gi, propertyCity);
+    }
+    // Agent name: {{agent}}, {{agentName}}
+    if (agentName) {
+      text = text.replace(/\{\{agent\}\}/gi, agentName);
+      text = text.replace(/\{\{agentName\}\}/gi, agentName);
+    }
     setMessage(text);
     setTemplatePickerOpen(false);
     setTemplateSearch("");
@@ -433,6 +460,24 @@ export function SMSChatButton({
                       className="w-full text-xs px-2 py-1.5 rounded border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-400"
                       autoFocus
                     />
+                    {/* Auto-fill status: show which variables will be replaced */}
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        contactName ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {contactName ? `✓ {{name}} → ${contactName.split(' ')[0]}` : '✗ {{name}} missing'}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        propertyAddress ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {propertyAddress ? `✓ {{address}}` : '✗ {{address}} missing'}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        agentName ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {agentName ? `✓ {{agent}} → ${agentName.split(' ')[0]}` : '✗ {{agent}} missing'}
+                      </span>
+                    </div>
                   </div>
                   <div className="max-h-72 overflow-y-auto">
                     {filteredTemplates.length === 0 ? (

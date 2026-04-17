@@ -67,6 +67,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { SMSChatButton } from "./SMSChatButton";
 import { CallModal } from "./CallModal";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ContactEditModal } from "./ContactEditModal";
 import { ContactNotesDialog } from "./ContactNotesDialog";
@@ -347,6 +348,10 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     { enabled: !!propertyId && !isNaN(propertyId) && propertyId > 0 }
   );
   const primaryTwilioNumber = propertyData?.primaryTwilioNumber || null;
+  const { user } = useAuth();
+  const propertyAddress = (propertyData as any)?.addressLine1 || undefined;
+  const propertyCity = (propertyData as any)?.city || undefined;
+  const agentName = user?.name || undefined;
 
   // Fetch available Twilio numbers for the Default Caller ID selector
   const { data: twilioNumbersList = [] } = trpc.twilio.listNumbers.useQuery({ activeOnly: true });
@@ -1629,6 +1634,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                     contactName={contact.name}
                                     contactId={contact.id}
                                     propertyId={propertyId}
+                                    propertyAddress={propertyAddress}
+                                    propertyCity={propertyCity}
+                                    agentName={agentName}
                                   />
                                 </>
                               )}
