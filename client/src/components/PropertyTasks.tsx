@@ -42,6 +42,21 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
     },
   });
 
+  const getDueDateBadge = (dueDate: string | Date | null, isDone: boolean) => {
+    if (!dueDate || isDone) return null;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    const diffDays = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
+    const label = due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+    if (diffDays < 0) return { label: `Overdue · ${label}`, className: "bg-red-100 text-red-700 border-red-200" };
+    if (diffDays === 0) return { label: "Today", className: "bg-amber-100 text-amber-700 border-amber-200" };
+    if (diffDays === 1) return { label: `Tomorrow · ${label}`, className: "bg-orange-100 text-orange-700 border-orange-200" };
+    return { label, className: "bg-slate-100 text-slate-600 border-slate-200" };
+  };
+
   const getPriorityColor = (priority: string, isDone: boolean) => {
     if (isDone) return "bg-emerald-50 text-emerald-500 border-emerald-100 opacity-60";
     switch (priority) {
@@ -210,12 +225,19 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                             {task.taskType}
                           </Badge>
                         </span>
-                        {task.dueDate && (
-                          <span className={`flex items-center gap-1 ${isDone ? "text-slate-300" : ""}`}>
-                            <Calendar className="h-2.5 w-2.5" />
-                            {new Date(task.dueDate).toLocaleDateString()}
-                          </span>
-                        )}
+                        {(() => {
+                          const badge = getDueDateBadge(task.dueDate, isDone);
+                          if (!badge) return null;
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] h-4 px-1.5 font-semibold flex items-center gap-0.5 ${badge.className}`}
+                            >
+                              <Calendar className="h-2.5 w-2.5" />
+                              {badge.label}
+                            </Badge>
+                          );
+                        })()}
                         {task.assignedToName && (
                           <span className={`flex items-center gap-1 ${isDone ? "text-slate-300" : ""}`}>
                             <User className="h-2.5 w-2.5" />
