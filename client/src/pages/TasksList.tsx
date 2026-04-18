@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Filter, Calendar, List, Search, Trash2, CheckCircle2, Circle, Clock, RotateCcw } from "lucide-react";
+import { Plus, Filter, Calendar, List, Search, Trash2, CheckCircle2, Circle, Clock, RotateCcw, AlertCircle } from "lucide-react";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -167,6 +167,10 @@ export function TasksList() {
   const pendingCount = filteredTasks.filter(t => t.status !== "Done").length;
   const doneCount = filteredTasks.filter(t => t.status === "Done").length;
 
+  // Quick filter counts (from all tasks, not filtered)
+  const overdueCount = tasks.filter(t => isOverdue(t)).length;
+  const todayCount = tasks.filter(t => isDueToday(t) && t.status !== "Done").length;
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
@@ -195,7 +199,7 @@ export function TasksList() {
                   </Button>
                 </Link>
               </div>
-              {/* Summary badges */}
+              {/* Summary badges + quick filters */}
               <div className="flex items-center gap-2 ml-2">
                 <Badge variant="secondary" className="bg-slate-100 text-slate-600">
                   {pendingCount} pending
@@ -203,6 +207,32 @@ export function TasksList() {
                 <Badge variant="secondary" className="bg-emerald-100 text-emerald-600">
                   {doneCount} done
                 </Badge>
+                {overdueCount > 0 && (
+                  <button
+                    onClick={() => setDateFilter(dateFilter === "overdue" ? "all" : "overdue")}
+                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                      dateFilter === "overdue"
+                        ? "bg-red-600 text-white border-red-600"
+                        : "bg-red-100 text-red-700 border-red-300 hover:bg-red-200"
+                    }`}
+                  >
+                    <AlertCircle className="w-3 h-3" />
+                    {overdueCount} Overdue
+                  </button>
+                )}
+                {todayCount > 0 && (
+                  <button
+                    onClick={() => setDateFilter(dateFilter === "today" ? "all" : "today")}
+                    className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                      dateFilter === "today"
+                        ? "bg-amber-500 text-white border-amber-500"
+                        : "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200"
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    {todayCount} Due Today
+                  </button>
+                )}
               </div>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)} className="bg-green-600 hover:bg-green-700">

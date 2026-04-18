@@ -183,6 +183,20 @@ function DashboardLayoutContent({
   // Global notification polling — fires toasts for new SMS and missed calls
   useNotificationPolling();
 
+  // Overdue tasks count badge
+  const { data: overdueTasksData } = trpc.tasks.list.useQuery(undefined, {
+    refetchInterval: 60_000, // poll every 60s
+    enabled: !!user,
+    select: (tasks) => ({
+      count: tasks.filter(t => {
+        if (t.status === "Done" || !t.dueDate) return false;
+        const d = new Date(t.dueDate);
+        return d < new Date() && d.toDateString() !== new Date().toDateString();
+      }).length,
+    }),
+  });
+  const overdueTasksCount = overdueTasksData?.count ?? 0;
+
   // Unread SMS count badge
   const { data: unreadSmsData } = trpc.sms.unreadCount.useQuery(undefined, {
     refetchInterval: 30_000, // poll every 30s
@@ -286,11 +300,21 @@ function DashboardLayoutContent({
                             {commBadgeCount > 9 ? "9+" : commBadgeCount}
                           </span>
                         )}
+                        {item.path === "/tasks/kanban" && overdueTasksCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                            {overdueTasksCount > 9 ? "9+" : overdueTasksCount}
+                          </span>
+                        )}
                       </div>
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.path === "/call-history" && commBadgeCount > 0 && !isCollapsed && (
                         <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
                           {commBadgeCount > 99 ? "99+" : commBadgeCount}
+                        </span>
+                      )}
+                      {item.path === "/tasks/kanban" && overdueTasksCount > 0 && !isCollapsed && (
+                        <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                          {overdueTasksCount > 99 ? "99+" : overdueTasksCount}
                         </span>
                       )}
                     </SidebarMenuButton>

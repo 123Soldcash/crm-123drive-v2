@@ -43,8 +43,29 @@ export function TasksKanban() {
     })
   );
 
-  const todoTasks = tasks.filter((t) => t.status === "To Do");
-  const inProgressTasks = tasks.filter((t) => t.status === "In Progress");
+  // Sort by urgency: overdue first, then today, then by due date asc, then no due date last
+  const sortByUrgency = (taskList: typeof tasks) => {
+    const now = new Date();
+    const todayStr = now.toDateString();
+    return [...taskList].sort((a, b) => {
+      const getScore = (t: typeof tasks[0]) => {
+        if (!t.dueDate) return 3; // no due date → last
+        const d = new Date(t.dueDate);
+        if (d.toDateString() === todayStr) return 1; // today → second
+        if (d < now) return 0; // overdue → first
+        return 2; // future → third
+      };
+      const scoreA = getScore(a);
+      const scoreB = getScore(b);
+      if (scoreA !== scoreB) return scoreA - scoreB;
+      // same urgency group → sort by date ascending
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      return 0;
+    });
+  };
+
+  const todoTasks = sortByUrgency(tasks.filter((t) => t.status === "To Do"));
+  const inProgressTasks = sortByUrgency(tasks.filter((t) => t.status === "In Progress"));
   const doneTasks = tasks.filter((t) => t.status === "Done");
 
   const handleDragStart = (event: DragStartEvent) => {
