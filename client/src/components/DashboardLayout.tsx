@@ -183,18 +183,21 @@ function DashboardLayoutContent({
   // Global notification polling — fires toasts for new SMS and missed calls
   useNotificationPolling();
 
-  // Overdue tasks count badge
-  const { data: overdueTasksData } = trpc.tasks.list.useQuery(undefined, {
-    refetchInterval: 60_000, // poll every 60s
-    enabled: !!user,
-    select: (tasks) => ({
-      count: tasks.filter(t => {
-        if (t.status === "Done" || !t.dueDate) return false;
-        const d = new Date(t.dueDate);
-        return d < new Date() && d.toDateString() !== new Date().toDateString();
-      }).length,
-    }),
-  });
+  // Overdue tasks count badge — always scoped to the logged-in user only
+  const { data: overdueTasksData } = trpc.tasks.list.useQuery(
+    { onlyMine: true },
+    {
+      refetchInterval: 60_000, // poll every 60s
+      enabled: !!user,
+      select: (tasks) => ({
+        count: tasks.filter(t => {
+          if (t.status === "Done" || !t.dueDate) return false;
+          const d = new Date(t.dueDate);
+          return d < new Date() && d.toDateString() !== new Date().toDateString();
+        }).length,
+      }),
+    }
+  );
   const overdueTasksCount = overdueTasksData?.count ?? 0;
 
   // Unread SMS count badge

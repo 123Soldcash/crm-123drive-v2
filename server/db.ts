@@ -2232,6 +2232,15 @@ export async function getTasks(filters?: {
   if (filters?.hidden !== undefined) {
     conditions.push(eq(tasks.hidden, filters.hidden));
   }
+  // Filter by userId: show tasks assigned to OR created by this user
+  if (filters?.userId !== undefined) {
+    conditions.push(
+      or(
+        eq(tasks.assignedToId, filters.userId),
+        eq(tasks.createdById, filters.userId)
+      )
+    );
+  }
   
   // Alias for assigned user and creator user joins
   const assignedUser = aliasedTable(users, 'assignedUser');

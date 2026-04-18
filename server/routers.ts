@@ -3373,17 +3373,21 @@ export const appRouter = router({
           overdue: z.boolean().optional(),
           dueToday: z.boolean().optional(),
           upcoming: z.boolean().optional(),
+          // When true, always filter by the logged-in user regardless of role
+          onlyMine: z.boolean().optional(),
         }).optional()
       )
       .query(async ({ input, ctx }) => {
-        // Non-admin users only see their assigned tasks
+        const { onlyMine, ...rest } = input ?? {};
+        // Non-admin users always see only their own tasks
+        // Admins see all tasks unless onlyMine=true (used by sidebar badge)
+        const forceUserFilter = onlyMine || ctx.user?.role !== 'admin';
         const filters = {
-          ...input,
-          userId: ctx.user?.role === 'admin' ? undefined : ctx.user?.id,
+          ...rest,
+          userId: forceUserFilter ? ctx.user?.id : undefined,
         };
         return await db.getTasks(filters);
       }),
-
     byId: protectedProcedure
       .input(z.object({ taskId: z.number() }))
       .query(async ({ input }) => {
