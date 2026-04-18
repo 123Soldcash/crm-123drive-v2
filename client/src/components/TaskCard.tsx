@@ -17,6 +17,7 @@ interface Task {
   dueTime?: string | null;
   repeatTask?: string | null;
   assignedToName?: string | null;
+  createdByName?: string | null;
   propertyId?: number | null;
   propertyAddress?: string | null;
   propertyCity?: string | null;
@@ -173,27 +174,41 @@ export function TaskCard({ task }: TaskCardProps) {
         </Link>
       )}
 
-      {/* Assigned To — explicit, prominent */}
-      {task.assignedToName && (
-        <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md ${
-          isDone ? "bg-emerald-50 border border-emerald-100" : "bg-blue-50 border border-blue-100"
-        }`}>
-          {/* Avatar with initials */}
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-            isDone ? "bg-emerald-200 text-emerald-700" : "bg-blue-200 text-blue-700"
+      {/* Assigned To / Created By — explicit, prominent */}
+      {(() => {
+        const displayName = task.assignedToName || task.createdByName;
+        const label = task.assignedToName ? "Assigned to" : task.createdByName ? "Created by" : null;
+        if (!displayName || !label) return null;
+        const initials = displayName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
+        const isAssigned = !!task.assignedToName;
+        return (
+          <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md ${
+            isDone
+              ? "bg-emerald-50 border border-emerald-100"
+              : isAssigned
+              ? "bg-blue-50 border border-blue-100"
+              : "bg-slate-50 border border-slate-200"
           }`}>
-            {task.assignedToName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()}
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+              isDone
+                ? "bg-emerald-200 text-emerald-700"
+                : isAssigned
+                ? "bg-blue-200 text-blue-700"
+                : "bg-slate-200 text-slate-600"
+            }`}>
+              {initials}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className={`text-[10px] font-medium uppercase tracking-wide ${
+                isDone ? "text-emerald-500" : isAssigned ? "text-blue-500" : "text-slate-400"
+              }`}>{label}</span>
+              <span className={`text-xs font-semibold truncate ${
+                isDone ? "text-emerald-600" : isAssigned ? "text-blue-700" : "text-slate-600"
+              }`}>{displayName}</span>
+            </div>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className={`text-[10px] font-medium uppercase tracking-wide ${
-              isDone ? "text-emerald-500" : "text-blue-500"
-            }`}>Assigned to</span>
-            <span className={`text-xs font-semibold truncate ${
-              isDone ? "text-emerald-600" : "text-blue-700"
-            }`}>{task.assignedToName}</span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
