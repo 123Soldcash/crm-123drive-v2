@@ -1,8 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, User, Phone, Mail, Home, Search, FileText, MessageSquare, Handshake, FileCheck, ClipboardCheck, MoreHorizontal, Send, Image, UserSearch, UserPlus, Repeat, CheckCircle2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Calendar, MapPin, User, Phone, Mail, Home, Search, FileText, MessageSquare, Handshake, FileCheck, ClipboardCheck, MoreHorizontal, Send, Image, UserSearch, UserPlus, Repeat, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { formatDistanceToNow, format, isToday, isTomorrow, isPast } from "date-fns";
 import { Link } from "wouter";
 
 interface Task {
@@ -71,9 +71,18 @@ export function TaskCard({ task }: TaskCardProps) {
 
   const Icon = taskTypeIcons[task.taskType] || FileText;
 
-  // Calculate if task is overdue
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isDone;
-  const isDueToday = task.dueDate && new Date(task.dueDate).toDateString() === new Date().toDateString();
+  // Calculate due date status
+  const dueDateObj = task.dueDate ? new Date(task.dueDate) : null;
+  const isOverdue = dueDateObj && isPast(dueDateObj) && !isToday(dueDateObj) && !isDone;
+  const isDueToday = dueDateObj && isToday(dueDateObj) && !isDone;
+  const isDueTomorrow = dueDateObj && isTomorrow(dueDateObj) && !isDone;
+
+  // Format the due date label
+  const formatDueDate = (date: Date) => {
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    return format(date, "MMM d");
+  };
 
   return (
     <div
@@ -109,6 +118,30 @@ export function TaskCard({ task }: TaskCardProps) {
         </div>
       </div>
 
+      {/* Due Date Badge — shown prominently below the header */}
+      {dueDateObj && !isDone && (
+        <div className="mb-2">
+          <span
+            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+              isOverdue
+                ? "bg-red-100 text-red-700 border border-red-300"
+                : isDueToday
+                ? "bg-amber-100 text-amber-700 border border-amber-300"
+                : isDueTomorrow
+                ? "bg-orange-50 text-orange-600 border border-orange-200"
+                : "bg-gray-100 text-gray-600 border border-gray-200"
+            }`}
+          >
+            {isOverdue ? (
+              <AlertCircle className="w-3 h-3" />
+            ) : (
+              <Clock className="w-3 h-3" />
+            )}
+            {isOverdue ? `Overdue · ${formatDueDate(dueDateObj)}` : formatDueDate(dueDateObj)}
+          </span>
+        </div>
+      )}
+
       {/* Task Title */}
       <h3 className={`font-semibold mb-2 line-clamp-2 ${
         isDone
@@ -141,22 +174,24 @@ export function TaskCard({ task }: TaskCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-        {/* Due Date */}
+        {/* Due Date — footer shows relative time */}
         {task.dueDate && (
           <div className="flex items-center gap-1 text-xs">
-            <Calendar className="w-3 h-3" />
+            <Calendar className="w-3 h-3 text-gray-400" />
             <span
               className={
                 isDone
                   ? "text-emerald-400"
                   : isOverdue
-                  ? "text-red-600 font-semibold"
+                  ? "text-red-500"
                   : isDueToday
-                  ? "text-yellow-600 font-semibold"
-                  : "text-gray-500"
+                  ? "text-amber-600"
+                  : "text-gray-400"
               }
             >
-              {isDone ? "Completed" : formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
+              {isDone
+                ? "Completed"
+                : formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
             </span>
           </div>
         )}

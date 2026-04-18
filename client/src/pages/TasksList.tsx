@@ -432,20 +432,23 @@ export function TasksList() {
                       <td className="px-4 py-3">
                         {task.dueDate ? (
                           <span
-                            className={
+                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
                               isDone
-                                ? "text-gray-300"
+                                ? "bg-gray-100 text-gray-400"
                                 : isOverdue(task)
-                                ? "text-red-600 font-semibold"
+                                ? "bg-red-100 text-red-700 border border-red-300"
                                 : isDueToday(task)
-                                ? "text-yellow-600 font-semibold"
-                                : "text-gray-700"
-                            }
+                                ? "bg-amber-100 text-amber-700 border border-amber-300"
+                                : "bg-gray-100 text-gray-600 border border-gray-200"
+                            }`}
                           >
+                            <Calendar className="w-3 h-3" />
                             {format(new Date(task.dueDate), "MMM d, yyyy")}
+                            {!isDone && isOverdue(task) && " · Overdue"}
+                            {!isDone && isDueToday(task) && " · Today"}
                           </span>
                         ) : (
-                          <span className="text-gray-400">No due date</span>
+                          <span className="text-gray-400 text-xs">No due date</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
