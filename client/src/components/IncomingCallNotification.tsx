@@ -57,6 +57,11 @@ export function IncomingCallNotification() {
   // Debounce token refresh
   const lastInitTimeRef = useRef(0);
 
+  // Heartbeat mutation — called every 30s when Device is registered
+  const heartbeatMutation = trpc.twilio.heartbeat.useMutation();
+  const goOfflineMutation = trpc.twilio.goOffline.useMutation();
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Fetch access token for Twilio Device SDK
   const { data: tokenData, refetch: refetchToken } = trpc.twilio.getAccessToken.useQuery(
     undefined,
@@ -199,6 +204,12 @@ export function IncomingCallNotification() {
         deviceRef.current = device;
         if (mountedRef.current) setDeviceReady(true);
         initializingRef.current = false;
+        // Start heartbeat: send immediately, then every 30 seconds
+        heartbeatMutation.mutate();
+        if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = setInterval(() => {
+          if (mountedRef.current) heartbeatMutation.mutate();
+        }, 30_000);
       });
 
       device.on("error", (error: any) => {
@@ -212,6 +223,12 @@ export function IncomingCallNotification() {
         console.log("[IncomingCall] Device unregistered");
         if (mountedRef.current) setDeviceReady(false);
         initializingRef.current = false;
+        // Stop heartbeat and mark user as offline
+        if (heartbeatIntervalRef.current) {
+          clearInterval(heartbeatIntervalRef.current);
+          heartbeatIntervalRef.current = null;
+        }
+        if (mountedRef.current) goOfflineMutation.mutate();
       });
 
       device.on("tokenWillExpire", () => {
@@ -274,6 +291,12 @@ export function IncomingCallNotification() {
     return () => {
       mountedRef.current = false;
       initializingRef.current = false;
+      // Stop heartbeat and mark offline on unmount
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
+      goOfflineMutation.mutate();
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current);
         durationIntervalRef.current = null;

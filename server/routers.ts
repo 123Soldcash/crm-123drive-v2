@@ -3830,6 +3830,50 @@ export const appRouter = router({
     }),
 
     /**
+     * Heartbeat: called every 30 seconds by the frontend when the Twilio Device is registered.
+     * Upserts a userSessions row to mark the user as online.
+     * The inbound call router uses this to ring only users with a recent heartbeat.
+     */
+    heartbeat: protectedProcedure.mutation(async ({ ctx }) => {
+      const { userSessions } = await import("../drizzle/schema");
+      const database = await getDb();
+      if (!database) return { ok: false };
+      const existing = await database
+        .select({ id: userSessions.id })
+        .from(userSessions)
+        .where(eq(userSessions.userId, ctx.user.id))
+        .limit(1);
+      if (existing.length > 0) {
+        await database
+          .update(userSessions)
+          .set({ isOnline: 1, lastHeartbeat: new Date() })
+          .where(eq(userSessions.userId, ctx.user.id));
+      } else {
+        await database.insert(userSessions).values({
+          userId: ctx.user.id,
+          isOnline: 1,
+          lastHeartbeat: new Date(),
+        });
+      }
+      return { ok: true };
+    }),
+
+    /**
+     * Go offline: called when the Twilio Device unregisters (browser tab closes, logout).
+     * Marks the user as offline so inbound calls skip them.
+     */
+    goOffline: protectedProcedure.mutation(async ({ ctx }) => {
+      const { userSessions } = await import("../drizzle/schema");
+      const database = await getDb();
+      if (!database) return { ok: false };
+      await database
+        .update(userSessions)
+        .set({ isOnline: 0 })
+        .where(eq(userSessions.userId, ctx.user.id));
+      return { ok: true };
+    }),
+
+    /**
      * Initiate an outbound call via the Twilio REST API.
      */
     makeCall: protectedProcedure

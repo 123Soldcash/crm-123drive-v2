@@ -22,8 +22,24 @@
  *   /api/twilio/connect   — TwiML to bridge calls to destination
  *   /api/twilio/answered  — TwiML when call is answered (no <Dial>)
  *   /api/twilio/status    — Call status callback (returns empty TwiML)
+ *
+ * INBOUND CALL ROUTING LOGIC (updated):
+ *   1. Identify the Twilio number that received the call (by "To" param)
+ *   2. Only consider ACTIVE Twilio numbers (isActive = 1)
+ *   3. Look up which desks are assigned to that number via twilioNumberDesks
+ *   4. Find users assigned to those desks via userDesks
+ *   5. Filter to users who are BOTH:
+ *      a. status = "Active" (account not suspended/inactive)
+ *      b. Have a userSessions row with isOnline = 1 AND lastHeartbeat within 90 seconds
+ *         (meaning their browser is open and their Twilio Device is registered)
+ *   6. If no desk is assigned to the number → play voicemail (do NOT ring all users)
+ *   7. If desk is assigned but no users are online → play voicemail
+ *   8. Error fallback → play voicemail (do NOT hardcode crm-user-1)
  */
 import type { Express } from "express";
+
+// Session timeout: users must have sent a heartbeat within this many ms to be considered online
+const SESSION_TIMEOUT_MS = 90_000; // 90 seconds
 
 /**
  * Register all Twilio webhook endpoints.
@@ -39,7 +55,7 @@ export function registerTwilioWebhooks(app: Express) {
   //
   // INBOUND: External caller dials a registered Twilio number
   //   → Direction is missing or "inbound", To is the Twilio number
-  //   → Returns <Dial> with <Client> tags to ring all logged-in CRM users
+  //   → Returns <Dial> with <Client> tags to ring desk-matched online users
   app.all("/api/twilio/voice", async (req, res) => {
     try {
       const to = req.body?.To || req.query?.To;
@@ -54,8 +70,6 @@ export function registerTwilioWebhooks(app: Express) {
       const VoiceResponse = twilio.default.twiml.VoiceResponse;
 
       // Determine if this is an OUTBOUND call (from browser) or INBOUND call (from external caller)
-      // Outbound: The "To" param is a phone number the agent wants to call
-      // Inbound: The "To" param is one of our registered Twilio numbers
       const isOutbound = callerPhone || (to && !from?.startsWith("client:") && direction === "outbound-api");
       const isFromBrowserClient = from?.startsWith("client:");
 
@@ -79,111 +93,158 @@ export function registerTwilioWebhooks(app: Express) {
         // Shared state accessible across try blocks
         let matchedDeskNames: string[] = [];
 
-        // Get all active CRM users to ring them
-        // We ring all users with identity pattern "crm-user-{id}"
         try {
           const { getDb } = await import("./db");
-          const { users: usersTable, twilioNumbers: twilioNumbersTable, twilioNumberDesks, userDesks, desks: desksTable } = await import("../drizzle/schema");
-          const { eq, and, inArray } = await import("drizzle-orm");
+          const {
+            users: usersTable,
+            twilioNumbers: twilioNumbersTable,
+            twilioNumberDesks,
+            userDesks,
+            desks: desksTable,
+            userSessions,
+          } = await import("../drizzle/schema");
+          const { eq, and, inArray, gte } = await import("drizzle-orm");
           const database = await getDb();
 
-
-          if (database) {
-            // ─── DESK-BASED ROUTING ───
-            // 1. Find the Twilio number record by matching the "to" phone number
-            // 2. Look up which desks are assigned to that number
-            // 3. Find users assigned to those desks
-            // 4. Ring only those users (or all active users if no desk is assigned)
-            let usersToRing: { id: number }[] = [];
-
-            // Normalize the called number for matching
-            const calledNumber = to ? (to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`) : "";
-            const calledDigits = calledNumber.replace(/\D/g, "");
-
-            // Find the Twilio number record
-            const allTwilioNumbers = await database.select().from(twilioNumbersTable);
-            const matchedTwilioNumber = allTwilioNumbers.find((tn) => {
-              const tnDigits = tn.phoneNumber.replace(/\D/g, "");
-              return tnDigits === calledDigits || tn.phoneNumber === calledNumber;
-            });
-
-            let deskIds: number[] = [];
-            if (matchedTwilioNumber) {
-              // Get desks assigned to this Twilio number
-              const numberDeskRows = await database
-                .select({ deskId: twilioNumberDesks.deskId })
-                .from(twilioNumberDesks)
-                .where(eq(twilioNumberDesks.twilioNumberId, matchedTwilioNumber.id));
-              deskIds = numberDeskRows.map(r => r.deskId);
-              console.log(`[Twilio Voice] Matched Twilio number ID ${matchedTwilioNumber.id} (${matchedTwilioNumber.label}), desks: [${deskIds.join(", ")}]`);
-
-              // Resolve desk names for logging
-              if (deskIds.length > 0) {
-                const deskRows = await database
-                  .select({ id: desksTable.id, name: desksTable.name, description: desksTable.description })
-                  .from(desksTable)
-                  .where(inArray(desksTable.id, deskIds));
-                matchedDeskNames = deskRows.map(d => d.description || d.name);
-              }
-            }
-
-            if (deskIds.length > 0) {
-              // Find users assigned to these desks
-              const userDeskRows = await database
-                .select({ userId: userDesks.userId })
-                .from(userDesks)
-                .where(inArray(userDesks.deskId, deskIds));
-              const deskUserIds = Array.from(new Set(userDeskRows.map(r => r.userId)));
-
-              if (deskUserIds.length > 0) {
-                // Only ring active users that are in the matching desks
-                usersToRing = await database
-                  .select({ id: usersTable.id })
-                  .from(usersTable)
-                  .where(and(eq(usersTable.status, "Active"), inArray(usersTable.id, deskUserIds)));
-                console.log(`[Twilio Voice] Desk routing: ${usersToRing.length} users in desks [${deskIds.join(", ")}]`);
-              }
-            }
-
-            // Fallback: if no desk routing or no users found in desks, ring all active users
-            if (usersToRing.length === 0) {
-              usersToRing = await database
-                .select({ id: usersTable.id })
-                .from(usersTable)
-                .where(eq(usersTable.status, "Active"));
-              console.log(`[Twilio Voice] No desk routing — ringing all ${usersToRing.length} active users`);
-            }
-
-            if (usersToRing.length > 0) {
-              // Ring the selected users simultaneously with a 30-second timeout
-              // The first user to accept gets the call
-              const dial = response.dial({
-                callerId: from, // Show the external caller's number
-                timeout: 30,
-                action: "/api/twilio/inbound-status",
-                method: "POST",
-              });
-
-              for (const user of usersToRing) {
-                dial.client(`crm-user-${user.id}`);
-              }
-
-              console.log(`[Twilio Voice] Ringing ${usersToRing.length} CRM users for inbound call from ${from}`);
-            } else {
-              // No active users — send to voicemail message
-              response.say("Thank you for calling. No agents are currently available. Please try again later.");
-              response.hangup();
-              console.log("[Twilio Voice] No active users found, playing unavailable message");
-            }
-          } else {
+          if (!database) {
+            console.error("[Twilio Voice] No database connection for inbound call routing");
             response.say("System is temporarily unavailable. Please try again later.");
             response.hangup();
+            res.set("Content-Type", "text/xml");
+            res.send(response.toString());
+            return;
           }
+
+          // ─── STEP 1: Find the Twilio number record (ACTIVE numbers only) ───
+          const calledNumber = to ? (to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`) : "";
+          const calledDigits = calledNumber.replace(/\D/g, "");
+
+          const allActiveTwilioNumbers = await database
+            .select()
+            .from(twilioNumbersTable)
+            .where(eq(twilioNumbersTable.isActive, 1));
+
+          const matchedTwilioNumber = allActiveTwilioNumbers.find((tn) => {
+            const tnDigits = tn.phoneNumber.replace(/\D/g, "");
+            return tnDigits === calledDigits || tn.phoneNumber === calledNumber;
+          });
+
+          if (!matchedTwilioNumber) {
+            console.warn(`[Twilio Voice] No active Twilio number found for "${to}" — playing voicemail`);
+            response.say("Thank you for calling. This number is not currently in service. Please try again later.");
+            response.hangup();
+            res.set("Content-Type", "text/xml");
+            res.send(response.toString());
+            return;
+          }
+
+          console.log(`[Twilio Voice] Matched active Twilio number ID ${matchedTwilioNumber.id} (${matchedTwilioNumber.label})`);
+
+          // ─── STEP 2: Find desks assigned to this Twilio number ───
+          const numberDeskRows = await database
+            .select({ deskId: twilioNumberDesks.deskId })
+            .from(twilioNumberDesks)
+            .where(eq(twilioNumberDesks.twilioNumberId, matchedTwilioNumber.id));
+
+          const deskIds = numberDeskRows.map(r => r.deskId);
+
+          if (deskIds.length === 0) {
+            // No desk assigned to this number — do NOT ring all users, play voicemail
+            console.warn(`[Twilio Voice] Twilio number ${matchedTwilioNumber.phoneNumber} has no desk assigned — playing voicemail`);
+            response.say("Thank you for calling. No team is currently assigned to this line. Please try again later.");
+            response.hangup();
+            res.set("Content-Type", "text/xml");
+            res.send(response.toString());
+            return;
+          }
+
+          // Resolve desk names for logging
+          const deskRows = await database
+            .select({ id: desksTable.id, name: desksTable.name, description: desksTable.description })
+            .from(desksTable)
+            .where(inArray(desksTable.id, deskIds));
+          matchedDeskNames = deskRows.map(d => d.description || d.name);
+          console.log(`[Twilio Voice] Desks for this number: [${matchedDeskNames.join(", ")}]`);
+
+          // ─── STEP 3: Find users assigned to these desks ───
+          const userDeskRows = await database
+            .select({ userId: userDesks.userId })
+            .from(userDesks)
+            .where(inArray(userDesks.deskId, deskIds));
+
+          const deskUserIds = Array.from(new Set(userDeskRows.map(r => r.userId)));
+
+          if (deskUserIds.length === 0) {
+            console.warn(`[Twilio Voice] No users assigned to desks [${deskIds.join(", ")}] — playing voicemail`);
+            response.say("Thank you for calling. No agents are currently assigned to this team. Please try again later.");
+            response.hangup();
+            res.set("Content-Type", "text/xml");
+            res.send(response.toString());
+            return;
+          }
+
+          // ─── STEP 4: Filter to users who are Active AND have an active session ───
+          // Active session = isOnline = 1 AND lastHeartbeat within SESSION_TIMEOUT_MS
+          const sessionCutoff = new Date(Date.now() - SESSION_TIMEOUT_MS);
+
+          const activeUsers = await database
+            .select({ id: usersTable.id })
+            .from(usersTable)
+            .where(and(
+              eq(usersTable.status, "Active"),
+              inArray(usersTable.id, deskUserIds)
+            ));
+
+          const activeUserIds = activeUsers.map(u => u.id);
+
+          // Check which of these users have a live heartbeat
+          let onlineUserIds: number[] = [];
+          if (activeUserIds.length > 0) {
+            const onlineSessions = await database
+              .select({ userId: userSessions.userId })
+              .from(userSessions)
+              .where(and(
+                eq(userSessions.isOnline, 1),
+                gte(userSessions.lastHeartbeat, sessionCutoff),
+                inArray(userSessions.userId, activeUserIds)
+              ));
+            onlineUserIds = onlineSessions.map(s => s.userId);
+          }
+
+          console.log(`[Twilio Voice] Desk users: ${deskUserIds.length} | Active: ${activeUserIds.length} | Online (heartbeat): ${onlineUserIds.length}`);
+
+          if (onlineUserIds.length === 0) {
+            // No online users in the correct desk — play voicemail
+            console.warn(`[Twilio Voice] No online agents for desks [${matchedDeskNames.join(", ")}] — playing voicemail`);
+            response.say("Thank you for calling. All agents are currently unavailable. Please try again later.");
+            response.hangup();
+            res.set("Content-Type", "text/xml");
+            res.send(response.toString());
+            return;
+          }
+
+          // ─── STEP 5: Ring the online desk users simultaneously ───
+          const dial = response.dial({
+            callerId: from, // Show the external caller's number
+            timeout: 30,
+            action: "/api/twilio/inbound-status",
+            method: "POST",
+          });
+
+          for (const userId of onlineUserIds) {
+            dial.client(`crm-user-${userId}`);
+          }
+
+          console.log(`[Twilio Voice] Ringing ${onlineUserIds.length} online CRM users for inbound call from ${from} (desks: ${matchedDeskNames.join(", ")})`);
+
         } catch (dbError) {
-          console.error("[Twilio Voice] Error fetching users for inbound call:", dbError);
-          // Fallback: ring a default client identity
-          const dial = response.dial({ callerId: from, timeout: 30 });
-          dial.client("crm-user-1");
+          // ─── SAFE ERROR FALLBACK: play voicemail, do NOT hardcode a user ───
+          console.error("[Twilio Voice] Error during desk-based routing:", dbError);
+          response.say("We're sorry, we encountered a technical issue. Please try again later.");
+          response.hangup();
+          res.set("Content-Type", "text/xml");
+          res.send(response.toString());
+          return;
         }
 
         // Set primary Twilio number on PROPERTIES where the caller is a contact
@@ -284,7 +345,7 @@ export function registerTwilioWebhooks(app: Express) {
     } catch (error) {
       console.error("[Twilio Voice] Error:", error);
       res.set("Content-Type", "text/xml");
-      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred.</Say></Response>');
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred. Please try again later.</Say></Response>');
     }
   });
 
@@ -340,7 +401,8 @@ export function registerTwilioWebhooks(app: Express) {
   app.all("/api/twilio/inbound-status", async (req, res) => {
     const dialCallStatus = req.body?.DialCallStatus || req.query?.DialCallStatus || "unknown";
     const callSid = req.body?.CallSid || req.query?.CallSid || "unknown";
-    console.log("[Twilio Inbound Status] DialCallStatus:", dialCallStatus, "SID:", callSid);
+    const parentCallSid = req.body?.ParentCallSid || req.query?.ParentCallSid || "";
+    console.log("[Twilio Inbound Status] DialCallStatus:", dialCallStatus, "SID:", callSid, "ParentSID:", parentCallSid);
 
     const twilio = await import("twilio");
     const VoiceResponse = twilio.default.twiml.VoiceResponse;
@@ -351,32 +413,55 @@ export function registerTwilioWebhooks(app: Express) {
       response.say("We're sorry, no agents are available right now. Please try again later.");
       response.hangup();
 
-      // Flag the most recent inbound call log entry for this CallSid as needsCallback
+      // Flag the inbound call log entry for this CallSid as needsCallback
+      // Use CallSid matching (not "most recent") to avoid race conditions with concurrent calls
       try {
         const { getDb } = await import("./db");
         const { communicationLog } = await import("../drizzle/schema");
-        const { eq, and, desc } = await import("drizzle-orm");
+        const { eq, and, desc, like } = await import("drizzle-orm");
         const database = await getDb();
         if (database) {
-          // Find the inbound call log entry by CallSid in notes
-          const recent = await database
+          // Match by CallSid stored in the notes field
+          const sidToMatch = parentCallSid || callSid;
+          const matchedRows = await database
             .select({ id: communicationLog.id })
             .from(communicationLog)
             .where(
               and(
                 eq(communicationLog.direction, "Inbound"),
-                eq(communicationLog.communicationType, "Phone")
+                eq(communicationLog.communicationType, "Phone"),
+                like(communicationLog.notes, `%${sidToMatch}%`)
               )
             )
             .orderBy(desc(communicationLog.createdAt))
-            .limit(5);
-          // Mark the most recent inbound call as needing callback
-          if (recent.length > 0) {
+            .limit(1);
+
+          if (matchedRows.length > 0) {
             await database
               .update(communicationLog)
               .set({ needsCallback: 1 })
-              .where(eq(communicationLog.id, recent[0].id));
-            console.log(`[Twilio Inbound Status] Flagged call ${recent[0].id} as needsCallback (${dialCallStatus})`);
+              .where(eq(communicationLog.id, matchedRows[0].id));
+            console.log(`[Twilio Inbound Status] Flagged call ${matchedRows[0].id} as needsCallback (${dialCallStatus}) via CallSid ${sidToMatch}`);
+          } else {
+            // Fallback: flag the most recent inbound call if no SID match
+            const recent = await database
+              .select({ id: communicationLog.id })
+              .from(communicationLog)
+              .where(
+                and(
+                  eq(communicationLog.direction, "Inbound"),
+                  eq(communicationLog.communicationType, "Phone")
+                )
+              )
+              .orderBy(desc(communicationLog.createdAt))
+              .limit(1);
+            if (recent.length > 0) {
+              await database
+                .update(communicationLog)
+                .set({ needsCallback: 1 })
+                .where(eq(communicationLog.id, recent[0].id));
+              console.log(`[Twilio Inbound Status] Flagged most recent call ${recent[0].id} as needsCallback (fallback)`);
+            }
           }
         }
       } catch (cbErr) {
@@ -435,7 +520,7 @@ export function registerTwilioWebhooks(app: Express) {
         });
         console.log("[Twilio SMS Inbound] Saved inbound message from", from);
       }
-      // Return empty TwiML so Twilio doesn’t auto-reply
+      // Return empty TwiML so Twilio doesn't auto-reply
       res.set("Content-Type", "text/xml");
       res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
     } catch (error) {

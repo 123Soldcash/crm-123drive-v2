@@ -1710,3 +1710,19 @@ export const userDesks = mysqlTable("userDesks", {
 });
 export type UserDesk = typeof userDesks.$inferSelect;
 export type InsertUserDesk = typeof userDesks.$inferInsert;
+
+// ─── User Sessions (Twilio Device Heartbeat) ─────────────────────────────────
+// Tracks which users currently have the CRM open and their Twilio Device registered.
+// The frontend sends a heartbeat every 30 seconds when the Device is in "registered" state.
+// Inbound call routing uses this table to ring only users who are actively online.
+// A session is considered "active" if lastHeartbeat is within the last 90 seconds.
+export const userSessions = mysqlTable("userSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(), // One row per user (upsert on heartbeat)
+  isOnline: int("isOnline").default(1).notNull(), // 1 = online, 0 = offline
+  lastHeartbeat: timestamp("lastHeartbeat").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = typeof userSessions.$inferInsert;
