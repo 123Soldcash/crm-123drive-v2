@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Filter, Calendar, List, Search, Trash2, CheckCircle2, Circle, Clock, RotateCcw, AlertCircle } from "lucide-react";
+import { parseDueDate, todayLocal } from "@/lib/dateUtils";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -57,17 +58,16 @@ export function TasksList() {
       if (task.assignedToId !== userId && task.createdById !== userId) return false;
     }
     if (dateFilter !== "all") {
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      const today = todayLocal();
+      const due = parseDueDate(task.dueDate);
       if (dateFilter === "overdue") {
-        if (!task.dueDate || new Date(task.dueDate) >= todayStart || task.status === "Done") return false;
+        if (!due || due >= today || task.status === "Done") return false;
       } else if (dateFilter === "today") {
-        if (!task.dueDate || new Date(task.dueDate) < todayStart || new Date(task.dueDate) > todayEnd) return false;
+        if (!due || due.getTime() !== today.getTime()) return false;
       } else if (dateFilter === "upcoming") {
-        const weekFromNow = new Date(now);
+        const weekFromNow = new Date(today);
         weekFromNow.setDate(weekFromNow.getDate() + 7);
-        if (!task.dueDate || new Date(task.dueDate) <= todayEnd || new Date(task.dueDate) > weekFromNow) return false;
+        if (!due || due.getTime() === today.getTime() || due > weekFromNow) return false;
       }
     }
     return true;
@@ -157,11 +157,13 @@ export function TasksList() {
   };
 
   const isOverdue = (task: any) => {
-    return task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "Done";
+    const due = parseDueDate(task.dueDate);
+    return due && due < todayLocal() && task.status !== "Done";
   };
 
   const isDueToday = (task: any) => {
-    return task.dueDate && new Date(task.dueDate).toDateString() === new Date().toDateString();
+    const due = parseDueDate(task.dueDate);
+    return due && due.getTime() === todayLocal().getTime() && task.status !== "Done";
   };
 
   const pendingCount = filteredTasks.filter(t => t.status !== "Done").length;

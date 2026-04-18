@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { parseDueDate, todayLocal } from "@/lib/dateUtils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -192,8 +193,8 @@ function DashboardLayoutContent({
       select: (tasks) => ({
         count: tasks.filter(t => {
           if (t.status === "Done" || !t.dueDate) return false;
-          const d = new Date(t.dueDate);
-          return d < new Date() && d.toDateString() !== new Date().toDateString();
+          const d = parseDueDate(t.dueDate);
+          return d !== null && d < todayLocal();
         }).length,
       }),
     }

@@ -6,6 +6,7 @@ import { TaskCard } from "@/components/TaskCard";
 import { DroppableColumn } from "@/components/DroppableColumn";
 import { Button } from "@/components/ui/button";
 import { Plus, Filter, Calendar, List } from "lucide-react";
+import { parseDueDate, todayLocal } from "@/lib/dateUtils";
 import {
   Select,
   SelectContent,
@@ -45,21 +46,22 @@ export function TasksKanban() {
 
   // Sort by urgency: overdue first, then today, then by due date asc, then no due date last
   const sortByUrgency = (taskList: typeof tasks) => {
-    const now = new Date();
-    const todayStr = now.toDateString();
+    const today = todayLocal();
     return [...taskList].sort((a, b) => {
       const getScore = (t: typeof tasks[0]) => {
-        if (!t.dueDate) return 3; // no due date → last
-        const d = new Date(t.dueDate);
-        if (d.toDateString() === todayStr) return 1; // today → second
-        if (d < now) return 0; // overdue → first
+        const d = parseDueDate(t.dueDate);
+        if (!d) return 3; // no due date → last
+        if (d.getTime() === today.getTime()) return 1; // today → second
+        if (d < today) return 0; // overdue → first
         return 2; // future → third
       };
       const scoreA = getScore(a);
       const scoreB = getScore(b);
       if (scoreA !== scoreB) return scoreA - scoreB;
       // same urgency group → sort by date ascending
-      if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      const dA = parseDueDate(a.dueDate);
+      const dB = parseDueDate(b.dueDate);
+      if (dA && dB) return dA.getTime() - dB.getTime();
       return 0;
     });
   };

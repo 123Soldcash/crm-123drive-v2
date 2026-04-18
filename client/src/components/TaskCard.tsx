@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, User, Phone, Mail, Home, Search, FileText, MessageSquare, Handshake, FileCheck, ClipboardCheck, MoreHorizontal, Send, Image, UserSearch, UserPlus, Repeat, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { formatDistanceToNow, format, isToday, isTomorrow, isPast } from "date-fns";
 import { Link } from "wouter";
+import { parseDueDate } from "@/lib/dateUtils";
 
 interface Task {
   id: number;
@@ -71,8 +72,8 @@ export function TaskCard({ task }: TaskCardProps) {
 
   const Icon = taskTypeIcons[task.taskType] || FileText;
 
-  // Calculate due date status
-  const dueDateObj = task.dueDate ? new Date(task.dueDate) : null;
+  // Calculate due date status — use parseDueDate to avoid UTC timezone shift
+  const dueDateObj = task.dueDate ? parseDueDate(task.dueDate) : null;
   const isOverdue = dueDateObj && isPast(dueDateObj) && !isToday(dueDateObj) && !isDone;
   const isDueToday = dueDateObj && isToday(dueDateObj) && !isDone;
   const isDueTomorrow = dueDateObj && isTomorrow(dueDateObj) && !isDone;
@@ -191,7 +192,7 @@ export function TaskCard({ task }: TaskCardProps) {
             >
               {isDone
                 ? "Completed"
-                : formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
+                : formatDistanceToNow(parseDueDate(task.dueDate) ?? new Date(task.dueDate), { addSuffix: true })}
             </span>
           </div>
         )}

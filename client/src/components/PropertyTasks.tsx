@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, User, CheckCircle2, Circle, Clock, Edit, Trash2, Eye, EyeOff, ClipboardList, RotateCcw } from "lucide-react";
+import { getDueDateBadgeConfig } from "@/lib/dateUtils";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { Link } from "wouter";
 import { CollapsibleSection } from "./CollapsibleSection";
@@ -41,21 +42,6 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
       utils.tasks.list.invalidate();
     },
   });
-
-  const getDueDateBadge = (dueDate: string | Date | null, isDone: boolean) => {
-    if (!dueDate || isDone) return null;
-    const now = new Date();
-    const due = new Date(dueDate);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-    const diffDays = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
-    const label = due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-
-    if (diffDays < 0) return { label: `Overdue · ${label}`, className: "bg-red-100 text-red-700 border-red-200" };
-    if (diffDays === 0) return { label: "Today", className: "bg-amber-100 text-amber-700 border-amber-200" };
-    if (diffDays === 1) return { label: `Tomorrow · ${label}`, className: "bg-orange-100 text-orange-700 border-orange-200" };
-    return { label, className: "bg-slate-100 text-slate-600 border-slate-200" };
-  };
 
   const getPriorityColor = (priority: string, isDone: boolean) => {
     if (isDone) return "bg-emerald-50 text-emerald-500 border-emerald-100 opacity-60";
@@ -226,7 +212,7 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                           </Badge>
                         </span>
                         {(() => {
-                          const badge = getDueDateBadge(task.dueDate, isDone);
+                          const badge = getDueDateBadgeConfig(task.dueDate, isDone);
                           if (!badge) return null;
                           return (
                             <Badge
