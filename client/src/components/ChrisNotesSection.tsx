@@ -1,15 +1,16 @@
 /**
- * CHRIS NOTES SECTION - Simple quick-note list
- * - Plain text input → adds a note instantly
- * - Each note shown as a chip/tag with an X to delete
- * - No history, no file uploads, no screenshots
+ * CHRIS NOTES SECTION - Simple plain-text notes list
+ * - Textarea input → adds a note on click or Ctrl+Enter
+ * - Each note shown as a card row with timestamp and delete button
+ * - Notes stacked vertically, newest first
+ * - No file uploads, no screenshots, no rich text
  */
 
 import { useState, useRef, KeyboardEvent } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { X, Plus, MessageSquareText } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Plus, MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { Badge } from "@/components/ui/badge";
@@ -18,22 +19,36 @@ interface ChrisNotesSectionProps {
   propertyId: number;
 }
 
+function formatNoteDate(date: Date | string): string {
+  const d = new Date(date);
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
   const [noteText, setNoteText] = useState("");
   const [isExpanded, setIsExpanded] = useState(true);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const utils = trpc.useUtils();
   const { data: allNotes, isLoading } = trpc.notes.byProperty.useQuery({ propertyId });
 
-  // Only desk-chris notes
-  const chrisNotes = (allNotes || []).filter((n) => n.noteType === "desk-chris");
+  // Only desk-chris notes, newest first
+  const chrisNotes = (allNotes || [])
+    .filter((n) => n.noteType === "desk-chris")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const createNote = trpc.notes.create.useMutation({
     onSuccess: () => {
       utils.notes.byProperty.invalidate({ propertyId });
       setNoteText("");
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
     },
     onError: (err) => {
       toast.error(err.message || "Failed to add note");
@@ -42,9 +57,11 @@ export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
 
   const deleteNote = trpc.notes.delete.useMutation({
     onSuccess: () => {
+      setDeletingId(null);
       utils.notes.byProperty.invalidate({ propertyId });
     },
     onError: (err) => {
+      setDeletingId(null);
       toast.error(err.message || "Failed to delete note");
     },
   });
@@ -55,14 +72,16 @@ export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
     createNote.mutate({ propertyId, content: text, noteType: "desk-chris" });
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ctrl+Enter or Cmd+Enter to submit
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleAdd();
     }
   };
 
   const handleDelete = (noteId: number) => {
+    setDeletingId(noteId);
     deleteNote.mutate({ id: noteId });
   };
 
@@ -84,24 +103,26 @@ export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
         ) : null
       }
     >
-      {/* Input row */}
-      <div className="flex gap-2 mb-3">
-        <Input
-          ref={inputRef}
+      {/* Input area */}
+      <div className="flex flex-col gap-2 mb-4">
+        <Textarea
+          ref={textareaRef}
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Add a quick note and press Enter…"
-          className="flex-1 h-9 text-sm bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+          placeholder="Type a note… (Ctrl+Enter to save)"
+          className="resize-none text-sm bg-white border-gray-300 text-gray-900 placeholder-gray-400 min-h-[72px]"
           disabled={createNote.isPending}
+          rows={3}
         />
         <Button
           size="sm"
-          className="h-9 px-3 bg-purple-600 hover:bg-purple-700 text-white"
+          className="self-end h-8 px-4 bg-purple-600 hover:bg-purple-700 text-white"
           onClick={handleAdd}
           disabled={!noteText.trim() || createNote.isPending}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Add Note
         </Button>
       </div>
 
@@ -109,26 +130,39 @@ export function ChrisNotesSection({ propertyId }: ChrisNotesSectionProps) {
       {isLoading ? (
         <p className="text-xs text-slate-400 animate-pulse">Loading…</p>
       ) : chrisNotes.length === 0 ? (
-        <p className="text-xs text-slate-400 italic">No notes yet. Type above and press Enter.</p>
+        <p className="text-xs text-slate-400 italic">No notes yet. Type above and press Ctrl+Enter or click Add Note.</p>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           {chrisNotes.map((note) => (
-            <span
+            <div
               key={note.id}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-800 text-xs font-medium max-w-full"
+              className="group flex items-start gap-3 rounded-lg border border-purple-100 bg-purple-50/50 px-3 py-2.5 hover:border-purple-200 hover:bg-purple-50 transition-colors"
             >
-              <span className="truncate max-w-[280px]" title={note.content}>
-                {note.content}
-              </span>
+              {/* Note content */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+                  {note.content}
+                </p>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  {formatNoteDate(note.createdAt)}
+                </p>
+              </div>
+
+              {/* Delete button */}
               <button
                 onClick={() => handleDelete(note.id)}
-                className="flex-shrink-0 text-purple-400 hover:text-red-500 transition-colors"
-                title="Remove note"
-                disabled={deleteNote.isPending}
+                disabled={deletingId === note.id}
+                className="flex-shrink-0 mt-0.5 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                title="Delete note"
+                aria-label="Delete note"
               >
-                <X className="h-3 w-3" />
+                {deletingId === note.id ? (
+                  <span className="text-[10px] text-gray-400">…</span>
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
               </button>
-            </span>
+            </div>
           ))}
         </div>
       )}
