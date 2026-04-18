@@ -173,6 +173,28 @@ export function TaskCard({ task }: TaskCardProps) {
         </Link>
       )}
 
+      {/* Assigned To — explicit, prominent */}
+      {task.assignedToName && (
+        <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md ${
+          isDone ? "bg-emerald-50 border border-emerald-100" : "bg-blue-50 border border-blue-100"
+        }`}>
+          {/* Avatar with initials */}
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+            isDone ? "bg-emerald-200 text-emerald-700" : "bg-blue-200 text-blue-700"
+          }`}>
+            {task.assignedToName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()}
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className={`text-[10px] font-medium uppercase tracking-wide ${
+              isDone ? "text-emerald-500" : "text-blue-500"
+            }`}>Assigned to</span>
+            <span className={`text-xs font-semibold truncate ${
+              isDone ? "text-emerald-600" : "text-blue-700"
+            }`}>{task.assignedToName}</span>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
         {/* Due Date — footer shows relative time */}
@@ -205,13 +227,8 @@ export function TaskCard({ task }: TaskCardProps) {
           </div>
         )}
 
-        {/* Assigned To */}
-        {task.assignedToName && (
-          <div className={`flex items-center gap-1 text-xs ${isDone ? "text-gray-300" : "text-gray-500"}`}>
-            <User className="w-3 h-3" />
-            <span className="truncate max-w-[100px]">{task.assignedToName}</span>
-          </div>
-        )}
+        {/* Spacer when no due date */}
+        {!task.dueDate && !isDone && <div />}
       </div>
     </div>
   );
