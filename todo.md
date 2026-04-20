@@ -3328,3 +3328,9 @@
 - [x] Fix recording not being saved to DB
 - [x] Verify greeting URL stored correctly in integrationSettings
 - [x] Write tests to validate voicemail webhook logic
+
+## Voicemail Audio Playback Fix - Twilio auth prompt
+- [x] Download Twilio recording to S3 in voicemail-recording webhook (using Twilio API credentials)
+- [x] Store S3 public URL in voicemails table instead of Twilio URL
+- [x] Update Voicemails page audio player to use S3 URLs (no auth needed - already uses recordingUrl from DB)
+- [x] Write/update tests for the fix (23/23 passed)

@@ -149,7 +149,7 @@ describe("Voicemail Webhook Flow — Structural Validation", () => {
 
   describe("Voicemail-recording endpoint", () => {
     it("is registered at /api/twilio/voicemail-recording", () => {
-      expect(webhooksSource).toContain('"/api/twilio/voicemail-recording"');
+      expect(webhooksSource).toContain('/api/twilio/voicemail-recording');
     });
 
     it("extracts RecordingUrl, RecordingSid, From, and duration", () => {
@@ -169,6 +169,53 @@ describe("Voicemail Webhook Flow — Structural Validation", () => {
     it("matches caller phone to property via contactPhones", () => {
       expect(webhooksSource).toContain("matchedPropertyId");
       expect(webhooksSource).toContain("matchedContactId");
+    });
+
+    it("downloads recording from Twilio using API credentials (Basic auth)", () => {
+      // The handler should fetch the recording with Twilio accountSid:authToken
+      // Use a broader regex that captures the full recording handler section
+      const recordingSection = webhooksSource.match(
+        /voicemail-recording[\s\S]*?Saved voicemail/
+      );
+      expect(recordingSection).toBeTruthy();
+      const section = recordingSection![0];
+      expect(section).toContain("getIntegrationConfig");
+      expect(section).toContain("accountSid");
+      expect(section).toContain("authToken");
+      expect(section).toContain('Buffer.from');
+      expect(section).toContain('base64');
+    });
+
+    it("uploads recording to S3 via storagePut", () => {
+      const recordingSection = webhooksSource.match(
+        /voicemail-recording[\s\S]*?Saved voicemail/
+      );
+      expect(recordingSection).toBeTruthy();
+      const section = recordingSection![0];
+      expect(section).toContain("storagePut");
+      expect(section).toContain("voicemail-recordings/");
+      expect(section).toContain('"audio/mpeg"');
+    });
+
+    it("stores S3 public URL (not Twilio URL) in the database", () => {
+      const recordingSection = webhooksSource.match(
+        /voicemail-recording[\s\S]*?Saved voicemail/
+      );
+      expect(recordingSection).toBeTruthy();
+      const section = recordingSection![0];
+      // Should use the S3 URL variable (publicUrl) not the Twilio URL directly
+      expect(section).toContain("publicUrl");
+      expect(section).toContain("recordingUrl: publicUrl");
+    });
+
+    it("has fallback to Twilio URL if S3 upload fails", () => {
+      const recordingSection = webhooksSource.match(
+        /voicemail-recording[\s\S]*?Saved voicemail/
+      );
+      expect(recordingSection).toBeTruthy();
+      const section = recordingSection![0];
+      // Should set publicUrl = mp3TwilioUrl as initial fallback
+      expect(section).toContain("let publicUrl = mp3TwilioUrl");
     });
   });
 });

@@ -597,6 +597,8 @@ export function registerTwilioWebhooks(app: Express) {
 
   // --- Voicemail Recording Callback -------------------------------------------
   // Twilio POSTs here after recording the caller voicemail message.
+  // Downloads the recording from Twilio (authenticated), uploads to S3,
+  // and stores the public S3 URL so the browser can play it without login.
   app.all("/api/twilio/voicemail-recording", async (req, res) => {
     const callSid = req.body?.CallSid || req.query?.CallSid || "";
     const recordingSid = req.body?.RecordingSid || req.query?.RecordingSid || "";
@@ -618,10 +620,44 @@ export function registerTwilioWebhooks(app: Express) {
       const { getDb } = await import("./db");
       const { voicemails, contacts, contactPhones } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
+      const { getIntegrationConfig } = await import("./integrationConfig");
+      const { storagePut } = await import("./storage");
       const database = await getDb();
 
       if (database) {
-        // Try to match caller phone to a property via contactPhones
+        // ── Step 1: Download recording from Twilio using API credentials ──
+        const twilioConfig = await getIntegrationConfig("twilio");
+        const accountSid = twilioConfig.accountSid || "";
+        const authToken = twilioConfig.authToken || "";
+
+        const mp3TwilioUrl = recordingUrl.endsWith(".mp3") ? recordingUrl : `${recordingUrl}.mp3`;
+        let publicUrl = mp3TwilioUrl; // fallback to Twilio URL if S3 upload fails
+
+        try {
+          console.log(`[Twilio Voicemail] Downloading recording from Twilio: ${mp3TwilioUrl}`);
+          const authHeader = "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+          const twilioResponse = await fetch(mp3TwilioUrl, {
+            headers: { Authorization: authHeader },
+            redirect: "follow",
+          });
+
+          if (twilioResponse.ok) {
+            const audioBuffer = Buffer.from(await twilioResponse.arrayBuffer());
+            const randomSuffix = Math.random().toString(36).substring(2, 10);
+            const s3Key = `voicemail-recordings/${recordingSid || callSid}-${randomSuffix}.mp3`;
+
+            const { url: s3Url } = await storagePut(s3Key, audioBuffer, "audio/mpeg");
+            publicUrl = s3Url;
+            console.log(`[Twilio Voicemail] Uploaded to S3: ${s3Url}`);
+          } else {
+            console.error(`[Twilio Voicemail] Failed to download from Twilio (${twilioResponse.status}), storing Twilio URL as fallback`);
+          }
+        } catch (downloadErr) {
+          console.error("[Twilio Voicemail] Error downloading/uploading recording:", downloadErr);
+          // Keep the Twilio URL as fallback — better than nothing
+        }
+
+        // ── Step 2: Match caller phone to property ──
         let matchedPropertyId: number | undefined = undefined;
         let matchedContactId: number | undefined = undefined;
 
@@ -645,21 +681,20 @@ export function registerTwilioWebhooks(app: Express) {
           }
         }
 
-        // Append .mp3 so browser audio player works natively
-        const mp3Url = recordingUrl.endsWith(".mp3") ? recordingUrl : `${recordingUrl}.mp3`;
+        // ── Step 3: Save to DB with public S3 URL ──
         await database.insert(voicemails).values({
           callerPhone,
           calledTwilioNumber: calledNumber || undefined,
           propertyId: matchedPropertyId,
           contactId: matchedContactId,
-          recordingUrl: mp3Url,
+          recordingUrl: publicUrl,
           recordingSid: recordingSid || undefined,
           callSid: callSid || undefined,
           durationSeconds: duration,
           isHeard: 0,
         });
 
-        console.log(`[Twilio Voicemail] Saved voicemail from ${callerPhone} (property: ${matchedPropertyId ?? "unknown"})`);
+        console.log(`[Twilio Voicemail] Saved voicemail from ${callerPhone} (property: ${matchedPropertyId ?? "unknown"}, url: ${publicUrl})`);
       }
     } catch (err) {
       console.error("[Twilio Voicemail] Error saving recording:", err);
