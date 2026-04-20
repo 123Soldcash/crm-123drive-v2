@@ -3321,3 +3321,10 @@
 - [x] Add tRPC procedures: voicemails.list, voicemails.markHeard, voicemails.getUnheardCount
 - [x] Build /voicemails page: list with audio player, caller number, property link, mark as heard
 - [x] Add Voicemails item to sidebar menu with unread badge count
+
+## Voicemail Bug Fix - Greeting not playing, recording not saved
+- [x] Audit full inbound call webhook chain (inbound → inbound-status → voicemail-recording)
+- [x] Fix greeting not playing on no-answer
+- [x] Fix recording not being saved to DB
+- [x] Verify greeting URL stored correctly in integrationSettings
+- [x] Write tests to validate voicemail webhook logic

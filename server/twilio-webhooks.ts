@@ -46,6 +46,46 @@ const SESSION_TIMEOUT_MS = 90_000; // 90 seconds
  * Must be called BEFORE Vite middleware and static file serving.
  */
 export function registerTwilioWebhooks(app: Express) {
+
+  /**
+   * Shared helper: play voicemail greeting + record caller message.
+   * Used by ALL paths where no agent answers (early-exit, no-answer, busy, error).
+   */
+  async function playVoicemailAndRecord(response: any) {
+    // Fetch the voicemail greeting MP3 URL from integration settings
+    let greetingUrl: string | null = null;
+    try {
+      const { getIntegrationConfig } = await import("./integrationConfig");
+      const vmConfig = await getIntegrationConfig("voicemail");
+      greetingUrl = vmConfig.greetingUrl || null;
+      console.log("[Voicemail] Greeting URL from DB:", greetingUrl || "(none, using TTS fallback)");
+    } catch (e) {
+      console.error("[Voicemail] Error fetching greeting config:", e);
+    }
+
+    if (greetingUrl) {
+      response.play({}, greetingUrl);
+    } else {
+      response.say(
+        { voice: "alice", language: "en-US" },
+        "Hi, you have reached our office. We are currently unavailable. Please leave your name and message after the beep and we will call you back as soon as possible."
+      );
+    }
+
+    // Build the recording callback URL using CUSTOM_DOMAIN (reliable)
+    const { getBaseUrl } = await import("./twilio");
+    const baseUrl = getBaseUrl();
+    console.log("[Voicemail] Recording callback URL:", `${baseUrl}/api/twilio/voicemail-recording`);
+
+    response.record({
+      action: `${baseUrl}/api/twilio/voicemail-recording`,
+      method: "POST",
+      maxLength: 120,
+      playBeep: true,
+      transcribe: false,
+    });
+    response.hangup();
+  }
   // ─── Voice Webhook ──────────────────────────────────────────────────────
   // Called when Twilio needs TwiML instructions for a voice call.
   // Handles BOTH outbound (browser → phone) and inbound (phone → browser) calls.
@@ -131,8 +171,7 @@ export function registerTwilioWebhooks(app: Express) {
 
           if (!matchedTwilioNumber) {
             console.warn(`[Twilio Voice] No active Twilio number found for "${to}" — playing voicemail`);
-            response.say("Thank you for calling. This number is not currently in service. Please try again later.");
-            response.hangup();
+            await playVoicemailAndRecord(response);
             res.set("Content-Type", "text/xml");
             res.send(response.toString());
             return;
@@ -151,8 +190,7 @@ export function registerTwilioWebhooks(app: Express) {
           if (deskIds.length === 0) {
             // No desk assigned to this number — do NOT ring all users, play voicemail
             console.warn(`[Twilio Voice] Twilio number ${matchedTwilioNumber.phoneNumber} has no desk assigned — playing voicemail`);
-            response.say("Thank you for calling. No team is currently assigned to this line. Please try again later.");
-            response.hangup();
+            await playVoicemailAndRecord(response);
             res.set("Content-Type", "text/xml");
             res.send(response.toString());
             return;
@@ -176,8 +214,7 @@ export function registerTwilioWebhooks(app: Express) {
 
           if (deskUserIds.length === 0) {
             console.warn(`[Twilio Voice] No users assigned to desks [${deskIds.join(", ")}] — playing voicemail`);
-            response.say("Thank you for calling. No agents are currently assigned to this team. Please try again later.");
-            response.hangup();
+            await playVoicemailAndRecord(response);
             res.set("Content-Type", "text/xml");
             res.send(response.toString());
             return;
@@ -216,8 +253,7 @@ export function registerTwilioWebhooks(app: Express) {
           if (onlineUserIds.length === 0) {
             // No online users in the correct desk — play voicemail
             console.warn(`[Twilio Voice] No online agents for desks [${matchedDeskNames.join(", ")}] — playing voicemail`);
-            response.say("Thank you for calling. All agents are currently unavailable. Please try again later.");
-            response.hangup();
+            await playVoicemailAndRecord(response);
             res.set("Content-Type", "text/xml");
             res.send(response.toString());
             return;
@@ -240,8 +276,7 @@ export function registerTwilioWebhooks(app: Express) {
         } catch (dbError) {
           // ─── SAFE ERROR FALLBACK: play voicemail, do NOT hardcode a user ───
           console.error("[Twilio Voice] Error during desk-based routing:", dbError);
-          response.say("We're sorry, we encountered a technical issue. Please try again later.");
-          response.hangup();
+          await playVoicemailAndRecord(response);
           res.set("Content-Type", "text/xml");
           res.send(response.toString());
           return;
@@ -416,7 +451,10 @@ export function registerTwilioWebhooks(app: Express) {
         const { getIntegrationConfig } = await import("./integrationConfig");
         const vmConfig = await getIntegrationConfig("voicemail");
         greetingUrl = vmConfig.greetingUrl || null;
-      } catch (_) { /* ignore */ }
+        console.log("[Twilio Inbound Status] Greeting URL from DB:", greetingUrl || "(none, using TTS fallback)");
+      } catch (greetErr) {
+        console.error("[Twilio Inbound Status] Error fetching greeting config:", greetErr);
+      }
 
       if (greetingUrl) {
         response.play({}, greetingUrl);
@@ -428,9 +466,9 @@ export function registerTwilioWebhooks(app: Express) {
       }
 
       // Record the caller message — Twilio POSTs to /api/twilio/voicemail-recording when done
-      const baseUrl = req.headers["x-forwarded-host"]
-        ? `https://${req.headers["x-forwarded-host"]}`
-        : `${req.protocol}://${req.headers.host}`;
+      const { getBaseUrl } = await import("./twilio");
+      const baseUrl = getBaseUrl();
+      console.log("[Twilio Inbound Status] Recording callback URL:", `${baseUrl}/api/twilio/voicemail-recording`);
       response.record({
         action: `${baseUrl}/api/twilio/voicemail-recording`,
         method: "POST",
