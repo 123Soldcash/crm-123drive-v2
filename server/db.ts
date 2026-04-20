@@ -147,6 +147,8 @@ export async function getProperties(filters?: {
   propertyIdFilter?: number;
   // Filter by city
   city?: string;
+  // Filter by email
+  email?: string;
 }) {
   const db = await getDb();
   if (!db) return { data: [], totalCount: 0 };
@@ -314,6 +316,18 @@ export async function getProperties(filters?: {
   if (filters?.city) {
     conditions.push(eq(properties.city, filters.city));
   }
+  // Filter by email (searches contactEmails table)
+  if (filters?.email) {
+    const emailTerm = `%${filters.email}%`;
+    const emailMatches = await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contactEmails)
+      .leftJoin(contacts, eq(contactEmails.contactId, contacts.id))
+      .where(and(like(contactEmails.email, emailTerm), isNotNull(contacts.propertyId)));
+    const emailPropertyIds = emailMatches.map(e => e.propertyId).filter(Boolean) as number[];
+    if (emailPropertyIds.length === 0) return { data: [], totalCount: 0 };
+    conditions.push(sql`${properties.id} IN (${sql.join(emailPropertyIds.map(id => sql`${id}`), sql`, `)})`);
+  }
 
   // Build the final query
   if (conditions.length > 0) {
@@ -359,6 +373,7 @@ export async function getPropertiesWithAgents(filters?: {
   dealStage?: string;
   propertyIdFilter?: number;
   city?: string;
+  email?: string;
 }) {
   // Simply call getProperties - the agent filtering logic is already there
   return await getProperties(filters);

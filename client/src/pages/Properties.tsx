@@ -83,6 +83,7 @@ interface FilterState {
   campaignName: string;
   propertyIdFilter: string;
   city: string;
+  email: string;
 }
 
 // Hardcoded fallback desk labels & colors (used before DB loads)
@@ -146,6 +147,7 @@ export default function Properties() {
       campaignName: "",
       propertyIdFilter: "",
       city: "",
+      email: "",
     };
   });
 
@@ -254,6 +256,7 @@ export default function Properties() {
     dealStage: (filters.dealStage && filters.dealStage !== "all" ? filters.dealStage : undefined),
     propertyIdFilter: (filters.propertyIdFilter && !isNaN(Number(filters.propertyIdFilter)) ? Number(filters.propertyIdFilter) : undefined),
     city: (filters.city && filters.city !== "all" ? filters.city : undefined),
+    email: (filters.email && filters.email.trim() ? filters.email.trim() : undefined),
     // Pagination
     page: currentPage,
     pageSize: PAGE_SIZE,
@@ -449,6 +452,7 @@ export default function Properties() {
       campaignName: "",
       propertyIdFilter: "",
       city: "",
+      email: "",
     });
   };
 
@@ -462,7 +466,8 @@ export default function Properties() {
     (filters.leadSource ? 1 : 0) +
     (filters.campaignName ? 1 : 0) +
     filters.statusTags.length +
-    (filters.city ? 1 : 0);
+    (filters.city ? 1 : 0) +
+    (filters.email ? 1 : 0);
 
   const handleSaveSearch = () => {
     if (!searchName.trim()) {
@@ -854,6 +859,34 @@ export default function Properties() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Email Filter */}
+            <div className="relative">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Filter by Email</span>
+              </div>
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="e.g. john@email.com"
+                  value={filters.email || ""}
+                  onChange={(e) => {
+                    setFilters((prev) => ({ ...prev, email: e.target.value }));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pr-8"
+                />
+                {filters.email && (
+                  <button
+                    onClick={() => setFilters((prev) => ({ ...prev, email: "" }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* City Filter */}
             <Select

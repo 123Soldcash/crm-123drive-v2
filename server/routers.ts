@@ -196,6 +196,8 @@ export const appRouter = router({
             propertyIdFilter: z.number().optional(),
             // Filter by city
             city: z.string().optional(),
+            // Filter by email
+            email: z.string().optional(),
           })
           .optional()
       )
