@@ -191,6 +191,26 @@ async function getPropertyContactInfo(propertyId: number) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// HELPER: Get property address fields for template variable substitution
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function getPropertyAddress(propertyId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({
+      addressLine1: properties.addressLine1,
+      city: properties.city,
+      state: properties.state,
+      zipCode: properties.zipcode,
+    })
+    .from(properties)
+    .where(eq(properties.id, propertyId))
+    .limit(1);
+  return rows[0] || null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ACTION: Send SMS via Twilio (REAL)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -217,12 +237,21 @@ async function executeFollowUpSMS(propertyId: number, actionDetails: any, follow
     // Build the message body — use template or actionDetails.message
     let messageBody = actionDetails.message || followUp.templateBody || "Follow-up automático";
 
-    // Simple variable replacement
+    // Fetch property address for {{address}} / {{city}} / {{state}} / {{zip}} substitution
+    const propAddress = await getPropertyAddress(propertyId);
+
+    // Full variable replacement — contact + property
     messageBody = messageBody
       .replace(/\{\{name\}\}/gi, contactInfo.fullName)
+      .replace(/\{\{ownerName\}\}/gi, contactInfo.fullName)
+      .replace(/\{\{contactName\}\}/gi, contactInfo.fullName)
       .replace(/\{\{firstName\}\}/gi, contactInfo.firstName)
       .replace(/\{\{lastName\}\}/gi, contactInfo.lastName)
-      .replace(/\{\{phone\}\}/gi, contactInfo.phone);
+      .replace(/\{\{phone\}\}/gi, contactInfo.phone)
+      .replace(/\{\{address\}\}/gi, propAddress?.addressLine1 || "")
+      .replace(/\{\{city\}\}/gi, propAddress?.city || "")
+      .replace(/\{\{state\}\}/gi, propAddress?.state || "")
+      .replace(/\{\{zip\}\}/gi, propAddress?.zipCode || "");
 
     // Format phone to E.164
     const rawDigits = contactInfo.phone.replace(/\D/g, "");
