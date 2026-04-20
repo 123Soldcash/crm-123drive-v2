@@ -44,6 +44,8 @@ const DEAD_REASON_OPTIONS = [
   { value: "DUPLICATE_LEAD", label: "Duplicate Lead", note: "The lead was already in the system under a different name or number" },
   { value: "WRONG_INFO", label: "Wrong Person/Number/Fraud", note: "The contact information was incorrect" },
   { value: "NO_BUYER", label: "Unable to Assign / No Buyer Found" },
+  { value: "TELEMARKETER", label: "Telemarketer", note: "The contact is a telemarketer, not a real seller" },
+  { value: "WHOLESALER", label: "Wholesaler", note: "The contact is a wholesaler, not a direct seller" },
   { value: "OTHER", label: "Other (Notes)" },
 ];
 import { STAGE_CONFIGS, getStageConfig, type DealStage } from "@/lib/stageConfig";
