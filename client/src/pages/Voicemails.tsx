@@ -97,6 +97,21 @@ export default function VoicemailsPage() {
     },
   });
 
+  /**
+   * Get the playback URL for a voicemail.
+   * - If the URL is already a public S3/CDN URL, use it directly.
+   * - If it's a Twilio URL (requires auth), route through our server proxy.
+   *   The proxy fetches from Twilio with credentials and also migrates to S3.
+   */
+  function getPlaybackUrl(vm: any): string {
+    const url = vm.recordingUrl || "";
+    const isTwilioUrl = url.includes("api.twilio.com") || url.includes("twilio.com/2010-04-01");
+    if (isTwilioUrl) {
+      return `/api/twilio/voicemail-audio/${vm.id}`;
+    }
+    return url;
+  }
+
   function handlePlay(vm: any) {
     if (playingId === vm.id) {
       audioRef.current?.pause();
@@ -106,11 +121,20 @@ export default function VoicemailsPage() {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const audio = new Audio(vm.recordingUrl);
+    const playUrl = getPlaybackUrl(vm);
+    const audio = new Audio(playUrl);
     audioRef.current = audio;
-    audio.play();
+    audio.play().catch((err) => {
+      console.error("Failed to play voicemail:", err);
+      toast.error("Failed to play voicemail. Please try again.");
+      setPlayingId(null);
+    });
     setPlayingId(vm.id);
     audio.onended = () => setPlayingId(null);
+    audio.onerror = () => {
+      toast.error("Error loading voicemail audio.");
+      setPlayingId(null);
+    };
 
     // Auto-mark as heard when played
     if (!vm.isHeard) {

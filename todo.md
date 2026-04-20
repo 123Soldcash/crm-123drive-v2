@@ -3334,3 +3334,10 @@
 - [x] Store S3 public URL in voicemails table instead of Twilio URL
 - [x] Update Voicemails page audio player to use S3 URLs (no auth needed - already uses recordingUrl from DB)
 - [x] Write/update tests for the fix (23/23 passed)
+
+## Voicemail Audio Playback Fix V2 - Proxy for existing Twilio URLs
+- [x] Create server-side proxy endpoint /api/twilio/voicemail-audio/:id that fetches from Twilio with credentials
+- [x] Add tRPC procedure to get proxy URL for a voicemail (handled via direct Express route)
+- [x] Update frontend audio player to use proxy endpoint instead of direct Twilio URLs
+- [x] Migrate existing voicemail records: auto-migrates on first play via proxy
+- [x] Write tests for the proxy endpoint (37/37 passed)

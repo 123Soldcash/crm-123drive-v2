@@ -704,5 +704,104 @@ export function registerTwilioWebhooks(app: Express) {
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
   });
 
+  // --- Voicemail Audio Proxy ---------------------------------------------------
+  // Streams voicemail audio from Twilio through our server using API credentials.
+  // This avoids the browser showing a Twilio login prompt for authenticated URLs.
+  // Also handles migration: downloads from Twilio, uploads to S3, updates DB.
+  app.get("/api/twilio/voicemail-audio/:id", async (req, res) => {
+    try {
+      const voicemailId = parseInt(req.params.id, 10);
+      if (isNaN(voicemailId)) {
+        res.status(400).json({ error: "Invalid voicemail ID" });
+        return;
+      }
+
+      const { getDb } = await import("./db");
+      const { voicemails } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const database = await getDb();
+
+      if (!database) {
+        res.status(500).json({ error: "Database unavailable" });
+        return;
+      }
+
+      const [vm] = await database
+        .select({ id: voicemails.id, recordingUrl: voicemails.recordingUrl, recordingSid: voicemails.recordingSid })
+        .from(voicemails)
+        .where(eq(voicemails.id, voicemailId))
+        .limit(1);
+
+      if (!vm || !vm.recordingUrl) {
+        res.status(404).json({ error: "Voicemail not found" });
+        return;
+      }
+
+      const url = vm.recordingUrl;
+      const isTwilioUrl = url.includes("api.twilio.com") || url.includes("twilio.com/2010-04-01");
+
+      if (!isTwilioUrl) {
+        // Already an S3/public URL — redirect directly
+        res.redirect(url);
+        return;
+      }
+
+      // Fetch from Twilio with credentials
+      const { getIntegrationConfig } = await import("./integrationConfig");
+      const twilioConfig = await getIntegrationConfig("twilio");
+      const accountSid = twilioConfig.accountSid || "";
+      const authToken = twilioConfig.authToken || "";
+
+      if (!accountSid || !authToken) {
+        console.error("[Voicemail Proxy] Missing Twilio credentials");
+        res.status(500).json({ error: "Twilio credentials not configured" });
+        return;
+      }
+
+      const authHeader = "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+      const mp3Url = url.endsWith(".mp3") ? url : `${url}.mp3`;
+
+      console.log(`[Voicemail Proxy] Fetching audio for voicemail ${voicemailId} from Twilio`);
+      const twilioResponse = await fetch(mp3Url, {
+        headers: { Authorization: authHeader },
+        redirect: "follow",
+      });
+
+      if (!twilioResponse.ok) {
+        console.error(`[Voicemail Proxy] Twilio returned ${twilioResponse.status}`);
+        res.status(502).json({ error: `Twilio returned ${twilioResponse.status}` });
+        return;
+      }
+
+      // Also migrate: upload to S3 and update DB in background
+      const audioBuffer = Buffer.from(await twilioResponse.arrayBuffer());
+
+      // Stream to browser immediately
+      res.set("Content-Type", "audio/mpeg");
+      res.set("Content-Length", String(audioBuffer.length));
+      res.set("Cache-Control", "public, max-age=86400");
+      res.send(audioBuffer);
+
+      // Background: upload to S3 and update DB so next time it's direct
+      try {
+        const { storagePut } = await import("./storage");
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        const s3Key = `voicemail-recordings/${vm.recordingSid || voicemailId}-${randomSuffix}.mp3`;
+        const { url: s3Url } = await storagePut(s3Key, audioBuffer, "audio/mpeg");
+
+        await database.update(voicemails)
+          .set({ recordingUrl: s3Url })
+          .where(eq(voicemails.id, voicemailId));
+
+        console.log(`[Voicemail Proxy] Migrated voicemail ${voicemailId} to S3: ${s3Url}`);
+      } catch (migrateErr) {
+        console.error(`[Voicemail Proxy] Failed to migrate voicemail ${voicemailId} to S3:`, migrateErr);
+      }
+    } catch (error) {
+      console.error("[Voicemail Proxy] Error:", error);
+      res.status(500).json({ error: "Failed to fetch voicemail audio" });
+    }
+  });
+
   console.log("[Twilio] Webhook routes registered at /api/twilio/*");
 }
