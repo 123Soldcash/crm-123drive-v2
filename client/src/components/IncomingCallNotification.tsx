@@ -19,6 +19,7 @@
  * - WebSocket errors are caught and logged without blocking the UI
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRingtone } from "@/hooks/useRingtone";
 import { Device, Call } from "@twilio/voice-sdk";
 import { trpc } from "@/lib/trpc";
 import { formatPhone } from "@/lib/formatPhone";
@@ -56,6 +57,9 @@ export function IncomingCallNotification() {
   const mountedRef = useRef(true);
   // Debounce token refresh
   const lastInitTimeRef = useRef(0);
+
+  // Ringtone — iOS-compatible audio notification
+  const { startRinging, stopRinging } = useRingtone();
 
   // Heartbeat mutation — called every 30s when Device is registered
   const heartbeatMutation = trpc.twilio.heartbeat.useMutation();
@@ -121,12 +125,15 @@ export function IncomingCallNotification() {
           incomingCallRef.current = call;
           setCallerNumber(call.parameters?.From || "Unknown");
           setCallState("ringing");
+          // Start ringtone (iOS-compatible)
+          startRinging();
 
           // Auto-reject after 30 seconds if not answered
           const autoRejectTimeout = setTimeout(() => {
             if (incomingCallRef.current && mountedRef.current) {
               try {
                 console.log("[IncomingCall] Auto-rejecting after 30s timeout");
+                stopRinging();
                 incomingCallRef.current.reject();
               } catch (e) {
                 console.warn("[IncomingCall] Error auto-rejecting:", e);
@@ -143,6 +150,7 @@ export function IncomingCallNotification() {
           call.on("cancel", () => {
             console.log("[IncomingCall] Call cancelled by caller");
             clearTimeout(autoRejectTimeout);
+            stopRinging();
             if (mountedRef.current) {
               setCallState("idle");
               setCallerNumber("");
@@ -154,6 +162,7 @@ export function IncomingCallNotification() {
           call.on("disconnect", () => {
             console.log("[IncomingCall] Call disconnected");
             clearTimeout(autoRejectTimeout);
+            stopRinging();
             if (mountedRef.current) {
               setCallState("ended");
             }
@@ -177,6 +186,7 @@ export function IncomingCallNotification() {
           call.on("reject", () => {
             console.log("[IncomingCall] Call rejected");
             clearTimeout(autoRejectTimeout);
+            stopRinging();
             if (mountedRef.current) {
               setCallState("idle");
               setCallerNumber("");
@@ -188,6 +198,7 @@ export function IncomingCallNotification() {
             console.warn("[IncomingCall] Call error:", err?.code, err?.message);
             // Don't freeze — just log and clean up
             clearTimeout(autoRejectTimeout);
+            stopRinging();
             if (mountedRef.current) {
               setCallState("idle");
               setCallerNumber("");
@@ -344,6 +355,7 @@ export function IncomingCallNotification() {
     if (incomingCallRef.current) {
       try {
         console.log("[IncomingCall] Accepting call from:", callerNumber);
+        stopRinging();
         incomingCallRef.current.accept();
         setCallState("active");
         toast.success("Call connected");
@@ -361,6 +373,7 @@ export function IncomingCallNotification() {
     if (incomingCallRef.current) {
       try {
         console.log("[IncomingCall] Rejecting call from:", callerNumber);
+        stopRinging();
         incomingCallRef.current.reject();
       } catch (e) {
         console.warn("[IncomingCall] Error rejecting call:", e);
