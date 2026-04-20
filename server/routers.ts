@@ -5281,5 +5281,174 @@ export const appRouter = router({
       return nums;
     }),
   }),
+  // ─── Voicemails ─────────────────────────────────────────────────────────────
+  voicemails: router({
+    /**
+     * List all voicemails, newest first. Optionally filter by unheard only.
+     */
+    list: protectedProcedure
+      .input(z.object({
+        unheardOnly: z.boolean().optional().default(false),
+        limit: z.number().optional().default(50),
+        offset: z.number().optional().default(0),
+      }))
+      .query(async ({ input }) => {
+        const { voicemails: vmTable, contacts, contactPhones, properties: propsTable } = await import("../drizzle/schema");
+        const { eq, desc, and } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+
+        const conditions = input.unheardOnly ? [eq(vmTable.isHeard, 0)] : [];
+        const rows = await dbInst
+          .select()
+          .from(vmTable)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(vmTable.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
+
+        // Enrich with property address and contact name
+        const enriched = await Promise.all(rows.map(async (vm) => {
+          let propertyAddress: string | null = null;
+          let contactName: string | null = null;
+          if (vm.propertyId) {
+            const prop = await dbInst
+              .select({ addressLine1: propsTable.addressLine1, city: propsTable.city, state: propsTable.state })
+              .from(propsTable)
+              .where(eq(propsTable.id, vm.propertyId))
+              .limit(1);
+            if (prop.length > 0) {
+              propertyAddress = `${prop[0].addressLine1}, ${prop[0].city}, ${prop[0].state}`;
+            }
+          }
+          if (vm.contactId) {
+            const contact = await dbInst
+              .select({ name: contacts.name, firstName: contacts.firstName, lastName: contacts.lastName })
+              .from(contacts)
+              .where(eq(contacts.id, vm.contactId))
+              .limit(1);
+            if (contact.length > 0) {
+              const c = contact[0];
+              contactName = c.name || `${c.firstName || ""} ${c.lastName || ""}`.trim() || null;
+            }
+          }
+          return { ...vm, propertyAddress, contactName };
+        }));
+
+        return enriched;
+      }),
+
+    /**
+     * Mark a voicemail as heard
+     */
+    markHeard: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const { voicemails: vmTable } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+        await dbInst.update(vmTable).set({
+          isHeard: 1,
+          heardByUserId: ctx.user.id,
+          heardAt: new Date(),
+        }).where(eq(vmTable.id, input.id));
+        return { success: true };
+      }),
+
+    /**
+     * Get count of unheard voicemails (for sidebar badge)
+     */
+    getUnheardCount: protectedProcedure.query(async () => {
+      const { voicemails: vmTable } = await import("../drizzle/schema");
+      const { eq, count } = await import("drizzle-orm");
+      const dbInst = await db.getDb();
+      if (!dbInst) return { count: 0 };
+      const result = await dbInst
+        .select({ count: count() })
+        .from(vmTable)
+        .where(eq(vmTable.isHeard, 0));
+      return { count: result[0]?.count ?? 0 };
+    }),
+
+    /**
+     * Delete a voicemail
+     */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { voicemails: vmTable } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+        await dbInst.delete(vmTable).where(eq(vmTable.id, input.id));
+        return { success: true };
+      }),
+
+    /**
+     * Upload voicemail greeting MP3 and store URL in integrationSettings
+     */
+    uploadGreeting: protectedProcedure
+      .input(z.object({
+        fileBase64: z.string(),
+        mimeType: z.string().default("audio/mpeg"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const buffer = Buffer.from(input.fileBase64, "base64");
+        const randomSuffix = Math.random().toString(36).substring(2, 10);
+        const fileKey = `voicemail-greetings/greeting-${randomSuffix}.mp3`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        // Upsert the greetingUrl in integrationSettings
+        const { integrationSettings: iSettings } = await import("../drizzle/schema");
+        const { eq, and } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+
+        const existing = await dbInst
+          .select()
+          .from(iSettings)
+          .where(and(eq(iSettings.integration, "voicemail"), eq(iSettings.settingKey, "greetingUrl")))
+          .limit(1);
+
+        if (existing.length > 0) {
+          await dbInst
+            .update(iSettings)
+            .set({ settingValue: url, updatedBy: ctx.user.id })
+            .where(eq(iSettings.id, existing[0].id));
+        } else {
+          await dbInst.insert(iSettings).values({
+            integration: "voicemail",
+            settingKey: "greetingUrl",
+            settingValue: url,
+            label: "Voicemail Greeting MP3 URL",
+            description: "Public URL of the MP3 file played when an inbound call goes unanswered",
+            isSecret: 0,
+            updatedBy: ctx.user.id,
+          });
+        }
+
+        const { clearIntegrationCache } = await import("./integrationConfig");
+        clearIntegrationCache();
+
+        return { url };
+      }),
+
+    /**
+     * Get current voicemail greeting URL
+     */
+    getGreeting: protectedProcedure.query(async () => {
+      const { integrationSettings: iSettings } = await import("../drizzle/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const dbInst = await db.getDb();
+      if (!dbInst) return { url: null };
+      const rows = await dbInst
+        .select()
+        .from(iSettings)
+        .where(and(eq(iSettings.integration, "voicemail"), eq(iSettings.settingKey, "greetingUrl")))
+        .limit(1);
+      return { url: rows[0]?.settingValue || null };
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;;

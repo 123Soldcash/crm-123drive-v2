@@ -372,6 +372,13 @@
       "when": 1776515951594,
       "tag": "0052_cheerful_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1776724544105,
+      "tag": "0053_motionless_night_thrasher",
+      "breakpoints": true
     }
   ]
 }

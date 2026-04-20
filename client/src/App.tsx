@@ -33,6 +33,7 @@ import NotificationsPage from "./pages/Notifications";
 import CommsHistory from "./pages/CommsHistory";
 import { IncomingCallNotification } from "./components/IncomingCallNotification";
 import { FloatingDialer } from "./components/FloatingDialer";
+import VoicemailsPage from "./pages/Voicemails";
 
 // Named wrapper components to prevent React from unmounting/remounting
 // on every render (inline arrow functions create new references each time)
@@ -108,6 +109,9 @@ function IntegrationsPage() {
 function CommsHistoryPage() {
   return <DashboardLayout><CommsHistory /></DashboardLayout>;
 }
+function VoicemailsPageWrapper() {
+  return <DashboardLayout><VoicemailsPage /></DashboardLayout>;
+}
 
 function Router() {
   return (
@@ -138,6 +142,7 @@ function Router() {
       <Route path="/desk-management" component={DeskManagementPage} />
       <Route path="/integrations" component={IntegrationsPage} />
       <Route path="/comms-history" component={CommsHistoryPage} />
+      <Route path="/voicemails" component={VoicemailsPageWrapper} />
       <Route path="/notifications" component={NotificationsPage} />
       <Route path="/invite/:token" component={InviteAccept} />
       <Route path="/404" component={NotFound} />

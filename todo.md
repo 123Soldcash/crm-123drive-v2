@@ -3301,3 +3301,23 @@
 - [x] Fix matchedDeskNames scoping bug (was declared inside try block, moved outside)
 - [x] Add detailed logging for every step of desk routing
 - [x] Write comprehensive vitest tests for the routing flow (33 tests passing)
+
+## Voicemail System
+- [x] Add voicemails table to drizzle/schema.ts
+- [x] Push DB migration with pnpm db:push
+- [x] Update /api/twilio/inbound-status: on no-answer, play MP3 greeting + record caller message
+- [x] Add /api/twilio/voicemail-recording webhook to receive recording URL and save to DB
+- [x] Add voicemail greeting MP3 upload to Settings > Integrations
+- [x] Add tRPC procedures: voicemails.list, voicemails.markHeard, voicemails.getUnheardCount
+- [x] Build /voicemails page: list with audio player, caller number, property link, mark as heard
+- [x] Add Voicemails item to sidebar menu with unread badge count
+
+## Voicemail System
+- [x] Add voicemails table to drizzle/schema.ts
+- [x] Push DB migration with pnpm db:push
+- [x] Update /api/twilio/inbound-status: on no-answer, play MP3 greeting + record caller message
+- [x] Add /api/twilio/voicemail-recording webhook to receive recording URL and save to DB
+- [x] Add voicemail greeting MP3 upload to Settings > Integrations
+- [x] Add tRPC procedures: voicemails.list, voicemails.markHeard, voicemails.getUnheardCount
+- [x] Build /voicemails page: list with audio player, caller number, property link, mark as heard
+- [x] Add Voicemails item to sidebar menu with unread badge count

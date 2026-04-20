@@ -408,9 +408,36 @@ export function registerTwilioWebhooks(app: Express) {
     const VoiceResponse = twilio.default.twiml.VoiceResponse;
     const response = new VoiceResponse();
 
-    // If no one answered, play a message and flag for callback
+    // If no one answered, play voicemail greeting and record the caller's message
     if (dialCallStatus === "no-answer" || dialCallStatus === "busy" || dialCallStatus === "failed") {
-      response.say("We're sorry, no agents are available right now. Please try again later.");
+      // Fetch the voicemail greeting MP3 URL from integration settings
+      let greetingUrl: string | null = null;
+      try {
+        const { getIntegrationConfig } = await import("./integrationConfig");
+        const vmConfig = await getIntegrationConfig("voicemail");
+        greetingUrl = vmConfig.greetingUrl || null;
+      } catch (_) { /* ignore */ }
+
+      if (greetingUrl) {
+        response.play({}, greetingUrl);
+      } else {
+        response.say(
+          { voice: "alice", language: "en-US" },
+          "Hi, you have reached our office. We are currently unavailable. Please leave your name and message after the beep and we will call you back as soon as possible."
+        );
+      }
+
+      // Record the caller message — Twilio POSTs to /api/twilio/voicemail-recording when done
+      const baseUrl = req.headers["x-forwarded-host"]
+        ? `https://${req.headers["x-forwarded-host"]}`
+        : `${req.protocol}://${req.headers.host}`;
+      response.record({
+        action: `${baseUrl}/api/twilio/voicemail-recording`,
+        method: "POST",
+        maxLength: 120,
+        playBeep: true,
+        transcribe: false,
+      });
       response.hangup();
 
       // Flag the inbound call log entry for this CallSid as needsCallback
@@ -528,6 +555,80 @@ export function registerTwilioWebhooks(app: Express) {
       res.set("Content-Type", "text/xml");
       res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
     }
+  });
+
+  // --- Voicemail Recording Callback -------------------------------------------
+  // Twilio POSTs here after recording the caller voicemail message.
+  app.all("/api/twilio/voicemail-recording", async (req, res) => {
+    const callSid = req.body?.CallSid || req.query?.CallSid || "";
+    const recordingSid = req.body?.RecordingSid || req.query?.RecordingSid || "";
+    const recordingUrl = req.body?.RecordingUrl || req.query?.RecordingUrl || "";
+    const durationStr = req.body?.RecordingDuration || req.query?.RecordingDuration || "0";
+    const callerPhone = req.body?.From || req.query?.From || req.body?.Caller || "";
+    const calledNumber = req.body?.To || req.query?.To || req.body?.Called || "";
+    const duration = parseInt(durationStr, 10) || 0;
+
+    console.log(`[Twilio Voicemail] Recording received: ${recordingSid} from ${callerPhone} (${duration}s)`);
+
+    if (!recordingUrl) {
+      res.set("Content-Type", "text/xml");
+      res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
+      return;
+    }
+
+    try {
+      const { getDb } = await import("./db");
+      const { voicemails, contacts, contactPhones } = await import("../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const database = await getDb();
+
+      if (database) {
+        // Try to match caller phone to a property via contactPhones
+        let matchedPropertyId: number | undefined = undefined;
+        let matchedContactId: number | undefined = undefined;
+
+        if (callerPhone) {
+          const callerDigits = callerPhone.replace(/\D/g, "");
+          const allPhones = await database.select().from(contactPhones);
+          const matchedPhone = allPhones.find((p: any) => {
+            const d = (p.phoneNumber || "").replace(/\D/g, "");
+            return d === callerDigits || d === callerDigits.slice(-10);
+          });
+          if (matchedPhone) {
+            matchedContactId = matchedPhone.contactId;
+            const contactRow = await database
+              .select({ propertyId: contacts.propertyId })
+              .from(contacts)
+              .where(eq(contacts.id, matchedPhone.contactId))
+              .limit(1);
+            if (contactRow.length > 0) {
+              matchedPropertyId = contactRow[0].propertyId ?? undefined;
+            }
+          }
+        }
+
+        // Append .mp3 so browser audio player works natively
+        const mp3Url = recordingUrl.endsWith(".mp3") ? recordingUrl : `${recordingUrl}.mp3`;
+        await database.insert(voicemails).values({
+          callerPhone,
+          calledTwilioNumber: calledNumber || undefined,
+          propertyId: matchedPropertyId,
+          contactId: matchedContactId,
+          recordingUrl: mp3Url,
+          recordingSid: recordingSid || undefined,
+          callSid: callSid || undefined,
+          durationSeconds: duration,
+          isHeard: 0,
+        });
+
+        console.log(`[Twilio Voicemail] Saved voicemail from ${callerPhone} (property: ${matchedPropertyId ?? "unknown"})`);
+      }
+    } catch (err) {
+      console.error("[Twilio Voicemail] Error saving recording:", err);
+    }
+
+    res.set("Content-Type", "text/xml");
+    res.send('<?xml version="1.0" encoding="UTF-8"?><Response/>');
   });
 
   console.log("[Twilio] Webhook routes registered at /api/twilio/*");

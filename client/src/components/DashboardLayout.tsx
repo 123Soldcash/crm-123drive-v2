@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers, Link2, History } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Building2, MapPin, Activity, Upload, TrendingUp, Users, CheckSquare, Zap, GitMerge, Workflow, LogIn, MessageSquare, FileText, Phone, Layers, Link2, History, Voicemail } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -49,6 +49,7 @@ const menuItems = [
   { icon: Zap, label: "Bulk Assign Agents", path: "/bulk-assign-agents", adminOnly: true },
   { icon: Layers, label: "Desk Management", path: "/desk-management", adminOnly: true },
   { icon: Link2, label: "Integrations", path: "/integrations", adminOnly: true },
+  { icon: Voicemail, label: "Voicemails", path: "/voicemails" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -208,6 +209,13 @@ function DashboardLayoutContent({
   });
   const unreadSmsCount = unreadSmsData?.count ?? 0;
 
+  // Unheard voicemails count badge
+  const { data: unheardVoicemailData } = trpc.voicemails.getUnheardCount.useQuery(undefined, {
+    refetchInterval: 60_000,
+    enabled: !!user,
+  });
+  const unheardVoicemailCount = unheardVoicemailData?.count ?? 0;
+
   // Needs-callback count badge
   const { data: callbackData } = trpc.callHistory.needsCallbackCount.useQuery(undefined, {
     refetchInterval: 30_000,
@@ -307,6 +315,11 @@ function DashboardLayoutContent({
                         {item.path === "/tasks/kanban" && overdueTasksCount > 0 && (
                           <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
                             {overdueTasksCount > 9 ? "9+" : overdueTasksCount}
+                          </span>
+                        )}
+                        {item.path === "/voicemails" && unheardVoicemailCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-purple-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                            {unheardVoicemailCount > 9 ? "9+" : unheardVoicemailCount}
                           </span>
                         )}
                       </div>

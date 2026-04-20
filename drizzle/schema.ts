@@ -1726,3 +1726,25 @@ export const userSessions = mysqlTable("userSessions", {
 });
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = typeof userSessions.$inferInsert;
+
+// ─── Voicemails (Inbound missed-call recordings) ─────────────────────────────
+// When an inbound call goes unanswered, Twilio plays a greeting MP3 and records
+// the caller's message. The recording URL is stored here for agents to review.
+export const voicemails = mysqlTable("voicemails", {
+  id: int("id").autoincrement().primaryKey(),
+  callerPhone: varchar("callerPhone", { length: 30 }).notNull(),
+  calledTwilioNumber: varchar("calledTwilioNumber", { length: 30 }),
+  propertyId: int("propertyId"),
+  contactId: int("contactId"),
+  recordingUrl: varchar("recordingUrl", { length: 1000 }).notNull(),
+  recordingSid: varchar("recordingSid", { length: 100 }),
+  callSid: varchar("callSid", { length: 100 }),
+  durationSeconds: int("durationSeconds"),
+  isHeard: int("isHeard").default(0).notNull(),
+  heardByUserId: int("heardByUserId"),
+  heardAt: timestamp("heardAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Voicemail = typeof voicemails.$inferSelect;
+export type InsertVoicemail = typeof voicemails.$inferInsert;
