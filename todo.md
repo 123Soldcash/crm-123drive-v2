@@ -3469,3 +3469,9 @@
 - [x] Applied same color logic to email tab rows and no-phones fallback rows
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Decision Maker Priority Sorting
+- [x] Auto-position Decision Maker contacts at the top of the contact list
+- [x] Apply to both Phone Numbers and Emails tabs
+- [x] Maintain drag-and-drop order within decision makers and non-decision makers
+- [x] TypeScript check (0 errors) and save checkpoint

@@ -998,6 +998,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const phoneContacts = useMemo(() => {
     const filtered = filteredContacts?.filter((c: any) => c.contactType === 'phone' || (!c.contactType && c.phones && c.phones.length > 0)) || [];
     return [...filtered].sort((a: any, b: any) => {
+      // Decision makers always come first
+      const aDM = a.isDecisionMaker ? 1 : 0;
+      const bDM = b.isDecisionMaker ? 1 : 0;
+      if (aDM !== bDM) return bDM - aDM;
+      // Then contacts with phone data
       const aHasPhone = a.phoneNumber || (a.phones && a.phones.length > 0 && a.phones[0].phoneNumber);
       const bHasPhone = b.phoneNumber || (b.phones && b.phones.length > 0 && b.phones[0].phoneNumber);
       if (aHasPhone && !bHasPhone) return -1;
@@ -1009,6 +1014,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const emailContacts = useMemo(() => {
     const filtered = filteredContacts?.filter((c: any) => c.contactType === 'email') || [];
     return [...filtered].sort((a: any, b: any) => {
+      // Decision makers always come first
+      const aDM = a.isDecisionMaker ? 1 : 0;
+      const bDM = b.isDecisionMaker ? 1 : 0;
+      if (aDM !== bDM) return bDM - aDM;
+      // Then contacts with email data
       const aHasEmail = a.email || (a.emails && a.emails.length > 0 && a.emails[0].email);
       const bHasEmail = b.email || (b.emails && b.emails.length > 0 && b.emails[0].email);
       if (aHasEmail && !bHasEmail) return -1;
