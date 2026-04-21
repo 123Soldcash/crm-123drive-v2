@@ -1397,9 +1397,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <TableHead className="w-[150px]">Contact Name</TableHead>
                   <TableHead className="w-[120px]">Contact Relationship</TableHead>
 
-                  <TableHead className="w-[28px] text-center px-0">📱</TableHead>
-                  <TableHead className="w-[28px] text-center px-0">📞</TableHead>
-                  <TableHead className="w-[28px] text-center px-0">📋</TableHead>
+
                   <TableHead className="w-[130px]">Phone Number</TableHead>
                   <TableHead className="w-[60px] text-center">Attempts</TableHead>
                   <TableHead className="w-[180px]">Disposition</TableHead>
@@ -1454,31 +1452,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                             </>
                           )}
                           
-                          {/* Phone Type Checkboxes */}
-                          <TableCell className="text-center align-middle px-0">
-                            <Checkbox
-                              checked={phone.phoneType === "Mobile"}
-                              disabled
-                              className="pointer-events-none data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                              aria-label="Mobile"
-                            />
-                          </TableCell>
-                          <TableCell className="text-center align-middle px-0">
-                            <Checkbox
-                              checked={phone.phoneType === "Landline"}
-                              disabled
-                              className="pointer-events-none data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                              aria-label="Landline"
-                            />
-                          </TableCell>
-                          <TableCell className="text-center align-middle px-0">
-                            <Checkbox
-                              checked={!["Mobile", "Landline"].includes(phone.phoneType) && !!phone.phoneType}
-                              disabled
-                              className="pointer-events-none data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600"
-                              aria-label="Other"
-                            />
-                          </TableCell>
+
                           
 
 
