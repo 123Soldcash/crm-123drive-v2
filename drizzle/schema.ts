@@ -351,6 +351,20 @@ export const contacts = mysqlTable("contacts", {
   notes: text("notes"),
   dealMachineContactId: varchar("dealMachineContactId", { length: 50 }),
   
+  // Direct phone/email (1 contact = 1 phone or 1 email)
+  phoneNumber: varchar("phoneNumber", { length: 20 }),
+  phoneType: mysqlEnum("phoneType", ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"]).default("Mobile"),
+  email: varchar("email", { length: 255 }),
+  contactType: mysqlEnum("contactType", ["phone", "email"]).default("phone"), // which type this contact record represents
+  
+  // Phone-specific fields (from contactPhones)
+  carrier: varchar("carrier", { length: 100 }),
+  activityStatus: varchar("activityStatus", { length: 50 }),
+  isPrepaid: int("isPrepaid").default(0),
+  trestleScore: int("trestleScore"),
+  trestleLineType: varchar("trestleLineType", { length: 50 }),
+  trestleLastChecked: timestamp("trestleLastChecked"),
+  
   // Decision making & flags
   isDecisionMaker: int("isDecisionMaker").default(0).notNull(), // 0=NO, 1=YES - who can sell the property
   dnc: int("dnc").default(0).notNull(), // 0=NO, 1=YES - Do Not Call flag

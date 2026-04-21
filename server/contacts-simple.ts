@@ -1,14 +1,12 @@
 /**
  * Simple, direct contact fetching functions
- * This bypasses complex logic and gets contacts directly from the database
+ * Updated for new model: 1 contact = 1 phone OR 1 email (stored directly on contacts table)
  */
 
 import { getDb } from "./db";
 import { eq, asc } from "drizzle-orm";
 import {
   contacts,
-  contactPhones,
-  contactEmails,
   contactAddresses,
   properties,
 } from "../drizzle/schema";
@@ -16,12 +14,14 @@ import {
 /**
  * Get all contacts for a property by ANY property identifier
  * Handles both database ID and leadId automatically
+ *
+ * New model: phoneNumber, phoneType, email are directly on the contacts row.
+ * We still return phones[] and emails[] arrays for backward compatibility with the frontend,
+ * but each array will have at most 1 entry derived from the contact's own fields.
  */
 export async function getPropertyContactsSimple(propertyIdentifier: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
-
 
   // Step 1: Find the actual database ID for this property
   let propertyDbId: number | null = null;
@@ -35,7 +35,6 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
 
   if (byLeadId.length > 0) {
     propertyDbId = byLeadId[0].id;
-
   } else {
     // Try by database ID
     const byDbId = await db
@@ -43,15 +42,12 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
       .from(properties)
       .where(eq(properties.id, propertyIdentifier))
       .limit(1);
-
     if (byDbId.length > 0) {
       propertyDbId = byDbId[0].id;
-  
     }
   }
 
   if (!propertyDbId) {
-
     return [];
   }
 
@@ -62,24 +58,56 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
     .where(eq(contacts.propertyId, propertyDbId))
     .orderBy(asc(contacts.sortOrder), asc(contacts.id));
 
-
-
-  // Step 3: For each contact, get phones and emails
+  // Step 3: Build response with backward-compatible phones/emails arrays
   const contactsWithDetails = await Promise.all(
     contactsList.map(async (contact) => {
-      // Get phones
-      const phones = await db
-        .select()
-        .from(contactPhones)
-        .where(eq(contactPhones.contactId, contact.id));
+      // Build phones array from direct contact fields (at most 1 entry)
+      const phones: Array<{
+        id: number;
+        contactId: number;
+        phoneNumber: string;
+        phoneType: string | null;
+        isPrimary: number;
+        dnc: number;
+        isLitigator: number;
+        trestleScore: number | null;
+        trestleLineType: string | null;
+        trestleLastChecked: Date | null;
+      }> = [];
 
-      // Get emails
-      const emails = await db
-        .select()
-        .from(contactEmails)
-        .where(eq(contactEmails.contactId, contact.id));
+      if (contact.phoneNumber) {
+        phones.push({
+          id: contact.id, // use contact id as phone id for compatibility
+          contactId: contact.id,
+          phoneNumber: contact.phoneNumber,
+          phoneType: contact.phoneType || "Mobile",
+          isPrimary: 1,
+          dnc: contact.dnc || 0,
+          isLitigator: contact.isLitigator || 0,
+          trestleScore: contact.trestleScore || null,
+          trestleLineType: contact.trestleLineType || null,
+          trestleLastChecked: contact.trestleLastChecked || null,
+        });
+      }
 
-      // Get addresses
+      // Build emails array from direct contact fields (at most 1 entry)
+      const emails: Array<{
+        id: number;
+        contactId: number;
+        email: string;
+        isPrimary: number;
+      }> = [];
+
+      if (contact.email) {
+        emails.push({
+          id: contact.id,
+          contactId: contact.id,
+          email: contact.email,
+          isPrimary: 1,
+        });
+      }
+
+      // Get addresses (still from separate table)
       let addresses: any[] = [];
       try {
         addresses = await db
@@ -88,17 +116,14 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
           .where(eq(contactAddresses.contactId, contact.id));
       } catch (e) {
         // Table might not exist
-        // Addresses table might not exist
       }
-
-
 
       return {
         ...contact,
         phones,
         emails,
         addresses,
-        socialMedia: [], // Empty for now
+        socialMedia: [],
       };
     })
   );

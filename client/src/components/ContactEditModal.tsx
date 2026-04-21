@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  User, Phone, Mail, Save, X, Plus, Trash2, History, AlertCircle, AlertTriangle, Search, Loader2, ShieldAlert, Activity,
+  User, Phone, Mail, Save, X, History, AlertCircle, AlertTriangle, Search, Loader2, ShieldAlert, Activity,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -67,23 +67,22 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const [onBoard, setOnBoard] = useState(false);
   const [notOnBoard, setNotOnBoard] = useState(false);
 
-  // Phones
-  const [phones, setPhones] = useState<Array<{ id?: number; phoneNumber: string; phoneType: string; isPrimary: number; dnc: number; trestleScore?: number | null; isLitigator?: number; trestleLineType?: string | null; trestleLastChecked?: string | null }>>([]); 
-  const [lookingUpPhone, setLookingUpPhone] = useState<number | null>(null);
-  const [newPhone, setNewPhone] = useState("");
-  const [newPhoneType, setNewPhoneType] = useState("Mobile");
+  // New model: single phone and email directly on the contact
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneType, setPhoneType] = useState("Mobile");
+  const [email, setEmail] = useState("");
 
-  // Emails
-  const [emails, setEmails] = useState<Array<{ email: string; isPrimary: number }>>([]);
-  const [newEmail, setNewEmail] = useState("");
+  // TrestleIQ data (read-only display from the contact's phone)
+  const [trestleScore, setTrestleScore] = useState<number | null>(null);
+  const [trestleLineType, setTrestleLineType] = useState<string | null>(null);
+  const [trestleLastChecked, setTrestleLastChecked] = useState<string | null>(null);
+  const [phoneIsLitigator, setPhoneIsLitigator] = useState(false);
+  const [lookingUpPhone, setLookingUpPhone] = useState(false);
 
   // Errors & warnings
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [crossPropertyWarnings, setCrossPropertyWarnings] = useState<Array<{ phone: string; propertyId: number; leadId: number | null; address: string }>>([]);
   const [showCrossPropertyConfirm, setShowCrossPropertyConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'addPhone' | 'save' | null>(null);
-  const [pendingPhoneToAdd, setPendingPhoneToAdd] = useState<{ phoneNumber: string; phoneType: string } | null>(null);
 
   // ── Communication log ──────────────────────────────────────────────────────
   const { data: communications } = trpc.communication.getCommunicationLog.useQuery(
@@ -110,25 +109,22 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
       setContacted(contact.contacted === 1);
       setOnBoard(contact.onBoard === 1);
       setNotOnBoard(contact.notOnBoard === 1);
-      setPhones(
-        (contact.phones || []).map((p: any) => ({
-          id: p.id,
-          phoneNumber: p.phoneNumber || "",
-          phoneType: p.phoneType || "Mobile",
-          isPrimary: p.isPrimary || 0,
-          dnc: p.dnc || 0,
-          trestleScore: p.trestleScore ?? null,
-          isLitigator: p.isLitigator ?? 0,
-          trestleLineType: p.trestleLineType ?? null,
-          trestleLastChecked: p.trestleLastChecked ?? null,
-        }))
-      );
-      setEmails(
-        (contact.emails || []).map((e: any) => ({
-          email: e.email || "",
-          isPrimary: e.isPrimary || 0,
-        }))
-      );
+
+      // New model: phone/email directly on the contact
+      // First check direct fields, then fall back to phones[0]/emails[0] for backward compat
+      const directPhone = contact.phoneNumber || (contact.phones?.[0]?.phoneNumber) || "";
+      const directPhoneType = contact.phoneType || (contact.phones?.[0]?.phoneType) || "Mobile";
+      const directEmail = contact.email || (contact.emails?.[0]?.email) || "";
+      setPhoneNumber(directPhone);
+      setPhoneType(directPhoneType);
+      setEmail(directEmail);
+
+      // TrestleIQ data from the phone
+      const phoneData = contact.phones?.[0];
+      setTrestleScore(phoneData?.trestleScore ?? contact.trestleScore ?? null);
+      setTrestleLineType(phoneData?.trestleLineType ?? contact.trestleLineType ?? null);
+      setTrestleLastChecked(phoneData?.trestleLastChecked ?? contact.trestleLastChecked ?? null);
+      setPhoneIsLitigator(!!(phoneData?.isLitigator || contact.isLitigator));
     }
   }, [contact]);
 
@@ -167,16 +163,14 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
         contacted: contacted ? 1 : 0,
         onBoard: onBoard ? 1 : 0,
         notOnBoard: notOnBoard ? 1 : 0,
-        phones: phones.map(p => ({
-          phoneNumber: p.phoneNumber,
-          phoneType: p.phoneType || "Mobile",
-          isPrimary: p.isPrimary || 0,
-          dnc: dnc ? 1 : 0,
-        })),
-        emails: emails.map(e => ({
-          email: e.email,
-          isPrimary: e.isPrimary || 0,
-        })),
+        // New model: direct phone/email fields
+        phoneNumber: phoneNumber || undefined,
+        phoneType: phoneType || undefined,
+        email: email || undefined,
+        contactType: phoneNumber ? "phone" : (email ? "email" : undefined),
+        // Also pass legacy phones/emails for backward compat
+        phones: phoneNumber ? [{ phoneNumber, phoneType: phoneType || "Mobile", isPrimary: 1, dnc: dnc ? 1 : 0 }] : [],
+        emails: email ? [{ email, isPrimary: 1 }] : [],
       });
     } catch (_) { /* handled by onError */ }
   };
@@ -184,18 +178,18 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const handleSave = async () => {
     if (!contact?.id) return;
     setSaveError(null);
-    const originalPhoneNums = new Set(
-      (contact.phones || []).map((p: any) => p.phoneNumber.replace(/\D/g, ''))
-    );
-    const newPhoneNumbers = phones
-      .filter(p => !originalPhoneNums.has(p.phoneNumber.replace(/\D/g, '')))
-      .map(p => p.phoneNumber);
-    if (newPhoneNumbers.length > 0) {
+
+    // Check if phone changed
+    const originalPhone = contact.phoneNumber || contact.phones?.[0]?.phoneNumber || "";
+    const normalizedOriginal = originalPhone.replace(/\D/g, "");
+    const normalizedNew = phoneNumber.replace(/\D/g, "");
+
+    if (phoneNumber && normalizedNew !== normalizedOriginal) {
+      // New phone number — check cross-property
       try {
-        const result = await utils.communication.checkCrossPropertyPhones.fetch({ propertyId, phones: newPhoneNumbers });
+        const result = await utils.communication.checkCrossPropertyPhones.fetch({ propertyId, phones: [phoneNumber] });
         if (result.matches && result.matches.length > 0) {
           setCrossPropertyWarnings(result.matches);
-          setPendingAction('save');
           setShowCrossPropertyConfirm(true);
           return;
         }
@@ -204,50 +198,11 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
     await doSave();
   };
 
-  const handleAddPhone = async () => {
-    if (!newPhone.trim()) return;
-    const normalized = newPhone.trim().replace(/\D/g, "");
-    if (phones.some(p => p.phoneNumber.replace(/\D/g, "") === normalized)) {
-      setPhoneError(`Phone number ${newPhone.trim()} already exists for this contact`);
-      return;
-    }
-    setPhoneError(null);
-    try {
-      const result = await utils.communication.checkCrossPropertyPhones.fetch({ propertyId, phones: [newPhone.trim()] });
-      if (result.matches && result.matches.length > 0) {
-        setCrossPropertyWarnings(result.matches);
-        setPendingAction('addPhone');
-        setPendingPhoneToAdd({ phoneNumber: newPhone.trim(), phoneType: newPhoneType });
-        setShowCrossPropertyConfirm(true);
-        return;
-      }
-    } catch (_) { /* proceed anyway */ }
-    setPhones([...phones, { phoneNumber: newPhone.trim(), phoneType: newPhoneType, isPrimary: 0, dnc: 0 }]);
-    setNewPhone("");
-    setNewPhoneType("Mobile");
-  };
-
   const handleCrossPropertyConfirm = () => {
     setShowCrossPropertyConfirm(false);
     setCrossPropertyWarnings([]);
-    if (pendingAction === 'addPhone' && pendingPhoneToAdd) {
-      setPhones([...phones, { phoneNumber: pendingPhoneToAdd.phoneNumber, phoneType: pendingPhoneToAdd.phoneType, isPrimary: 0, dnc: 0 }]);
-      setNewPhone("");
-      setNewPhoneType("Mobile");
-      setPendingPhoneToAdd(null);
-    } else if (pendingAction === 'save') {
-      doSave();
-    }
-    setPendingAction(null);
+    doSave();
   };
-
-  const handleRemovePhone = (index: number) => setPhones(phones.filter((_, i) => i !== index));
-  const handleAddEmail = () => {
-    if (!newEmail.trim()) return;
-    setEmails([...emails, { email: newEmail.trim(), isPrimary: 0 }]);
-    setNewEmail("");
-  };
-  const handleRemoveEmail = (index: number) => setEmails(emails.filter((_, i) => i !== index));
 
   if (!contact) return null;
 
@@ -262,6 +217,11 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             <DialogTitle className="flex items-center gap-3 text-lg">
               <User className="h-6 w-6 text-primary" />
               Edit Contact: <span className="font-bold">{contact.name || "Unknown"}</span>
+              {contact.contactType && (
+                <Badge variant="outline" className="text-xs ml-2">
+                  {contact.contactType === "phone" ? "📞 Phone Contact" : "📧 Email Contact"}
+                </Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
 
@@ -334,176 +294,131 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
               </div>
             </section>
 
-            {/* ══ SECTION 2: Phones & Emails ══════════════════════════════════ */}
+            {/* ══ SECTION 2: Phone & Email (single fields) ═══════════════════ */}
             <section className="border-t pt-6">
               <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-                <Phone className="h-4.5 w-4.5" /> Phones &amp; Emails
+                <Phone className="h-4.5 w-4.5" /> Phone &amp; Email
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
-                {/* ── Phones ── */}
+                {/* ── Phone ── */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium">Phone Numbers</span>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">{phones.length}</Badge>
+                    <span className="text-sm font-medium">Phone Number</span>
                   </div>
 
-                  {phones.length > 0 ? (
-                    <div className="space-y-2">
-                      {phones.map((phone, idx) => (
-                        <div key={idx} className="p-2.5 bg-muted/30 rounded-lg border text-sm space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono flex-1 truncate text-sm">{formatPhone(phone.phoneNumber)}</span>
-                            <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 shrink-0">{phone.phoneType}</Badge>
-                            {phone.dnc === 1 && <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">DNC</Badge>}
-                            {phone.isLitigator === 1 && <Badge className="bg-red-600 text-white text-xs px-1.5 py-0 h-5"><ShieldAlert className="h-3 w-3 mr-0.5" />Litigator</Badge>}
-                            <button onClick={() => handleRemovePhone(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                          {/* TrestleIQ Score & Lookup */}
-                          <div className="flex items-center gap-2 pl-1">
-                            {phone.trestleScore != null && (
-                              <div className="flex items-center gap-1">
-                                <Activity className={`h-3.5 w-3.5 ${
-                                  phone.trestleScore >= 70 ? 'text-green-600' :
-                                  phone.trestleScore >= 30 ? 'text-amber-500' : 'text-red-500'
-                                }`} />
-                                <span className={`text-xs font-semibold ${
-                                  phone.trestleScore >= 70 ? 'text-green-700' :
-                                  phone.trestleScore >= 30 ? 'text-amber-600' : 'text-red-600'
-                                }`}>
-                                  Score: {phone.trestleScore}/100
-                                </span>
-                              </div>
-                            )}
-                            {phone.trestleLineType && (
-                              <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">{phone.trestleLineType}</Badge>
-                            )}
-                            {phone.trestleLastChecked && (
-                              <span className="text-xs text-muted-foreground">
-                                Checked: {new Date(phone.trestleLastChecked).toLocaleDateString()}
-                              </span>
-                            )}
-                            {phone.id && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-6 px-2 text-xs ml-auto"
-                                disabled={lookingUpPhone === phone.id}
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  if (!phone.id) return;
-                                  setLookingUpPhone(phone.id);
-                                  try {
-                                    const result = await utils.client.trestleiq.lookupPhone.mutate({ phoneId: phone.id });
-                                    // Update the local phone state with the result
-                                    setPhones(prev => prev.map((p, i) => i === idx ? {
-                                      ...p,
-                                      trestleScore: result.activityScore,
-                                      isLitigator: result.isLitigator ? 1 : 0,
-                                      trestleLineType: result.lineType,
-                                      trestleLastChecked: new Date().toISOString(),
-                                    } : p));
-                                    if (result.isLitigator) {
-                                      toast.error(`⚠️ LITIGATOR RISK: ${formatPhone(phone.phoneNumber)} — Score: ${result.activityScore}/100`);
-                                    } else {
-                                      toast.success(`TrestleIQ: Score ${result.activityScore}/100, ${result.lineType || 'Unknown'} — ${result.carrier || ''}`);
-                                    }
-                                  } catch (err: any) {
-                                    toast.error(`TrestleIQ error: ${err.message}`);
-                                  } finally {
-                                    setLookingUpPhone(null);
-                                  }
-                                }}
-                              >
-                                {lookingUpPhone === phone.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                ) : (
-                                  <Search className="h-3 w-3 mr-1" />
-                                )}
-                                TrestleIQ
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">No phone numbers</p>
-                  )}
-
-                  {/* Add phone */}
                   <div className="flex gap-2">
                     <Input
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="Add phone"
-                      className="h-10 text-sm flex-1"
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddPhone(); }}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="Phone number"
+                      className="h-11 text-base flex-1"
                     />
-                    <Select value={newPhoneType} onValueChange={setNewPhoneType}>
-                      <SelectTrigger className="h-10 w-[110px] text-sm">
+                    <Select value={phoneType} onValueChange={setPhoneType}>
+                      <SelectTrigger className="h-11 w-[130px] text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {["Mobile", "Landline", "Work", "Home", "Other"].map(t => (
-                          <SelectItem key={t} value={t} className="text-sm">{t}</SelectItem>
+                          <SelectItem key={t} value={t} className="text-base">{t}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="sm" className="h-10 px-3" onClick={handleAddPhone} disabled={!newPhone.trim()}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
                   </div>
-                  {phoneError && (
-                    <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>{phoneError}</span>
+
+                  {/* TrestleIQ Score & Lookup */}
+                  {phoneNumber && (
+                    <div className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-lg border">
+                      {trestleScore != null && (
+                        <div className="flex items-center gap-1">
+                          <Activity className={`h-3.5 w-3.5 ${
+                            trestleScore >= 70 ? 'text-green-600' :
+                            trestleScore >= 30 ? 'text-amber-500' : 'text-red-500'
+                          }`} />
+                          <span className={`text-xs font-semibold ${
+                            trestleScore >= 70 ? 'text-green-700' :
+                            trestleScore >= 30 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            Score: {trestleScore}/100
+                          </span>
+                        </div>
+                      )}
+                      {trestleLineType && (
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">{trestleLineType}</Badge>
+                      )}
+                      {phoneIsLitigator && (
+                        <Badge className="bg-red-600 text-white text-xs px-1.5 py-0 h-5">
+                          <ShieldAlert className="h-3 w-3 mr-0.5" />Litigator
+                        </Badge>
+                      )}
+                      {trestleLastChecked && (
+                        <span className="text-xs text-muted-foreground">
+                          Checked: {new Date(trestleLastChecked).toLocaleDateString()}
+                        </span>
+                      )}
+                      {/* TrestleIQ Lookup button - uses the phone from the contact's phones array if available */}
+                      {contact?.phones?.[0]?.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-xs ml-auto"
+                          disabled={lookingUpPhone}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const phoneId = contact.phones[0].id;
+                            if (!phoneId) return;
+                            setLookingUpPhone(true);
+                            try {
+                              const result = await utils.client.trestleiq.lookupPhone.mutate({ phoneId });
+                              setTrestleScore(result.activityScore);
+                              setPhoneIsLitigator(!!result.isLitigator);
+                              setTrestleLineType(result.lineType);
+                              setTrestleLastChecked(new Date().toISOString());
+                              if (result.isLitigator) {
+                                toast.error(`⚠️ LITIGATOR RISK: ${formatPhone(phoneNumber)} — Score: ${result.activityScore}/100`);
+                              } else {
+                                toast.success(`TrestleIQ: Score ${result.activityScore}/100, ${result.lineType || 'Unknown'} — ${result.carrier || ''}`);
+                              }
+                            } catch (err: any) {
+                              toast.error(`TrestleIQ error: ${err.message}`);
+                            } finally {
+                              setLookingUpPhone(false);
+                            }
+                          }}
+                        >
+                          {lookingUpPhone ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <Search className="h-3 w-3 mr-1" />
+                          )}
+                          TrestleIQ
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* ── Emails ── */}
+                {/* ── Email ── */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium">Email Addresses</span>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">{emails.length}</Badge>
+                    <span className="text-sm font-medium">Email Address</span>
                   </div>
 
-                  {emails.length > 0 ? (
-                    <div className="space-y-2">
-                      {emails.map((email, idx) => (
-                        <div key={idx} className="flex items-center gap-2 p-2.5 bg-muted/30 rounded-lg border text-sm">
-                          <span className="flex-1 truncate text-sm">{email.email}</span>
-                          <button onClick={() => handleRemoveEmail(idx)} className="text-red-400 hover:text-red-600 shrink-0 p-1">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">No email addresses</p>
-                  )}
-
-                  {/* Add email */}
-                  <div className="flex gap-2">
-                    <Input
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="Add email"
-                      className="h-10 text-sm flex-1"
-                      type="email"
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddEmail(); }}
-                    />
-                    <Button variant="outline" size="sm" className="h-10 px-3" onClick={handleAddEmail} disabled={!newEmail.trim()}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email address"
+                    type="email"
+                    className="h-11 text-base"
+                  />
                 </div>
               </div>
+
+              <p className="text-xs text-muted-foreground mt-3 italic">
+                Each contact has one phone number and/or one email. To add another phone, create a new contact.
+              </p>
             </section>
 
             {/* ══ SECTION 3: Call History (scrollable list) ═══════════════════ */}
@@ -624,8 +539,6 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             <AlertDialogCancel onClick={() => {
               setShowCrossPropertyConfirm(false);
               setCrossPropertyWarnings([]);
-              setPendingAction(null);
-              setPendingPhoneToAdd(null);
             }}>
               Cancel
             </AlertDialogCancel>
@@ -633,7 +546,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
               onClick={handleCrossPropertyConfirm}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
-              {pendingAction === 'save' ? 'Save Anyway' : 'Add Anyway'}
+              Save Anyway
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

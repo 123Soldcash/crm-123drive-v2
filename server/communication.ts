@@ -46,66 +46,42 @@ export async function getContactsByProperty(propertyId: number) {
   const dbPropertyId = await resolvePropertyDbId(propertyId);
   if (!dbPropertyId) return [];
   
-  const contactsData = await db.select({
-    id: contacts.id,
-    propertyId: contacts.propertyId,
-    name: contacts.name,
-    relationship: contacts.relationship,
-    age: contacts.age,
-    deceased: contacts.deceased,
-    currentAddress: contacts.currentAddress,
-    flags: contacts.flags,
-    notes: contacts.notes,
-    dnc: contacts.dnc,
-    isLitigator: contacts.isLitigator,
-    isDecisionMaker: contacts.isDecisionMaker,
-    hidden: contacts.hidden,
-    currentResident: contacts.currentResident,
-    contacted: contacts.contacted,
-    contactedDate: contacts.contactedDate,
-    onBoard: contacts.onBoard,
-    notOnBoard: contacts.notOnBoard,
-    sortOrder: contacts.sortOrder,
-  }).from(contacts).where(eq(contacts.propertyId, dbPropertyId)).orderBy(contacts.sortOrder);
+  const contactsData = await db.select().from(contacts).where(eq(contacts.propertyId, dbPropertyId)).orderBy(contacts.sortOrder);
   
-  // For each contact, fetch phones, emails, and addresses with error handling for missing tables
+  // New model: phoneNumber/email are directly on the contacts row.
+  // Build backward-compatible phones[]/emails[] arrays from direct fields.
   const contactsWithDetails = await Promise.all(
     contactsData.map(async (contact) => {
-      let phones: any[] = [];
-      let emails: any[] = [];
+      // Build phones array from direct contact fields (at most 1 entry)
+      const phones: any[] = [];
+      if (contact.phoneNumber) {
+        phones.push({
+          id: contact.id,
+          contactId: contact.id,
+          phoneNumber: contact.phoneNumber,
+          phoneType: contact.phoneType || "Mobile",
+          isPrimary: 1,
+          dnc: contact.dnc || 0,
+          isLitigator: contact.isLitigator || 0,
+          trestleScore: contact.trestleScore || null,
+          trestleLineType: contact.trestleLineType || null,
+          trestleLastChecked: contact.trestleLastChecked || null,
+        });
+      }
+      
+      // Build emails array from direct contact fields (at most 1 entry)
+      const emails: any[] = [];
+      if (contact.email) {
+        emails.push({
+          id: contact.id,
+          contactId: contact.id,
+          email: contact.email,
+          isPrimary: 1,
+        });
+      }
+      
+      // Fetch addresses - still from separate table
       let addresses: any[] = [];
-      
-      // Fetch phones - table should exist
-      try {
-        phones = await db.select({
-          id: contactPhones.id,
-          contactId: contactPhones.contactId,
-          phoneNumber: contactPhones.phoneNumber,
-          phoneType: contactPhones.phoneType,
-          isPrimary: contactPhones.isPrimary,
-          dnc: contactPhones.dnc,
-          isLitigator: contactPhones.isLitigator,
-          trestleScore: contactPhones.trestleScore,
-          trestleLineType: contactPhones.trestleLineType,
-          trestleLastChecked: contactPhones.trestleLastChecked,
-        }).from(contactPhones).where(eq(contactPhones.contactId, contact.id));
-      } catch (e) {
-        console.error('Error fetching phones:', e);
-      }
-      
-      // Fetch emails - table should exist
-      try {
-        emails = await db.select({
-          id: contactEmails.id,
-          contactId: contactEmails.contactId,
-          email: contactEmails.email,
-          isPrimary: contactEmails.isPrimary,
-        }).from(contactEmails).where(eq(contactEmails.contactId, contact.id));
-      } catch (e) {
-        console.error('Error fetching emails:', e);
-      }
-      
-      // Fetch addresses - table may not exist
       try {
         addresses = await db.select({ id: contactAddresses.id, contactId: contactAddresses.contactId, address: contactAddresses.addressLine1, city: contactAddresses.city, state: contactAddresses.state, zipcode: contactAddresses.zipcode }).from(contactAddresses).where(eq(contactAddresses.contactId, contact.id));
       } catch (e) {
@@ -114,8 +90,8 @@ export async function getContactsByProperty(propertyId: number) {
       
       return {
         ...contact,
-        phones: phones || [],
-        emails: emails || [],
+        phones,
+        emails,
         addresses: addresses || [],
       };
     })
@@ -128,7 +104,7 @@ export async function getContactById(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.select({ id: contacts.id, propertyId: contacts.propertyId, name: contacts.name, relationship: contacts.relationship }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  const result = await db.select().from(contacts).where(eq(contacts.id, contactId)).limit(1);
   return result[0] || null;
 }
 
@@ -137,26 +113,22 @@ function normalizePhone(phone: string): string {
   return phone.replace(/\D/g, '').replace(/^1/, ''); // strip non-digits and leading country code 1
 }
 
-// Helper: get all existing phone numbers for a property
+// Helper: get all existing phone numbers for a property (uses direct contacts.phoneNumber)
 export async function getExistingPhonesForProperty(propertyId: number): Promise<string[]> {
   const db = await getDb();
   if (!db) return [];
   
-  const propertyContacts = await db.select({ id: contacts.id })
+  const propertyContacts = await db.select({ phoneNumber: contacts.phoneNumber })
     .from(contacts)
     .where(eq(contacts.propertyId, propertyId));
   
-  if (propertyContacts.length === 0) return [];
-  
-  const contactIds = propertyContacts.map(c => c.id);
-  const phones = await db.select({ phoneNumber: contactPhones.phoneNumber })
-    .from(contactPhones)
-    .where(inArray(contactPhones.contactId, contactIds));
-  
-  return phones.map(p => normalizePhone(p.phoneNumber));
+  return propertyContacts
+    .filter(c => c.phoneNumber)
+    .map(c => normalizePhone(c.phoneNumber!));
 }
 
 // Helper: check if phones exist in OTHER properties (cross-property warning)
+// Uses contacts.phoneNumber directly instead of contactPhones join table
 export async function findCrossPropertyPhones(
   currentPropertyId: number,
   phonesToCheck: string[]
@@ -171,43 +143,40 @@ export async function findCrossPropertyPhones(
 
   const normalizedInput = phonesToCheck.map(p => normalizePhone(p));
 
-  // Get all phones from ALL contacts across ALL properties
-  const allPhones = await db
+  // Get all contacts with phone numbers across ALL properties
+  const allContactsWithPhones = await db
     .select({
-      phoneNumber: contactPhones.phoneNumber,
-      contactId: contactPhones.contactId,
+      id: contacts.id,
+      phoneNumber: contacts.phoneNumber,
+      propertyId: contacts.propertyId,
     })
-    .from(contactPhones);
+    .from(contacts)
+    .where(sql`${contacts.phoneNumber} IS NOT NULL`);
 
-  // Build a map: normalized phone -> contactIds
-  const phoneToContactIds = new Map<string, number[]>();
-  for (const row of allPhones) {
+  // Build a map: normalized phone -> propertyIds
+  const phoneToProperties = new Map<string, Set<number>>();
+  const phoneToContactPropertyMap = new Map<string, Array<{ contactId: number; propertyId: number }>>();
+  for (const row of allContactsWithPhones) {
+    if (!row.phoneNumber) continue;
     const norm = normalizePhone(row.phoneNumber);
-    if (!phoneToContactIds.has(norm)) phoneToContactIds.set(norm, []);
-    phoneToContactIds.get(norm)!.push(row.contactId);
+    if (!phoneToProperties.has(norm)) phoneToProperties.set(norm, new Set());
+    phoneToProperties.get(norm)!.add(row.propertyId);
+    if (!phoneToContactPropertyMap.has(norm)) phoneToContactPropertyMap.set(norm, []);
+    phoneToContactPropertyMap.get(norm)!.push({ contactId: row.id, propertyId: row.propertyId });
   }
 
-  // For each input phone, find contacts that are NOT in the current property
+  // For each input phone, find properties that are NOT the current property
   const results: Array<{ phone: string; propertyId: number; leadId: number | null; address: string }> = [];
   const seenProperties = new Set<string>(); // phone+propertyId dedup
 
   for (const normPhone of normalizedInput) {
-    const contactIds = phoneToContactIds.get(normPhone);
-    if (!contactIds || contactIds.length === 0) continue;
+    const entries = phoneToContactPropertyMap.get(normPhone);
+    if (!entries || entries.length === 0) continue;
 
-    // Get the property info for these contacts
-    for (const cId of contactIds) {
-      const contactRow = await db
-        .select({ propertyId: contacts.propertyId })
-        .from(contacts)
-        .where(eq(contacts.id, cId))
-        .limit(1);
+    for (const entry of entries) {
+      if (entry.propertyId === dbPropertyId) continue; // same property, skip
 
-      if (contactRow.length === 0) continue;
-      const propId = contactRow[0].propertyId;
-      if (propId === dbPropertyId) continue; // same property, skip
-
-      const key = `${normPhone}-${propId}`;
+      const key = `${normPhone}-${entry.propertyId}`;
       if (seenProperties.has(key)) continue;
       seenProperties.add(key);
 
@@ -222,7 +191,7 @@ export async function findCrossPropertyPhones(
           zipcode: properties.zipcode,
         })
         .from(properties)
-        .where(eq(properties.id, propId))
+        .where(eq(properties.id, entry.propertyId))
         .limit(1);
 
       if (propRow.length > 0) {
@@ -241,28 +210,25 @@ export async function findCrossPropertyPhones(
   return results;
 }
 
-// Helper: check which phones are duplicates within a property
+// Helper: check which phones are duplicates within a property (uses contacts.phoneNumber directly)
 export async function findDuplicatePhones(propertyId: number, newPhones: string[], excludeContactId?: number): Promise<string[]> {
   const db = await getDb();
   if (!db) return [];
   
-  const propertyContacts = await db.select({ id: contacts.id })
+  let propertyContacts = await db.select({ id: contacts.id, phoneNumber: contacts.phoneNumber })
     .from(contacts)
     .where(eq(contacts.propertyId, propertyId));
   
+  if (excludeContactId) {
+    propertyContacts = propertyContacts.filter(c => c.id !== excludeContactId);
+  }
   if (propertyContacts.length === 0) return [];
   
-  let contactIds = propertyContacts.map(c => c.id);
-  if (excludeContactId) {
-    contactIds = contactIds.filter(id => id !== excludeContactId);
-  }
-  if (contactIds.length === 0) return [];
-  
-  const existingPhones = await db.select({ phoneNumber: contactPhones.phoneNumber })
-    .from(contactPhones)
-    .where(inArray(contactPhones.contactId, contactIds));
-  
-  const existingNormalized = new Set(existingPhones.map(p => normalizePhone(p.phoneNumber)));
+  const existingNormalized = new Set(
+    propertyContacts
+      .filter(c => c.phoneNumber)
+      .map(c => normalizePhone(c.phoneNumber!))
+  );
   const newNormalized = newPhones.map(p => normalizePhone(p));
   
   return newNormalized.filter(p => existingNormalized.has(p));
@@ -274,10 +240,25 @@ export async function createContact(contactData: any) {
   
   const { phones, emails, addresses, ...contactBase } = contactData;
   
+  // New model: phoneNumber and email go directly on the contact record
+  // If phones array is provided (backward compat), extract first phone into direct fields
+  if (phones && Array.isArray(phones) && phones.length > 0 && !contactBase.phoneNumber) {
+    contactBase.phoneNumber = phones[0].phoneNumber;
+    contactBase.phoneType = phones[0].phoneType || "Mobile";
+    contactBase.contactType = "phone";
+  }
+  
+  // If emails array is provided (backward compat), extract first email into direct field
+  if (emails && Array.isArray(emails) && emails.length > 0 && !contactBase.email) {
+    contactBase.email = emails[0].email;
+    if (!contactBase.phoneNumber) {
+      contactBase.contactType = "email";
+    }
+  }
+  
   // Check for duplicate phones within the same property
-  if (phones && Array.isArray(phones) && phones.length > 0 && contactBase.propertyId) {
-    const phoneNumbers = phones.map((p: any) => p.phoneNumber);
-    const duplicates = await findDuplicatePhones(contactBase.propertyId, phoneNumbers);
+  if (contactBase.phoneNumber && contactBase.propertyId) {
+    const duplicates = await findDuplicatePhones(contactBase.propertyId, [contactBase.phoneNumber]);
     if (duplicates.length > 0) {
       throw new Error(`Duplicate phone number(s) already exist in this property: ${duplicates.join(', ')}`);
     }
@@ -286,17 +267,32 @@ export async function createContact(contactData: any) {
   const result = await db.insert(contacts).values(contactBase);
   const contactId = result[0].insertId;
   
-  // Add phones
-  if (phones && Array.isArray(phones)) {
-    for (const phone of phones) {
-      await addPhone({ ...phone, contactId });
+  // Also insert into contactPhones for backward compat with Trestle/DNC logic
+  if (contactBase.phoneNumber) {
+    try {
+      await addPhone({
+        contactId,
+        phoneNumber: contactBase.phoneNumber,
+        phoneType: contactBase.phoneType || "Mobile",
+        isPrimary: 1,
+        dnc: contactBase.dnc || 0,
+      });
+    } catch (e) {
+      // Non-critical: contactPhones is legacy, don't fail the whole operation
+      console.error('Warning: failed to add legacy phone record:', e);
     }
   }
   
-  // Add emails
-  if (emails && Array.isArray(emails)) {
-    for (const email of emails) {
-      await addEmail({ ...email, contactId });
+  // Also insert into contactEmails for backward compat
+  if (contactBase.email) {
+    try {
+      await addEmail({
+        contactId,
+        email: contactBase.email,
+        isPrimary: 1,
+      });
+    } catch (e) {
+      console.error('Warning: failed to add legacy email record:', e);
     }
   }
   
@@ -316,42 +312,75 @@ export async function updateContact(contactId: number, contactData: any) {
   
   const { phones, emails, addresses, ...updates } = contactData;
   
-  // Check for duplicate phones within the same property (exclude current contact)
+  // New model: phoneNumber and email are directly on the contact
+  // If phones array is provided (backward compat), extract into direct fields
   if (phones && Array.isArray(phones) && phones.length > 0) {
+    updates.phoneNumber = phones[0].phoneNumber;
+    updates.phoneType = phones[0].phoneType || "Mobile";
+  }
+  
+  // If emails array is provided (backward compat), extract into direct field
+  if (emails && Array.isArray(emails) && emails.length > 0) {
+    updates.email = emails[0].email;
+  }
+  
+  // Check for duplicate phones within the same property (exclude current contact)
+  if (updates.phoneNumber) {
     const contact = await db.select({ propertyId: contacts.propertyId }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
     if (contact[0]?.propertyId) {
-      const phoneNumbers = phones.map((p: any) => p.phoneNumber);
-      const duplicates = await findDuplicatePhones(contact[0].propertyId, phoneNumbers, contactId);
+      const duplicates = await findDuplicatePhones(contact[0].propertyId, [updates.phoneNumber], contactId);
       if (duplicates.length > 0) {
         throw new Error(`Duplicate phone number(s) already exist in this property: ${duplicates.join(', ')}`);
       }
     }
   }
   
-  // Update base contact info
+  // Update base contact info (includes phoneNumber, phoneType, email directly)
   if (Object.keys(updates).length > 0) {
     await db.update(contacts).set(updates).where(eq(contacts.id, contactId));
     
-    // Sync DNC: when contact.dnc is toggled, also update ALL phones for this contact
+    // Sync DNC to legacy contactPhones table
     if ('dnc' in updates) {
       const dncValue = updates.dnc ? 1 : 0;
-      await db.update(contactPhones).set({ dnc: dncValue }).where(eq(contactPhones.contactId, contactId));
+      try {
+        await db.update(contactPhones).set({ dnc: dncValue }).where(eq(contactPhones.contactId, contactId));
+      } catch (e) {
+        // Legacy table sync, non-critical
+      }
     }
   }
   
-  // Update phones (simple approach: delete and recreate)
-  if (phones && Array.isArray(phones)) {
-    await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
-    for (const phone of phones) {
-      await addPhone({ ...phone, contactId });
+  // Sync to legacy contactPhones table
+  if (updates.phoneNumber !== undefined) {
+    try {
+      await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
+      if (updates.phoneNumber) {
+        await addPhone({
+          contactId,
+          phoneNumber: updates.phoneNumber,
+          phoneType: updates.phoneType || "Mobile",
+          isPrimary: 1,
+          dnc: updates.dnc || 0,
+        });
+      }
+    } catch (e) {
+      console.error('Warning: failed to sync legacy phone record:', e);
     }
   }
   
-  // Update emails
-  if (emails && Array.isArray(emails)) {
-    await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
-    for (const email of emails) {
-      await addEmail({ ...email, contactId });
+  // Sync to legacy contactEmails table
+  if (updates.email !== undefined) {
+    try {
+      await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
+      if (updates.email) {
+        await addEmail({
+          contactId,
+          email: updates.email,
+          isPrimary: 1,
+        });
+      }
+    } catch (e) {
+      console.error('Warning: failed to sync legacy email record:', e);
     }
   }
   
@@ -561,6 +590,7 @@ export async function deleteCommunicationLog(logId: number) {
 
 /**
  * Get full contact details with all related data
+ * New model: phoneNumber/email are directly on the contact row
  */
 export async function getContactWithDetails(contactId: number) {
   const db = await getDb();
@@ -569,13 +599,38 @@ export async function getContactWithDetails(contactId: number) {
   const contact = await getContactById(contactId);
   if (!contact) return null;
   
-  const [phones, emails, addresses, socialMedia, communications] = await Promise.all([
-    getPhonesByContact(contactId),
-    getEmailsByContact(contactId),
+  const [addresses, socialMedia, communications] = await Promise.all([
     getAddressesByContact(contactId),
     getSocialMediaByContact(contactId),
     getCommunicationLogByContact(contactId),
   ]);
+  
+  // Build backward-compatible phones/emails arrays from direct fields
+  const phones: any[] = [];
+  if (contact.phoneNumber) {
+    phones.push({
+      id: contact.id,
+      contactId: contact.id,
+      phoneNumber: contact.phoneNumber,
+      phoneType: contact.phoneType || "Mobile",
+      isPrimary: 1,
+      dnc: contact.dnc || 0,
+      isLitigator: contact.isLitigator || 0,
+      trestleScore: contact.trestleScore || null,
+      trestleLineType: contact.trestleLineType || null,
+      trestleLastChecked: contact.trestleLastChecked || null,
+    });
+  }
+  
+  const emails: any[] = [];
+  if (contact.email) {
+    emails.push({
+      id: contact.id,
+      contactId: contact.id,
+      email: contact.email,
+      isPrimary: 1,
+    });
+  }
   
   return {
     ...contact,
@@ -589,33 +644,11 @@ export async function getContactWithDetails(contactId: number) {
 
 /**
  * Get all contacts for a property with their details
+ * New model: phones/emails are already included from getContactsByProperty
  */
 export async function getPropertyContactsWithDetails(propertyId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const propertyContacts = await getContactsByProperty(propertyId);
-  
-  const contactsWithDetails = await Promise.all(
-    propertyContacts.map(async (contact) => {
-      const [phones, emails, addresses, socialMedia] = await Promise.all([
-        getPhonesByContact(contact.id),
-        getEmailsByContact(contact.id),
-        getAddressesByContact(contact.id),
-        getSocialMediaByContact(contact.id),
-      ]);
-      
-      return {
-        ...contact,
-        phones,
-        emails,
-        addresses,
-        socialMedia,
-      };
-    })
-  );
-  
-  return contactsWithDetails;
+  // getContactsByProperty already returns contacts with phones/emails/addresses
+  return await getContactsByProperty(propertyId);
 }
 
 /**
@@ -680,17 +713,26 @@ export async function bulkDeleteContacts(contactIds: number[]) {
 }
 
 /**
- * Toggle DNC flag on a specific phone number
+ * Toggle DNC flag on a specific contact (new model: contactId = phoneId since 1 contact = 1 phone)
  */
 export async function togglePhoneDNC(phoneId: number, dnc: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Update ONLY the individual phone's DNC flag — do NOT touch contact.dnc
-  // contact.dnc is only set via markPropertyDNC (bulk) or direct admin action
-  await db.update(contactPhones)
+  // In the new model, phoneId IS the contactId (1 contact = 1 phone)
+  // Update the contact's DNC flag directly
+  await db.update(contacts)
     .set({ dnc: dnc ? 1 : 0 })
-    .where(eq(contactPhones.id, phoneId));
+    .where(eq(contacts.id, phoneId));
+  
+  // Also sync to legacy contactPhones table
+  try {
+    await db.update(contactPhones)
+      .set({ dnc: dnc ? 1 : 0 })
+      .where(eq(contactPhones.contactId, phoneId));
+  } catch (e) {
+    // Legacy sync, non-critical
+  }
 }
 
 /**

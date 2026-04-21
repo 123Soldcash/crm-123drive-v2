@@ -787,23 +787,43 @@ export const appRouter = router({
         console.log('[CREATE PROPERTY V3] Success! ID:', insertedId);
         
         // Always create a contact (owner) for the new property
+        // New model: 1 contact = 1 phone OR 1 email
         try {
           const { createContact } = await import("./communication");
-          const phones = input.ownerPhone && input.ownerPhone.trim()
-            ? [{ phoneNumber: input.ownerPhone.trim(), phoneType: "Mobile" }]
-            : undefined;
-          const emails = input.ownerEmail && input.ownerEmail.trim()
-            ? [{ email: input.ownerEmail.trim() }]
-            : undefined;
+          const ownerPhone = input.ownerPhone?.trim() || undefined;
+          const ownerEmail = input.ownerEmail?.trim() || undefined;
           
-          const contactId = await createContact({
-            propertyId: Number(insertedId),
-            name: input.owner1Name || "Owner",
-            relationship: "Owner",
-            phones,
-            emails,
-          });
-          console.log('[CREATE PROPERTY V3] Contact created! ID:', contactId);
+          // Create primary contact with phone
+          if (ownerPhone) {
+            const contactId = await createContact({
+              propertyId: Number(insertedId),
+              name: input.owner1Name || "Owner",
+              relationship: "Owner",
+              phoneNumber: ownerPhone,
+              phoneType: "Mobile",
+              email: ownerEmail, // attach email to same contact if both exist
+              contactType: "phone",
+            });
+            console.log('[CREATE PROPERTY V3] Contact created with phone! ID:', contactId);
+          } else if (ownerEmail) {
+            // Only email, no phone
+            const contactId = await createContact({
+              propertyId: Number(insertedId),
+              name: input.owner1Name || "Owner",
+              relationship: "Owner",
+              email: ownerEmail,
+              contactType: "email",
+            });
+            console.log('[CREATE PROPERTY V3] Contact created with email! ID:', contactId);
+          } else {
+            // No phone or email, just create name-only contact
+            const contactId = await createContact({
+              propertyId: Number(insertedId),
+              name: input.owner1Name || "Owner",
+              relationship: "Owner",
+            });
+            console.log('[CREATE PROPERTY V3] Contact created (no phone/email)! ID:', contactId);
+          }
         } catch (contactError) {
           console.error('[CREATE PROPERTY V3] Error creating contact:', contactError);
           // Don't fail the property creation if contact creation fails
@@ -2743,13 +2763,15 @@ export const appRouter = router({
           dnc: z.number().optional(),
           isLitigator: z.number().optional(),
           flags: z.string().optional(),
+          // New model: 1 contact = 1 phone OR 1 email (direct fields)
           phone1: z.string().optional(),
           phone1Type: z.string().optional(),
+          email1: z.string().optional(),
+          // Legacy fields still accepted for backward compat
           phone2: z.string().optional(),
           phone2Type: z.string().optional(),
           phone3: z.string().optional(),
           phone3Type: z.string().optional(),
-          email1: z.string().optional(),
           email2: z.string().optional(),
           email3: z.string().optional(),
         })
@@ -2757,23 +2779,80 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { phone1, phone1Type, phone2, phone2Type, phone3, phone3Type, email1, email2, email3, ...contactBase } = input;
         
-        // Build phones array from flat fields
-        const phones: Array<{ phoneNumber: string; phoneType?: string }> = [];
-        if (phone1) phones.push({ phoneNumber: phone1, phoneType: phone1Type || "Mobile" });
-        if (phone2) phones.push({ phoneNumber: phone2, phoneType: phone2Type || "Mobile" });
-        if (phone3) phones.push({ phoneNumber: phone3, phoneType: phone3Type || "Mobile" });
-        
-        // Build emails array from flat fields
-        const emails: Array<{ email: string }> = [];
-        if (email1) emails.push({ email: email1 });
-        if (email2) emails.push({ email: email2 });
-        if (email3) emails.push({ email: email3 });
-        
-        const contactId = await communication.createContact({
+        // New model: store phoneNumber/email directly on the contact
+        // phone1 goes directly as the contact's phoneNumber
+        const createData: any = {
           ...contactBase,
-          phones: phones.length > 0 ? phones : undefined,
-          emails: emails.length > 0 ? emails : undefined,
-        });
+          phoneNumber: phone1 || undefined,
+          phoneType: phone1Type || (phone1 ? "Mobile" : undefined),
+          email: email1 || undefined,
+          contactType: phone1 ? "phone" : (email1 ? "email" : undefined),
+        };
+        
+        const contactId = await communication.createContact(createData);
+        
+        // If there are additional phones (phone2, phone3), create separate contacts for them
+        const extraContactIds: number[] = [];
+        if (phone2) {
+          try {
+            const id = await communication.createContact({
+              propertyId: input.propertyId,
+              name: input.name,
+              relationship: input.relationship,
+              phoneNumber: phone2,
+              phoneType: phone2Type || "Mobile",
+              contactType: "phone",
+            });
+            extraContactIds.push(id);
+          } catch (e) {
+            // Duplicate phone, skip
+          }
+        }
+        if (phone3) {
+          try {
+            const id = await communication.createContact({
+              propertyId: input.propertyId,
+              name: input.name,
+              relationship: input.relationship,
+              phoneNumber: phone3,
+              phoneType: phone3Type || "Mobile",
+              contactType: "phone",
+            });
+            extraContactIds.push(id);
+          } catch (e) {
+            // Duplicate phone, skip
+          }
+        }
+        // If there are additional emails (email2, email3), create separate contacts
+        if (email2) {
+          try {
+            const id = await communication.createContact({
+              propertyId: input.propertyId,
+              name: input.name,
+              relationship: input.relationship,
+              email: email2,
+              contactType: "email",
+            });
+            extraContactIds.push(id);
+          } catch (e) {
+            // Skip
+          }
+        }
+        if (email3) {
+          try {
+            const id = await communication.createContact({
+              propertyId: input.propertyId,
+              name: input.name,
+              relationship: input.relationship,
+              email: email3,
+              contactType: "email",
+            });
+            extraContactIds.push(id);
+          } catch (e) {
+            // Skip
+          }
+        }
+        
         return { success: true, contactId };
       }),
 
@@ -2793,16 +2872,51 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const results: Array<{ name: string; success: boolean; contactId?: number; error?: string }> = [];
         for (const contact of input.contacts) {
-          try {
-            const contactId = await communication.createContact({
-              propertyId: input.propertyId,
-              name: contact.name,
-              phones: contact.phones && contact.phones.length > 0 ? contact.phones : undefined,
-              emails: contact.emails && contact.emails.length > 0 ? contact.emails : undefined,
-            });
-            results.push({ name: contact.name, success: true, contactId });
-          } catch (error: any) {
-            results.push({ name: contact.name, success: false, error: error.message });
+          // New model: each phone becomes a separate contact, each email becomes a separate contact
+          const phones = contact.phones || [];
+          const emails = contact.emails || [];
+          
+          if (phones.length === 0 && emails.length === 0) {
+            // Contact with no phone or email
+            try {
+              const contactId = await communication.createContact({
+                propertyId: input.propertyId,
+                name: contact.name,
+              });
+              results.push({ name: contact.name, success: true, contactId });
+            } catch (error: any) {
+              results.push({ name: contact.name, success: false, error: error.message });
+            }
+          } else {
+            // Create one contact per phone
+            for (const phone of phones) {
+              try {
+                const contactId = await communication.createContact({
+                  propertyId: input.propertyId,
+                  name: contact.name,
+                  phoneNumber: phone.phoneNumber,
+                  phoneType: phone.phoneType || "Mobile",
+                  contactType: "phone",
+                });
+                results.push({ name: `${contact.name} (${phone.phoneNumber})`, success: true, contactId });
+              } catch (error: any) {
+                results.push({ name: `${contact.name} (${phone.phoneNumber})`, success: false, error: error.message });
+              }
+            }
+            // Create one contact per email (only emails not already covered by a phone contact)
+            for (const email of emails) {
+              try {
+                const contactId = await communication.createContact({
+                  propertyId: input.propertyId,
+                  name: contact.name,
+                  email: email.email,
+                  contactType: "email",
+                });
+                results.push({ name: `${contact.name} (${email.email})`, success: true, contactId });
+              } catch (error: any) {
+                results.push({ name: `${contact.name} (${email.email})`, success: false, error: error.message });
+              }
+            }
           }
         }
         return { success: true, imported: results.filter(r => r.success).length, total: results.length, results };
@@ -2825,6 +2939,12 @@ export const appRouter = router({
           contacted: z.number().optional(),
           onBoard: z.number().optional(),
           notOnBoard: z.number().optional(),
+          // New model: direct fields
+          phoneNumber: z.string().optional(),
+          phoneType: z.string().optional(),
+          email: z.string().optional(),
+          contactType: z.string().optional(),
+          // Legacy: still accept phones/emails arrays for backward compat
           phones: z.array(z.object({
             phoneNumber: z.string(),
             phoneType: z.string().optional(),

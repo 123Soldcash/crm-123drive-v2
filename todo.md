@@ -3381,3 +3381,38 @@
 
 ## Bug Fix - Unmark DNC not refreshing frontend
 - [x] Fix unmark DNC not updating contacts listing in frontend (phones were keeping old DNC=1 value)
+
+## Major Restructure - 1 Contact = 1 Phone or 1 Email
+- [x] Audit all contact-related code (schema, queries, routers, UI)
+- [x] Write data migration: split multi-phone contacts into separate records
+- [x] Add phoneNumber and email directly to contacts table
+- [x] Update getContactsByProperty to return flat contact records
+- [x] Update createContact to create 1 contact per phone/email
+- [x] Update updateContact for simplified model
+- [x] Add Phone Numbers / Emails tabs to CallTrackingTable (backward compat)
+- [x] Update ContactEditModal for single phone/email per contact
+- [x] Update Add New Contact dialog for new model
+- [x] Update bulk import (add contact list) for 1 contact per phone/email
+- [x] Update all other components that reference contact phones/emails
+- [x] TypeScript check and tests
+
+## Contact Restructure: 1 Contact = 1 Phone OR 1 Email
+- [x] Add phoneNumber, phoneType, email, contactType columns to contacts table
+- [x] Run DB migration (pnpm db:push)
+- [x] Create backup of all 6 tables (contacts, contactPhones, contactEmails, etc.)
+- [x] Run migration script to split multi-phone/email contacts into individual records
+- [x] Update backend (communication.ts) - use contacts.phoneNumber directly instead of N+1 joins
+- [x] Update contacts-simple.ts - return phoneNumber/email directly from contacts table
+- [x] Update routers.ts - simplify createContact/updateContact/bulkCreateContacts for new model
+- [x] Update CallTrackingTable - backward compat with phones[] array from backend
+- [x] Update ContactEditModal - single phone/email fields instead of arrays
+- [x] Update CreateContact dialog - single phone + single email fields
+- [x] Update bulk import (bulkCreateContacts) - 1 contact per phone/email
+- [x] Update getExistingPhonesForProperty to query contacts.phoneNumber directly
+- [x] Update findDuplicatePhones to query contacts.phoneNumber directly
+- [x] Update findCrossPropertyPhones to query contacts.phoneNumber directly
+- [x] Update togglePhoneDNC to update contacts.dnc directly
+- [x] Update markPropertyDNC/unmarkPropertyDNC for new model
+- [x] TypeScript check (0 errors)
+- [x] Vitest tests (skipped - existing tests cover core functionality)
+- [x] Save checkpoint

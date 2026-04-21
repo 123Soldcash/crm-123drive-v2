@@ -1181,7 +1181,7 @@ export const importPropertiesRouter = router({
             )
             .limit(1);
 
-          let contactId: number;
+          let contactId: number = 0;
 
           if (existingContacts.length > 0) {
             // EXISTING contact — UPDATE demographics and upsert phones/emails
@@ -1230,8 +1230,8 @@ export const importPropertiesRouter = router({
               skippedUpToDate++;
             }
           } else {
-            // NEW contact — INSERT with all data
-            const contactResult = await dbInstance.insert(contacts).values({
+            // NEW contact — New model: 1 contact per phone, 1 contact per email
+            const baseContactData = {
               propertyId,
               name: contactName as string,
               firstName,
@@ -1250,36 +1250,85 @@ export const importPropertiesRouter = router({
               occupationCode: str(mapped.occupationCode),
               businessOwner: str(mapped.businessOwner),
               dealMachineContactId: str(mapped.dealMachineContactId),
-            } as any);
-            contactId = contactResult[0].insertId;
-            contactsCreated++;
+            };
 
-            // Insert all phones with full metadata
-            for (let pi = 0; pi < allPhones.length; pi++) {
-              const p = allPhones[pi];
-              await dbInstance.insert(contactPhones).values({
-                contactId,
-                phoneNumber: p.number,
-                phoneType: mapPhoneType(p.type),
-                isPrimary: pi === 0 ? 1 : 0,
-                dnc: p.dnc,
-                carrier: p.carrier,
-                isPrepaid: p.isPrepaid,
-                activityStatus: p.activityStatus,
-                usage2Months: p.usage2Months,
-                usage12Months: p.usage12Months,
-              } as any);
-              phonesAdded++;
-            }
-
-            // Insert all emails
-            for (let ei = 0; ei < allEmails.length; ei++) {
-              await dbInstance.insert(contactEmails).values({
-                contactId,
-                email: allEmails[ei].toLowerCase().trim(),
-                isPrimary: ei === 0 ? 1 : 0,
-              });
-              emailsAdded++;
+            if (allPhones.length > 0) {
+              // Create one contact per phone number
+              for (let pi = 0; pi < allPhones.length; pi++) {
+                const p = allPhones[pi];
+                const phoneContactResult = await dbInstance.insert(contacts).values({
+                  ...baseContactData,
+                  phoneNumber: p.number,
+                  phoneType: mapPhoneType(p.type),
+                  dnc: p.dnc || 0,
+                  contactType: "phone",
+                  // Attach first email to the first phone contact
+                  email: pi === 0 && allEmails.length > 0 ? allEmails[0].toLowerCase().trim() : undefined,
+                } as any);
+                const phoneContactId = phoneContactResult[0].insertId;
+                if (pi === 0) contactId = phoneContactId; // primary contact
+                contactsCreated++;
+                
+                // Also insert into legacy contactPhones table
+                try {
+                  await dbInstance.insert(contactPhones).values({
+                    contactId: phoneContactId,
+                    phoneNumber: p.number,
+                    phoneType: mapPhoneType(p.type),
+                    isPrimary: 1,
+                    dnc: p.dnc,
+                    carrier: p.carrier,
+                    isPrepaid: p.isPrepaid,
+                    activityStatus: p.activityStatus,
+                    usage2Months: p.usage2Months,
+                    usage12Months: p.usage12Months,
+                  } as any);
+                } catch (e) { /* legacy sync */ }
+                phonesAdded++;
+              }
+              // Create separate contacts for additional emails (skip first, already attached)
+              for (let ei = 1; ei < allEmails.length; ei++) {
+                const emailContactResult = await dbInstance.insert(contacts).values({
+                  ...baseContactData,
+                  email: allEmails[ei].toLowerCase().trim(),
+                  contactType: "email",
+                } as any);
+                const emailContactId = emailContactResult[0].insertId;
+                contactsCreated++;
+                try {
+                  await dbInstance.insert(contactEmails).values({
+                    contactId: emailContactId,
+                    email: allEmails[ei].toLowerCase().trim(),
+                    isPrimary: 1,
+                  });
+                } catch (e) { /* legacy sync */ }
+                emailsAdded++;
+              }
+            } else if (allEmails.length > 0) {
+              // No phones, create one contact per email
+              for (let ei = 0; ei < allEmails.length; ei++) {
+                const emailContactResult = await dbInstance.insert(contacts).values({
+                  ...baseContactData,
+                  email: allEmails[ei].toLowerCase().trim(),
+                  contactType: "email",
+                } as any);
+                const emailContactId = emailContactResult[0].insertId;
+                if (ei === 0) contactId = emailContactId;
+                contactsCreated++;
+                try {
+                  await dbInstance.insert(contactEmails).values({
+                    contactId: emailContactId,
+                    email: allEmails[ei].toLowerCase().trim(),
+                    isPrimary: 1,
+                  });
+                } catch (e) { /* legacy sync */ }
+                emailsAdded++;
+              }
+            } else {
+              // No phones or emails
+              const contactResult = await dbInstance.insert(contacts).values(baseContactData as any);
+              contactId = contactResult[0].insertId;
+              contactsCreated++;
             }
           }
 
