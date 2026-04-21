@@ -1323,29 +1323,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               </Tooltip>
             </TooltipProvider>
 
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1 text-sm cursor-pointer">
-                <Checkbox
-                  checked={flagFilters.litigator}
-                  onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, litigator: !!checked }))}
-                />
-                <span>🗣 Litigator</span>
-              </label>
-              <label className="flex items-center gap-1 text-sm cursor-pointer">
-                <Checkbox
-                  checked={flagFilters.deceased}
-                  onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, deceased: !!checked }))}
-                />
-                <span>🕊 Deceased</span>
-              </label>
-              <label className="flex items-center gap-1 text-sm cursor-pointer">
-                <Checkbox
-                  checked={flagFilters.decisionMaker}
-                  onCheckedChange={(checked) => setFlagFilters(prev => ({ ...prev, decisionMaker: !!checked }))}
-                />
-                <span>✍ Decision Maker</span>
-              </label>
-            </div>
+
 
             {hasActiveFilters && (
               <>

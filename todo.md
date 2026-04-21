@@ -3357,3 +3357,6 @@
 - [x] Fix CreateTaskDialog to correctly match property deskName to desk list and auto-select the right desk
 - [x] Show desk description (human-friendly name like 'Zach', 'Chris') instead of raw desk name ('DESK_3', 'DESK_CHRIS') in all dropdowns and displays
 - [x] Update getTasks and getTasksByPropertyId to return desk description
+
+## Refinements - Contacts Page
+- [x] Remove Litigator, Deceased, Decision Maker checkboxes from Contacts top filter bar
