@@ -379,7 +379,7 @@ export function CreateTaskDialog({
                                 style={{ backgroundColor: desk.color }}
                               />
                             )}
-                            <span>{desk.name}</span>
+                            <span>{desk.description || desk.name}</span>
                           </div>
                         </SelectItem>
                       ))}

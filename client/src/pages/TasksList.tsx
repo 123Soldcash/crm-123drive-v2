@@ -315,7 +315,7 @@ export function TasksList() {
                   <SelectItem key={desk.id} value={desk.id.toString()}>
                     <div className="flex items-center gap-2">
                       {desk.color && <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: desk.color }} />}
-                      {desk.name}
+                      {desk.description || desk.name}
                     </div>
                   </SelectItem>
                 ))}

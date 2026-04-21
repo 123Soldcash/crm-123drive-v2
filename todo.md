@@ -3352,3 +3352,8 @@
 - [x] Update Tasks page: show desk name instead of user, filter by desk
 - [x] Update all other places that display task assignment (property detail, TaskCard, Calendar, Kanban)
 - [x] Run TypeScript checks and write tests (22/22 passed, 0 TS errors)
+
+## Bug Fix - Task desk auto-default not matching property's desk
+- [x] Fix CreateTaskDialog to correctly match property deskName to desk list and auto-select the right desk
+- [x] Show desk description (human-friendly name like 'Zach', 'Chris') instead of raw desk name ('DESK_3', 'DESK_CHRIS') in all dropdowns and displays
+- [x] Update getTasks and getTasksByPropertyId to return desk description

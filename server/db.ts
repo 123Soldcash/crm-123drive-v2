@@ -2303,7 +2303,7 @@ export async function getTasks(filters?: {
       propertyState: properties.state,
       assignedToName: assignedUser.name,
       createdByName: creatorUser.name,
-      deskName: desks.name,
+      deskName: desks.description,
     })
     .from(tasks)
     .leftJoin(properties, eq(tasks.propertyId, properties.id))
@@ -2328,11 +2328,34 @@ export async function getTasksByPropertyId(propertyId: number): Promise<any[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  return await db
-    .select()
+  const rows = await db
+    .select({
+      id: tasks.id,
+      title: tasks.title,
+      description: tasks.description,
+      taskType: tasks.taskType,
+      priority: tasks.priority,
+      status: tasks.status,
+      dueDate: tasks.dueDate,
+      dueTime: tasks.dueTime,
+      repeatTask: tasks.repeatTask,
+      propertyId: tasks.propertyId,
+      assignedToId: tasks.assignedToId,
+      createdById: tasks.createdById,
+      completedDate: tasks.completedDate,
+      hidden: tasks.hidden,
+      checklist: tasks.checklist,
+      deskId: tasks.deskId,
+      createdAt: tasks.createdAt,
+      updatedAt: tasks.updatedAt,
+      deskName: desks.description,
+    })
     .from(tasks)
+    .leftJoin(desks, eq(tasks.deskId, desks.id))
     .where(eq(tasks.propertyId, propertyId))
     .orderBy(desc(tasks.createdAt));
+  
+  return rows;
 }
 
 export async function updateTask(taskId: number, updateData: any): Promise<any> {
