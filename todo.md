@@ -3435,4 +3435,20 @@
 - [x] Update badge from conditional phone/email to always show 'Phone Contact'
 - [x] Update helper text to mention emails are in Emails tab
 - [x] TypeScript check (0 errors)
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## Remodel Add Contact & Bulk Import for Phone/Email Separation
+- [x] Add Contact (Phone tab): form with Name, Relationship, Phone Number, Phone Type fields
+- [x] Add Contact (Email tab): form with Name, Relationship, Email Address fields
+- [x] Show the correct Add Contact form based on active tab (phones vs emails)
+- [x] BulkContactImport: accepts contactTab prop to filter by phone/email mode
+- [x] BulkContactImport: auto-detect phones vs emails from pasted text
+- [x] BulkContactImport: create phone contacts and email contacts separately
+- [x] BulkContactImport: show summary of valid contacts and skipped lines
+- [x] AI Extract: filters results by active tab (phone or email)
+- [x] Updated empty state Add Contact form (phone-only)
+- [x] Updated button labels: 'Add Phone Contact' / 'Add Email Contact'
+- [x] Updated button labels: 'Add Phone List' / 'Add Email List'
+- [x] Cross-property check only runs for phone mode
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint

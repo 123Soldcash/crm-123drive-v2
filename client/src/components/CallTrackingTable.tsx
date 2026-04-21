@@ -459,14 +459,24 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   });
 
   const doCreateContact = () => {
-    createContactMutation.mutate({
-      propertyId,
-      name: newContactName.trim(),
-      relationship: newContactRelationship || undefined,
-      phone1: newContactPhone.trim() || undefined,
-      phone1Type: newContactPhone.trim() ? newContactPhoneType : undefined,
-      email1: newContactEmail.trim() || undefined,
-    });
+    if (contactTab === 'phones') {
+      // Phone contact — no email
+      createContactMutation.mutate({
+        propertyId,
+        name: newContactName.trim(),
+        relationship: newContactRelationship || undefined,
+        phone1: newContactPhone.trim() || undefined,
+        phone1Type: newContactPhone.trim() ? newContactPhoneType : undefined,
+      });
+    } else {
+      // Email contact — no phone
+      createContactMutation.mutate({
+        propertyId,
+        name: newContactName.trim(),
+        relationship: newContactRelationship || undefined,
+        email1: newContactEmail.trim() || undefined,
+      });
+    }
   };
 
   const handleAddContact = async () => {
@@ -476,9 +486,13 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setAddContactError("Contact name is required");
       return;
     }
-    // If there's a phone, check cross-property first
-    const phone = newContactPhone.trim();
-    if (phone) {
+    if (contactTab === 'phones') {
+      // Phone tab: validate phone and check cross-property
+      if (!newContactPhone.trim()) {
+        setAddContactError("Phone number is required for phone contacts");
+        return;
+      }
+      const phone = newContactPhone.trim();
       try {
         const result = await utils.communication.checkCrossPropertyPhones.fetch({
           propertyId,
@@ -491,6 +505,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         }
       } catch (e) {
         // If check fails, proceed anyway
+      }
+    } else {
+      // Email tab: validate email
+      if (!newContactEmail.trim()) {
+        setAddContactError("Email address is required for email contacts");
+        return;
       }
     }
     doCreateContact();
@@ -1027,9 +1047,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   className="flex items-center gap-2"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Add Contact
+                  Add Phone Contact
                 </Button>
-                <BulkContactImport propertyId={propertyId} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
+                <BulkContactImport propertyId={propertyId} contactTab="phones" onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
               </div>
             )}
           </div>
@@ -1037,19 +1057,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         <CardContent>
           {!showAddContactForm ? (
             <p className="text-muted-foreground">
-              No contacts available. Click "Add Contact" or "Add Contact List" to add contacts.
+              No contacts available. Click "Add Phone Contact" or "Add Contact List" to add contacts.
             </p>
           ) : (
             <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
-                  New Contact
+                  New Phone Contact
                 </h4>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowAddContactForm(false)}
+                  onClick={() => { setShowAddContactForm(false); setAddContactError(null); }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -1062,6 +1082,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     placeholder="Contact name"
                     value={newContactName}
                     onChange={(e) => setNewContactName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
                   />
                 </div>
                 <div>
@@ -1074,13 +1095,14 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="empty-new-phone" className="text-xs">Phone</Label>
+                  <Label htmlFor="empty-new-phone" className="text-xs">Phone Number *</Label>
                   <div className="flex gap-2">
                     <Input
                       id="empty-new-phone"
                       placeholder="(555) 123-4567"
                       value={newContactPhone}
                       onChange={(e) => setNewContactPhone(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
                       className="flex-1"
                     />
                     <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
@@ -1095,15 +1117,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     </Select>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="empty-new-email" className="text-xs">Email</Label>
-                  <Input
-                    id="empty-new-email"
-                    placeholder="email@example.com"
-                    value={newContactEmail}
-                    onChange={(e) => setNewContactEmail(e.target.value)}
-                  />
-                </div>
               </div>
               {addContactError && (
                 <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -1115,11 +1128,11 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 <Button
                   size="sm"
                   onClick={handleAddContact}
-                  disabled={createContactMutation.isPending}
+                  disabled={!newContactName.trim() || createContactMutation.isPending}
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  {createContactMutation.isPending ? "Adding..." : "Add Contact"}
+                  {createContactMutation.isPending ? "Adding..." : "Add Phone Contact"}
                 </Button>
                 <Button
                   variant="ghost"
@@ -1930,16 +1943,16 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   className="flex items-center gap-2"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Add Contact
+                  {contactTab === 'phones' ? 'Add Phone Contact' : 'Add Email Contact'}
                 </Button>
-                <BulkContactImport propertyId={propertyId} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
+                <BulkContactImport propertyId={propertyId} contactTab={contactTab} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
               </div>
             ) : (
               <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <UserPlus className="h-4 w-4" />
-                    New Contact
+                    {contactTab === 'phones' ? 'New Phone Contact' : 'New Email Contact'}
                   </h4>
                   <Button
                     variant="ghost"
@@ -1952,6 +1965,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       setNewContactPhone("");
                       setNewContactPhoneType("Mobile");
                       setNewContactEmail("");
+                      setAddContactError(null);
                     }}
                   >
                     <X className="h-4 w-4" />
@@ -1985,40 +1999,43 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Phone Number</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Phone number"
-                        value={newContactPhone}
-                        onChange={(e) => setNewContactPhone(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                        className="flex-1"
-                      />
-                      <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
-                        <SelectTrigger className="w-[110px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Mobile">Mobile</SelectItem>
-                          <SelectItem value="Landline">Landline</SelectItem>
-                          <SelectItem value="Work">Work</SelectItem>
-                          <SelectItem value="Home">Home</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  {contactTab === 'phones' ? (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Phone Number *</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="(555) 123-4567"
+                          value={newContactPhone}
+                          onChange={(e) => setNewContactPhone(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                          className="flex-1"
+                        />
+                        <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
+                          <SelectTrigger className="w-[110px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Mobile">Mobile</SelectItem>
+                            <SelectItem value="Landline">Landline</SelectItem>
+                            <SelectItem value="Work">Work</SelectItem>
+                            <SelectItem value="Home">Home</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Email</Label>
-                    <Input
-                      type="email"
-                      placeholder="Email address"
-                      value={newContactEmail}
-                      onChange={(e) => setNewContactEmail(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                    />
-                  </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Email Address *</Label>
+                      <Input
+                        type="email"
+                        placeholder="email@example.com"
+                        value={newContactEmail}
+                        onChange={(e) => setNewContactEmail(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                      />
+                    </div>
+                  )}
                 </div>
                 {addContactError && (
                   <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -2034,7 +2051,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    {createContactMutation.isPending ? "Adding..." : "Add Contact"}
+                    {createContactMutation.isPending ? "Adding..." : (contactTab === 'phones' ? "Add Phone Contact" : "Add Email Contact")}
                   </Button>
                   <Button
                     variant="ghost"

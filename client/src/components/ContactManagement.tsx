@@ -603,7 +603,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <BulkContactImport propertyId={propertyId} />
+            <BulkContactImport propertyId={propertyId} contactTab="phones" />
           </div>
           </div>
           
@@ -1056,7 +1056,7 @@ export function ContactManagement({ propertyId }: ContactManagementProps) {
               </div>
             </DialogContent>
           </Dialog>
-          <BulkContactImport propertyId={propertyId} />
+          <BulkContactImport propertyId={propertyId} contactTab="phones" />
         </div>
       )}
     </div>
