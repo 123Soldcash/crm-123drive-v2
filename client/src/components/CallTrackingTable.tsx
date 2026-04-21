@@ -55,7 +55,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan, GripVertical } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan, GripVertical, Mail, Copy } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -260,6 +260,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   // Inline call state: clicking phone number starts a call directly
   const [callSelectorOpen, setCallSelectorOpen] = useState<string | null>(null); // phoneNumber that has selector open
   const [callModalOpen, setCallModalOpen] = useState(false);
+  // Tab state: 'phones' or 'emails'
+  const [contactTab, setContactTab] = useState<'phones' | 'emails'>('phones');
   const [callModalPhone, setCallModalPhone] = useState<{ phoneNumber: string; contactName: string; contactId: number; callerPhone: string } | null>(null);
 
   // DNC auto-check state
@@ -965,6 +967,28 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     return true;
   });
 
+  // Split contacts by type for tabs
+  const phoneContacts = useMemo(() => 
+    filteredContacts?.filter((c: any) => c.contactType === 'phone' || (!c.contactType && c.phones && c.phones.length > 0)) || [],
+    [filteredContacts]
+  );
+  const emailContacts = useMemo(() => 
+    filteredContacts?.filter((c: any) => c.contactType === 'email') || [],
+    [filteredContacts]
+  );
+
+  // Counts for tab badges (use unfiltered ordered contacts for total counts)
+  const totalPhoneContacts = useMemo(() => 
+    orderedContacts?.filter((c: any) => c.contactType === 'phone' || (!c.contactType && c.phones && c.phones.length > 0)).length || 0,
+    [orderedContacts]
+  );
+  const totalEmailContacts = useMemo(() => 
+    orderedContacts?.filter((c: any) => c.contactType === 'email').length || 0,
+    [orderedContacts]
+  );
+
+  const activeTabContacts = contactTab === 'phones' ? phoneContacts : emailContacts;
+
   const hasActiveFilters = dispositionFilter || Object.values(flagFilters).some(v => v) || dateFilter !== "all" || agentFilter !== "all" || phoneTypeFilter !== "all";
   const activeFilterCount = (dispositionFilter ? 1 : 0) + Object.values(flagFilters).filter(v => v).length + (dateFilter !== "all" ? 1 : 0) + (agentFilter !== "all" ? 1 : 0) + (phoneTypeFilter !== "all" ? 1 : 0);
 
@@ -1123,7 +1147,41 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             </CardTitle>
           </div>
 
-          {/* Default Caller ID Selector - Property Level */}
+          {/* Phone Numbers / Emails Tabs */}
+          <div className="flex items-center gap-1 mt-3 border-b">
+            <button
+              onClick={() => setContactTab('phones')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                contactTab === 'phones'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+              }`}
+            >
+              <Phone className="h-4 w-4" />
+              Phone Numbers
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {totalPhoneContacts}
+              </Badge>
+            </button>
+            <button
+              onClick={() => setContactTab('emails')}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                contactTab === 'emails'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+              }`}
+            >
+              <Mail className="h-4 w-4" />
+              Emails
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {totalEmailContacts}
+              </Badge>
+            </button>
+          </div>
+
+          {contactTab === 'phones' && (
+          <>
+          {/* Default Caller ID Selector - Property Level (only on phone tab) */}
           <div className="mt-3 p-3 rounded-lg border bg-blue-50/50 border-blue-200">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 min-w-0">
@@ -1324,11 +1382,13 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   Clear Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {filteredContacts?.length || 0} result{(filteredContacts?.length || 0) !== 1 ? 's' : ''}
+                  {phoneContacts?.length || 0} result{(phoneContacts?.length || 0) !== 1 ? 's' : ''}
                 </span>
               </>
             )}
           </div>
+          </>
+          )}
 
           <div className="flex items-center justify-end mt-4">
             <div className="flex items-center gap-2">
@@ -1369,6 +1429,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           </div>
         </CardHeader>
         <CardContent>
+          {/* ===== PHONE TAB TABLE ===== */}
+          {contactTab === 'phones' && (
           <div className="overflow-x-auto">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={orderedContactIds} strategy={verticalListSortingStrategy}>
@@ -1397,7 +1459,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredContacts?.map((contact: any) => (
+                {phoneContacts?.map((contact: any) => (
                   contact.phones && contact.phones.length > 0 ? (
                     contact.phones
                       .map((phone: any, phoneIdx: number) => {
@@ -1718,6 +1780,144 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             </SortableContext>
             </DndContext>
           </div>
+          )}
+
+          {/* ===== EMAIL TAB TABLE ===== */}
+          {contactTab === 'emails' && (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px] text-center">
+                    <Checkbox
+                      checked={selectAll}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all email contacts"
+                    />
+                  </TableHead>
+                  <TableHead className="w-[180px]">Contact Name</TableHead>
+                  <TableHead className="w-[140px]">Relationship</TableHead>
+                  <TableHead className="min-w-[250px]">Email Address</TableHead>
+                  <TableHead className="min-w-[300px]">Notes</TableHead>
+                  <TableHead className="w-[80px] text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {emailContacts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <Mail className="h-8 w-8 text-muted-foreground/40" />
+                        <p>No email contacts found.</p>
+                        <p className="text-xs">Add a contact with an email address to see it here.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  emailContacts.map((contact: any) => {
+                    const emailAddress = contact.email || (contact.emails && contact.emails.length > 0 ? contact.emails[0].email : null);
+                    return (
+                      <TableRow key={contact.id} className="hover:bg-muted/50">
+                        <TableCell className="text-center align-middle">
+                          <Checkbox
+                            checked={selectedContacts.has(contact.id)}
+                            onCheckedChange={(checked) => handleSelectContact(contact.id, checked as boolean)}
+                            aria-label={`Select ${contact.name}`}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium align-middle">
+                          <button
+                            onClick={() => { setEditingContact(contact); setShowEditModal(true); }}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium text-left"
+                            title="Click to edit contact"
+                          >
+                            {contact.name || <span className="text-muted-foreground italic">No Name</span>}
+                          </button>
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          <Badge variant="outline" className="text-xs">
+                            {contact.relationship || "N/A"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          {emailAddress ? (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`mailto:${emailAddress}`}
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5"
+                                title={`Send email to ${emailAddress}`}
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                                {emailAddress}
+                              </a>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(emailAddress);
+                                  toast.success("Email copied to clipboard");
+                                }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Copy email"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">No email</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground align-middle">
+                          {editingNote?.contactId === contact.id && editingNote?.phoneNumber === (emailAddress || '') ? (
+                            <input
+                              type="text"
+                              value={noteValue}
+                              onChange={(e) => setNoteValue(e.target.value)}
+                              onBlur={() => handleNoteSave(contact.id, emailAddress || '')}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleNoteSave(contact.id, emailAddress || '');
+                                } else if (e.key === "Escape") {
+                                  setEditingNote(null);
+                                  setNoteValue("");
+                                }
+                              }}
+                              autoFocus
+                              className="w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                              placeholder="Add notes..."
+                            />
+                          ) : (
+                            <div
+                              onClick={() => {
+                                setEditingNote({ contactId: contact.id, phoneNumber: emailAddress || '' });
+                                setNoteValue("");
+                              }}
+                              className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded min-h-[24px]"
+                              title="Click to add notes"
+                            >
+                              {getLastNotes(contact.id, emailAddress || '') || "-"}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center align-middle">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setNotesDialog({ contactId: contact.id, contactName: contact.name || "Unknown" })}
+                              className="h-7 w-7 p-0 hover:bg-blue-50 rounded-full"
+                              title={`View notes for ${contact.name}`}
+                            >
+                              <FileText className="h-3.5 w-3.5 text-blue-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          )}
 
           {/* Add Contact Section */}
           <div className="mt-4 border-t pt-4">

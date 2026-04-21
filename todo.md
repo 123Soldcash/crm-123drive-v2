@@ -3416,3 +3416,13 @@
 - [x] TypeScript check (0 errors)
 - [x] Vitest tests (skipped - existing tests cover core functionality)
 - [x] Save checkpoint
+
+## Phone Numbers / Emails Tabs in CallTrackingTable
+- [x] Add tab navigation (Phone Numbers / Emails) to CallTrackingTable
+- [x] Filter contacts by contactType ('phone' vs 'email') based on active tab
+- [x] Show phone-specific columns in Phone tab (phone number, phone type, DNC, TrestleIQ score)
+- [x] Show email-specific columns in Email tab (email address, mailto link, copy button)
+- [x] Keep contact details (name, relationship, flags) visible in both tabs
+- [x] Ensure Add Contact form works for both tabs (phone or email)
+- [x] TypeScript check (0 errors)
+- [ ] Save checkpoint
