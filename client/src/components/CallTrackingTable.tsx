@@ -1396,10 +1396,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   </TableHead>
                   <TableHead className="w-[150px]">Contact Name</TableHead>
                   <TableHead className="w-[120px]">Contact Relationship</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">📵</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">🗣</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">🕊</TableHead>
-                  <TableHead className="w-[24px] text-center px-0">✍</TableHead>
+
                   <TableHead className="w-[28px] text-center px-0">📱</TableHead>
                   <TableHead className="w-[28px] text-center px-0">📞</TableHead>
                   <TableHead className="w-[28px] text-center px-0">📋</TableHead>
@@ -1453,31 +1450,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                                   {contact.relationship || "N/A"}
                                 </Badge>
                               </TableCell>
-                              {/* DNC column is now per-phone, rendered below */}
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
-                                <Checkbox
-                                  checked={!!contact.isLitigator}
-                                  disabled
-                                  className="pointer-events-none data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                                  aria-label="Litigator"
-                                />
-                              </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
-                                <Checkbox
-                                  checked={!!contact.deceased}
-                                  disabled
-                                  className="pointer-events-none data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                                  aria-label="Deceased"
-                                />
-                              </TableCell>
-                              <TableCell rowSpan={contact.phones.length} className="text-center align-middle px-0">
-                                <Checkbox
-                                  checked={!!contact.isDecisionMaker}
-                                  disabled
-                                  className="pointer-events-none data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
-                                  aria-label="Decision Maker"
-                                />
-                              </TableCell>
+
                             </>
                           )}
                           
@@ -1507,26 +1480,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                             />
                           </TableCell>
                           
-                          {/* Per-phone DNC checkbox */}
-                          <TableCell className="text-center align-middle px-0">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div>
-                                    <Checkbox
-                                      checked={!!phone.dnc}
-                                      onCheckedChange={(checked) => togglePhoneDNCMutation.mutate({ phoneId: phone.id, dnc: !!checked })}
-                                      className="data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600 cursor-pointer"
-                                      aria-label="DNC"
-                                    />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  {phone.dnc ? "Click to remove DNC from this number" : "Click to mark this number as DNC"}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
+
 
                           {/* Phone Number */}
                           <TableCell className="align-middle">
@@ -1778,40 +1732,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                           {contact.relationship || "N/A"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center align-middle px-0">
-                        {/* Contact-row DNC indicator: true if ANY phone of this contact is DNC */}
-                        <Checkbox
-                          checked={contact.phones?.some((p: any) => !!p.dnc) || false}
-                          disabled
-                          className="pointer-events-none data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600"
-                          aria-label="DNC"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center align-middle px-0">
-                        <Checkbox
-                          checked={!!contact.isLitigator}
-                          disabled
-                          className="pointer-events-none data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                          aria-label="Litigator"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center align-middle px-0">
-                        <Checkbox
-                          checked={!!contact.deceased}
-                          disabled
-                          className="pointer-events-none data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                          aria-label="Deceased"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center align-middle px-0">
-                        <Checkbox
-                          checked={!!contact.isDecisionMaker}
-                          disabled
-                          className="pointer-events-none data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
-                          aria-label="Decision Maker"
-                        />
-                      </TableCell>
-<TableCell colSpan={8} className="text-center align-middle text-sm text-muted-foreground">
+
+<TableCell colSpan={4} className="text-center align-middle text-sm text-muted-foreground">
                          No phone numbers
                        </TableCell>
                       <TableCell className="text-center align-middle">

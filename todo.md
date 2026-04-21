@@ -3360,3 +3360,7 @@
 
 ## Refinements - Contacts Page
 - [x] Remove Litigator, Deceased, Decision Maker checkboxes from Contacts top filter bar
+
+## Refinements - Remove inline flag checkboxes from contact listing
+- [x] Remove Decision Maker, Current Resident, Contacted, On Board, NOT On Board, DNC, Litigator, Deceased checkboxes from contact rows in CallTrackingTable
+- [x] Keep backend logic and edit-contact form intact
