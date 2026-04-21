@@ -3378,3 +3378,6 @@
 ## Contact Edit - Auto-refresh listing
 - [x] Make contact edits (DNC, litigator, deceased, decision maker, etc.) immediately reflect in contacts listing
 - [x] Invalidate/refetch contacts query after contact update mutations (expanded getContactsByProperty to return all fields)
+
+## Bug Fix - Unmark DNC not refreshing frontend
+- [x] Fix unmark DNC not updating contacts listing in frontend (phones were keeping old DNC=1 value)

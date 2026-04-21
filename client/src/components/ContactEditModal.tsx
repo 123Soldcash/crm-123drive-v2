@@ -171,7 +171,7 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
           phoneNumber: p.phoneNumber,
           phoneType: p.phoneType || "Mobile",
           isPrimary: p.isPrimary || 0,
-          dnc: dnc ? 1 : (p.dnc || 0),
+          dnc: dnc ? 1 : 0,
         })),
         emails: emails.map(e => ({
           email: e.email,
