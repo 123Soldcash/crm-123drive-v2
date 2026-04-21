@@ -3374,3 +3374,7 @@
 - [x] Update ContactNotesDialog to use unified query (getUnifiedByContact)
 - [x] Update inline note editing to create callNote entries
 - [x] Write tests for unified notes system (24/24 passed)
+
+## Contact Edit - Auto-refresh listing
+- [x] Make contact edits (DNC, litigator, deceased, decision maker, etc.) immediately reflect in contacts listing
+- [x] Invalidate/refetch contacts query after contact update mutations (expanded getContactsByProperty to return all fields)
