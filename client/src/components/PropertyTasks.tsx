@@ -224,10 +224,10 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                             </Badge>
                           );
                         })()}
-                        {task.assignedToName && (
+                        {(task as any).deskName && (
                           <span className={`flex items-center gap-1 ${isDone ? "text-slate-300" : ""}`}>
                             <User className="h-2.5 w-2.5" />
-                            {task.assignedToName}
+                            {(task as any).deskName}
                           </span>
                         )}
                         {isDone && task.completedDate && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone, Mail, Home, Search, MessageSquare, Handshake, FileCheck, ClipboardCheck, FileText, Send, Image, UserSearch, UserPlus, Repeat } from "lucide-react";
+import { Phone, Mail, Home, MessageSquare, Handshake, FileCheck, FileText, Send, Image, UserSearch, UserPlus, Repeat, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateTaskDialogProps {
@@ -58,13 +58,32 @@ export function CreateTaskDialog({
   const [dueDate, setDueDate] = useState<string>("");
   const [dueTime, setDueTime] = useState<string>("");
   const [repeat, setRepeat] = useState<string>("No repeat");
-  const [assignedTo, setAssignedTo] = useState<string>("");
+  const [selectedDeskId, setSelectedDeskId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deskDefaultApplied, setDeskDefaultApplied] = useState(false);
 
-  // Fetch agents
-  const { data: agents = [], isLoading: agentsLoading } = trpc.users.listAgents.useQuery();
+  // Fetch desks instead of agents
+  const { data: desksList = [], isLoading: desksLoading } = trpc.desks.list.useQuery();
+
+  // Fetch property details to get the default desk
+  const { data: propertyData } = trpc.properties.getById.useQuery(
+    { id: defaultPropertyId! },
+    { enabled: !!defaultPropertyId }
+  );
+
   const createTaskMutation = trpc.tasks.create.useMutation();
   const updateTaskMutation = trpc.tasks.update.useMutation();
+
+  // Auto-set desk from property's deskName when creating a new task
+  useEffect(() => {
+    if (open && !editingTask && propertyData?.deskName && desksList.length > 0 && !deskDefaultApplied) {
+      const matchingDesk = desksList.find((d: any) => d.name === propertyData.deskName);
+      if (matchingDesk) {
+        setSelectedDeskId(matchingDesk.id.toString());
+        setDeskDefaultApplied(true);
+      }
+    }
+  }, [open, editingTask, propertyData, desksList, deskDefaultApplied]);
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -75,10 +94,17 @@ export function CreateTaskDialog({
         setPriority(editingTask.priority || "Medium");
         setStatus(editingTask.status || defaultStatus);
         setDueDate(editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : "");
-        setAssignedTo(editingTask.assignedTo || "");
-        setRepeat(editingTask.repeat || "No repeat");
+        setRepeat(editingTask.repeatTask || editingTask.repeat || "No repeat");
+        // Set desk from editingTask
+        if (editingTask.deskId) {
+          setSelectedDeskId(editingTask.deskId.toString());
+        } else {
+          setSelectedDeskId("");
+        }
+        setDeskDefaultApplied(true); // Don't override with property default when editing
       } else {
         resetForm();
+        setDeskDefaultApplied(false); // Allow auto-default for new tasks
       }
     }
   }, [open, editingTask]);
@@ -91,7 +117,8 @@ export function CreateTaskDialog({
     setDueDate("");
     setDueTime("");
     setRepeat("No repeat");
-    setAssignedTo("");
+    setSelectedDeskId("");
+    setDeskDefaultApplied(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,6 +140,7 @@ export function CreateTaskDialog({
         dueTime: dueTime || undefined,
         repeatTask: repeat !== "No repeat" ? repeat as any : undefined,
         propertyId: defaultPropertyId,
+        deskId: selectedDeskId ? parseInt(selectedDeskId) : undefined,
       };
 
       if (editingTask) {
@@ -298,7 +326,7 @@ export function CreateTaskDialog({
               </div>
             </div>
 
-            {/* Repeat & Assign To */}
+            {/* Repeat & Assign To Desk */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="repeat" className="text-gray-700">
@@ -326,26 +354,42 @@ export function CreateTaskDialog({
               </div>
 
               <div>
-                <Label htmlFor="assignedTo" className="text-gray-700">
-                  Assign To
+                <Label htmlFor="deskId" className="text-gray-700">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Assign To (Desk)
+                  </div>
                 </Label>
-                {agentsLoading ? (
-                  <div className="text-gray-500 text-sm py-2">Loading agents...</div>
-                ) : agents.length === 0 ? (
-                  <div className="text-gray-500 text-sm py-2">No agents available</div>
+                {desksLoading ? (
+                  <div className="text-gray-500 text-sm py-2">Loading desks...</div>
+                ) : desksList.length === 0 ? (
+                  <div className="text-gray-500 text-sm py-2">No desks available</div>
                 ) : (
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                  <Select value={selectedDeskId} onValueChange={setSelectedDeskId}>
                     <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Select agent..." />
+                      <SelectValue placeholder="Select desk..." />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200 z-[200]">
-                      {agents.map((agent: any) => (
-                        <SelectItem key={agent.id} value={agent.id.toString()} className="text-gray-900">
-                          {agent.name}
+                      {desksList.map((desk: any) => (
+                        <SelectItem key={desk.id} value={desk.id.toString()} className="text-gray-900">
+                          <div className="flex items-center gap-2">
+                            {desk.color && (
+                              <span
+                                className="w-3 h-3 rounded-full inline-block flex-shrink-0"
+                                style={{ backgroundColor: desk.color }}
+                              />
+                            )}
+                            <span>{desk.name}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+                {propertyData?.deskName && !editingTask && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Default: {propertyData.deskName}
+                  </p>
                 )}
               </div>
             </div>

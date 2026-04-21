@@ -17,6 +17,7 @@ interface Task {
   dueTime?: string | null;
   repeatTask?: string | null;
   assignedToName?: string | null;
+  deskName?: string | null;
   createdByName?: string | null;
   propertyId?: number | null;
   propertyAddress?: string | null;
@@ -174,13 +175,14 @@ export function TaskCard({ task }: TaskCardProps) {
         </Link>
       )}
 
-      {/* Assigned To / Created By — explicit, prominent */}
+      {/* Desk / Created By — explicit, prominent */}
       {(() => {
-        const displayName = task.assignedToName || task.createdByName;
-        const label = task.assignedToName ? "Assigned to" : task.createdByName ? "Created by" : null;
+        const deskDisplayName = (task as any).deskName;
+        const displayName = deskDisplayName || task.createdByName;
+        const label = deskDisplayName ? "Desk" : task.createdByName ? "Created by" : null;
         if (!displayName || !label) return null;
         const initials = displayName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
-        const isAssigned = !!task.assignedToName;
+        const isAssigned = !!deskDisplayName;
         return (
           <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-md ${
             isDone

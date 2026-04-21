@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray, aliasedTable } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames, twilioNumbers } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames, twilioNumbers, desks } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -2223,9 +2223,11 @@ export async function getTasks(filters?: {
   status?: string; 
   priority?: string; 
   assignedToId?: number;
+  deskId?: number;
   propertyId?: number;
   hidden?: number;
   userId?: number;
+  userDeskIds?: number[];
 }): Promise<any[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -2241,20 +2243,35 @@ export async function getTasks(filters?: {
   if (filters?.assignedToId) {
     conditions.push(eq(tasks.assignedToId, filters.assignedToId));
   }
+  if (filters?.deskId) {
+    conditions.push(eq(tasks.deskId, filters.deskId));
+  }
   if (filters?.propertyId) {
     conditions.push(eq(tasks.propertyId, filters.propertyId));
   }
   if (filters?.hidden !== undefined) {
     conditions.push(eq(tasks.hidden, filters.hidden));
   }
-  // Filter by userId: show tasks assigned to OR created by this user
+  // Filter by userId: show tasks in user's desks OR created by this user
   if (filters?.userId !== undefined) {
-    conditions.push(
-      or(
-        eq(tasks.assignedToId, filters.userId),
-        eq(tasks.createdById, filters.userId)
-      )
-    );
+    if (filters?.userDeskIds && filters.userDeskIds.length > 0) {
+      // Show tasks assigned to user's desks OR created by this user
+      conditions.push(
+        or(
+          inArray(tasks.deskId, filters.userDeskIds),
+          eq(tasks.createdById, filters.userId),
+          eq(tasks.assignedToId, filters.userId)
+        )
+      );
+    } else {
+      // Fallback: show tasks assigned to or created by this user
+      conditions.push(
+        or(
+          eq(tasks.assignedToId, filters.userId),
+          eq(tasks.createdById, filters.userId)
+        )
+      );
+    }
   }
   
   // Alias for assigned user and creator user joins
@@ -2271,6 +2288,7 @@ export async function getTasks(filters?: {
       status: tasks.status,
       hidden: tasks.hidden,
       assignedToId: tasks.assignedToId,
+      deskId: tasks.deskId,
       createdById: tasks.createdById,
       propertyId: tasks.propertyId,
       dueDate: tasks.dueDate,
@@ -2285,11 +2303,13 @@ export async function getTasks(filters?: {
       propertyState: properties.state,
       assignedToName: assignedUser.name,
       createdByName: creatorUser.name,
+      deskName: desks.name,
     })
     .from(tasks)
     .leftJoin(properties, eq(tasks.propertyId, properties.id))
     .leftJoin(assignedUser, eq(tasks.assignedToId, assignedUser.id))
     .leftJoin(creatorUser, eq(tasks.createdById, creatorUser.id))
+    .leftJoin(desks, eq(tasks.deskId, desks.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(tasks.createdAt));
   

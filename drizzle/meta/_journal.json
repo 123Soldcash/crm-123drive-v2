@@ -379,6 +379,13 @@
       "when": 1776724544105,
       "tag": "0053_motionless_night_thrasher",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "5",
+      "when": 1776775014478,
+      "tag": "0054_supreme_centennial",
+      "breakpoints": true
     }
   ]
 }

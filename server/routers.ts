@@ -3372,6 +3372,7 @@ export const appRouter = router({
           priority: z.string().optional(),
           taskType: z.string().optional(),
           assignedToId: z.number().optional(),
+          deskId: z.number().optional(),
           overdue: z.boolean().optional(),
           dueToday: z.boolean().optional(),
           upcoming: z.boolean().optional(),
@@ -3381,12 +3382,27 @@ export const appRouter = router({
       )
       .query(async ({ input, ctx }) => {
         const { onlyMine, ...rest } = input ?? {};
-        // Non-admin users always see only their own tasks
+        // Non-admin users always see only their desk tasks
         // Admins see all tasks unless onlyMine=true (used by sidebar badge)
         const forceUserFilter = onlyMine || ctx.user?.role !== 'admin';
+        
+        // Get user's desk IDs for filtering
+        let userDeskIds: number[] | undefined;
+        if (forceUserFilter && ctx.user?.id) {
+          const database = await getDb();
+          if (database) {
+            const deskRows = await database
+              .select({ deskId: userDesks.deskId })
+              .from(userDesks)
+              .where(eq(userDesks.userId, ctx.user.id));
+            userDeskIds = deskRows.map(r => r.deskId);
+          }
+        }
+        
         const filters = {
           ...rest,
           userId: forceUserFilter ? ctx.user?.id : undefined,
+          userDeskIds,
         };
         return await db.getTasks(filters);
       }),
@@ -3416,6 +3432,7 @@ export const appRouter = router({
           priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
           status: z.enum(["To Do", "In Progress", "Done"]).default("To Do"),
           assignedToId: z.number().optional(),
+          deskId: z.number().optional(),
           propertyId: z.number().optional(),
           dueDate: z.string().optional(), // ISO date string
           dueTime: z.string().optional(), // HH:MM format
@@ -3426,6 +3443,30 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         // Auto-generate title from taskType if not provided
         const autoTitle = input.title || input.taskType;
+        
+        // Resolve deskId: use provided deskId, or auto-resolve from property's deskName
+        let resolvedDeskId = input.deskId;
+        if (!resolvedDeskId && input.propertyId) {
+          const database = await getDb();
+          if (database) {
+            const [prop] = await database
+              .select({ deskName: properties.deskName })
+              .from(properties)
+              .where(eq(properties.id, input.propertyId))
+              .limit(1);
+            if (prop?.deskName) {
+              const [desk] = await database
+                .select({ id: desks.id })
+                .from(desks)
+                .where(eq(desks.name, prop.deskName))
+                .limit(1);
+              if (desk) {
+                resolvedDeskId = desk.id;
+              }
+            }
+          }
+        }
+        
         const taskData: any = {
           title: autoTitle,
           description: input.description,
@@ -3433,6 +3474,7 @@ export const appRouter = router({
           priority: input.priority,
           status: input.status,
           propertyId: input.propertyId,
+          deskId: resolvedDeskId,
           dueTime: input.dueTime,
           repeatTask: input.repeatTask,
           checklist: input.checklist,
@@ -3454,6 +3496,7 @@ export const appRouter = router({
           dueTime: z.string().optional(),
           repeatTask: z.enum(["Daily", "Weekly", "Monthly", "No repeat"]).optional(),
           assignedToId: z.number().optional(),
+          deskId: z.number().nullable().optional(),
           propertyId: z.number().optional(),
           dueDate: z.string().optional(),
           completedDate: z.string().optional(),

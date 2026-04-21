@@ -814,7 +814,8 @@ export const tasks = mysqlTable("tasks", {
   hidden: int("hidden").default(0).notNull(), // 0=NO, 1=YES - Hide task from main view
   
   // Assignment
-  assignedToId: int("assignedToId"), // User ID of assigned agent
+  assignedToId: int("assignedToId"), // User ID of assigned agent (legacy, kept for backward compat)
+  deskId: int("deskId"), // Desk ID - primary assignment field
   createdById: int("createdById").notNull(), // User ID of creator
   
   // Property association

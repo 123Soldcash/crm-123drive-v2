@@ -18,16 +18,16 @@ export function TasksCalendar() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [userFilter, setUserFilter] = useState<string>("all");
+  const [deskFilter, setDeskFilter] = useState<string>("all");
 
   const { data: allTasks = [], refetch } = trpc.tasks.list.useQuery();
-  const { data: allUsers = [] } = trpc.agents.listAllUsers.useQuery();
+  const { data: desksList = [] } = trpc.desks.list.useQuery();
 
-  // Filter tasks by user
+  // Filter tasks by desk
   const tasks = allTasks.filter((task) => {
-    if (userFilter === "all") return true;
-    const userId = parseInt(userFilter);
-    return task.assignedToId === userId || task.createdById === userId;
+    if (deskFilter === "all") return true;
+    const deskId = parseInt(deskFilter);
+    return (task as any).deskId === deskId;
   });
 
   const monthStart = startOfMonth(currentMonth);
@@ -107,15 +107,18 @@ export function TasksCalendar() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Select value={userFilter} onValueChange={setUserFilter}>
+              <Select value={deskFilter} onValueChange={setDeskFilter}>
                 <SelectTrigger className="w-[180px] bg-white border-gray-300 text-gray-900">
-                  <SelectValue placeholder="Filter by User" />
+                  <SelectValue placeholder="Filter by Desk" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200 max-h-[300px]">
-                  <SelectItem value="all">All Users</SelectItem>
-                  {allUsers.map((user: any) => (
-                    <SelectItem key={user.id} value={String(user.id)}>
-                      {user.name || user.email}
+                  <SelectItem value="all">All Desks</SelectItem>
+                  {(desksList as any[]).map((desk: any) => (
+                    <SelectItem key={desk.id} value={String(desk.id)}>
+                      <div className="flex items-center gap-2">
+                        {desk.color && <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: desk.color }} />}
+                        {desk.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -293,8 +296,8 @@ export function TasksCalendar() {
                             {task.status}
                           </Badge>
                         )}
-                        {task.assignedToName && (
-                          <span className={`text-xs ${isDone ? "text-gray-300" : "text-gray-500"}`}>{task.assignedToName}</span>
+                        {(task as any).deskName && (
+                          <span className={`text-xs ${isDone ? "text-gray-300" : "text-gray-500"}`}>{(task as any).deskName}</span>
                         )}
                       </div>
 

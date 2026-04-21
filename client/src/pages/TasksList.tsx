@@ -26,10 +26,10 @@ export function TasksList() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
-  const [userFilter, setUserFilter] = useState<string>("all");
+  const [deskFilter, setDeskFilter] = useState<string>("all");
 
   const { data: tasks = [], refetch } = trpc.tasks.list.useQuery();
-  const { data: allUsers = [] } = trpc.agents.listAllUsers.useQuery();
+  const { data: desksList = [] } = trpc.desks.list.useQuery();
   const updateTask = trpc.tasks.update.useMutation({
     onSuccess: () => refetch(),
   });
@@ -53,9 +53,9 @@ export function TasksList() {
     if (statusFilter !== "all" && task.status !== statusFilter) return false;
     if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
     if (typeFilter !== "all" && task.taskType !== typeFilter) return false;
-    if (userFilter !== "all") {
-      const userId = parseInt(userFilter);
-      if (task.assignedToId !== userId && task.createdById !== userId) return false;
+    if (deskFilter !== "all") {
+      const deskId = parseInt(deskFilter);
+      if (task.deskId !== deskId) return false;
     }
     if (dateFilter !== "all") {
       const today = todayLocal();
@@ -305,15 +305,18 @@ export function TasksList() {
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={userFilter} onValueChange={setUserFilter}>
+            <Select value={deskFilter} onValueChange={setDeskFilter}>
               <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                <SelectValue placeholder="User" />
+                <SelectValue placeholder="Desk" />
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200 max-h-[300px]">
-                <SelectItem value="all">All Users</SelectItem>
-                {(allUsers as any[]).map((user: any) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.name || user.email}
+                <SelectItem value="all">All Desks</SelectItem>
+                {(desksList as any[]).map((desk: any) => (
+                  <SelectItem key={desk.id} value={desk.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      {desk.color && <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: desk.color }} />}
+                      {desk.name}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -377,7 +380,7 @@ export function TasksList() {
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Priority</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">Assigned To</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Desk</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Due Date</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Property</th>
               </tr>
@@ -459,7 +462,7 @@ export function TasksList() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={isDone ? "text-gray-300" : "text-gray-700"}>{task.assignedToName || "Unassigned"}</span>
+                        <span className={isDone ? "text-gray-300" : "text-gray-700"}>{(task as any).deskName || "Unassigned"}</span>
                       </td>
                       <td className="px-4 py-3">
                         {task.dueDate ? (

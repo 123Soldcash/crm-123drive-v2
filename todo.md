@@ -3341,3 +3341,14 @@
 - [x] Update frontend audio player to use proxy endpoint instead of direct Twilio URLs
 - [x] Migrate existing voicemail records: auto-migrates on first play via proxy
 - [x] Write tests for the proxy endpoint (37/37 passed)
+
+## Tasks - Refactor Assign To (use Desks instead of Users)
+- [x] Audit current task schema, routers, and all UI components
+- [x] Add deskId column to tasks table (schema + migration)
+- [x] Update task creation routers to default deskId from property's desk
+- [x] Update task edit routers to allow changing deskId
+- [x] Update task creation UI: show desk dropdown, default to property desk
+- [x] Update task edit UI: allow changing desk assignment
+- [x] Update Tasks page: show desk name instead of user, filter by desk
+- [x] Update all other places that display task assignment (property detail, TaskCard, Calendar, Kanban)
+- [x] Run TypeScript checks and write tests (22/22 passed, 0 TS errors)
