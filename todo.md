@@ -3365,3 +3365,12 @@
 - [x] Remove Decision Maker, Current Resident, Contacted, On Board, NOT On Board, DNC, Litigator, Deceased checkboxes from contact rows in CallTrackingTable
 - [x] Keep backend logic and edit-contact form intact
 - [x] Remove Mobile, Landline, Other phone type checkboxes from contact table rows
+
+## Unify Notes System in Contacts
+- [x] Audit current notes schema, routers, and UI (two separate note systems)
+- [x] Unify into single notes system: Notes column = last note preview, Call Notes = full history
+- [x] Include call log dispositions and options in the unified notes
+- [x] Preserve all existing data during migration (both tables preserved, merged in query)
+- [x] Update ContactNotesDialog to use unified query (getUnifiedByContact)
+- [x] Update inline note editing to create callNote entries
+- [x] Write tests for unified notes system (24/24 passed)

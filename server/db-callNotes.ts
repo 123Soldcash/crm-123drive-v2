@@ -5,8 +5,8 @@
  * Notes are linked to contacts and optionally to specific call logs.
  */
 import { getDb } from "./db";
-import { callNotes, callLogs } from "../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { callNotes, callLogs, communicationLog, users } from "../drizzle/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 /**
  * Create a new call note
@@ -100,6 +100,150 @@ export async function getCallNotesWithCallInfo(contactId: number) {
     .where(eq(callNotes.contactId, contactId))
     .orderBy(desc(callNotes.createdAt));
   return results;
+}
+
+/**
+ * Get UNIFIED notes for a contact — merges callNotes + communicationLog entries
+ * into a single chronological timeline. This is used by ContactNotesDialog.
+ * Returns entries sorted newest first with a unified shape.
+ */
+export async function getUnifiedNotesForContact(contactId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 1. Get callNotes with call info
+  const callNoteResults = await db
+    .select({
+      id: callNotes.id,
+      content: callNotes.content,
+      createdAt: callNotes.createdAt,
+      userId: callNotes.userId,
+      userName: users.name,
+      callStatus: callLogs.status,
+      callDuration: callLogs.duration,
+      callToNumber: callLogs.toPhoneNumber,
+    })
+    .from(callNotes)
+    .leftJoin(callLogs, eq(callNotes.callLogId, callLogs.id))
+    .leftJoin(users, eq(callNotes.userId, users.id))
+    .where(eq(callNotes.contactId, contactId))
+    .orderBy(desc(callNotes.createdAt));
+
+  // 2. Get communicationLog entries that have notes
+  const commLogResults = await db
+    .select({
+      id: communicationLog.id,
+      notes: communicationLog.notes,
+      callResult: communicationLog.callResult,
+      disposition: communicationLog.disposition,
+      mood: communicationLog.mood,
+      direction: communicationLog.direction,
+      contactPhoneNumber: communicationLog.contactPhoneNumber,
+      communicationDate: communicationLog.communicationDate,
+      userId: communicationLog.userId,
+      userName: users.name,
+      propertyDetails: communicationLog.propertyDetails,
+    })
+    .from(communicationLog)
+    .leftJoin(users, eq(communicationLog.userId, users.id))
+    .where(eq(communicationLog.contactId, contactId))
+    .orderBy(desc(communicationLog.communicationDate));
+
+  // 3. Merge into unified shape
+  type UnifiedNote = {
+    id: number;
+    source: "callNote" | "commLog";
+    content: string;
+    createdAt: Date;
+    userId: number;
+    userName: string | null;
+    // Call-specific info
+    callStatus: string | null;
+    callDuration: number | null;
+    callToNumber: string | null;
+    // CommLog-specific info
+    callResult: string | null;
+    disposition: string | null;
+    mood: string | null;
+    direction: string | null;
+    propertyDetails: string | null;
+  };
+
+  const unified: UnifiedNote[] = [];
+
+  // Add callNotes
+  for (const cn of callNoteResults) {
+    unified.push({
+      id: cn.id,
+      source: "callNote",
+      content: cn.content,
+      createdAt: cn.createdAt,
+      userId: cn.userId,
+      userName: cn.userName,
+      callStatus: cn.callStatus,
+      callDuration: cn.callDuration,
+      callToNumber: cn.callToNumber,
+      callResult: null,
+      disposition: null,
+      mood: null,
+      direction: null,
+      propertyDetails: null,
+    });
+  }
+
+  // Add communicationLog entries
+  for (const cl of commLogResults) {
+    // Build content from commLog fields
+    const parts: string[] = [];
+    if (cl.callResult) parts.push(`[${cl.callResult}]`);
+    if (cl.disposition) parts.push(`Disposition: ${cl.disposition}`);
+    if (cl.mood) parts.push(`Mood: ${cl.mood}`);
+    // Extract the actual note text (after " - " prefix)
+    if (cl.notes) {
+      const dashIndex = cl.notes.indexOf(" - ");
+      const noteText = dashIndex !== -1 ? cl.notes.substring(dashIndex + 3).trim() : cl.notes;
+      if (noteText) parts.push(noteText);
+    }
+    // Parse propertyDetails JSON if present
+    if (cl.propertyDetails) {
+      try {
+        const details = JSON.parse(cl.propertyDetails);
+        const detailParts: string[] = [];
+        if (details.bedBath) detailParts.push(`Bed/Bath: ${details.bedBath}`);
+        if (details.sf) detailParts.push(`SF: ${details.sf}`);
+        if (details.roofAge) detailParts.push(`Roof: ${details.roofAge}`);
+        if (details.acAge) detailParts.push(`AC: ${details.acAge}`);
+        if (details.overallCondition) detailParts.push(`Condition: ${details.overallCondition}`);
+        if (details.reasonToSell) detailParts.push(`Reason: ${details.reasonToSell}`);
+        if (details.howFastToSell) detailParts.push(`Timeline: ${details.howFastToSell}`);
+        if (detailParts.length > 0) parts.push(`Property: ${detailParts.join(", ")}`);
+      } catch {}
+    }
+
+    const content = parts.join(" | ") || "(No details)";
+
+    unified.push({
+      id: cl.id,
+      source: "commLog",
+      content,
+      createdAt: cl.communicationDate,
+      userId: cl.userId,
+      userName: cl.userName,
+      callStatus: null,
+      callDuration: null,
+      callToNumber: cl.contactPhoneNumber,
+      callResult: cl.callResult,
+      disposition: cl.disposition,
+      mood: cl.mood,
+      direction: cl.direction,
+      propertyDetails: cl.propertyDetails,
+    });
+  }
+
+  // Sort by date descending
+  unified.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return unified;
 }
 
 /**

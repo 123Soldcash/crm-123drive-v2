@@ -4278,6 +4278,14 @@ export const appRouter = router({
         return getCallNotesWithCallInfo(input.contactId);
       }),
 
+    /** Get UNIFIED notes for a contact — merges callNotes + communicationLog */
+    getUnifiedByContact: protectedProcedure
+      .input(z.object({ contactId: z.number() }))
+      .query(async ({ input }) => {
+        const { getUnifiedNotesForContact } = await import("./db-callNotes");
+        return getUnifiedNotesForContact(input.contactId);
+      }),
+
     /** Get notes for a specific call log */
     getByCallLog: protectedProcedure
       .input(z.object({ callLogId: z.number() }))

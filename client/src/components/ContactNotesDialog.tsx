@@ -1,8 +1,9 @@
 /**
- * ContactNotesDialog — View all call notes for a specific contact
+ * ContactNotesDialog — Unified notes timeline for a contact
  * 
- * Shows a timeline of notes with call information (status, duration, date).
- * Can be opened from the contacts table via the Notes button.
+ * Merges notes from callNotes table AND communicationLog table
+ * into a single chronological view. Shows call info, dispositions,
+ * mood, property details, and manual notes all in one place.
  */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -29,6 +30,10 @@ import {
   PhoneMissed,
   CheckCircle2,
   AlertCircle,
+  PhoneIncoming,
+  PhoneOutgoing,
+  MessageSquare,
+  User,
 } from "lucide-react";
 
 interface ContactNotesDialogProps {
@@ -50,7 +55,8 @@ const CALL_STATUS_ICONS: Record<string, React.ReactNode> = {
 export function ContactNotesDialog({ open, onOpenChange, contactId, contactName, propertyId }: ContactNotesDialogProps) {
   const [noteText, setNoteText] = useState("");
 
-  const { data: notes, refetch } = trpc.callNotes.getByContact.useQuery(
+  // Use the unified query that merges callNotes + communicationLog
+  const { data: notes, refetch } = trpc.callNotes.getUnifiedByContact.useQuery(
     { contactId },
     { enabled: open && !!contactId }
   );
@@ -74,7 +80,11 @@ export function ContactNotesDialog({ open, onOpenChange, contactId, contactName,
     }
   };
 
-  const handleDeleteNote = async (noteId: number) => {
+  const handleDeleteNote = async (noteId: number, source: string) => {
+    if (source !== "callNote") {
+      toast.error("Communication log entries can only be deleted from the call log");
+      return;
+    }
     try {
       await deleteNoteMutation.mutateAsync({ noteId });
       refetch();
@@ -112,7 +122,7 @@ export function ContactNotesDialog({ open, onOpenChange, contactId, contactName,
             Notes — {contactName}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            {notes?.length ?? 0} notes across all calls
+            {notes?.length ?? 0} notes across all interactions
           </p>
         </DialogHeader>
 
@@ -136,19 +146,33 @@ export function ContactNotesDialog({ open, onOpenChange, contactId, contactName,
                   <div className="space-y-2">
                     {dateNotes!.map((note) => (
                       <div
-                        key={note.id}
-                        className="group relative bg-muted/50 rounded-lg p-3 border border-transparent hover:border-border transition-colors"
+                        key={`${note.source}-${note.id}`}
+                        className={`group relative rounded-lg p-3 border border-transparent hover:border-border transition-colors ${
+                          note.source === "commLog" 
+                            ? "bg-blue-50/50 dark:bg-blue-950/20" 
+                            : "bg-muted/50"
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap flex-1">{note.content}</p>
-                          <button
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-start gap-2 flex-1">
+                            {/* Source icon */}
+                            {note.source === "commLog" ? (
+                              <Phone className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                            ) : (
+                              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                            )}
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap flex-1">{note.content}</p>
+                          </div>
+                          {note.source === "callNote" && (
+                            <button
+                              onClick={() => handleDeleteNote(note.id, note.source)}
+                              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-all shrink-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap ml-5">
                           <Clock className="h-3 w-3" />
                           <span>
                             {new Date(note.createdAt).toLocaleTimeString("en-US", {
@@ -156,19 +180,60 @@ export function ContactNotesDialog({ open, onOpenChange, contactId, contactName,
                               minute: "2-digit",
                             })}
                           </span>
+                          {/* Source badge */}
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] h-4 px-1.5 ${
+                              note.source === "commLog" 
+                                ? "border-blue-300 text-blue-600 dark:border-blue-700 dark:text-blue-400" 
+                                : ""
+                            }`}
+                          >
+                            {note.source === "commLog" ? "Call Log" : "Note"}
+                          </Badge>
+                          {/* Call status (from callNotes linked to callLogs) */}
                           {note.callStatus && (
                             <Badge variant="outline" className="text-[10px] h-4 px-1.5 gap-1">
                               {CALL_STATUS_ICONS[note.callStatus] || <Phone className="h-3 w-3" />}
                               {note.callStatus}
                             </Badge>
                           )}
+                          {/* Call result (from communicationLog) */}
+                          {note.callResult && (
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                              {note.callResult}
+                            </Badge>
+                          )}
+                          {/* Direction */}
+                          {note.direction && (
+                            <span className="flex items-center gap-0.5">
+                              {note.direction === "Inbound" ? (
+                                <PhoneIncoming className="h-3 w-3 text-green-500" />
+                              ) : (
+                                <PhoneOutgoing className="h-3 w-3 text-blue-500" />
+                              )}
+                            </span>
+                          )}
+                          {/* Mood */}
+                          {note.mood && (
+                            <span className="text-sm">{note.mood}</span>
+                          )}
+                          {/* Duration */}
                           {note.callDuration != null && note.callDuration > 0 && (
                             <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
                               {formatDuration(note.callDuration)}
                             </Badge>
                           )}
+                          {/* Phone number */}
                           {note.callToNumber && (
                             <span className="text-[10px] font-mono">{note.callToNumber}</span>
+                          )}
+                          {/* User name */}
+                          {note.userName && (
+                            <span className="flex items-center gap-0.5 text-[10px]">
+                              <User className="h-2.5 w-2.5" />
+                              {note.userName}
+                            </span>
                           )}
                         </div>
                       </div>

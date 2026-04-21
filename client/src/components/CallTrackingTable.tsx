@@ -396,6 +396,15 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   // Fetch latest call notes per contact (added during calls via CallModal)
   const { data: latestCallNotes, refetch: refetchLatestCallNotes } = trpc.callNotes.getLatestByProperty.useQuery({ propertyId });
 
+  // Mutation for creating inline notes via callNotes table
+  const createInlineNoteMutation = trpc.callNotes.create.useMutation({
+    onSuccess: () => {
+      refetchLatestCallNotes();
+      toast.success("Note saved");
+    },
+    onError: (err) => toast.error(`Failed to save note: ${err.message}`),
+  });
+
   const updateContactMutation = trpc.contacts.updateContact.useMutation({
     onSuccess: () => {
       utils.contacts.byProperty.invalidate();
@@ -874,39 +883,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     setNoteValue(currentNotes);
   };
 
-  const handleNoteSave = (contactId: number, phoneNumber: string) => {
-    const log = getLastCommunicationLog(contactId, phoneNumber);
-    
-    if (!log) {
-      // No existing log found — create a new one with the note
-      if (!noteValue.trim()) {
-        setEditingNote(null);
-        return;
-      }
-      logCommunicationMutation.mutate({
-        propertyId,
-        contactId,
-        communicationType: "Phone",
-        callResult: "See Notes" as any,
-        direction: "Outbound",
-        twilioNumber: primaryTwilioNumber || undefined,
-        contactPhoneNumber: phoneNumber,
-        notes: `Called ${phoneNumber} - ${noteValue.trim()}`,
-        nextStep: "",
-      });
+    const handleNoteSave = (contactId: number, phoneNumber: string) => {
+    if (!noteValue.trim()) {
       setEditingNote(null);
-      setNoteValue("");
       return;
     }
-
-    // Update notes with format: "Called (phone) (type) - {new notes}"
-    const phonePrefix = `Called ${phoneNumber}`;
-    const newNotes = noteValue.trim() ? `${phonePrefix} - ${noteValue.trim()}` : phonePrefix;
-
-    updateNotesMutation.mutate({
-      logId: log.id,
-      notes: newNotes,
+    // Always create a callNote entry (unified notes system)
+    createInlineNoteMutation.mutate({
+      contactId,
+      propertyId,
+      content: noteValue.trim(),
     });
+    setEditingNote(null);
+    setNoteValue("");
   };
 
   // Filter contacts based on disposition, flags, date, agent, and phone type
