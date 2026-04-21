@@ -168,19 +168,26 @@ function TrestleLookupBtn({ phoneId, propertyId }: { phoneId: number; propertyId
 }
 
 // Sortable wrapper for contact rows (handles drag-and-drop per contact)
-function SortableContactRow({ id, phoneIdx, phonesCount, rowBgClass, children }: {
+function SortableContactRow({ id, phoneIdx, phonesCount, rowBgClass, contactType, children }: {
   id: number;
   phoneIdx: number;
   phonesCount: number;
   rowBgClass: string;
+  contactType?: string;
   children: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  // Use inset box-shadow for left color indicator (border-l doesn't work reliably on <tr>)
+  const indicatorColor = contactType === 'email' ? '#3b82f6' : '#10b981'; // blue for email, emerald for phone
+  const baseStyle: React.CSSProperties = {
+    boxShadow: `inset 4px 0 0 0 ${indicatorColor}`,
+  };
   const style = phoneIdx === 0 ? {
+    ...baseStyle,
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  } : undefined;
+  } : baseStyle;
 
   return (
     <TableRow
@@ -935,9 +942,9 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     // Flag filters
     // DNC filter: show contact if ANY of its phones is marked DNC
     if (flagFilters.dnc && !contact.phones?.some((p: any) => !!p.dnc)) return false;
-    if (flagFilters.litigator && !contact.litigator) return false;
+    if (flagFilters.litigator && !contact.isLitigator) return false;
     if (flagFilters.deceased && !contact.deceased) return false;
-    if (flagFilters.decisionMaker && !contact.decisionMaker) return false;
+    if (flagFilters.decisionMaker && !contact.isDecisionMaker) return false;
 
     // Phone type filter - check if any phone matches the type
     if (phoneTypeFilter && phoneTypeFilter !== "all") {
@@ -1492,18 +1499,19 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       const attempts = getCallAttempts(contact.id, phone.phoneNumber);
                       const lastDisposition = getLastDisposition(contact.id, phone.phoneNumber);
                       
-                      // Determine row background color based on flags (priority: Litigator > Deceased)
-                      // DNC no longer colors the row — it's shown only via the DNC checkbox
-                      // Phone contacts get a green left border indicator
-                      const flagBgClass = contact.isLitigator 
+                      // Determine row background color based on flags
+                      // Priority: Litigator (red) > Deceased (purple) > Decision Maker (blue) > default
+                      // Phone contacts get a green left shadow indicator
+                      const rowBgClass = contact.isLitigator 
                         ? "bg-red-50 hover:bg-red-100" 
                         : contact.deceased 
                         ? "bg-purple-50 hover:bg-purple-100" 
+                        : contact.isDecisionMaker
+                        ? "bg-blue-50 hover:bg-blue-100"
                         : "hover:bg-muted/50";
-                      const rowBgClass = `${flagBgClass} border-l-4 border-l-emerald-500`;
                       
                       return (
-                        <SortableContactRow key={`${contact.id}-${phoneIdx}`} id={contact.id} phoneIdx={phoneIdx} phonesCount={contact.phones.length} rowBgClass={rowBgClass}>
+                        <SortableContactRow key={`${contact.id}-${phoneIdx}`} id={contact.id} phoneIdx={phoneIdx} phonesCount={contact.phones.length} rowBgClass={rowBgClass} contactType={contact.contactType || 'phone'}>
                           {phoneIdx === 0 && (
                             <>
                               <TableCell rowSpan={contact.phones.length} className="text-center align-middle">
@@ -1760,7 +1768,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       );
                     })
                   ) : (
-                    <TableRow key={contact.id} className="hover:bg-muted/50 border-t-2 border-t-muted">
+                    <TableRow key={contact.id} style={{ boxShadow: 'inset 4px 0 0 0 #10b981' }} className={`${contact.isLitigator ? 'bg-red-50 hover:bg-red-100' : contact.deceased ? 'bg-purple-50 hover:bg-purple-100' : contact.isDecisionMaker ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-muted/50'} border-t-2 border-t-muted`}>
                       <TableCell className="text-center align-middle px-1">
                         <GripVertical className="h-4 w-4 text-muted-foreground/30 mx-auto" />
                       </TableCell>
@@ -1845,7 +1853,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   emailContacts.map((contact: any) => {
                     const emailAddress = contact.email || (contact.emails && contact.emails.length > 0 ? contact.emails[0].email : null);
                     return (
-                      <TableRow key={contact.id} className="hover:bg-muted/50 border-l-4 border-l-blue-500">
+                      <TableRow key={contact.id} style={{ boxShadow: 'inset 4px 0 0 0 #3b82f6' }} className={`${contact.isLitigator ? 'bg-red-50 hover:bg-red-100' : contact.deceased ? 'bg-purple-50 hover:bg-purple-100' : contact.isDecisionMaker ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-muted/50'}`}>
                         <TableCell className="text-center align-middle">
                           <Checkbox
                             checked={selectedContacts.has(contact.id)}

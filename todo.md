@@ -3458,3 +3458,14 @@
 - [x] Position contacts with data at the top of the list (sorted by having phone/email)
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Fix Contact Color Indicators & Decision Maker Highlighting
+- [x] Investigate why border-l colors are not rendering — border-l on <tr> doesn't work in HTML tables
+- [x] Fix: replaced border-l with inset box-shadow (4px left indicator) — emerald for phone, blue for email
+- [x] Review SortableContactRow — added contactType prop, applies box-shadow via inline style
+- [x] Check decision maker data in DB — 995 decision makers, 20 litigators, 1 deceased, 5443 DNC
+- [x] Fix row bg: Litigator=red, Deceased=purple, Decision Maker=blue, Default=transparent
+- [x] Fix filter field name mismatch: contact.litigator→contact.isLitigator, contact.decisionMaker→contact.isDecisionMaker
+- [x] Applied same color logic to email tab rows and no-phones fallback rows
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint
