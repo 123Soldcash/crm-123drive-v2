@@ -3425,4 +3425,14 @@
 - [x] Keep contact details (name, relationship, flags) visible in both tabs
 - [x] Ensure Add Contact form works for both tabs (phone or email)
 - [x] TypeScript check (0 errors)
+- [x] Save checkpoint
+
+## Remove Email from ContactEditModal
+- [x] Remove email field from ContactEditModal (emails are now separate contacts in Emails tab)
+- [x] Remove any email-related state, validation, or rendering
+- [x] Remove Mail icon import (no longer needed)
+- [x] Update section title from 'Phone & Email' to 'Phone Number'
+- [x] Update badge from conditional phone/email to always show 'Phone Contact'
+- [x] Update helper text to mention emails are in Emails tab
+- [x] TypeScript check (0 errors)
 - [ ] Save checkpoint

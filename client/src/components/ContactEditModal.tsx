@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  User, Phone, Mail, Save, X, History, AlertCircle, AlertTriangle, Search, Loader2, ShieldAlert, Activity,
+  User, Phone, Save, X, History, AlertCircle, AlertTriangle, Search, Loader2, ShieldAlert, Activity,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -67,10 +67,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
   const [onBoard, setOnBoard] = useState(false);
   const [notOnBoard, setNotOnBoard] = useState(false);
 
-  // New model: single phone and email directly on the contact
+  // New model: single phone directly on the contact
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneType, setPhoneType] = useState("Mobile");
-  const [email, setEmail] = useState("");
 
   // TrestleIQ data (read-only display from the contact's phone)
   const [trestleScore, setTrestleScore] = useState<number | null>(null);
@@ -110,14 +109,11 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
       setOnBoard(contact.onBoard === 1);
       setNotOnBoard(contact.notOnBoard === 1);
 
-      // New model: phone/email directly on the contact
-      // First check direct fields, then fall back to phones[0]/emails[0] for backward compat
+      // New model: phone directly on the contact
       const directPhone = contact.phoneNumber || (contact.phones?.[0]?.phoneNumber) || "";
       const directPhoneType = contact.phoneType || (contact.phones?.[0]?.phoneType) || "Mobile";
-      const directEmail = contact.email || (contact.emails?.[0]?.email) || "";
       setPhoneNumber(directPhone);
       setPhoneType(directPhoneType);
-      setEmail(directEmail);
 
       // TrestleIQ data from the phone
       const phoneData = contact.phones?.[0];
@@ -163,14 +159,12 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
         contacted: contacted ? 1 : 0,
         onBoard: onBoard ? 1 : 0,
         notOnBoard: notOnBoard ? 1 : 0,
-        // New model: direct phone/email fields
+        // New model: direct phone field (emails are managed separately in Emails tab)
         phoneNumber: phoneNumber || undefined,
         phoneType: phoneType || undefined,
-        email: email || undefined,
-        contactType: phoneNumber ? "phone" : (email ? "email" : undefined),
-        // Also pass legacy phones/emails for backward compat
+        contactType: "phone",
+        // Also pass legacy phones for backward compat
         phones: phoneNumber ? [{ phoneNumber, phoneType: phoneType || "Mobile", isPrimary: 1, dnc: dnc ? 1 : 0 }] : [],
-        emails: email ? [{ email, isPrimary: 1 }] : [],
       });
     } catch (_) { /* handled by onError */ }
   };
@@ -217,11 +211,9 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
             <DialogTitle className="flex items-center gap-3 text-lg">
               <User className="h-6 w-6 text-primary" />
               Edit Contact: <span className="font-bold">{contact.name || "Unknown"}</span>
-              {contact.contactType && (
-                <Badge variant="outline" className="text-xs ml-2">
-                  {contact.contactType === "phone" ? "📞 Phone Contact" : "📧 Email Contact"}
-                </Badge>
-              )}
+              <Badge variant="outline" className="text-xs ml-2">
+                📞 Phone Contact
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
@@ -294,10 +286,10 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
               </div>
             </section>
 
-            {/* ══ SECTION 2: Phone & Email (single fields) ═══════════════════ */}
+            {/* ══ SECTION 2: Phone Number ═══════════════════════════════════ */}
             <section className="border-t pt-6">
               <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-                <Phone className="h-4.5 w-4.5" /> Phone &amp; Email
+                <Phone className="h-4.5 w-4.5" /> Phone Number
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
@@ -399,25 +391,10 @@ export function ContactEditModal({ open, onOpenChange, contact, propertyId }: Co
                   )}
                 </div>
 
-                {/* ── Email ── */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium">Email Address</span>
-                  </div>
-
-                  <Input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
-                    type="email"
-                    className="h-11 text-base"
-                  />
-                </div>
               </div>
 
               <p className="text-xs text-muted-foreground mt-3 italic">
-                Each contact has one phone number and/or one email. To add another phone, create a new contact.
+                Each phone contact has one phone number. To add another phone, create a new contact. Emails are managed in the Emails tab.
               </p>
             </section>
 
