@@ -987,15 +987,28 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
     return true;
   });
 
-  // Split contacts by type for tabs
-  const phoneContacts = useMemo(() => 
-    filteredContacts?.filter((c: any) => c.contactType === 'phone' || (!c.contactType && c.phones && c.phones.length > 0)) || [],
-    [filteredContacts]
-  );
-  const emailContacts = useMemo(() => 
-    filteredContacts?.filter((c: any) => c.contactType === 'email') || [],
-    [filteredContacts]
-  );
+  // Split contacts by type for tabs, sorted: contacts with data first
+  const phoneContacts = useMemo(() => {
+    const filtered = filteredContacts?.filter((c: any) => c.contactType === 'phone' || (!c.contactType && c.phones && c.phones.length > 0)) || [];
+    return [...filtered].sort((a: any, b: any) => {
+      const aHasPhone = a.phoneNumber || (a.phones && a.phones.length > 0 && a.phones[0].phoneNumber);
+      const bHasPhone = b.phoneNumber || (b.phones && b.phones.length > 0 && b.phones[0].phoneNumber);
+      if (aHasPhone && !bHasPhone) return -1;
+      if (!aHasPhone && bHasPhone) return 1;
+      return 0;
+    });
+  }, [filteredContacts]);
+
+  const emailContacts = useMemo(() => {
+    const filtered = filteredContacts?.filter((c: any) => c.contactType === 'email') || [];
+    return [...filtered].sort((a: any, b: any) => {
+      const aHasEmail = a.email || (a.emails && a.emails.length > 0 && a.emails[0].email);
+      const bHasEmail = b.email || (b.emails && b.emails.length > 0 && b.emails[0].email);
+      if (aHasEmail && !bHasEmail) return -1;
+      if (!aHasEmail && bHasEmail) return 1;
+      return 0;
+    });
+  }, [filteredContacts]);
 
   // Counts for tab badges (use unfiltered ordered contacts for total counts)
   const totalPhoneContacts = useMemo(() => 
@@ -1481,11 +1494,13 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                       
                       // Determine row background color based on flags (priority: Litigator > Deceased)
                       // DNC no longer colors the row — it's shown only via the DNC checkbox
-                      const rowBgClass = contact.isLitigator 
+                      // Phone contacts get a green left border indicator
+                      const flagBgClass = contact.isLitigator 
                         ? "bg-red-50 hover:bg-red-100" 
                         : contact.deceased 
                         ? "bg-purple-50 hover:bg-purple-100" 
                         : "hover:bg-muted/50";
+                      const rowBgClass = `${flagBgClass} border-l-4 border-l-emerald-500`;
                       
                       return (
                         <SortableContactRow key={`${contact.id}-${phoneIdx}`} id={contact.id} phoneIdx={phoneIdx} phonesCount={contact.phones.length} rowBgClass={rowBgClass}>
@@ -1830,7 +1845,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   emailContacts.map((contact: any) => {
                     const emailAddress = contact.email || (contact.emails && contact.emails.length > 0 ? contact.emails[0].email : null);
                     return (
-                      <TableRow key={contact.id} className="hover:bg-muted/50">
+                      <TableRow key={contact.id} className="hover:bg-muted/50 border-l-4 border-l-blue-500">
                         <TableCell className="text-center align-middle">
                           <Checkbox
                             checked={selectedContacts.has(contact.id)}

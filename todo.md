@@ -3452,3 +3452,9 @@
 - [x] Cross-property check only runs for phone mode
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Contact Color Indicators & Sorting
+- [x] Add visual color indicator: phone contacts have emerald/green left border, email contacts have blue left border
+- [x] Position contacts with data at the top of the list (sorted by having phone/email)
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint
