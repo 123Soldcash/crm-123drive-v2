@@ -540,7 +540,7 @@ export default function CallHistory() {
                           <div className="text-sm">
                             {rec.phoneNumber ? (
                               <div>
-                                {rec.type === "call" && rec.needsCallback && rec.twilioNumber ? (
+                                {rec.type === "call" && rec.twilioNumber ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <button
@@ -554,14 +554,22 @@ export default function CallHistory() {
                                             description: "Press Call to connect",
                                           });
                                         }}
-                                        className="font-semibold text-orange-700 hover:text-orange-900 hover:underline cursor-pointer flex items-center gap-1.5 group"
+                                        className={`font-semibold hover:underline cursor-pointer flex items-center gap-1.5 group ${
+                                          rec.needsCallback
+                                            ? "text-orange-700 hover:text-orange-900"
+                                            : "text-foreground hover:text-primary"
+                                        }`}
                                       >
-                                        <PhoneForwarded className="h-3.5 w-3.5 text-orange-500 group-hover:text-orange-700 transition-colors" />
+                                        <Phone className={`h-3.5 w-3.5 transition-colors ${
+                                          rec.needsCallback
+                                            ? "text-orange-500 group-hover:text-orange-700"
+                                            : "text-muted-foreground group-hover:text-primary"
+                                        }`} />
                                         {rec.phoneNumber}
                                       </button>
                                     </TooltipTrigger>
                                     <TooltipContent side="top">
-                                      <p className="text-xs">Click to call back from <strong>{rec.twilioNumber}</strong></p>
+                                      <p className="text-xs">Click to call from <strong>{rec.twilioNumber}</strong></p>
                                     </TooltipContent>
                                   </Tooltip>
                                 ) : (
@@ -678,47 +686,45 @@ export default function CallHistory() {
                         {/* Actions */}
                         <TableCell>
                           <div className="flex items-center gap-1">
+                            {/* Call button for ALL call records with phone + twilio number */}
+                            {rec.type === "call" && rec.phoneNumber && rec.twilioNumber ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-7 w-7 ${rec.needsCallback ? "text-orange-600 hover:text-white hover:bg-orange-500" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`}
+                                    onClick={() => {
+                                      openDialer({
+                                        phone: rec.phoneNumber!,
+                                        callerId: rec.twilioNumber!,
+                                        autoCall: false,
+                                      });
+                                      toast.info(`Dialer opened \u2014 calling ${rec.phoneNumber} from ${rec.twilioNumber}`, {
+                                        description: "Press Call to connect",
+                                      });
+                                    }}
+                                    title={rec.needsCallback ? "Call Back" : "Call"}
+                                  >
+                                    <PhoneForwarded className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="text-xs">{rec.needsCallback ? "Call back" : "Call"} from <strong>{rec.twilioNumber}</strong></p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : null}
+                            {/* Mark as Called Back button (only for needsCallback) */}
                             {rec.type === "call" && rec.needsCallback ? (
-                              <>
-                                {/* Call Back button */}
-                                {rec.phoneNumber && rec.twilioNumber && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 text-orange-600 hover:text-white hover:bg-orange-500"
-                                        onClick={() => {
-                                          openDialer({
-                                            phone: rec.phoneNumber!,
-                                            callerId: rec.twilioNumber!,
-                                            autoCall: false,
-                                          });
-                                          toast.info(`Dialer opened — calling ${rec.phoneNumber} from ${rec.twilioNumber}`, {
-                                            description: "Press Call to connect",
-                                          });
-                                        }}
-                                        title="Call Back"
-                                      >
-                                        <PhoneForwarded className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">
-                                      <p className="text-xs">Call back from {rec.twilioNumber}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                {/* Mark as Called Back button */}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-orange-600 hover:text-green-600 hover:bg-green-50"
-                                  onClick={() => markCallbackDone.mutate({ logId: rec.id })}
-                                  title="Mark as Called Back"
-                                >
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-orange-600 hover:text-green-600 hover:bg-green-50"
+                                onClick={() => markCallbackDone.mutate({ logId: rec.id })}
+                                title="Mark as Called Back"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
                             ) : null}
                             {rec.propertyLeadId && rec.propertyLeadId > 0 ? (
                               <Button

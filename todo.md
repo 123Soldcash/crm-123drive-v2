@@ -3532,3 +3532,11 @@
 - [x] Added Call Back button in Actions column for Needs Callback rows
 - [x] Fixed webhook to also read CallerId param from browser SDK (not just CallerPhone)
 - [x] TypeScript check and save checkpoint
+
+## Click-to-Call for All Call Records (not just Needs Callback)
+- [x] Extend clickable phone number to ALL call records in Communications Log
+- [x] When a call row has a phone number + Twilio number, make it clickable to open dialer
+- [x] Use the Twilio number from that call as the caller ID
+- [x] Needs Callback rows: orange styling; regular calls: subtle default styling
+- [x] Call button in Actions column for all call records (not just callback)
+- [x] TypeScript check (0 errors) and save checkpoint
