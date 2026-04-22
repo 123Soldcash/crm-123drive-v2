@@ -955,6 +955,7 @@ export type UnifiedCommRecord = {
   needsCallback?: number | null; // 1 = missed inbound call needing callback
   isRead?: number | null; // 0 = unread inbound SMS
   deskName?: string | null; // Desk this communication was routed to
+  callClassification?: string | null; // telemarketing, wholesale, others
 };
 
 /**
@@ -1090,6 +1091,7 @@ export async function getUnifiedCommunications(filters: {
         disposition: communicationLog.disposition,
         needsCallback: communicationLog.needsCallback,
         deskName: communicationLog.deskName,
+        callClassification: communicationLog.callClassification,
       })
       .from(communicationLog)
       .leftJoin(users, eq(communicationLog.userId, users.id))
@@ -1123,6 +1125,7 @@ export async function getUnifiedCommunications(filters: {
         disposition: c.disposition,
         needsCallback: c.needsCallback,
         deskName: resolvedDeskName,
+        callClassification: c.callClassification,
       };
     });
   }

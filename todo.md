@@ -3540,3 +3540,13 @@
 - [x] Needs Callback rows: orange styling; regular calls: subtle default styling
 - [x] Call button in Actions column for all call records (not just callback)
 - [x] TypeScript check (0 errors) and save checkpoint
+
+## Call Classification System (Telemarketing / Wholesale / Others)
+- [x] Add callClassification field to communicationLog schema (enum: telemarketing, wholesale, others, null)
+- [x] Run db:push to apply schema change
+- [x] Add backend procedure to classify a call (classifyCall)
+- [x] Add classification toggle buttons to FloatingDialer during active/completed calls
+- [x] Display color-coded classification badges in Communications Log table
+- [x] Row highlighting: red-left for telemarketing, purple-left for wholesale, amber-left for others
+- [x] Click badge to remove classification, click icon to assign classification
+- [x] TypeScript check (0 errors) and save checkpoint

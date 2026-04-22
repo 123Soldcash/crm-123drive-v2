@@ -400,6 +400,13 @@
       "when": 1776889914239,
       "tag": "0056_living_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "5",
+      "when": 1776899769113,
+      "tag": "0057_dapper_rick_jones",
+      "breakpoints": true
     }
   ]
 }

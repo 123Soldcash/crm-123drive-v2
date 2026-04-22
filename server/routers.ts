@@ -5421,6 +5421,21 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    /** Classify a call as telemarketing, wholesale, or others */
+    classifyCall: protectedProcedure
+      .input(z.object({
+        logId: z.number(),
+        classification: z.enum(["telemarketing", "wholesale", "others"]).nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        const { communicationLog: commLog } = await import("../drizzle/schema");
+        const { eq: eqFn } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new Error("Database not available");
+        await dbInst.update(commLog).set({ callClassification: input.classification }).where(eqFn(commLog.id, input.logId));
+        return { success: true };
+      }),
+
     /** Mark a single SMS message as read by its ID */
     markSingleSmsRead: protectedProcedure
       .input(z.object({ smsId: z.number() }))

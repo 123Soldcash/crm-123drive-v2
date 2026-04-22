@@ -48,6 +48,10 @@ import {
   MailOpen,
   BellOff,
   PhoneForwarded,
+  Tag,
+  ShieldAlert,
+  Store,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -99,6 +103,66 @@ function getDirectionBadge(direction: string | null, type: "call" | "sms") {
       <ArrowUpRight className="h-3 w-3" />
       Sent
     </Badge>
+  );
+}
+
+const CLASSIFICATION_CONFIG: Record<string, { label: string; bg: string; text: string; border: string; icon: any }> = {
+  telemarketing: { label: "Telemarketing", bg: "bg-red-100", text: "text-red-700", border: "border-red-300", icon: ShieldAlert },
+  wholesale: { label: "Wholesale", bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-300", icon: Store },
+  others: { label: "Others", bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-300", icon: HelpCircle },
+};
+
+function ClassificationBadge({ classification, logId }: { classification: string | null; logId: number }) {
+  const utils = trpc.useUtils();
+  const classifyCall = trpc.callHistory.classifyCall.useMutation({
+    onSuccess: () => {
+      utils.callHistory.unified.invalidate();
+    },
+  });
+
+  if (classification && CLASSIFICATION_CONFIG[classification]) {
+    const cfg = CLASSIFICATION_CONFIG[classification];
+    const Icon = cfg.icon;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => classifyCall.mutate({ logId, classification: null })}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full ${cfg.bg} ${cfg.border} ${cfg.text} text-[10px] font-semibold border hover:opacity-80 transition-opacity cursor-pointer`}
+          >
+            <Icon className="h-2.5 w-2.5 shrink-0" />
+            {cfg.label}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-xs">Click to remove classification</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div className="flex gap-0.5">
+      {Object.entries(CLASSIFICATION_CONFIG).map(([key, cfg]) => {
+        const Icon = cfg.icon;
+        return (
+          <Tooltip key={key}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => classifyCall.mutate({ logId, classification: key as any })}
+                className={`p-1 rounded border border-transparent hover:${cfg.border} hover:${cfg.bg} text-muted-foreground hover:${cfg.text} transition-all`}
+                title={cfg.label}
+              >
+                <Icon className="h-3 w-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="text-xs">Mark as {cfg.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
   );
 }
 
@@ -492,6 +556,7 @@ export default function CallHistory() {
                       <SortHeader field="property">Property</SortHeader>
                       <SortHeader field="desk">Desk</SortHeader>
                       <SortHeader field="agent">Agent</SortHeader>
+                      <TableHead className="w-[100px]">Classification</TableHead>
                       <TableHead className="w-[60px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -500,7 +565,13 @@ export default function CallHistory() {
                       <TableRow
                         key={`${rec.type}-${rec.id}`}
                         className={`hover:bg-muted/30 ${
-                          rec.type === "call" && rec.needsCallback
+                          rec.type === "call" && (rec as any).callClassification === "telemarketing"
+                            ? "border-l-4 border-l-red-400 bg-red-50/30"
+                            : rec.type === "call" && (rec as any).callClassification === "wholesale"
+                            ? "border-l-4 border-l-purple-400 bg-purple-50/30"
+                            : rec.type === "call" && (rec as any).callClassification === "others"
+                            ? "border-l-4 border-l-amber-400 bg-amber-50/30"
+                            : rec.type === "call" && rec.needsCallback
                             ? "border-l-4 border-l-orange-500 bg-orange-50/40"
                             : rec.type === "sms"
                             ? "border-l-2 border-l-emerald-400"
@@ -681,6 +752,18 @@ export default function CallHistory() {
                         {/* Agent */}
                         <TableCell>
                           <span className="text-sm">{rec.agentName || "System"}</span>
+                        </TableCell>
+
+                        {/* Classification */}
+                        <TableCell>
+                          {rec.type === "call" ? (
+                            <ClassificationBadge
+                              classification={(rec as any).callClassification}
+                              logId={rec.id}
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">&mdash;</span>
+                          )}
                         </TableCell>
 
                         {/* Actions */}

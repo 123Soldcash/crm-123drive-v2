@@ -1,0 +1,1 @@
+ALTER TABLE `communicationLog` ADD `callClassification` enum('telemarketing','wholesale','others');

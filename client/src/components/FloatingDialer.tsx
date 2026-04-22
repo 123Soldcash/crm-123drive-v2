@@ -31,6 +31,7 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  Tag,
 } from "lucide-react";
 
 type DialerStatus = "idle" | "initializing" | "connecting" | "ringing" | "in-progress" | "completed" | "failed";
@@ -79,6 +80,8 @@ export function FloatingDialer() {
   const [callDuration, setCallDuration] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deviceReady, setDeviceReady] = useState(false);
+  const [callClassification, setCallClassification] = useState<string | null>(null);
+  const [lastCallLogId, setLastCallLogId] = useState<number | null>(null);
 
   const deviceRef = useRef<Device | null>(null);
   const activeCallRef = useRef<Call | null>(null);
@@ -477,10 +480,52 @@ export function FloatingDialer() {
                 )}
               </div>
 
+              {/* Call Classification — visible during active call or after call ends */}
+              {(status === "in-progress" || status === "ringing" || status === "completed") && (
+                <div className="border border-gray-200 rounded-xl p-2.5 bg-gray-50">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Tag className="h-3.5 w-3.5 text-gray-500" />
+                    <span className="text-xs font-medium text-gray-600">Classify Call</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setCallClassification(callClassification === "telemarketing" ? null : "telemarketing")}
+                      className={`flex-1 text-[10px] font-semibold py-1.5 px-1 rounded-lg border transition-all ${
+                        callClassification === "telemarketing"
+                          ? "bg-red-100 border-red-400 text-red-700 ring-1 ring-red-300"
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-red-50 hover:border-red-300"
+                      }`}
+                    >
+                      Telemarketing
+                    </button>
+                    <button
+                      onClick={() => setCallClassification(callClassification === "wholesale" ? null : "wholesale")}
+                      className={`flex-1 text-[10px] font-semibold py-1.5 px-1 rounded-lg border transition-all ${
+                        callClassification === "wholesale"
+                          ? "bg-purple-100 border-purple-400 text-purple-700 ring-1 ring-purple-300"
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-purple-50 hover:border-purple-300"
+                      }`}
+                    >
+                      Wholesale
+                    </button>
+                    <button
+                      onClick={() => setCallClassification(callClassification === "others" ? null : "others")}
+                      className={`flex-1 text-[10px] font-semibold py-1.5 px-1 rounded-lg border transition-all ${
+                        callClassification === "others"
+                          ? "bg-amber-100 border-amber-400 text-amber-700 ring-1 ring-amber-300"
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-300"
+                      }`}
+                    >
+                      Others
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Reset after completed/failed */}
               {(status === "completed" || status === "failed") && (
                 <button
-                  onClick={() => { setStatus("idle"); setErrorMessage(null); setCallDuration(0); }}
+                  onClick={() => { setStatus("idle"); setErrorMessage(null); setCallDuration(0); setCallClassification(null); setLastCallLogId(null); }}
                   className="text-xs text-center text-blue-600 hover:underline mt-0.5"
                 >
                   New call

@@ -549,6 +549,9 @@ export const communicationLog = mysqlTable("communicationLog", {
   
   // Callback tracking: 1 = missed inbound call that needs a callback, 0 = normal
   needsCallback: int("needsCallback").default(0).notNull(),
+
+  // Call classification: helps filter out telemarketing, wholesale, etc.
+  callClassification: mysqlEnum("callClassification", ["telemarketing", "wholesale", "others"]),
   
   // Desk routing — which desk this communication was routed to
   deskName: varchar("deskName", { length: 100 }),
