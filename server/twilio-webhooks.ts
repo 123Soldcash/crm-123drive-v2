@@ -101,7 +101,7 @@ export function registerTwilioWebhooks(app: Express) {
       const to = req.body?.To || req.query?.To;
       const from = req.body?.From || req.query?.From;
       const direction = req.body?.Direction || req.query?.Direction;
-      const callerPhone = req.body?.CallerPhone || req.query?.CallerPhone;
+      const callerPhone = req.body?.CallerPhone || req.query?.CallerPhone || req.body?.CallerId || req.query?.CallerId;
       const callSid = req.body?.CallSid || req.query?.CallSid;
 
       console.log("[Twilio Voice] Request. Method:", req.method, "Direction:", direction, "To:", to, "From:", from, "CallSid:", callSid);

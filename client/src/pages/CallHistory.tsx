@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { openDialer } from "@/lib/dialerEvents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ import {
   Mail,
   MailOpen,
   BellOff,
+  PhoneForwarded,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -538,7 +540,33 @@ export default function CallHistory() {
                           <div className="text-sm">
                             {rec.phoneNumber ? (
                               <div>
-                                <div className="font-medium">{rec.phoneNumber}</div>
+                                {rec.type === "call" && rec.needsCallback && rec.twilioNumber ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => {
+                                          openDialer({
+                                            phone: rec.phoneNumber!,
+                                            callerId: rec.twilioNumber!,
+                                            autoCall: false,
+                                          });
+                                          toast.info(`Dialer opened — calling ${rec.phoneNumber} from ${rec.twilioNumber}`, {
+                                            description: "Press Call to connect",
+                                          });
+                                        }}
+                                        className="font-semibold text-orange-700 hover:text-orange-900 hover:underline cursor-pointer flex items-center gap-1.5 group"
+                                      >
+                                        <PhoneForwarded className="h-3.5 w-3.5 text-orange-500 group-hover:text-orange-700 transition-colors" />
+                                        {rec.phoneNumber}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p className="text-xs">Click to call back from <strong>{rec.twilioNumber}</strong></p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <div className="font-medium">{rec.phoneNumber}</div>
+                                )}
                                 {rec.twilioNumber && (
                                   <div className="text-xs text-muted-foreground">
                                     via {rec.twilioNumber}
@@ -651,15 +679,46 @@ export default function CallHistory() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             {rec.type === "call" && rec.needsCallback ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-orange-600 hover:text-green-600 hover:bg-green-50"
-                                onClick={() => markCallbackDone.mutate({ logId: rec.id })}
-                                title="Mark as Called Back"
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                              </Button>
+                              <>
+                                {/* Call Back button */}
+                                {rec.phoneNumber && rec.twilioNumber && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-orange-600 hover:text-white hover:bg-orange-500"
+                                        onClick={() => {
+                                          openDialer({
+                                            phone: rec.phoneNumber!,
+                                            callerId: rec.twilioNumber!,
+                                            autoCall: false,
+                                          });
+                                          toast.info(`Dialer opened — calling ${rec.phoneNumber} from ${rec.twilioNumber}`, {
+                                            description: "Press Call to connect",
+                                          });
+                                        }}
+                                        title="Call Back"
+                                      >
+                                        <PhoneForwarded className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p className="text-xs">Call back from {rec.twilioNumber}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                                {/* Mark as Called Back button */}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-orange-600 hover:text-green-600 hover:bg-green-50"
+                                  onClick={() => markCallbackDone.mutate({ logId: rec.id })}
+                                  title="Mark as Called Back"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
                             ) : null}
                             {rec.propertyLeadId && rec.propertyLeadId > 0 ? (
                               <Button

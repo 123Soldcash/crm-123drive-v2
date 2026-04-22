@@ -3522,3 +3522,13 @@
 - [x] Update properties.updateProperty router to accept apnParcelId
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Needs Callback - Click to Call Back
+- [x] Add clickable phone number in Needs Callback section
+- [x] When clicked, initiate call back using the number the caller originally contacted
+- [x] Pass the original Twilio number (the one they called) as the caller ID for the callback
+- [x] Created dialer event system (dialerEvents.ts) for programmatic FloatingDialer opening
+- [x] Added PhoneForwarded icon + tooltip on phone numbers in Needs Callback rows
+- [x] Added Call Back button in Actions column for Needs Callback rows
+- [x] Fixed webhook to also read CallerId param from browser SDK (not just CallerPhone)
+- [x] TypeScript check and save checkpoint

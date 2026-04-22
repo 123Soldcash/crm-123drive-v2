@@ -8,6 +8,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Device, Call } from "@twilio/voice-sdk";
 import { trpc } from "@/lib/trpc";
+import { onDialerOpen } from "@/lib/dialerEvents";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +108,23 @@ export function FloatingDialer() {
       setSelectedCallerId((twilioNumbers[0] as any).phoneNumber || "");
     }
   }, [twilioNumbers, selectedCallerId]);
+
+  // Listen for programmatic dialer open events (e.g., Needs Callback click-to-call)
+  const autoCallPendingRef = useRef(false);
+  useEffect(() => {
+    return onDialerOpen((params) => {
+      setPhoneInput(params.phone);
+      if (params.callerId) setSelectedCallerId(params.callerId);
+      setIsOpen(true);
+      setIsMinimized(false);
+      setStatus("idle");
+      setErrorMessage(null);
+      setCallDuration(0);
+      if (params.autoCall) {
+        autoCallPendingRef.current = true;
+      }
+    });
+  }, []);
 
   const initializeDevice = useCallback(async (token: string): Promise<Device | null> => {
     if (deviceRef.current) {
@@ -235,6 +253,16 @@ export function FloatingDialer() {
       }
     }
   }, [phoneInput, tokenData, deviceReady, selectedCallerId, initializeDevice]);
+
+  // Auto-call after dialer opens with autoCall flag
+  useEffect(() => {
+    if (autoCallPendingRef.current && isOpen && phoneInput && status === "idle") {
+      autoCallPendingRef.current = false;
+      // Small delay to ensure device is ready
+      const timer = setTimeout(() => handleCall(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, phoneInput, status, handleCall]);
 
   const handleHangUp = useCallback(() => {
     try {
