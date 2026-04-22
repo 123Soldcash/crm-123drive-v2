@@ -40,6 +40,7 @@ interface EditPropertyDialogProps {
     id: number;
     addressLine1: string;
     unitNumber?: string | null;
+    apnParcelId?: string | null;
     city: string;
     state: string;
     zipcode: string;
@@ -75,6 +76,7 @@ export function EditPropertyDialog({
   const [formData, setFormData] = useState({
     addressLine1: property.addressLine1 || "",
     unitNumber: property.unitNumber || "",
+    apnParcelId: property.apnParcelId || "",
     city: property.city || "",
     state: property.state || "",
     zipcode: property.zipcode || "",
@@ -106,6 +108,7 @@ export function EditPropertyDialog({
       setFormData({
         addressLine1: property.addressLine1 || "",
         unitNumber: property.unitNumber || "",
+        apnParcelId: property.apnParcelId || "",
         city: property.city || "",
         state: property.state || "",
         zipcode: property.zipcode || "",
@@ -197,6 +200,7 @@ export function EditPropertyDialog({
       id: property.id,
       addressLine1: formData.addressLine1,
       unitNumber: formData.unitNumber || null,
+      apnParcelId: formData.apnParcelId || null,
       city: formData.city,
       state: formData.state,
       zipcode: formData.zipcode,
@@ -453,6 +457,17 @@ export function EditPropertyDialog({
                     setFormData({ ...formData, unitNumber: e.target.value })
                   }
                   placeholder="Apt, Suite, Unit #"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-apn">APN / Parcel ID</Label>
+                <Input
+                  id="edit-apn"
+                  value={formData.apnParcelId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, apnParcelId: e.target.value })
+                  }
+                  placeholder="Assessor Parcel Number"
                 />
               </div>
               <div>

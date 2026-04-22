@@ -3513,3 +3513,12 @@
 - [x] Update delete confirmation dialog — address with unitNumber
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Make APN (Parcel ID) Editable in Property Forms
+- [x] Check if apnParcelId already exists in schema (confirmed)
+- [x] Add APN field to EditPropertyDialog form (formData, reset, mutation, input field)
+- [x] Add APN field to QuickAddLeadDialog form (formData, reset, input field)
+- [x] Update properties.create router to accept apnParcelId in input and SQL insert
+- [x] Update properties.updateProperty router to accept apnParcelId
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint

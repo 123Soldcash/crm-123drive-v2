@@ -23,6 +23,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
   const [formData, setFormData] = useState({
     addressLine1: "",
     unitNumber: "",
+    apnParcelId: "",
     city: "",
     state: "",
     zipCode: "",
@@ -77,6 +78,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
     setFormData({
       addressLine1: "",
       unitNumber: "",
+    apnParcelId: "",
       city: "",
       state: "",
       zipCode: "",
@@ -246,14 +248,25 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="unitNumber">Unit # (Apt, Suite, Condo)</Label>
-              <Input
-                id="unitNumber"
-                placeholder="#115, Apt 2B, Suite 300"
-                value={formData.unitNumber}
-                onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="unitNumber">Unit # (Apt, Suite, Condo)</Label>
+                <Input
+                  id="unitNumber"
+                  placeholder="#115, Apt 2B, Suite 300"
+                  value={formData.unitNumber}
+                  onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apnParcelId">APN / Parcel ID</Label>
+                <Input
+                  id="apnParcelId"
+                  placeholder="Assessor Parcel Number"
+                  value={formData.apnParcelId}
+                  onChange={(e) => setFormData({ ...formData, apnParcelId: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -713,6 +713,7 @@ export const appRouter = router({
         z.object({
           addressLine1: z.string().min(1),
           unitNumber: z.string().optional(),
+          apnParcelId: z.string().optional(),
           city: z.string().optional(),
           state: z.string().optional(),
           zipcode: z.string().optional(),
@@ -747,6 +748,7 @@ export const appRouter = router({
             propertyId,
             addressLine1,
             unitNumber,
+            apnParcelId,
             city,
             state,
             zipcode,
@@ -763,6 +765,7 @@ export const appRouter = router({
             ${escapeStr(propertyId)},
             ${escapeStr(input.addressLine1)},
             ${escapeStr(input.unitNumber || null)},
+            ${escapeStr(input.apnParcelId || null)},
             ${escapeStr(input.city || 'TBD')},
             ${escapeStr(input.state || 'FL')},
             ${escapeStr(input.zipcode || '00000')},
@@ -864,6 +867,7 @@ export const appRouter = router({
           id: z.number(),
           addressLine1: z.string().optional(),
           unitNumber: z.string().nullable().optional(),
+          apnParcelId: z.string().nullable().optional(),
           city: z.string().optional(),
           state: z.string().optional(),
           zipcode: z.string().optional(),
@@ -889,6 +893,7 @@ export const appRouter = router({
         const updateData: any = {};
         if (input.addressLine1 !== undefined) updateData.addressLine1 = input.addressLine1;
         if (input.unitNumber !== undefined) updateData.unitNumber = input.unitNumber;
+        if (input.apnParcelId !== undefined) updateData.apnParcelId = input.apnParcelId;
         if (input.city !== undefined) updateData.city = input.city;
         if (input.state !== undefined) updateData.state = input.state;
         if (input.zipcode !== undefined) updateData.zipcode = input.zipcode;
