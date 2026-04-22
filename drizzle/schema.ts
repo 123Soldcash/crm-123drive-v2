@@ -131,6 +131,7 @@ export const properties = mysqlTable("properties", {
   // Address information
   addressLine1: varchar("addressLine1", { length: 255 }).notNull(),
   addressLine2: varchar("addressLine2", { length: 255 }),
+  unitNumber: varchar("unitNumber", { length: 50 }),
   city: varchar("city", { length: 100 }).notNull(),
   state: varchar("state", { length: 2 }).notNull(),
   zipcode: varchar("zipcode", { length: 10 }).notNull(),

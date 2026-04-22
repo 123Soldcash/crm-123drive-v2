@@ -39,6 +39,7 @@ interface EditPropertyDialogProps {
   property: {
     id: number;
     addressLine1: string;
+    unitNumber?: string | null;
     city: string;
     state: string;
     zipcode: string;
@@ -73,6 +74,7 @@ export function EditPropertyDialog({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: property.addressLine1 || "",
+    unitNumber: property.unitNumber || "",
     city: property.city || "",
     state: property.state || "",
     zipcode: property.zipcode || "",
@@ -103,6 +105,7 @@ export function EditPropertyDialog({
     if (open) {
       setFormData({
         addressLine1: property.addressLine1 || "",
+        unitNumber: property.unitNumber || "",
         city: property.city || "",
         state: property.state || "",
         zipcode: property.zipcode || "",
@@ -193,6 +196,7 @@ export function EditPropertyDialog({
     updatePropertyMutation.mutate({
       id: property.id,
       addressLine1: formData.addressLine1,
+      unitNumber: formData.unitNumber || null,
       city: formData.city,
       state: formData.state,
       zipcode: formData.zipcode,
@@ -438,6 +442,17 @@ export function EditPropertyDialog({
                     setFormData({ ...formData, addressLine1: e.target.value })
                   }
                   placeholder="123 Main St"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-unit">Unit #</Label>
+                <Input
+                  id="edit-unit"
+                  value={formData.unitNumber}
+                  onChange={(e) =>
+                    setFormData({ ...formData, unitNumber: e.target.value })
+                  }
+                  placeholder="Apt, Suite, Unit #"
                 />
               </div>
               <div>
@@ -712,7 +727,7 @@ export function EditPropertyDialog({
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This will permanently delete the property at{" "}
-                <strong>{property.addressLine1}, {property.city}, {property.state} {property.zipcode}</strong>{" "}
+                <strong>{property.addressLine1}{property.unitNumber ? ` #${property.unitNumber}` : ''}, {property.city}, {property.state} {property.zipcode}</strong>{" "}
                 and all associated data including contacts, notes, photos, tasks, and documents.
                 This action cannot be undone.
               </AlertDialogDescription>

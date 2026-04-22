@@ -687,7 +687,7 @@ export const appRouter = router({
         // Transform to format expected by duplicate detection
         const propertiesForMatching = allProperties.map((p: any) => ({
           id: p.id,
-          address: `${p.addressLine1}${p.addressLine2 ? ' ' + p.addressLine2 : ''}, ${p.city}, ${p.state} ${p.zipcode}`,
+          address: `${p.addressLine1}${p.unitNumber ? ' #' + p.unitNumber : ''}${p.addressLine2 ? ' ' + p.addressLine2 : ''}, ${p.city}, ${p.state} ${p.zipcode}`,
           ownerName: p.owner1Name,
           leadTemperature: p.leadTemperature,
           createdAt: p.createdAt,
@@ -712,6 +712,7 @@ export const appRouter = router({
       .input(
         z.object({
           addressLine1: z.string().min(1),
+          unitNumber: z.string().optional(),
           city: z.string().optional(),
           state: z.string().optional(),
           zipcode: z.string().optional(),
@@ -745,6 +746,7 @@ export const appRouter = router({
           INSERT INTO properties (
             propertyId,
             addressLine1,
+            unitNumber,
             city,
             state,
             zipcode,
@@ -760,6 +762,7 @@ export const appRouter = router({
           ) VALUES (
             ${escapeStr(propertyId)},
             ${escapeStr(input.addressLine1)},
+            ${escapeStr(input.unitNumber || null)},
             ${escapeStr(input.city || 'TBD')},
             ${escapeStr(input.state || 'FL')},
             ${escapeStr(input.zipcode || '00000')},
@@ -860,6 +863,7 @@ export const appRouter = router({
         z.object({
           id: z.number(),
           addressLine1: z.string().optional(),
+          unitNumber: z.string().nullable().optional(),
           city: z.string().optional(),
           state: z.string().optional(),
           zipcode: z.string().optional(),
@@ -884,6 +888,7 @@ export const appRouter = router({
         // Build update object with only provided fields
         const updateData: any = {};
         if (input.addressLine1 !== undefined) updateData.addressLine1 = input.addressLine1;
+        if (input.unitNumber !== undefined) updateData.unitNumber = input.unitNumber;
         if (input.city !== undefined) updateData.city = input.city;
         if (input.state !== undefined) updateData.state = input.state;
         if (input.zipcode !== undefined) updateData.zipcode = input.zipcode;

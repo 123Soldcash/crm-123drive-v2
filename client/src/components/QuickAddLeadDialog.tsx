@@ -22,6 +22,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     addressLine1: "",
+    unitNumber: "",
     city: "",
     state: "",
     zipCode: "",
@@ -75,6 +76,7 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
     setShowCreateForm(false);
     setFormData({
       addressLine1: "",
+      unitNumber: "",
       city: "",
       state: "",
       zipCode: "",
@@ -241,6 +243,16 @@ export function QuickAddLeadDialog({ open, onOpenChange, dealStage }: QuickAddLe
                 value={formData.addressLine1}
                 onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                 autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unitNumber">Unit # (Apt, Suite, Condo)</Label>
+              <Input
+                id="unitNumber"
+                placeholder="#115, Apt 2B, Suite 300"
+                value={formData.unitNumber}
+                onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
               />
             </div>
 

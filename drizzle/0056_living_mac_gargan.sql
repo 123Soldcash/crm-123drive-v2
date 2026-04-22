@@ -1,0 +1,1 @@
+ALTER TABLE `properties` ADD `unitNumber` varchar(50);

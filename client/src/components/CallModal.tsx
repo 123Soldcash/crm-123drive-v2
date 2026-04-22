@@ -641,7 +641,7 @@ export function CallModal({ open, onOpenChange, phoneNumber, contactName, contac
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-lg font-semibold leading-tight">{prop.addressLine1 || "No address"}</p>
+                    <p className="text-lg font-semibold leading-tight">{prop.addressLine1 || "No address"}{prop.unitNumber ? ` #${prop.unitNumber}` : ''}</p>
                     <p className="text-base text-muted-foreground">{prop.city}{prop.city && prop.state ? ", " : ""}{prop.state} {prop.zipcode}</p>
                   </div>
                 </div>

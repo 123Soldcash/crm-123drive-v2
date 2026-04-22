@@ -211,7 +211,7 @@ export function LeadSummary({ propertyId }: LeadSummaryProps) {
             <div className="flex items-start gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-semibold">{property.addressLine1}</div>
+                <div className="font-semibold">{property.addressLine1}{(property as any).unitNumber ? ` #${(property as any).unitNumber}` : ''}</div>
                 <div className="text-sm text-muted-foreground">
                   {property.city}, {property.state} {property.zipcode}
                 </div>

@@ -3498,3 +3498,18 @@
 - [x] Summary badges show count of Phone Contacts and Email Contacts separately
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Add Unit Number Field to Properties
+- [x] Add unitNumber column (varchar 50) to properties table in schema.ts
+- [x] Run db:push migration — column confirmed in DB
+- [x] Update createProperty router to accept unitNumber
+- [x] Update updateProperty router to accept unitNumber
+- [x] Update search result address string to include unitNumber
+- [x] Update EditPropertyDialog — form field + reset + mutation
+- [x] Update QuickAddLeadDialog — form field + reset
+- [x] Update LeadSummary — address display with unitNumber
+- [x] Update StickyPropertyHeader — both compact and full address display
+- [x] Update CallModal — address display with unitNumber
+- [x] Update delete confirmation dialog — address with unitNumber
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint

@@ -198,7 +198,7 @@ export function StickyPropertyHeader({
             <PropertyImage
               propertyId={property.id}
               propertyImage={propertyImage}
-              address={property.addressLine1}
+              address={`${property.addressLine1}${(property as any).unitNumber ? ` #${(property as any).unitNumber}` : ''}`}
               city={property.city}
               state={property.state}
               zipcode={property.zipcode || ""}
@@ -309,7 +309,7 @@ export function StickyPropertyHeader({
             <PropertyImage
               propertyId={property.id}
               propertyImage={propertyImage}
-              address={property.addressLine1}
+              address={`${property.addressLine1}${(property as any).unitNumber ? ` #${(property as any).unitNumber}` : ''}`}
               city={property.city}
               state={property.state}
               zipcode={property.zipcode || ""}

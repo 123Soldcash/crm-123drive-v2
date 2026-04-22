@@ -393,6 +393,13 @@
       "when": 1776786177366,
       "tag": "0055_jazzy_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "5",
+      "when": 1776889914239,
+      "tag": "0056_living_mac_gargan",
+      "breakpoints": true
     }
   ]
 }
