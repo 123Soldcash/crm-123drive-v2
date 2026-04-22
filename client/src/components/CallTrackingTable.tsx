@@ -55,7 +55,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan, GripVertical, Mail, Copy } from "lucide-react";
+import { Phone, Star, Smartphone, PhoneCall, Skull, MessageSquarePlus, UserPlus, Plus, X, FileText, PhoneOff, Ban, ShieldAlert, ShieldCheck, AlertCircle, AlertTriangle, Loader2, Search, ShieldBan, GripVertical, Mail, Copy, List } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -256,6 +256,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [notesDialog, setNotesDialog] = useState<{ contactId: number; contactName: string } | null>(null);
   const [showAddContactForm, setShowAddContactForm] = useState(false);
+  const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
+  const [newContactType, setNewContactType] = useState<'phone' | 'email'>('phone');
   const [newContactName, setNewContactName] = useState("");
   const [newContactRelationship, setNewContactRelationship] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
@@ -466,7 +468,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   });
 
   const doCreateContact = () => {
-    if (contactTab === 'phones') {
+    if (newContactType === 'phone') {
       // Phone contact — no email
       createContactMutation.mutate({
         propertyId,
@@ -493,8 +495,8 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setAddContactError("Contact name is required");
       return;
     }
-    if (contactTab === 'phones') {
-      // Phone tab: validate phone and check cross-property
+    if (newContactType === 'phone') {
+      // Phone contact: validate phone and check cross-property
       if (!newContactPhone.trim()) {
         setAddContactError("Phone number is required for phone contacts");
         return;
@@ -514,7 +516,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         // If check fails, proceed anyway
       }
     } else {
-      // Email tab: validate email
+      // Email contact: validate email
       if (!newContactEmail.trim()) {
         setAddContactError("Email address is required for email contacts");
         return;
@@ -1068,85 +1070,148 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <Phone className="h-5 w-5" />
               Contacts
             </CardTitle>
-            {!showAddContactForm && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddContactForm(true)}
-                  className="flex items-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Add Phone Contact
-                </Button>
-                <BulkContactImport propertyId={propertyId} contactTab="phones" onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
-              </div>
-            )}
+            <div className="flex gap-2">
+              <Button
+                variant={showAddContactForm ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => { setShowAddContactForm(!showAddContactForm); setShowBulkImportDialog(false); setAddContactError(null); }}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Contact
+              </Button>
+              <Button
+                variant={showBulkImportDialog ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => { setShowBulkImportDialog(!showBulkImportDialog); setShowAddContactForm(false); }}
+                className="flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                Add Contact List
+              </Button>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {!showAddContactForm ? (
-            <p className="text-muted-foreground">
-              No contacts available. Click "Add Phone Contact" or "Add Contact List" to add contacts.
-            </p>
-          ) : (
-            <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
+
+          {/* Add Contact Form (inline, at top) */}
+          {showAddContactForm && (
+            <div className="mt-3 bg-muted/30 border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
-                  New Phone Contact
+                  New Contact
                 </h4>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={() => { setShowAddContactForm(false); setAddContactError(null); }}
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => {
+                    setShowAddContactForm(false);
+                    setNewContactName("");
+                    setNewContactRelationship("");
+                    setNewContactPhone("");
+                    setNewContactPhoneType("Mobile");
+                    setNewContactEmail("");
+                    setAddContactError(null);
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="empty-new-name" className="text-xs">Name *</Label>
+              {/* Type toggle */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Type:</span>
+                <div className="flex rounded-md border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setNewContactType('phone')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      newContactType === 'phone'
+                        ? 'bg-emerald-100 text-emerald-800 border-r'
+                        : 'bg-background text-muted-foreground hover:bg-muted border-r'
+                    }`}
+                  >
+                    <Phone className="h-3 w-3" />
+                    Phone Number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewContactType('email')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      newContactType === 'email'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Mail className="h-3 w-3" />
+                    Email
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Name *</Label>
                   <Input
-                    id="empty-new-name"
                     placeholder="Contact name"
                     value={newContactName}
                     onChange={(e) => setNewContactName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="empty-new-relationship" className="text-xs">Relationship</Label>
-                  <Input
-                    id="empty-new-relationship"
-                    placeholder="e.g. Owner, Spouse, Child"
-                    value={newContactRelationship}
-                    onChange={(e) => setNewContactRelationship(e.target.value)}
-                  />
+                <div className="space-y-1">
+                  <Label className="text-xs">Relationship</Label>
+                  <Select value={newContactRelationship} onValueChange={setNewContactRelationship}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select relationship" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Owner">Owner</SelectItem>
+                      <SelectItem value="Spouse">Spouse</SelectItem>
+                      <SelectItem value="Relative">Relative</SelectItem>
+                      <SelectItem value="Tenant">Tenant</SelectItem>
+                      <SelectItem value="Neighbor">Neighbor</SelectItem>
+                      <SelectItem value="Attorney">Attorney</SelectItem>
+                      <SelectItem value="Personal Representative">Personal Representative</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label htmlFor="empty-new-phone" className="text-xs">Phone Number *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="empty-new-phone"
-                      placeholder="(555) 123-4567"
-                      value={newContactPhone}
-                      onChange={(e) => setNewContactPhone(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                      className="flex-1"
-                    />
-                    <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
-                      <SelectTrigger className="w-[110px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Mobile">Mobile</SelectItem>
-                        <SelectItem value="Landline">Landline</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {newContactType === 'phone' ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone Number *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="(555) 123-4567"
+                        value={newContactPhone}
+                        onChange={(e) => setNewContactPhone(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                        className="flex-1"
+                      />
+                      <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
+                        <SelectTrigger className="w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Mobile">Mobile</SelectItem>
+                          <SelectItem value="Landline">Landline</SelectItem>
+                          <SelectItem value="Work">Work</SelectItem>
+                          <SelectItem value="Home">Home</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email Address *</Label>
+                    <Input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={newContactEmail}
+                      onChange={(e) => setNewContactEmail(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                    />
+                  </div>
+                )}
               </div>
               {addContactError && (
                 <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -1154,7 +1219,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   <span>{addContactError}</span>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 <Button
                   size="sm"
                   onClick={handleAddContact}
@@ -1162,18 +1227,40 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  {createContactMutation.isPending ? "Adding..." : "Add Phone Contact"}
+                  {createContactMutation.isPending ? "Adding..." : (newContactType === 'phone' ? "Add Phone Contact" : "Add Email Contact")}
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setShowAddContactForm(false); setAddContactError(null); }}
+                  onClick={() => {
+                    setShowAddContactForm(false);
+                    setNewContactName("");
+                    setNewContactRelationship("");
+                    setNewContactPhone("");
+                    setNewContactPhoneType("Mobile");
+                    setNewContactEmail("");
+                    setAddContactError(null);
+                  }}
                 >
                   Cancel
                 </Button>
               </div>
             </div>
           )}
+
+          {/* Bulk Import Dialog */}
+          <BulkContactImport
+            propertyId={propertyId}
+            contactTab="universal"
+            open={showBulkImportDialog}
+            onOpenChange={(isOpen) => setShowBulkImportDialog(isOpen)}
+            onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); setShowBulkImportDialog(false); }}
+          />
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            No contacts available. Click "Add Contact" to add a phone or email contact, or "Add Contact List" to bulk import.
+          </p>
         </CardContent>
       </Card>
     );
@@ -1188,7 +1275,192 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <Phone className="h-5 w-5" />
               Contacts
             </CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant={showAddContactForm ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => { setShowAddContactForm(!showAddContactForm); setShowBulkImportDialog(false); setAddContactError(null); }}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Contact
+              </Button>
+              <Button
+                variant={showBulkImportDialog ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => { setShowBulkImportDialog(!showBulkImportDialog); setShowAddContactForm(false); }}
+                className="flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                Add Contact List
+              </Button>
+            </div>
           </div>
+
+          {/* Add Contact Form (inline, at top) */}
+          {showAddContactForm && (
+            <div className="mt-3 bg-muted/30 border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  New Contact
+                </h4>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => {
+                    setShowAddContactForm(false);
+                    setNewContactName("");
+                    setNewContactRelationship("");
+                    setNewContactPhone("");
+                    setNewContactPhoneType("Mobile");
+                    setNewContactEmail("");
+                    setAddContactError(null);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              {/* Type toggle */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Type:</span>
+                <div className="flex rounded-md border overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setNewContactType('phone')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      newContactType === 'phone'
+                        ? 'bg-emerald-100 text-emerald-800 border-r'
+                        : 'bg-background text-muted-foreground hover:bg-muted border-r'
+                    }`}
+                  >
+                    <Phone className="h-3 w-3" />
+                    Phone Number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewContactType('email')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      newContactType === 'email'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Mail className="h-3 w-3" />
+                    Email
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Name *</Label>
+                  <Input
+                    placeholder="Contact name"
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Relationship</Label>
+                  <Select value={newContactRelationship} onValueChange={setNewContactRelationship}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select relationship" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Owner">Owner</SelectItem>
+                      <SelectItem value="Spouse">Spouse</SelectItem>
+                      <SelectItem value="Relative">Relative</SelectItem>
+                      <SelectItem value="Tenant">Tenant</SelectItem>
+                      <SelectItem value="Neighbor">Neighbor</SelectItem>
+                      <SelectItem value="Attorney">Attorney</SelectItem>
+                      <SelectItem value="Personal Representative">Personal Representative</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {newContactType === 'phone' ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone Number *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="(555) 123-4567"
+                        value={newContactPhone}
+                        onChange={(e) => setNewContactPhone(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                        className="flex-1"
+                      />
+                      <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
+                        <SelectTrigger className="w-[110px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Mobile">Mobile</SelectItem>
+                          <SelectItem value="Landline">Landline</SelectItem>
+                          <SelectItem value="Work">Work</SelectItem>
+                          <SelectItem value="Home">Home</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email Address *</Label>
+                    <Input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={newContactEmail}
+                      onChange={(e) => setNewContactEmail(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
+                    />
+                  </div>
+                )}
+              </div>
+              {addContactError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{addContactError}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  onClick={handleAddContact}
+                  disabled={!newContactName.trim() || createContactMutation.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {createContactMutation.isPending ? "Adding..." : (newContactType === 'phone' ? "Add Phone Contact" : "Add Email Contact")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowAddContactForm(false);
+                    setNewContactName("");
+                    setNewContactRelationship("");
+                    setNewContactPhone("");
+                    setNewContactPhoneType("Mobile");
+                    setNewContactEmail("");
+                    setAddContactError(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Import Dialog */}
+          <BulkContactImport
+            propertyId={propertyId}
+            contactTab="universal"
+            open={showBulkImportDialog}
+            onOpenChange={(isOpen) => setShowBulkImportDialog(isOpen)}
+            onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); setShowBulkImportDialog(false); }}
+          />
 
           {/* Phone Numbers / Emails Tabs */}
           <div className="flex items-center gap-1 mt-3 border-b">
@@ -1965,146 +2237,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
           </div>
           )}
 
-          {/* Add Contact Section */}
-          <div className="mt-4 border-t pt-4">
-            {!showAddContactForm ? (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddContactForm(true)}
-                  className="flex items-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {contactTab === 'phones' ? 'Add Phone Contact' : 'Add Email Contact'}
-                </Button>
-                <BulkContactImport propertyId={propertyId} contactTab={contactTab} onSuccess={() => { setDncCheckDone(false); setDncCheckResult(null); }} />
-              </div>
-            ) : (
-              <div className="bg-muted/30 border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    {contactTab === 'phones' ? 'New Phone Contact' : 'New Email Contact'}
-                  </h4>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => {
-                      setShowAddContactForm(false);
-                      setNewContactName("");
-                      setNewContactRelationship("");
-                      setNewContactPhone("");
-                      setNewContactPhoneType("Mobile");
-                      setNewContactEmail("");
-                      setAddContactError(null);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Name *</Label>
-                    <Input
-                      placeholder="Contact name"
-                      value={newContactName}
-                      onChange={(e) => setNewContactName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Relationship</Label>
-                    <Select value={newContactRelationship} onValueChange={setNewContactRelationship}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select relationship" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Owner">Owner</SelectItem>
-                        <SelectItem value="Spouse">Spouse</SelectItem>
-                        <SelectItem value="Relative">Relative</SelectItem>
-                        <SelectItem value="Tenant">Tenant</SelectItem>
-                        <SelectItem value="Neighbor">Neighbor</SelectItem>
-                        <SelectItem value="Attorney">Attorney</SelectItem>
-                        <SelectItem value="Personal Representative">Personal Representative</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {contactTab === 'phones' ? (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Phone Number *</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="(555) 123-4567"
-                          value={newContactPhone}
-                          onChange={(e) => setNewContactPhone(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                          className="flex-1"
-                        />
-                        <Select value={newContactPhoneType} onValueChange={setNewContactPhoneType}>
-                          <SelectTrigger className="w-[110px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Mobile">Mobile</SelectItem>
-                            <SelectItem value="Landline">Landline</SelectItem>
-                            <SelectItem value="Work">Work</SelectItem>
-                            <SelectItem value="Home">Home</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Email Address *</Label>
-                      <Input
-                        type="email"
-                        placeholder="email@example.com"
-                        value={newContactEmail}
-                        onChange={(e) => setNewContactEmail(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleAddContact(); }}
-                      />
-                    </div>
-                  )}
-                </div>
-                {addContactError && (
-                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>{addContactError}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 pt-1">
-                  <Button
-                    size="sm"
-                    onClick={handleAddContact}
-                    disabled={!newContactName.trim() || createContactMutation.isPending}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {createContactMutation.isPending ? "Adding..." : (contactTab === 'phones' ? "Add Phone Contact" : "Add Email Contact")}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowAddContactForm(false);
-                      setNewContactName("");
-                      setNewContactRelationship("");
-                      setNewContactPhone("");
-                      setNewContactPhoneType("Mobile");
-                      setNewContactEmail("");
-                      setAddContactError(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+
         </CardContent>
       </Card>
 

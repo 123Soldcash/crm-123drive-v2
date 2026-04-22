@@ -3475,3 +3475,17 @@
 - [x] Apply to both Phone Numbers and Emails tabs
 - [x] Maintain drag-and-drop order within decision makers and non-decision makers
 - [x] TypeScript check (0 errors) and save checkpoint
+
+## Remodel Add Contact Section (Universal)
+- [x] Move Add Contact and Add Contact List buttons to TOP of the contact section (above tabs)
+- [x] Add Contact: single button opens form with phone/email type toggle, fields change dynamically
+- [x] Add Contact: after adding, contact goes to correct list (phone or email) automatically
+- [x] Add Contact List: universal parser that auto-detects phones and emails from mixed input
+- [x] Add Contact List (Simple mode): comma-separated, auto-detect phone vs email per entry
+- [x] Add Contact List (AI mode): AI reorganizes mixed text, identifies phones and emails, separates them
+- [x] Both modes create phone contacts and email contacts separately in correct tabs
+- [x] Removed old bottom Add Contact section from CallTrackingTable
+- [x] Updated ContactManagement.tsx BulkContactImport to universal mode
+- [x] BulkContactImport now supports controlled open/onOpenChange props
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint
