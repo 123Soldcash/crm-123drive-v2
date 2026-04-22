@@ -271,15 +271,43 @@ export function BulkContactImport({ propertyId, contactTab = "universal", onSucc
     }
   };
 
+  // Split AI extracted contacts into individual phone/email entries for preview
+  const aiSplitContacts = useMemo(() => {
+    if (!aiExtracted) return [];
+    const split: Array<{ name: string; relationship: string; address: string; city: string; state: string; zip: string; notes: string; type: 'phone' | 'email'; value: string; phoneType?: string }> = [];
+    for (const c of aiExtracted) {
+      for (const p of c.phones) {
+        split.push({ name: c.name, relationship: c.relationship, address: c.address, city: c.city, state: c.state, zip: c.zip, notes: c.notes, type: 'phone', value: p.phoneNumber, phoneType: p.phoneType });
+      }
+      for (const e of c.emails) {
+        split.push({ name: c.name, relationship: c.relationship, address: c.address, city: c.city, state: c.state, zip: c.zip, notes: c.notes, type: 'email', value: e.email });
+      }
+    }
+    return split;
+  }, [aiExtracted]);
+
   const handleAIImport = async () => {
     if (!aiExtracted || aiExtracted.length === 0) return;
     setImporting(true);
     try {
-      const contactsToCreate = aiExtracted.map((c) => ({
-        name: c.name,
-        phones: c.phones.map((p) => ({ phoneNumber: p.phoneNumber, phoneType: (p.phoneType || "Mobile") as any })),
-        emails: c.emails.map((e) => ({ email: e.email })),
-      }));
+      // Pre-split: each phone becomes its own contact, each email becomes its own contact
+      const contactsToCreate: Array<{ name: string; phones: Array<{ phoneNumber: string; phoneType: string }>; emails: Array<{ email: string }> }> = [];
+      for (const c of aiExtracted) {
+        for (const p of c.phones) {
+          contactsToCreate.push({
+            name: c.name,
+            phones: [{ phoneNumber: p.phoneNumber, phoneType: p.phoneType || "Mobile" }],
+            emails: [],
+          });
+        }
+        for (const e of c.emails) {
+          contactsToCreate.push({
+            name: c.name,
+            phones: [],
+            emails: [{ email: e.email }],
+          });
+        }
+      }
       const result = await bulkCreate.mutateAsync({ propertyId, contacts: contactsToCreate });
       utils.communication.getContactsByProperty.invalidate({ propertyId });
       toast.success(`${result.imported} of ${result.total} contacts imported!`);
@@ -354,52 +382,52 @@ Bob Wilson, bob@company.com`;
               )}
             </Button>
 
-            {/* AI Results Preview */}
-            {aiExtracted && aiExtracted.length > 0 && (
+            {/* AI Results Preview — split into individual phone/email contacts */}
+            {aiExtracted && aiExtracted.length > 0 && aiSplitContacts.length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  {aiExtracted.length} contact(s) extracted — review and import:
+                  {aiSplitContacts.length} contact(s) will be created:
                 </h4>
-                {aiExtracted.map((c, i) => (
-                  <div key={i} className="border rounded-lg p-3 space-y-2 bg-muted/30">
-                    <div className="flex items-center gap-2 font-medium">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      {c.name}
-                      {c.relationship && <Badge variant="outline" className="text-xs">{c.relationship}</Badge>}
-                    </div>
-                    {c.phones.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        <Phone className="h-3.5 w-3.5 text-emerald-600 mt-0.5" />
-                        {c.phones.map((p, j) => (
-                          <Badge key={j} variant="secondary" className="text-xs font-mono bg-emerald-50 text-emerald-800 border-emerald-200">
-                            {p.phoneNumber} <span className="text-muted-foreground ml-1">({p.phoneType})</span>
+                <div className="flex gap-2 text-xs">
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-800 border-emerald-200">
+                    <Phone className="h-3 w-3 mr-1" />
+                    {aiSplitContacts.filter(c => c.type === 'phone').length} Phone Contact(s)
+                  </Badge>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                    <Mail className="h-3 w-3 mr-1" />
+                    {aiSplitContacts.filter(c => c.type === 'email').length} Email Contact(s)
+                  </Badge>
+                </div>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {aiSplitContacts.map((c, i) => (
+                    <div key={i} className={`border rounded-lg p-3 flex items-center gap-3 ${
+                      c.type === 'phone'
+                        ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
+                        : 'bg-blue-50/50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800'
+                    }`} style={{ boxShadow: `inset 4px 0 0 0 ${c.type === 'phone' ? '#10b981' : '#3b82f6'}` }}>
+                      <div className="shrink-0">
+                        {c.type === 'phone'
+                          ? <Phone className="h-4 w-4 text-emerald-600" />
+                          : <Mail className="h-4 w-4 text-blue-600" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate">{c.name}</span>
+                          {c.relationship && <Badge variant="outline" className="text-xs shrink-0">{c.relationship}</Badge>}
+                          <Badge variant="secondary" className={`text-xs shrink-0 ${c.type === 'phone' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}`}>
+                            {c.type === 'phone' ? 'Phone' : 'Email'}
                           </Badge>
-                        ))}
+                        </div>
+                        <div className="text-sm font-mono text-muted-foreground mt-0.5">
+                          {c.value}
+                          {c.type === 'phone' && c.phoneType && <span className="text-xs ml-2">({c.phoneType})</span>}
+                        </div>
                       </div>
-                    )}
-                    {c.emails.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        <Mail className="h-3.5 w-3.5 text-blue-600 mt-0.5" />
-                        {c.emails.map((e, j) => (
-                          <Badge key={j} variant="outline" className="text-xs font-mono bg-blue-50 text-blue-800 border-blue-200">{e.email}</Badge>
-                        ))}
-                      </div>
-                    )}
-                    {(c.address || c.city) && (
-                      <div className="flex items-start gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        <span>{[c.address, c.city, c.state, c.zip].filter(Boolean).join(", ")}</span>
-                      </div>
-                    )}
-                    {c.notes && (
-                      <div className="flex items-start gap-1 text-xs text-muted-foreground">
-                        <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        <span className="italic">{c.notes}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
                 <Button
                   onClick={handleAIImport}
                   disabled={importing}
@@ -408,7 +436,7 @@ Bob Wilson, bob@company.com`;
                   {importing ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Importing...</>
                   ) : (
-                    <><Upload className="h-4 w-4 mr-2" />Import {aiExtracted.length} Contact(s)</>
+                    <><Upload className="h-4 w-4 mr-2" />Import {aiSplitContacts.length} Contact(s)</>
                   )}
                 </Button>
               </div>

@@ -3489,3 +3489,12 @@
 - [x] BulkContactImport now supports controlled open/onOpenChange props
 - [x] TypeScript check (0 errors)
 - [x] Save checkpoint
+
+## Fix AI Extract - Separate Phone and Email Contacts
+- [x] AI Extract now pre-splits records: each phone = 1 Phone Contact, each email = 1 Email Contact
+- [x] Preview shows individual entries with color-coded cards (green=phone, blue=email)
+- [x] Both share the same name/relationship but are independent records
+- [x] handleAIImport sends pre-split contacts to backend (1 phone or 1 email per entry)
+- [x] Summary badges show count of Phone Contacts and Email Contacts separately
+- [x] TypeScript check (0 errors)
+- [x] Save checkpoint
