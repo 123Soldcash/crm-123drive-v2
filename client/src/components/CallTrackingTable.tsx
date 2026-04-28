@@ -325,32 +325,38 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setDncCheckRunning(false);
       setDncCheckDone(true);
       if (result.error) {
-        // Don't show error toast for "not configured" — just show the banner
+        // Don't show error toast for "not configured"
       } else if (result.flagged > 0) {
         toast.warning(`DNC Check: ${result.flagged} of ${result.checked} numbers flagged as DNC`);
       } else if (result.checked > 0) {
         toast.success(`DNC Check: All ${result.checked} numbers are clean`);
       }
-      // Always refresh contacts to show updated dncChecked status
-      if (!result.error && result.checked > 0) {
-        utils.communication.getContactsByProperty.invalidate({ propertyId });
-      }
+      // ALWAYS refresh contacts after check completes (regardless of error/result)
+      // This ensures dncChecked values are reflected in the UI
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
     },
     onError: (err) => {
       setDncCheckResult({ checked: 0, flagged: 0, error: err.message });
       setDncCheckRunning(false);
       setDncCheckDone(true);
+      // Still refresh contacts even on error
+      utils.communication.getContactsByProperty.invalidate({ propertyId });
     },
   });
 
   // Auto-run DNC check when property loads and contacts are available
+  // Only run if there are unchecked phones (dncChecked=0 and dnc=0)
   useEffect(() => {
     if (contacts && contacts.length > 0 && !dncCheckDone && !dncCheckRunning) {
-      // Check if any contact has phones
-      const hasPhones = contacts.some((c: any) => c.phones && c.phones.length > 0);
-      if (hasPhones) {
+      const hasUncheckedPhones = contacts.some((c: any) => 
+        c.phones && c.phones.some((p: any) => !p.dncChecked && !p.dnc)
+      );
+      if (hasUncheckedPhones) {
         setDncCheckRunning(true);
         checkDNCMutation.mutate({ propertyId });
+      } else {
+        // All phones already checked or flagged — mark as done without running
+        setDncCheckDone(true);
       }
     }
   }, [contacts, dncCheckDone, dncCheckRunning, propertyId]);
@@ -1899,26 +1905,51 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
                           {/* DNC Status */}
                           <TableCell className="text-center align-middle">
-                            {dncCheckRunning && !phone.dncChecked ? (
-                              <div className="flex items-center justify-center gap-1">
-                                <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
-                                <span className="text-[10px] font-medium text-amber-600">Checking</span>
-                              </div>
-                            ) : phone.dncChecked ? (
-                              phone.dnc ? (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-red-300 font-semibold">
-                                  DNC
+                            {(() => {
+                              // Priority 1: If dnc=1, always show DNC (red)
+                              if (phone.dnc) {
+                                return (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-red-300 font-semibold">
+                                    DNC
+                                  </Badge>
+                                );
+                              }
+                              // Priority 2: If dncChecked=1 and dnc=0, it's verified clean
+                              if (phone.dncChecked) {
+                                return (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 border-green-300">
+                                    Clean
+                                  </Badge>
+                                );
+                              }
+                              // Priority 3: If DNC check is currently running, show spinner
+                              if (dncCheckRunning) {
+                                return (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+                                    <span className="text-[10px] font-medium text-amber-600">Checking</span>
+                                  </div>
+                                );
+                              }
+                              // Priority 4: Not checked yet — show Pending with option to check
+                              return (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-600 border-amber-200 cursor-pointer hover:bg-amber-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!dncCheckRunning) {
+                                      setDncCheckDone(false);
+                                      setDncCheckRunning(true);
+                                      checkDNCMutation.mutate({ propertyId });
+                                    }
+                                  }}
+                                  title="Click to run DNC check"
+                                >
+                                  Pending
                                 </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 border-green-300">
-                                  Clean
-                                </Badge>
-                              )
-                            ) : (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-600 border-amber-200">
-                                Pending
-                              </Badge>
-                            )}
+                              );
+                            })()}
                           </TableCell>
                           
                           {/* Attempts Counter */}

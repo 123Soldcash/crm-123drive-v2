@@ -146,20 +146,16 @@ export async function checkDNCForPhones(
         .update(contactPhones)
         .set({ dnc: result.isDNC ? 1 : 0, dncChecked: 1 })
         .where(eq(contactPhones.id, result.phoneId));
+
+      // Also update the contacts table (new 1-contact-1-phone model)
+      // The phone.id in contacts-simple maps to contact.id
+      await db
+        .update(contacts)
+        .set({ dnc: result.isDNC ? 1 : 0, dncChecked: 1 })
+        .where(eq(contacts.id, result.contactId));
     }
 
-    // Also sync contact-level DNC: if any phone is DNC, mark contact as DNC
-    const contactIds = Array.from(new Set(batchResults.map((r) => r.contactId)));
-    for (const contactId of contactIds) {
-      const phonesForContact = batchResults.filter((r) => r.contactId === contactId);
-      const anyDNC = phonesForContact.some((r) => r.isDNC);
-      if (anyDNC) {
-        await db
-          .update(contacts)
-          .set({ dnc: 1 })
-          .where(eq(contacts.id, contactId));
-      }
-    }
+    // Contact-level DNC sync is now handled per-phone above (dnc + dncChecked)
   }
 
   return { checked: phoneRecords.length, flagged, results };
@@ -217,7 +213,7 @@ export async function checkDNCForProperty(propertyId: number): Promise<{
     return { checked: 0, flagged: 0, results: [] };
   }
 
-  // Get all phones for these contacts
+  // Get all phones for these contacts from contactPhones table (legacy)
   const contactIds = contactsList.map((c) => c.id);
   const allPhones = await db
     .select({
@@ -228,11 +224,34 @@ export async function checkDNCForProperty(propertyId: number): Promise<{
     .from(contactPhones)
     .where(inArray(contactPhones.contactId, contactIds));
 
-  if (allPhones.length === 0) {
+  // Also get phones from contacts table (new 1-contact-1-phone model)
+  const contactsWithPhones = await db
+    .select({
+      id: contacts.id,
+      phoneNumber: contacts.phoneNumber,
+    })
+    .from(contacts)
+    .where(inArray(contacts.id, contactIds));
+
+  // Build a set of phone numbers already in contactPhones to avoid duplicates
+  const existingPhoneNums = new Set(allPhones.map(p => normalizePhone(p.phoneNumber)));
+
+  // Add contacts-table phones that aren't already in contactPhones
+  const contactPhoneRecords = contactsWithPhones
+    .filter(c => c.phoneNumber && !existingPhoneNums.has(normalizePhone(c.phoneNumber)))
+    .map(c => ({
+      id: c.id, // contact.id used as phone.id for compatibility
+      phoneNumber: c.phoneNumber!,
+      contactId: c.id,
+    }));
+
+  const combinedPhones = [...allPhones, ...contactPhoneRecords];
+
+  if (combinedPhones.length === 0) {
     return { checked: 0, flagged: 0, results: [] };
   }
 
-  return checkDNCForPhones(allPhones);
+  return checkDNCForPhones(combinedPhones);
 }
 
 /**

@@ -3566,3 +3566,14 @@
 - [x] Root cause: contacts query only invalidated when flagged > 0, not when all clean
 - [x] Fix: Always invalidate contacts query after DNC check completes (when checked > 0)
 - [x] Ensure status updates to Clean/DNC after check completes
+
+## BUG FIX: DNC Status Still Freezing on Pending (Real Root Cause)
+- [x] Root cause: contacts-simple.ts builds phone objects WITHOUT dncChecked field
+- [x] Root cause: supabase-dnc.ts only updated contactPhones table, not contacts table
+- [x] Root cause: contacts table didn't have dncChecked column at all
+- [x] Fix: Added dncChecked column to contacts table schema + db:push
+- [x] Fix: Updated contacts-simple.ts to include dncChecked in phone objects
+- [x] Fix: Updated supabase-dnc.ts to update both contactPhones AND contacts tables
+- [x] Fix: Updated checkDNCForProperty to also check phones from contacts table (new model)
+- [x] Data migration: Set dncChecked=1 for 5,501 contacts with dnc=1 + synced 17 from contactPhones
+- [x] Verified: Property 630018 shows Clean (green) and DNC (red) correctly — no more Pending freeze

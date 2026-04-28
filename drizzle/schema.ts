@@ -369,6 +369,7 @@ export const contacts = mysqlTable("contacts", {
   // Decision making & flags
   isDecisionMaker: int("isDecisionMaker").default(0).notNull(), // 0=NO, 1=YES - who can sell the property
   dnc: int("dnc").default(0).notNull(), // 0=NO, 1=YES - Do Not Call flag
+  dncChecked: int("dncChecked").default(0).notNull(), // 0=not checked yet, 1=checked
   isLitigator: int("isLitigator").default(0).notNull(), // 0=NO, 1=YES - Litigator flag
   hidden: int("hidden").default(0).notNull(), // 0=NO, 1=YES - Hide contact from main view
   

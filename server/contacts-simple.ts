@@ -69,6 +69,7 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
         phoneType: string | null;
         isPrimary: number;
         dnc: number;
+        dncChecked: number;
         isLitigator: number;
         trestleScore: number | null;
         trestleLineType: string | null;
@@ -83,6 +84,7 @@ export async function getPropertyContactsSimple(propertyIdentifier: number) {
           phoneType: contact.phoneType || "Mobile",
           isPrimary: 1,
           dnc: contact.dnc || 0,
+          dncChecked: (contact as any).dncChecked || 0,
           isLitigator: contact.isLitigator || 0,
           trestleScore: contact.trestleScore || null,
           trestleLineType: contact.trestleLineType || null,
