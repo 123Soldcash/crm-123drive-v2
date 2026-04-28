@@ -3560,3 +3560,9 @@
 - [x] Added per-phone DNC status cell: Pending (amber), Checking (spinner), Clean (green), DNC (red)
 - [x] Updated no-phones row colSpan for new column
 - [x] TypeScript check (0 errors) and save checkpoint
+
+## BUG: DNC Check Status Freezes on Pending
+- [x] Fix DNC check flow - shows 'Checking' then freezes on 'Pending' after page load
+- [x] Root cause: contacts query only invalidated when flagged > 0, not when all clean
+- [x] Fix: Always invalidate contacts query after DNC check completes (when checked > 0)
+- [x] Ensure status updates to Clean/DNC after check completes

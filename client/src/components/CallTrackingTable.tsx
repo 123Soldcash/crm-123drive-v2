@@ -328,10 +328,12 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
         // Don't show error toast for "not configured" — just show the banner
       } else if (result.flagged > 0) {
         toast.warning(`DNC Check: ${result.flagged} of ${result.checked} numbers flagged as DNC`);
-        // Refresh contacts to show updated DNC flags
-        utils.communication.getContactsByProperty.invalidate({ propertyId });
       } else if (result.checked > 0) {
         toast.success(`DNC Check: All ${result.checked} numbers are clean`);
+      }
+      // Always refresh contacts to show updated dncChecked status
+      if (!result.error && result.checked > 0) {
+        utils.communication.getContactsByProperty.invalidate({ propertyId });
       }
     },
     onError: (err) => {
