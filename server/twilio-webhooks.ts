@@ -283,8 +283,9 @@ export function registerTwilioWebhooks(app: Express) {
         }
 
         // Set primary Twilio number on PROPERTIES where the caller is a contact
-        // Flow: caller phone → find contacts → find their properties → set primaryTwilioNumber on those properties
+        // Flow: caller phone -> find contacts -> find their properties -> set primaryTwilioNumber
         // Only sets if the property doesn't already have a primaryTwilioNumber
+        // Searches BOTH contactPhones table (legacy) AND contacts.phoneNumber (new model)
         try {
           const { getDb } = await import("./db");
           const { contacts, contactPhones, properties } = await import("../drizzle/schema");
@@ -301,7 +302,10 @@ export function registerTwilioWebhooks(app: Express) {
               callerDigits.length === 10 ? `1${callerDigits}` : null,
             ].filter(Boolean) as string[];
 
-            // Find contacts that have a phone matching the caller's number
+            // Collect all matching property IDs from both data models
+            const allPropertyIds = new Set<number>();
+
+            // --- MODEL 1: Search contactPhones table (legacy) ---
             const matchingPhones: { contactId: number }[] = [];
             for (const variant of callerVariants) {
               const matches = await database
@@ -310,38 +314,50 @@ export function registerTwilioWebhooks(app: Express) {
                 .where(eq(contactPhones.phoneNumber, variant));
               matchingPhones.push(...matches);
             }
-
-            // Deduplicate contact IDs
-            const uniqueContactIds = Array.from(new Set(matchingPhones.map(m => m.contactId)));
-
-            if (uniqueContactIds.length > 0) {
-              // Find all properties linked to these contacts
+            const uniqueContactIdsFromPhones = Array.from(new Set(matchingPhones.map(m => m.contactId)));
+            if (uniqueContactIdsFromPhones.length > 0) {
               const contactRecords = await database
-                .select({ id: contacts.id, propertyId: contacts.propertyId })
+                .select({ propertyId: contacts.propertyId })
                 .from(contacts)
-                .where(inArray(contacts.id, uniqueContactIds));
-
-              const uniquePropertyIds = Array.from(new Set(
-                contactRecords.map(c => c.propertyId).filter((id): id is number => id != null && id > 0)
-              ));
-
-              if (uniquePropertyIds.length > 0) {
-                // Normalize the Twilio number (the "to" number)
-                const twilioNumber = to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`;
-
-                // Update properties that don't have a primaryTwilioNumber yet
-                for (const propId of uniquePropertyIds) {
-                  await database.update(properties)
-                    .set({ primaryTwilioNumber: twilioNumber })
-                    .where(
-                      and(
-                        eq(properties.id, propId),
-                        isNull(properties.primaryTwilioNumber)
-                      )
-                    );
-                }
-                console.log(`[Twilio Voice] Set primary Twilio number ${twilioNumber} for ${uniquePropertyIds.length} property(ies) matching caller ${from}`);
+                .where(inArray(contacts.id, uniqueContactIdsFromPhones));
+              for (const c of contactRecords) {
+                if (c.propertyId != null && c.propertyId > 0) allPropertyIds.add(c.propertyId);
               }
+            }
+
+            // --- MODEL 2: Search contacts.phoneNumber directly (new model) ---
+            for (const variant of callerVariants) {
+              const directMatches = await database
+                .select({ propertyId: contacts.propertyId })
+                .from(contacts)
+                .where(
+                  and(
+                    eq(contacts.phoneNumber, variant),
+                    eq(contacts.contactType, "phone")
+                  )
+                );
+              for (const m of directMatches) {
+                if (m.propertyId != null && m.propertyId > 0) allPropertyIds.add(m.propertyId);
+              }
+            }
+
+            // --- Update properties that don't have a primaryTwilioNumber yet ---
+            if (allPropertyIds.size > 0) {
+              const twilioNumber = to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`;
+              const propIdArray = Array.from(allPropertyIds);
+              let updatedCount = 0;
+              for (const propId of propIdArray) {
+                const result = await database.update(properties)
+                  .set({ primaryTwilioNumber: twilioNumber })
+                  .where(
+                    and(
+                      eq(properties.id, propId),
+                      isNull(properties.primaryTwilioNumber)
+                    )
+                  );
+                if (result[0]?.affectedRows > 0) updatedCount++;
+              }
+              console.log(`[Twilio Voice] Default Caller ID: found ${propIdArray.length} property(ies) for caller ${from}, updated ${updatedCount} (skipped ${propIdArray.length - updatedCount} already set)`);
             }
           }
         } catch (primaryError) {

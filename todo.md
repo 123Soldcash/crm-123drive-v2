@@ -3577,3 +3577,14 @@
 - [x] Fix: Updated checkDNCForProperty to also check phones from contacts table (new model)
 - [x] Data migration: Set dncChecked=1 for 5,501 contacts with dnc=1 + synced 17 from contactPhones
 - [x] Verified: Property 630018 shows Clean (green) and DNC (red) correctly — no more Pending freeze
+
+## Default Caller ID Logic Review & Fix
+- [x] Review current defaultCallerId logic in inbound call handling
+- [x] Ensure: when inbound call arrives, find linked properties for the caller
+- [x] If property has NO defaultCallerId → set the Twilio number that received the call
+- [x] If property already HAS defaultCallerId → do NOT change it
+- [x] If caller linked to multiple properties → update only those without defaultCallerId
+- [x] Verify and fix the implementation
+- [x] Bug found: original code only searched contactPhones table (legacy model), missing contacts.phoneNumber (new model)
+- [x] Fixed: Now searches BOTH contactPhones AND contacts.phoneNumber (contactType='phone') tables
+- [x] TypeScript check passed (0 errors)
