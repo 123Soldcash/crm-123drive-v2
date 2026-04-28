@@ -1538,59 +1538,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
             </p>
           </div>
 
-          {/* DNC Auto-Check Banner */}
-          {dncCheckRunning && (
-            <div className="mt-3 p-3 rounded-lg border bg-amber-50 border-amber-200 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
-              <span className="text-sm text-amber-800 font-medium">Checking DNC status for all phone numbers via Supabase...</span>
-            </div>
-          )}
-          {dncCheckResult && !dncCheckRunning && (
-            <div className={`mt-3 p-3 rounded-lg border flex items-center justify-between gap-2 ${
-              dncCheckResult.error
-                ? 'bg-gray-50 border-gray-200'
-                : dncCheckResult.flagged > 0
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-green-50 border-green-200'
-            }`}>
-              <div className="flex items-center gap-2">
-                {dncCheckResult.error ? (
-                  <AlertCircle className="h-4 w-4 text-gray-500" />
-                ) : dncCheckResult.flagged > 0 ? (
-                  <ShieldBan className="h-4 w-4 text-red-600" />
-                ) : (
-                  <ShieldCheck className="h-4 w-4 text-green-600" />
-                )}
-                <span className={`text-sm font-medium ${
-                  dncCheckResult.error
-                    ? 'text-gray-600'
-                    : dncCheckResult.flagged > 0
-                      ? 'text-red-800'
-                      : 'text-green-800'
-                }`}>
-                  {dncCheckResult.error
-                    ? `DNC Check: ${dncCheckResult.error}`
-                    : dncCheckResult.flagged > 0
-                      ? `DNC Check: ${dncCheckResult.flagged} of ${dncCheckResult.checked} numbers flagged as DNC`
-                      : `DNC Check: All ${dncCheckResult.checked} numbers are clean`
-                  }
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs h-7"
-                onClick={() => {
-                  setDncCheckDone(false);
-                  setDncCheckResult(null);
-                  setDncCheckRunning(true);
-                  checkDNCMutation.mutate({ propertyId });
-                }}
-              >
-                Re-check
-              </Button>
-            </div>
-          )}
+
           
           {/* Filters */}
           <div className="flex items-center gap-3 mt-4 flex-wrap">
@@ -1765,6 +1713,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
 
 
                   <TableHead className="w-[130px]">Phone Number</TableHead>
+                  <TableHead className="w-[70px] text-center">DNC</TableHead>
                   <TableHead className="w-[60px] text-center">Attempts</TableHead>
                   <TableHead className="w-[180px]">Disposition</TableHead>
                   <TableHead className="min-w-[300px]">Notes</TableHead>
@@ -1945,6 +1894,30 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                               </button>
                             </div>
                           </TableCell>
+
+                          {/* DNC Status */}
+                          <TableCell className="text-center align-middle">
+                            {dncCheckRunning && !phone.dncChecked ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+                                <span className="text-[10px] font-medium text-amber-600">Checking</span>
+                              </div>
+                            ) : phone.dncChecked ? (
+                              phone.dnc ? (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-red-300 font-semibold">
+                                  DNC
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 border-green-300">
+                                  Clean
+                                </Badge>
+                              )
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-600 border-amber-200">
+                                Pending
+                              </Badge>
+                            )}
+                          </TableCell>
                           
                           {/* Attempts Counter */}
                           <TableCell className="text-center align-middle">
@@ -2076,7 +2049,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
                         </Badge>
                       </TableCell>
 
-<TableCell colSpan={4} className="text-center align-middle text-sm text-muted-foreground">
+<TableCell colSpan={5} className="text-center align-middle text-sm text-muted-foreground">
                          No phone numbers
                        </TableCell>
                       <TableCell className="text-center align-middle">

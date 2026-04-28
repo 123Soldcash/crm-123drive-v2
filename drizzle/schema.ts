@@ -422,6 +422,7 @@ export const contactPhones = mysqlTable("contactPhones", {
   phoneType: mysqlEnum("phoneType", ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"]).default("Mobile"),
   isPrimary: int("isPrimary").default(0).notNull(),
   dnc: int("dnc").default(0).notNull(),
+  dncChecked: int("dncChecked").default(0).notNull(), // 0=not checked yet, 1=checked
   carrier: varchar("carrier", { length: 100 }),
   activityStatus: varchar("activityStatus", { length: 50 }),
   isPrepaid: int("isPrepaid").default(0).notNull(),

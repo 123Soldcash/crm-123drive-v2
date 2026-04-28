@@ -141,10 +141,10 @@ export async function checkDNCForPhones(
         flagged++;
       }
 
-      // Update the phone's DNC flag in the database
+      // Update the phone's DNC flag and mark as checked in the database
       await db
         .update(contactPhones)
-        .set({ dnc: result.isDNC ? 1 : 0 })
+        .set({ dnc: result.isDNC ? 1 : 0, dncChecked: 1 })
         .where(eq(contactPhones.id, result.phoneId));
     }
 

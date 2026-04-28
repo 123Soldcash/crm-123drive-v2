@@ -3550,3 +3550,13 @@
 - [x] Row highlighting: red-left for telemarketing, purple-left for wholesale, amber-left for others
 - [x] Click badge to remove classification, click icon to assign classification
 - [x] TypeScript check (0 errors) and save checkpoint
+
+## DNC Check - Move to Inline Column in Phone Listing
+- [x] Added dncChecked field to contactPhones schema (0=not checked, 1=checked)
+- [x] Updated supabase-dnc.ts to set dncChecked=1 when checking
+- [x] Added dncChecked to db.ts phone select query
+- [x] Removed DNC banner from top of Contacts section
+- [x] Added DNC column header in phone listing table
+- [x] Added per-phone DNC status cell: Pending (amber), Checking (spinner), Clean (green), DNC (red)
+- [x] Updated no-phones row colSpan for new column
+- [x] TypeScript check (0 errors) and save checkpoint

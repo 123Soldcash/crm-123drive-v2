@@ -500,6 +500,7 @@ export async function getPropertyById(id: number) {
         phoneType: contactPhones.phoneType,
         isPrimary: contactPhones.isPrimary,
         dnc: contactPhones.dnc,
+        dncChecked: contactPhones.dncChecked,
         carrier: contactPhones.carrier,
         activityStatus: contactPhones.activityStatus,
         isPrepaid: contactPhones.isPrepaid,

@@ -1,0 +1,1 @@
+ALTER TABLE `contactPhones` ADD `dncChecked` int DEFAULT 0 NOT NULL;
