@@ -738,7 +738,7 @@ export default function Properties() {
                 <SelectValue placeholder="Lead Temperature" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Temperatures</SelectItem>
+                <SelectItem value="all">All (excl. Dead)</SelectItem>
                 <SelectItem value="SUPER HOT">🔥🔥 SUPER HOT</SelectItem>
                 <SelectItem value="HOT">🔥 HOT</SelectItem>
                 <SelectItem value="DEEP_SEARCH">🔍 DEEP SEARCH</SelectItem>

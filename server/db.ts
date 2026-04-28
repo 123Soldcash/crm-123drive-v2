@@ -210,6 +210,9 @@ export async function getProperties(filters?: {
   }
   if (filters?.leadTemperature) {
     conditions.push(eq(properties.leadTemperature, filters.leadTemperature));
+  } else {
+    // By default, exclude DEAD leads — they only appear when explicitly filtered
+    conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
   }
   if (filters?.ownerVerified === true) {
     conditions.push(eq(properties.ownerVerified, 1));
@@ -676,12 +679,14 @@ export async function getPropertiesForMap(filters?: { userId?: number; userRole?
     .from(properties);
 
   // Agent filtering: non-admin users only see their assigned properties
+  // Also exclude DEAD leads from map view
+  const deadFilter = sql`${properties.leadTemperature} != 'DEAD'`;
   if (filters?.userId && filters?.userRole !== 'admin') {
-    const results = await baseQuery.where(eq(properties.assignedAgentId, filters.userId));
+    const results = await baseQuery.where(and(eq(properties.assignedAgentId, filters.userId), deadFilter));
     return results;
   }
 
-  const results = await baseQuery;
+  const results = await baseQuery.where(deadFilter);
   return results;
 }
 

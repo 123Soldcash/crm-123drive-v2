@@ -3588,3 +3588,10 @@
 - [x] Bug found: original code only searched contactPhones table (legacy model), missing contacts.phoneNumber (new model)
 - [x] Fixed: Now searches BOTH contactPhones AND contacts.phoneNumber (contactType='phone') tables
 - [x] TypeScript check passed (0 errors)
+
+## Hide DEAD Leads from Default Properties Listing
+- [x] Exclude DEAD temperature leads from default Properties list view
+- [x] DEAD leads should only appear when explicitly filtering by DEAD temperature
+- [x] Update backend query to exclude DEAD by default unless filter is set
+- [x] Update frontend filter to support explicit DEAD selection
+- [x] Verify Dashboard DEAD count card still works correctly

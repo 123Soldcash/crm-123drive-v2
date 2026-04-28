@@ -4578,7 +4578,8 @@ export const appRouter = router({
           return allConditions ? q.where(allConditions) : q;
         };
 
-        const [totalResult] = await countQuery();
+        // Total count excludes DEAD leads (they are hidden from default view)
+        const [totalResult] = await countQuery(sql`${properties.leadTemperature} != 'DEAD'`);
         const [newLeadsResult] = await countQuery(eq(properties.deskName, 'NEW_LEAD'));
         const [superHotResult] = await countQuery(eq(properties.leadTemperature, 'SUPER HOT'));
         const [hotResult] = await countQuery(eq(properties.leadTemperature, 'HOT'));
