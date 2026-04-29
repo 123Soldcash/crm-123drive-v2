@@ -16,7 +16,7 @@ import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
 import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks, smsMessages, callLogs } from "../drizzle/schema";
-import { eq, sql, and, isNull, desc, inArray } from "drizzle-orm";
+import { eq, sql, and, isNull, desc, inArray, ne, or } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
 import { dealmachineRouter } from "./routers/dealmachine";
@@ -4578,14 +4578,21 @@ export const appRouter = router({
           return allConditions ? q.where(allConditions) : q;
         };
 
-        // Total count excludes DEAD leads (they are hidden from default view)
-        const [totalResult] = await countQuery(sql`${properties.leadTemperature} != 'DEAD'`);
+        // Total count excludes DEAD leads (both leadTemperature=DEAD and deskStatus=DEAD)
+        const [totalResult] = await countQuery(and(
+          sql`${properties.leadTemperature} != 'DEAD'`,
+          ne(properties.deskStatus, 'DEAD')
+        ));
         const [newLeadsResult] = await countQuery(eq(properties.deskName, 'NEW_LEAD'));
         const [superHotResult] = await countQuery(eq(properties.leadTemperature, 'SUPER HOT'));
         const [hotResult] = await countQuery(eq(properties.leadTemperature, 'HOT'));
         const [warmResult] = await countQuery(eq(properties.leadTemperature, 'WARM'));
         const [coldResult] = await countQuery(eq(properties.leadTemperature, 'COLD'));
-        const [deadResult] = await countQuery(eq(properties.leadTemperature, 'DEAD'));
+        // DEAD count includes both leadTemperature=DEAD and deskStatus=DEAD
+        const [deadResult] = await countQuery(or(
+          eq(properties.leadTemperature, 'DEAD'),
+          eq(properties.deskStatus, 'DEAD')
+        ));
         const [ownerVerifiedResult] = await countQuery(eq(properties.ownerVerified, 1));
 
         // Visited count (requires join with visits table)

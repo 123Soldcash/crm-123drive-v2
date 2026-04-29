@@ -3595,3 +3595,10 @@
 - [x] Update backend query to exclude DEAD by default unless filter is set
 - [x] Update frontend filter to support explicit DEAD selection
 - [x] Verify Dashboard DEAD count card still works correctly
+
+## Fix DEAD Exclusion — Also Exclude deskName = 'DEAD'
+- [x] Investigate: leads with deskName='DEAD' still appear in default listing even after leadTemperature exclusion
+- [x] Fix db.ts getProperties() to exclude BOTH leadTemperature='DEAD' AND deskStatus='DEAD' by default
+- [x] Fix db.ts getPropertiesForMap() same exclusion
+- [x] Determine correct filter behavior: when user selects DEAD filter, show OR(leadTemperature=DEAD, deskStatus=DEAD)
+- [x] Update tests and checkpoint — 10/10 tests passing, TypeScript 0 errors

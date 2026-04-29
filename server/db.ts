@@ -210,9 +210,23 @@ export async function getProperties(filters?: {
   }
   if (filters?.leadTemperature) {
     conditions.push(eq(properties.leadTemperature, filters.leadTemperature));
-  } else {
-    // By default, exclude DEAD leads — they only appear when explicitly filtered
+    // When explicitly filtering by DEAD temperature, also include deskStatus=DEAD leads
+    if (filters.leadTemperature === 'DEAD') {
+      // Remove the condition we just added and replace with an OR to catch both cases
+      conditions.pop();
+      conditions.push(or(
+        eq(properties.leadTemperature, 'DEAD'),
+        eq(properties.deskStatus, 'DEAD')
+      ));
+    }
+  } else if (filters?.deskName) {
+    // When filtering by a specific desk, show all leads in that desk (including DEAD status ones)
+    // but still exclude leadTemperature=DEAD unless explicitly requested
     conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
+  } else {
+    // By default, exclude DEAD leads — exclude both leadTemperature=DEAD and deskStatus=DEAD
+    conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
+    conditions.push(ne(properties.deskStatus, 'DEAD'));
   }
   if (filters?.ownerVerified === true) {
     conditions.push(eq(properties.ownerVerified, 1));
@@ -679,8 +693,11 @@ export async function getPropertiesForMap(filters?: { userId?: number; userRole?
     .from(properties);
 
   // Agent filtering: non-admin users only see their assigned properties
-  // Also exclude DEAD leads from map view
-  const deadFilter = sql`${properties.leadTemperature} != 'DEAD'`;
+  // Also exclude DEAD leads from map view (both leadTemperature=DEAD and deskStatus=DEAD)
+  const deadFilter = and(
+    sql`${properties.leadTemperature} != 'DEAD'`,
+    ne(properties.deskStatus, 'DEAD')
+  );
   if (filters?.userId && filters?.userRole !== 'admin') {
     const results = await baseQuery.where(and(eq(properties.assignedAgentId, filters.userId), deadFilter));
     return results;
