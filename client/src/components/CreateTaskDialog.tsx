@@ -60,7 +60,6 @@ export function CreateTaskDialog({
   const [repeat, setRepeat] = useState<string>("No repeat");
   const [selectedDeskId, setSelectedDeskId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deskDefaultApplied, setDeskDefaultApplied] = useState(false);
 
   // Fetch desks instead of agents
   const { data: desksList = [], isLoading: desksLoading } = trpc.desks.list.useQuery();
@@ -71,19 +70,15 @@ export function CreateTaskDialog({
     { enabled: !!defaultPropertyId }
   );
 
+  // Compute the property's desk ID from the desk list (race-condition-free)
+  const propertyDefaultDeskId = useMemo(() => {
+    if (!propertyData?.deskName || desksList.length === 0) return "";
+    const match = desksList.find((d: any) => d.name === propertyData.deskName);
+    return match ? match.id.toString() : "";
+  }, [propertyData?.deskName, desksList]);
+
   const createTaskMutation = trpc.tasks.create.useMutation();
   const updateTaskMutation = trpc.tasks.update.useMutation();
-
-  // Auto-set desk from property's deskName when creating a new task
-  useEffect(() => {
-    if (open && !editingTask && propertyData?.deskName && desksList.length > 0 && !deskDefaultApplied) {
-      const matchingDesk = desksList.find((d: any) => d.name === propertyData.deskName);
-      if (matchingDesk) {
-        setSelectedDeskId(matchingDesk.id.toString());
-        setDeskDefaultApplied(true);
-      }
-    }
-  }, [open, editingTask, propertyData, desksList, deskDefaultApplied]);
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -96,18 +91,23 @@ export function CreateTaskDialog({
         setDueDate(editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : "");
         setRepeat(editingTask.repeatTask || editingTask.repeat || "No repeat");
         // Set desk from editingTask
-        if (editingTask.deskId) {
-          setSelectedDeskId(editingTask.deskId.toString());
-        } else {
-          setSelectedDeskId("");
-        }
-        setDeskDefaultApplied(true); // Don't override with property default when editing
+        setSelectedDeskId(editingTask.deskId ? editingTask.deskId.toString() : "");
       } else {
         resetForm();
-        setDeskDefaultApplied(false); // Allow auto-default for new tasks
+        // Pre-select property's desk (if already loaded)
+        if (propertyDefaultDeskId) {
+          setSelectedDeskId(propertyDefaultDeskId);
+        }
       }
     }
   }, [open, editingTask]);
+
+  // When property desk loads after dialog opens (async), apply it if no desk is selected yet
+  useEffect(() => {
+    if (open && !editingTask && propertyDefaultDeskId && !selectedDeskId) {
+      setSelectedDeskId(propertyDefaultDeskId);
+    }
+  }, [open, editingTask, propertyDefaultDeskId]);
 
   const resetForm = () => {
     setDescription("");
@@ -118,7 +118,6 @@ export function CreateTaskDialog({
     setDueTime("");
     setRepeat("No repeat");
     setSelectedDeskId("");
-    setDeskDefaultApplied(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -392,11 +391,7 @@ export function CreateTaskDialog({
                     </SelectContent>
                   </Select>
                 )}
-                {propertyData?.deskName && !editingTask && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Default: {propertyData.deskName}
-                  </p>
-                )}
+
               </div>
             </div>
           </div>

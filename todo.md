@@ -3620,3 +3620,10 @@
 - [x] Ensure repeat logic works for all intervals: Daily, Weekly, Monthly, 3 Months, 6 Months
 - [x] 15/15 tests passing, TypeScript 0 errors
 - [x] Checkpoint and deliver
+
+## Pre-select Property Desk in Create Task Dialog
+- [x] Fixed race condition: replaced deskDefaultApplied flag with useMemo + reactive useEffect
+- [x] Desk is now pre-selected immediately when dialog opens (if data already loaded)
+- [x] Second useEffect applies desk when property/desks data loads after dialog opens
+- [x] Removed confusing 'Default: deskName' label below the Assigned To selector
+- [x] TypeScript 0 errors
