@@ -135,7 +135,14 @@ export default function PropertyDetail() {
     }
   };
 
-  const { data: property, isLoading, error } = trpc.properties.getById.useQuery({ id: propertyId }, { enabled: isValidId });
+  const { data: property, isLoading, error, refetch } = trpc.properties.getById.useQuery(
+    { id: propertyId },
+    { 
+      enabled: isValidId,
+      retry: 2,
+      retryDelay: 1000,
+    }
+  );
   const { data: notes } = trpc.notes.byProperty.useQuery({ propertyId }, { enabled: isValidId });
   const { data: tags } = trpc.properties.getTags.useQuery({ propertyId }, { enabled: isValidId });
   const { data: agentsList } = trpc.agents.listAll.useQuery();
@@ -266,11 +273,24 @@ export default function PropertyDetail() {
 
   if (error || !property) {
     console.error('PropertyDetail error:', error);
+    const isNotFound = !error && !property;
+    const isAuthError = error?.data?.code === 'UNAUTHORIZED';
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="text-rose-500 font-bold">Error loading property data</div>
-        <div className="text-sm text-gray-500 max-w-md text-center">{error?.message || 'Property not found'}</div>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
+        <div className="text-rose-500 font-bold text-lg">
+          {isNotFound ? '🔍 Property Not Found' : isAuthError ? '🔒 Authentication Required' : '⚠️ Error Loading Property'}
+        </div>
+        <div className="text-sm text-gray-500 max-w-md text-center">
+          {isNotFound 
+            ? `Property ID ${propertyId} was not found. It may have been deleted or the URL is incorrect.`
+            : isAuthError
+            ? 'Your session may have expired. Please refresh the page to log in again.'
+            : error?.message || 'An unexpected error occurred while loading this property.'}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.history.back()}>← Go Back</Button>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </div>
       </div>
     );
   }

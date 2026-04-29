@@ -3602,3 +3602,11 @@
 - [x] Fix db.ts getPropertiesForMap() same exclusion
 - [x] Determine correct filter behavior: when user selects DEAD filter, show OR(leadTemperature=DEAD, deskStatus=DEAD)
 - [x] Update tests and checkpoint — 10/10 tests passing, TypeScript 0 errors
+
+## Fix PropertyDetail Null Error (line 227)
+- [x] Investigate null reference crash at PropertyDetail.tsx:227
+- [x] Root cause: getPropertyById returns null when property ID doesn't exist (deleted/wrong URL)
+- [x] Added retry: 2 with retryDelay: 1000ms to handle transient DB connection issues
+- [x] Improved error messages: 'Property Not Found' vs 'Auth Required' vs 'Error Loading'
+- [x] Added 'Go Back' button alongside 'Retry' button
+- [x] TypeScript check passed (0 errors)
