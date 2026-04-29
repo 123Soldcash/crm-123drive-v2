@@ -881,6 +881,13 @@ async function startServer() {
     }).catch((err) => {
       console.error("[FollowUp Scheduler] Failed to start:", err);
     });
+
+    // Start the task repeat scheduler
+    import("../task-repeat-scheduler").then(({ startTaskRepeatScheduler }) => {
+      startTaskRepeatScheduler();
+    }).catch((err) => {
+      console.error("[Task Repeat] Failed to start:", err);
+    });
   });
 }
 

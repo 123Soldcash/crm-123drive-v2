@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, User, CheckCircle2, Circle, Clock, Edit, Trash2, Eye, EyeOff, ClipboardList, RotateCcw } from "lucide-react";
+import { Plus, Calendar, User, CheckCircle2, Circle, Clock, Edit, Trash2, Eye, EyeOff, ClipboardList, RotateCcw, BellOff, RefreshCw } from "lucide-react";
 import { getDueDateBadgeConfig } from "@/lib/dateUtils";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { Link } from "wouter";
@@ -42,6 +42,27 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
       utils.tasks.list.invalidate();
     },
   });
+
+  const cancelRepeat = trpc.tasks.cancelRepeat.useMutation({
+    onSuccess: () => {
+      utils.tasks.byProperty.invalidate({ propertyId });
+      utils.tasks.list.invalidate();
+      toast.success("Repeat cancelled — task will no longer recur");
+    },
+    onError: () => toast.error("Failed to cancel repeat"),
+  });
+
+  const getRepeatLabel = (repeatTask: string | null) => {
+    if (!repeatTask || repeatTask === "No repeat") return null;
+    const labels: Record<string, string> = {
+      Daily: "Daily",
+      Weekly: "Weekly",
+      Monthly: "Monthly",
+      "3 Months": "Every 3mo",
+      "6 Months": "Every 6mo",
+    };
+    return labels[repeatTask] || repeatTask;
+  };
 
   const getPriorityColor = (priority: string, isDone: boolean) => {
     if (isDone) return "bg-emerald-50 text-emerald-500 border-emerald-100 opacity-60";
@@ -236,6 +257,12 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                             Completed {new Date(task.completedDate).toLocaleDateString()}
                           </span>
                         )}
+                        {getRepeatLabel((task as any).repeatTask) && (
+                          <span className="flex items-center gap-1 text-violet-500">
+                            <RefreshCw className="h-2.5 w-2.5" />
+                            {getRepeatLabel((task as any).repeatTask)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     
@@ -249,6 +276,21 @@ export function PropertyTasks({ propertyId }: PropertyTasksProps) {
                           title="Reopen task"
                         >
                           <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {(task as any).repeatTask && (task as any).repeatTask !== "No repeat" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-violet-400 hover:text-rose-600"
+                          title="Cancel repeat — stop this task from recurring"
+                          onClick={() => {
+                            if (confirm(`Cancel the "${(task as any).repeatTask}" repeat for this task? It will no longer recur automatically.`)) {
+                              cancelRepeat.mutate({ taskId: task.id });
+                            }
+                          }}
+                        >
+                          <BellOff className="h-3 w-3" />
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-blue-600" onClick={() => { setEditingTask(task); setCreateDialogOpen(true); }}>

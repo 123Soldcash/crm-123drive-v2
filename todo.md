@@ -3610,3 +3610,13 @@
 - [x] Improved error messages: 'Property Not Found' vs 'Auth Required' vs 'Error Loading'
 - [x] Added 'Go Back' button alongside 'Retry' button
 - [x] TypeScript check passed (0 errors)
+
+## Task Repeat System Improvements
+- [x] Add "3 Months" and "6 Months" options to repeatTask enum in schema
+- [x] Implement real cron job (task-repeat-scheduler.ts) that creates next occurrence when a repeating task is completed
+- [x] Add cancelRepeat endpoint to disable repeat on a task
+- [x] Add cancel repeat button (BellOff icon) in PropertyTasks component
+- [x] Show repeat badge (RefreshCw icon, violet) on tasks with active repeat
+- [x] Ensure repeat logic works for all intervals: Daily, Weekly, Monthly, 3 Months, 6 Months
+- [x] 15/15 tests passing, TypeScript 0 errors
+- [x] Checkpoint and deliver

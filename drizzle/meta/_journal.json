@@ -421,6 +421,13 @@
       "when": 1777412562967,
       "tag": "0059_cuddly_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "5",
+      "when": 1777497336294,
+      "tag": "0060_lush_big_bertha",
+      "breakpoints": true
     }
   ]
 }

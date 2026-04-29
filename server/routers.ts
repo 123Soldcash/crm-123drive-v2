@@ -3566,7 +3566,7 @@ export const appRouter = router({
           propertyId: z.number().optional(),
           dueDate: z.string().optional(), // ISO date string
           dueTime: z.string().optional(), // HH:MM format
-          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "No repeat"]).optional(),
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "3 Months", "6 Months", "No repeat"]).optional(),
           checklist: z.string().optional(), // JSON string
         })
       )
@@ -3624,7 +3624,7 @@ export const appRouter = router({
           priority: z.enum(["High", "Medium", "Low"]).optional(),
           status: z.enum(["To Do", "In Progress", "Done"]).optional(),
           dueTime: z.string().optional(),
-          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "No repeat"]).optional(),
+          repeatTask: z.enum(["Daily", "Weekly", "Monthly", "3 Months", "6 Months", "No repeat"]).optional(),
           assignedToId: z.number().optional(),
           deskId: z.number().nullable().optional(),
           propertyId: z.number().optional(),
@@ -3653,6 +3653,21 @@ export const appRouter = router({
       .input(z.object({ taskId: z.number() }))
       .mutation(async ({ input }) => {
         return await db.deleteTask(input.taskId);
+      }),
+
+    cancelRepeat: protectedProcedure
+      .input(z.object({ taskId: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new Error("Database not available");
+        const { tasks } = await import("../drizzle/schema.js");
+        const { eq } = await import("drizzle-orm");
+        // Set repeatActive = 0 and repeatTask = 'No repeat' to fully disable repeat
+        await dbInstance
+          .update(tasks)
+          .set({ repeatActive: 0, repeatTask: "No repeat" })
+          .where(eq(tasks.id, input.taskId));
+        return { success: true };
       }),
 
     toggleHidden: protectedProcedure

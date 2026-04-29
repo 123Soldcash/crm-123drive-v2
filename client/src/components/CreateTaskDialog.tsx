@@ -349,6 +349,12 @@ export function CreateTaskDialog({
                     <SelectItem value="Monthly" className="text-gray-900">
                       Monthly
                     </SelectItem>
+                    <SelectItem value="3 Months" className="text-gray-900">
+                      Every 3 Months
+                    </SelectItem>
+                    <SelectItem value="6 Months" className="text-gray-900">
+                      Every 6 Months
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
