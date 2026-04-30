@@ -1,6 +1,6 @@
 import { eq, and, like, desc, sql, gte, lte, or, isNotNull, isNull, ne, inArray, aliasedTable } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactPhones, InsertContactPhone, contactEmails, InsertContactEmail, contactAddresses, InsertContactAddress, contactSocialMedia, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames, twilioNumbers, desks } from "../drizzle/schema";
+import { InsertUser, users, savedSearches, InsertSavedSearch, properties, InsertProperty, contacts, notes, InsertNote, visits, InsertVisit, photos, InsertPhoto, propertyTags, InsertPropertyTag, propertyAgents, InsertPropertyAgent, leadTransfers, InsertLeadTransfer, propertyDeepSearch, tasks, InsertTask, taskComments, InsertTaskComment, agents, leadAssignments, stageHistory, contactAddresses, InsertContactAddress, familyMembers, InsertFamilyMember, propertyDocuments, InsertPropertyDocument, leadSources, campaignNames, twilioNumbers, desks } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 import * as schema from "../drizzle/schema";
@@ -257,20 +257,11 @@ export async function getProperties(filters?: {
       .from(contacts)
       .where(like(contacts.name, searchTerm));
     
-    // Search in contactPhones table — normalize stored numbers by stripping formatting
-    // Stored numbers may be formatted like "(904) 413-3291" but user searches "9044133291"
+    // Search contacts.phoneNumber directly (new model)
     const rawSearch = filters.search.replace(/\D/g, ""); // digits only from user input
     const phoneSearchTerm = rawSearch.length >= 7 ? rawSearch : null;
-    const phoneMatches = phoneSearchTerm ? await db
-      .select({ propertyId: contacts.propertyId })
-      .from(contactPhones)
-      .leftJoin(contacts, eq(contactPhones.contactId, contacts.id))
-      .where(and(
-        sql`REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${contactPhones.phoneNumber}, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ${'%' + phoneSearchTerm + '%'}`,
-        isNotNull(contacts.propertyId)
-      )) : [];
+    const phoneMatches: any[] = []; // legacy table removed
 
-    // Also search contacts.phoneNumber directly (new model)
     const directPhoneMatches = phoneSearchTerm ? await db
       .select({ propertyId: contacts.propertyId })
       .from(contacts)
@@ -279,12 +270,11 @@ export async function getProperties(filters?: {
         isNotNull(contacts.propertyId)
       )) : [];
       
-    // Search in contactEmails table
+    // Search contacts.email directly (new model)
     const emailMatches = await db
       .select({ propertyId: contacts.propertyId })
-      .from(contactEmails)
-      .leftJoin(contacts, eq(contactEmails.contactId, contacts.id))
-      .where(and(like(contactEmails.email, searchTerm), isNotNull(contacts.propertyId)));
+      .from(contacts)
+      .where(and(like(contacts.email, searchTerm), isNotNull(contacts.propertyId)));
     
     // Combine unique property IDs from all searches
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
@@ -350,14 +340,13 @@ export async function getProperties(filters?: {
   if (filters?.city) {
     conditions.push(eq(properties.city, filters.city));
   }
-  // Filter by email (searches contactEmails table)
+  // Filter by email (searches contacts.email directly - new model)
   if (filters?.email) {
     const emailTerm = `%${filters.email}%`;
     const emailMatches = await db
       .select({ propertyId: contacts.propertyId })
-      .from(contactEmails)
-      .leftJoin(contacts, eq(contactEmails.contactId, contacts.id))
-      .where(and(like(contactEmails.email, emailTerm), isNotNull(contacts.propertyId)));
+      .from(contacts)
+      .where(and(like(contacts.email, emailTerm), isNotNull(contacts.propertyId)));
     const emailPropertyIds = emailMatches.map(e => e.propertyId).filter(Boolean) as number[];
     if (emailPropertyIds.length === 0) return { data: [], totalCount: 0 };
     conditions.push(sql`${properties.id} IN (${sql.join(emailPropertyIds.map(id => sql`${id}`), sql`, `)})`);
@@ -524,41 +513,9 @@ export async function getPropertyById(id: number) {
   let emailsResult: any[] = [];
   let addressesResult: any[] = [];
   
-  // Try to fetch phones - table may not exist
-  if (contactIds.length > 0) {
-    try {
-      phonesResult = await db.select({
-        id: contactPhones.id,
-        contactId: contactPhones.contactId,
-        phoneNumber: contactPhones.phoneNumber,
-        phoneType: contactPhones.phoneType,
-        isPrimary: contactPhones.isPrimary,
-        dnc: contactPhones.dnc,
-        dncChecked: contactPhones.dncChecked,
-        carrier: contactPhones.carrier,
-        activityStatus: contactPhones.activityStatus,
-        isPrepaid: contactPhones.isPrepaid,
-        createdAt: contactPhones.createdAt,
-      }).from(contactPhones).where(sql`${contactPhones.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`);
-    } catch (e) {
-      console.log('contactPhones table query failed, skipping:', e);
-    }
-  }
-  
-  // Try to fetch emails - table may not exist
-  if (contactIds.length > 0) {
-    try {
-      emailsResult = await db.select({
-        id: contactEmails.id,
-        contactId: contactEmails.contactId,
-        email: contactEmails.email,
-        isPrimary: contactEmails.isPrimary,
-        createdAt: contactEmails.createdAt,
-      }).from(contactEmails).where(sql`${contactEmails.contactId} IN (${sql.join(contactIds.map(cId => sql`${cId}`), sql`, `)})`);
-    } catch (e) {
-      console.log('contactEmails table query failed, skipping:', e);
-    }
-  }
+  // New model: phones and emails are directly on the contacts row.
+  // Build backward-compatible phones[]/emails[] arrays from the contacts data already fetched.
+  // (phonesResult and emailsResult will be populated from contactsResult below)
   
   // Try to fetch addresses - table may not exist
   if (contactIds.length > 0) {
@@ -1171,21 +1128,10 @@ export async function getStageHistory(propertyId: number) {
   return results;
 }
 
-export async function addContactPhone(phone: InsertContactPhone) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const result = await db.insert(contactPhones).values(phone);
-  return result;
-}
-
-export async function addContactEmail(email: InsertContactEmail) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const result = await db.insert(contactEmails).values(email);
-  return result;
-}
+/** @deprecated Legacy stub — phones/emails now live directly on contacts row **/
+export async function addContactPhone(_phone: any) { return null; }
+/** @deprecated Legacy stub — phones/emails now live directly on contacts row **/
+export async function addContactEmail(_email: any) { return null; }
 
 export async function addContactAddress(address: InsertContactAddress) {
   const db = await getDb();
@@ -1195,28 +1141,22 @@ export async function addContactAddress(address: InsertContactAddress) {
   return result;
 }
 
+/** @deprecated New model: phone is directly on contacts.phoneNumber **/
 export async function getContactPhones(contactId: number) {
   const db = await getDb();
   if (!db) return [];
-
-  const results = await db
-    .select()
-    .from(contactPhones)
-    .where(eq(contactPhones.contactId, contactId));
-
-  return results;
+  const c = await db.select({ id: contacts.id, phoneNumber: contacts.phoneNumber, phoneType: contacts.phoneType }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  if (!c[0]?.phoneNumber) return [];
+  return [{ id: c[0].id, contactId, phoneNumber: c[0].phoneNumber, phoneType: c[0].phoneType || 'Mobile', isPrimary: 1 }];
 }
 
+/** @deprecated New model: email is directly on contacts.email **/
 export async function getContactEmails(contactId: number) {
   const db = await getDb();
   if (!db) return [];
-
-  const results = await db
-    .select()
-    .from(contactEmails)
-    .where(eq(contactEmails.contactId, contactId));
-
-  return results;
+  const c = await db.select({ id: contacts.id, email: contacts.email }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  if (!c[0]?.email) return [];
+  return [{ id: c[0].id, contactId, email: c[0].email, isPrimary: 1 }];
 }
 
 export async function getContactAddresses(contactId: number) {
@@ -1769,14 +1709,16 @@ export async function getPropertyCountByContactPhoneCount() {
   const db = await getDb();
   if (!db) return [];
 
+  // New model: count phone contacts per property from contacts table
   const results = await db
     .select({
       contactPhoneCount: sql<number>`count(*)`,
-      contactId: contactPhones.contactId,
+      contactId: contacts.id,
     })
-    .from(contactPhones)
-    .groupBy(contactPhones.contactId)
-    .orderBy(desc(sql<number>`count(*)`))
+    .from(contacts)
+    .where(sql`${contacts.phoneNumber} IS NOT NULL`)
+    .groupBy(contacts.id)
+    .orderBy(desc(sql<number>`count(*)`))  
     .limit(10);
 
   return results;
@@ -1786,14 +1728,16 @@ export async function getPropertyCountByContactEmailCount() {
   const db = await getDb();
   if (!db) return [];
 
+  // New model: count email contacts per property from contacts table
   const results = await db
     .select({
       contactEmailCount: sql<number>`count(*)`,
-      contactId: contactEmails.contactId,
+      contactId: contacts.id,
     })
-    .from(contactEmails)
-    .groupBy(contactEmails.contactId)
-    .orderBy(desc(sql<number>`count(*)`))
+    .from(contacts)
+    .where(sql`${contacts.email} IS NOT NULL`)
+    .groupBy(contacts.id)
+    .orderBy(desc(sql<number>`count(*)`))  
     .limit(10);
 
   return results;
@@ -1819,40 +1763,17 @@ export async function getPropertyCountByContactAddressCount() {
 /**
  * Add a new contact phone (V3)
  */
-export async function addContactPhoneNew(
-  contactId: number,
-  phoneNumber: string,
-  phoneType: string = "Mobile",
-  isPrimary: number = 0
-) {
+/** @deprecated New model: update contacts.phoneNumber directly **/
+export async function addContactPhoneNew(contactId: number, phoneNumber: string, phoneType: string = "Mobile", _isPrimary: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(contactPhones).values({
-    contactId,
-    phoneNumber,
-    phoneType: phoneType as any,
-    isPrimary,
-  });
-  return result;
+  return await db.update(contacts).set({ phoneNumber, phoneType: phoneType as any, contactType: 'phone' }).where(eq(contacts.id, contactId));
 }
-/**
- * Add a new contact email (V3)
- */
-export async function addContactEmailNew(
-  contactId: number,
-  email: string,
-  emailType: string = "Personal",
-  isPrimary: number = 0
-) {
+/** @deprecated New model: update contacts.email directly **/
+export async function addContactEmailNew(contactId: number, email: string, _emailType: string = "Personal", _isPrimary: number = 0) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(contactEmails).values({
-    contactId,
-    email,
-    emailType: emailType as any,
-    isPrimary,
-  } as any);
-  return result;
+  return await db.update(contacts).set({ email, contactType: 'email' }).where(eq(contacts.id, contactId));
 }
 /**
  * Add a new contact address (V3)
@@ -2612,13 +2533,10 @@ export async function deleteProperty(propertyId: number): Promise<{ success: boo
     .where(eq(contacts.propertyId, propertyId));
   const contactIds = propertyContacts.map(c => c.id);
 
-  // 2. Delete contact-related records (phones, emails, addresses, social media)
+  // 2. Delete contact-related records (addresses only — phones/emails are on contacts row)
   if (contactIds.length > 0) {
     for (const contactId of contactIds) {
-      await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
-      await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
       await db.delete(contactAddresses).where(eq(contactAddresses.contactId, contactId));
-      await db.delete(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
     }
   }
 

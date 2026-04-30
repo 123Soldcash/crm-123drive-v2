@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb, getTwilioNumberByCampaign } from "../db";
-import { properties, contacts, contactPhones, contactEmails, contactAddresses } from "../../drizzle/schema";
+import { properties, contacts, contactAddresses } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { makeRequest } from "../_core/map";
 
@@ -474,12 +474,11 @@ export const importDealMachineRouter = router({
               const phoneNumber = row[`contact_${i}_phone${p}`];
               if (phoneNumber && String(phoneNumber).trim()) {
                 const phoneType = row[`contact_${i}_phone${p}_type`] || (p === 1 ? 'Mobile' : p === 2 ? 'Home' : 'Work');
-                await dbInstance.insert(contactPhones).values({
-                  contactId: insertedContactId,
+                await dbInstance.update(contacts).set({
                   phoneNumber: String(phoneNumber).trim(),
                   phoneType: phoneType,
-                  isPrimary: p === 1 ? 1 : 0,
-                } as any);
+                  contactType: "phone",
+                }).where(eq(contacts.id, insertedContactId));
                 phonesCount++;
               }
             }
@@ -488,11 +487,10 @@ export const importDealMachineRouter = router({
             for (let e = 1; e <= 10; e++) {
               const email = row[`contact_${i}_email${e}`];
               if (email && String(email).trim()) {
-                await dbInstance.insert(contactEmails).values({
-                  contactId: insertedContactId,
+                await dbInstance.update(contacts).set({
                   email: String(email).trim(),
-                  isPrimary: e === 1 ? 1 : 0,
-                });
+                  contactType: "email",
+                }).where(eq(contacts.id, insertedContactId));
                 emailsCount++;
               }
             }

@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { properties, contactPhones } from "../drizzle/schema";
+import { properties, contacts } from "../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { normalizePhoneNumber } from "./utils/phoneNormalization";
 
@@ -33,25 +33,27 @@ export async function searchLeadsByPhone(phoneNumber: string): Promise<PhoneDupl
       owner: properties.owner1Name,
       leadTemperature: properties.leadTemperature,
       deskStatus: properties.deskStatus,
-      phoneNumber: contactPhones.phoneNumber,
-      phoneType: contactPhones.phoneType,
+      phoneNumber: contacts.phoneNumber,
+      phoneType: contacts.phoneType,
       createdAt: properties.createdAt,
     })
-    .from(contactPhones)
-    .innerJoin(properties, eq(contactPhones.contactId, properties.id))
+    .from(contacts)
+    .leftJoin(properties, eq(contacts.propertyId, properties.id))
     .where(
-      sql`REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${contactPhones.phoneNumber}, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ${`%${normalizedPhone}%`}`
+      sql`REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${contacts.phoneNumber}, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ${`%${normalizedPhone}%`}`
     )
     .limit(10);
 
-  return results.map(r => ({
-    propertyId: r.propertyId,
-    address: r.address,
-    owner: r.owner,
-    leadTemperature: r.leadTemperature,
-    deskStatus: r.deskStatus,
-    phoneNumber: r.phoneNumber,
-    phoneType: r.phoneType,
-    createdAt: r.createdAt,
-  }));
+  return results
+    .filter(r => r.phoneNumber !== null && r.createdAt !== null)
+    .map(r => ({
+      propertyId: r.propertyId ?? 0,
+      address: r.address,
+      owner: r.owner,
+      leadTemperature: r.leadTemperature,
+      deskStatus: r.deskStatus,
+      phoneNumber: r.phoneNumber!,
+      phoneType: r.phoneType,
+      createdAt: r.createdAt!,
+    }));
 }

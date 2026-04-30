@@ -15,7 +15,7 @@ import { updatePropertyStage, getPropertyStageHistory, getPropertiesByStage, get
 import { getDb } from "./db";
 // agents.db no longer needed - deleteAgent logic is inline in the router
 import { storagePut } from "./storage";
-import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, contactPhones, contactEmails, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks, smsMessages, callLogs } from "../drizzle/schema";
+import { properties, visits, photos, notes, users, skiptracingLogs, outreachLogs, communicationLog, contacts, leadAssignments, propertyAgents, twilioNumbers, propertyOffers, twilioNumberDesks, userDesks, desks, smsMessages, callLogs } from "../drizzle/schema";
 import { eq, sql, and, isNull, desc, inArray, ne, or } from "drizzle-orm";
 import * as communication from "./communication";
 import { agentsRouter } from "./routers/agents";
@@ -524,16 +524,16 @@ export const appRouter = router({
         if (propertyContacts.length > 0) {
           const contactIds = propertyContacts.map(c => c.id);
           const contactPhonesRows = await dbInstance
-            .select({ phoneNumber: contactPhones.phoneNumber, contactId: contactPhones.contactId })
-            .from(contactPhones)
-            .where(inArray(contactPhones.contactId, contactIds));
+            .select({ phoneNumber: contacts.phoneNumber, contactId: contacts.id })
+            .from(contacts)
+            .where(inArray(contacts.id, contactIds));
 
           if (contactPhonesRows.length > 0) {
-            const phoneNumbers = contactPhonesRows.map(cp => cp.phoneNumber);
+            const phoneNumbers = contactPhonesRows.map((cp: any) => cp.phoneNumber).filter(Boolean) as string[];
             // Build a map: phone → contactId
             const phoneToContactId: Record<string, number> = {};
             for (const cp of contactPhonesRows) {
-              phoneToContactId[cp.phoneNumber] = cp.contactId;
+              if (cp.phoneNumber) phoneToContactId[cp.phoneNumber] = cp.contactId;
             }
 
             // Find SMS where contactPhone matches any of these phone numbers and no propertyId set
@@ -1008,12 +1008,12 @@ export const appRouter = router({
                 const validTypes = ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"];
                 let phoneType: any = phone.phoneType || "Mobile";
                 if (!validTypes.includes(phoneType)) phoneType = "Mobile";
-                await dbInstance.insert(contactPhones).values({
-                  contactId,
+                // New model: update contacts row directly
+                await dbInstance.update(contacts).set({
                   phoneNumber: phone.phoneNumber.trim(),
                   phoneType,
-                  isPrimary: i === 0 ? 1 : 0,
-                } as any);
+                  contactType: 'phone',
+                }).where(eq(contacts.id, contactId));
                 phonesCreated++;
               }
             }
@@ -1022,12 +1022,11 @@ export const appRouter = router({
             for (let i = 0; i < contact.emails.length; i++) {
               const email = contact.emails[i];
               if (email.email?.trim()) {
-                await dbInstance.insert(contactEmails).values({
-                  contactId,
+                // New model: update contacts row directly
+                await dbInstance.update(contacts).set({
                   email: email.email.trim(),
-                  emailType: email.emailType || "Personal",
-                  isPrimary: i === 0 ? 1 : 0,
-                } as any);
+                  contactType: 'email',
+                }).where(eq(contacts.id, contactId));
                 emailsCreated++;
               }
             }
@@ -3382,7 +3381,7 @@ export const appRouter = router({
 
     /**
      * Check DNC status for all phone numbers of a property via Supabase.
-     * Updates contactPhones.dnc and contacts.dnc in the database.
+     * Updates contacts.dnc in the database (new model).
      */
     checkDNCForProperty: protectedProcedure
       .input(z.object({ propertyId: z.number() }))
@@ -4093,26 +4092,18 @@ export const appRouter = router({
             const toVariants = [input.to, toDigits, toDigits.startsWith("1") ? toDigits.slice(1) : `1${toDigits}`];
             const phoneRows = await db
               .select({
-                dnc: contactPhones.dnc,
-                isLitigator: contactPhones.isLitigator,
-                contactDnc: contacts.dnc,
-                contactLitigator: contacts.isLitigator,
+                dnc: contacts.dnc,
+                isLitigator: contacts.isLitigator,
               })
-              .from(contactPhones)
-              .innerJoin(contacts, eq(contacts.id, contactPhones.contactId))
-              .where(
-                and(
-                  eq(contactPhones.contactId, input.contactId),
-                  sql`${contactPhones.phoneNumber} IN (${sql.join(toVariants.map(v => sql`${v}`), sql`, `)})`
-                )
-              )
+              .from(contacts)
+              .where(eq(contacts.id, input.contactId))
               .limit(1);
             const phoneRow = phoneRows[0] ?? null;
             if (phoneRow) {
-              if (phoneRow.dnc || phoneRow.contactDnc) {
+              if (phoneRow.dnc) {
                 throw new TRPCError({ code: "FORBIDDEN", message: "This number is marked as DNC. Call blocked." });
               }
-              if (phoneRow.isLitigator || phoneRow.contactLitigator) {
+              if (phoneRow.isLitigator) {
                 throw new TRPCError({ code: "FORBIDDEN", message: "This number is flagged as a Litigator. Call blocked." });
               }
             }
@@ -5581,7 +5572,7 @@ export const appRouter = router({
         offset: z.number().optional().default(0),
       }))
       .query(async ({ input }) => {
-        const { voicemails: vmTable, contacts, contactPhones, properties: propsTable } = await import("../drizzle/schema");
+        const { voicemails: vmTable, contacts, properties: propsTable } = await import("../drizzle/schema");
         const { eq, desc, and } = await import("drizzle-orm");
         const dbInst = await db.getDb();
         if (!dbInst) throw new Error("Database not available");

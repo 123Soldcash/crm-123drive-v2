@@ -7,31 +7,24 @@
  *   - Inbound SMS webhook  (twilio-webhooks.ts)
  *   - Voicemail recording callback (twilio-webhooks.ts)
  *
- * Strategy
- * --------
- * 1. Build a list of phone-number variants (E.164, digits-only, 10-digit, 11-digit)
- *    so we match regardless of how the number is stored in the DB.
- * 2. Search MODEL 1 — `contactPhones` table (legacy import model).
- * 3. Search MODEL 2 — `contacts.phoneNumber` where contactType = 'phone' (new model).
- * 4. Return the union of all matching property IDs (deduped).
+ * New model: all phone data lives directly on contacts.phoneNumber.
+ * Legacy contactPhones table has been removed.
  */
 
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNotNull } from "drizzle-orm";
 
 /** Build all reasonable variants of a phone number for DB matching. */
 export function buildPhoneVariants(phone: string): string[] {
   const digits = phone.replace(/\D/g, "");
-  // Normalize to 10-digit core (strip leading country code 1 if present)
   const digits10 = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
   const digits11 = digits10.length === 10 ? `1${digits10}` : digits;
 
   const variants: (string | null)[] = [
-    phone,                                                              // raw as-is
-    `+${digits11}`,                                                     // E.164 with country code
-    digits,                                                             // all digits as-is
-    digits10.length === 10 ? digits10 : null,                          // 10-digit
-    digits10.length === 10 ? digits11 : null,                          // 11-digit
-    // formatted variants that might be stored in DB
+    phone,
+    `+${digits11}`,
+    digits,
+    digits10.length === 10 ? digits10 : null,
+    digits10.length === 10 ? digits11 : null,
     digits10.length === 10
       ? `(${digits10.slice(0, 3)}) ${digits10.slice(3, 6)}-${digits10.slice(6)}`
       : null,
@@ -41,12 +34,8 @@ export function buildPhoneVariants(phone: string): string[] {
 
 /**
  * Look up all property IDs associated with a given phone number.
- * Strategy:
- *   1. Search contactPhones table (legacy model)
- *   2. Search contacts.phoneNumber (new model)
- *   3. FALLBACK: Search smsMessages history for prior outbound SMS to same contactPhone
- *      that already has a propertyId (handles replies on different Twilio numbers)
- * Returns an empty array if nothing is found or if DB is unavailable.
+ * Searches contacts.phoneNumber directly (new model).
+ * FALLBACK: Search smsMessages history for prior outbound SMS to same contactPhone.
  */
 export async function lookupPropertiesByPhone(phone: string): Promise<{ propertyId: number; deskName: string | null }[]> {
   if (!phone || phone === "undefined" || phone.startsWith("client:")) {
@@ -54,31 +43,14 @@ export async function lookupPropertiesByPhone(phone: string): Promise<{ property
   }
   try {
     const { getDb } = await import("../db");
-    const { contacts, contactPhones, properties: propertiesTable } = await import("../../drizzle/schema");
+    const { contacts, properties: propertiesTable } = await import("../../drizzle/schema");
     const database = await getDb();
     if (!database) return [];
+
     const variants = buildPhoneVariants(phone);
     const allPropertyIds = new Set<number>();
-    // ── MODEL 1: contactPhones table (legacy) ────────────────────────────────
-    const matchingPhones: { contactId: number }[] = [];
-    for (const variant of variants) {
-      const rows = await database
-        .select({ contactId: contactPhones.contactId })
-        .from(contactPhones)
-        .where(eq(contactPhones.phoneNumber, variant));
-      matchingPhones.push(...rows);
-    }
-    const uniqueContactIds = Array.from(new Set(matchingPhones.map(r => r.contactId)));
-    if (uniqueContactIds.length > 0) {
-      const contactRows = await database
-        .select({ propertyId: contacts.propertyId })
-        .from(contacts)
-        .where(inArray(contacts.id, uniqueContactIds));
-      for (const c of contactRows) {
-        if (c.propertyId != null && c.propertyId > 0) allPropertyIds.add(c.propertyId);
-      }
-    }
-    // ── MODEL 2: contacts.phoneNumber directly (new model) ───────────────────
+
+    // Search contacts.phoneNumber directly (new model)
     for (const variant of variants) {
       const rows = await database
         .select({ propertyId: contacts.propertyId })
@@ -93,13 +65,10 @@ export async function lookupPropertiesByPhone(phone: string): Promise<{ property
         if (r.propertyId != null && r.propertyId > 0) allPropertyIds.add(r.propertyId);
       }
     }
-    // ── MODEL 3: Conversation history fallback ──────────────────────────────
-    // If no contact match found, look for prior SMS to/from this number that
-    // already has a propertyId. This handles cases where the contact replies
-    // on a different Twilio number than the outbound was sent from.
+
+    // FALLBACK: Conversation history (handles replies on different Twilio numbers)
     if (allPropertyIds.size === 0) {
       const { smsMessages } = await import("../../drizzle/schema");
-      const { isNotNull, or } = await import("drizzle-orm");
       for (const variant of variants) {
         const historyRows = await database
           .select({ propertyId: smsMessages.propertyId })
@@ -119,7 +88,7 @@ export async function lookupPropertiesByPhone(phone: string): Promise<{ property
     }
 
     if (allPropertyIds.size === 0) return [];
-    // Fetch deskName for each matched property
+
     const propIds = Array.from(allPropertyIds);
     const propRows = await database
       .select({ id: propertiesTable.id, deskName: propertiesTable.deskName })
@@ -139,34 +108,14 @@ export async function lookupPropertyIdsByPhone(phone: string): Promise<number[]>
 
   try {
     const { getDb } = await import("../db");
-    const { contacts, contactPhones } = await import("../../drizzle/schema");
+    const { contacts } = await import("../../drizzle/schema");
     const database = await getDb();
     if (!database) return [];
 
     const variants = buildPhoneVariants(phone);
     const allPropertyIds = new Set<number>();
 
-    // ── MODEL 1: contactPhones table (legacy) ────────────────────────────────
-    const matchingPhones: { contactId: number }[] = [];
-    for (const variant of variants) {
-      const rows = await database
-        .select({ contactId: contactPhones.contactId })
-        .from(contactPhones)
-        .where(eq(contactPhones.phoneNumber, variant));
-      matchingPhones.push(...rows);
-    }
-    const uniqueContactIds = Array.from(new Set(matchingPhones.map(r => r.contactId)));
-    if (uniqueContactIds.length > 0) {
-      const contactRows = await database
-        .select({ propertyId: contacts.propertyId })
-        .from(contacts)
-        .where(inArray(contacts.id, uniqueContactIds));
-      for (const c of contactRows) {
-        if (c.propertyId != null && c.propertyId > 0) allPropertyIds.add(c.propertyId);
-      }
-    }
-
-    // ── MODEL 2: contacts.phoneNumber directly (new model) ───────────────────
+    // Search contacts.phoneNumber directly (new model)
     for (const variant of variants) {
       const rows = await database
         .select({ propertyId: contacts.propertyId })

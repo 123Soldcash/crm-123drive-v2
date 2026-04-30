@@ -1,7 +1,7 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb, getNextLeadId } from "../db";
-import { properties, contacts, contactPhones, contactEmails, propertyTags } from "../../drizzle/schema";
+import { properties, contacts, propertyTags } from "../../drizzle/schema";
 import { parseCSV, transformPropertyWithContacts, validateProperty, getPropertyKey } from "../dealmachine-import";
 import { eq } from "drizzle-orm";
 
@@ -161,23 +161,20 @@ export const dealmachineRouter = router({
             if (contactId) {
               // Add phone if exists
               if (contactPhone1) {
-                await db.insert(contactPhones).values({
-                  contactId,
+                await db.update(contacts).set({
                   phoneNumber: contactPhone1,
                   phoneType: 'Mobile',
-                  createdAt: new Date(),
-                });
+                  contactType: "phone",
+                }).where(eq(contacts.id, contactId));
                 phonesCreated++;
               }
 
               // Add email if exists
               if (contactEmail1) {
-                await db.insert(contactEmails).values({
-                  contactId,
+                await db.update(contacts).set({
                   email: contactEmail1,
-                  isPrimary: 1,
-                  createdAt: new Date(),
-                });
+                  contactType: "email",
+                }).where(eq(contacts.id, contactId));
                 emailsCreated++;
               }
 
@@ -302,24 +299,21 @@ export const dealmachineRouter = router({
                       phoneType = "Mobile";
                     }
 
-                    await db.insert(contactPhones).values({
-                      contactId,
+                    await db.update(contacts).set({
                       phoneNumber: parsedContact.phone,
                       phoneType,
                       dnc: parsedContact.dnc ? 1 : 0,
-                      createdAt: new Date(),
-                    });
+                      contactType: "phone",
+                    }).where(eq(contacts.id, contactId));
                     phonesCreated++;
                   }
 
                   // Add email if provided
                   if (parsedContact.email) {
-                    await db.insert(contactEmails).values({
-                      contactId,
+                    await db.update(contacts).set({
                       email: parsedContact.email,
-                      isPrimary: 1,
-                      createdAt: new Date(),
-                    });
+                      contactType: "email",
+                    }).where(eq(contacts.id, contactId));
                     emailsCreated++;
                   }
 

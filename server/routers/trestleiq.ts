@@ -1,17 +1,12 @@
 /**
- * TrestleIQ Router — Phone validation, activity score, and litigator checks
- *
- * Supports dual phone data models:
- *   Model A: contactPhones table (legacy) — phoneId maps to contactPhones.id
- *   Model B: contacts table (new) — phoneId maps to contacts.id (phone stored directly on contact)
- *
- * The frontend passes phone.id which may be either a contactPhones.id or a contacts.id.
- * We try contactPhones first; if not found, fall back to contacts table.
+ * TrestleIQ Router — Phone validation, activity score, and litigator checks/**
+ * Uses the new unified contacts model — phoneId maps to contacts.id.
+ * Phone data (phoneNumber, carrier, DNC, etc.) is stored directly on the contacts row.
  */
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { contactPhones, contacts, integrationSettings } from "../../drizzle/schema";
+import { contacts, integrationSettings } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -35,42 +30,26 @@ async function getTrestleConfig() {
 interface PhoneRecord {
   phoneNumber: string;
   carrier: string | null;
-  model: "contactPhones" | "contacts";
+  model: "contacts";
   id: number; // original id in its own table
 }
 
 /**
- * Look up a phone record by ID, trying contactPhones first then contacts.
- * Returns null if not found in either table.
+ * Look up a phone record by ID from the contacts table (new unified model).
+ * Returns null if not found.
  */
 async function findPhoneRecord(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, phoneId: number): Promise<PhoneRecord | null> {
-  // Try contactPhones first (legacy model)
-  const [cpRow] = await db
-    .select()
-    .from(contactPhones)
-    .where(eq(contactPhones.id, phoneId));
-
-  if (cpRow) {
-    return {
-      phoneNumber: cpRow.phoneNumber,
-      carrier: cpRow.carrier ?? null,
-      model: "contactPhones",
-      id: cpRow.id,
-    };
-  }
-
-  // Fall back to contacts table (new model — phone stored directly on contact)
-  const [contactRow] = await db
+  const [row] = await db
     .select()
     .from(contacts)
     .where(eq(contacts.id, phoneId));
 
-  if (contactRow && contactRow.phoneNumber) {
+  if (row && row.phoneNumber) {
     return {
-      phoneNumber: contactRow.phoneNumber,
-      carrier: contactRow.carrier ?? null,
+      phoneNumber: row.phoneNumber,
+      carrier: row.carrier ?? null,
       model: "contacts",
-      id: contactRow.id,
+      id: row.id,
     };
   }
 
@@ -100,17 +79,10 @@ async function saveTrestleResult(
     isPrepaid: result.isPrepaid,
   };
 
-  if (phone.model === "contactPhones") {
-    await db
-      .update(contactPhones)
-      .set(updatePayload)
-      .where(eq(contactPhones.id, phone.id));
-  } else {
-    await db
-      .update(contacts)
-      .set(updatePayload)
-      .where(eq(contacts.id, phone.id));
-  }
+  await db
+    .update(contacts)
+    .set(updatePayload)
+    .where(eq(contacts.id, phone.id));
 }
 
 export const trestleiqRouter = router({

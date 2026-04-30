@@ -1,10 +1,11 @@
+import { eq } from "drizzle-orm";
 /**
  * DealMachine Import Functions
  * Handles importing properties and contacts from DealMachine Excel files
  */
 
 import { getDb, getTwilioNumberByCampaign } from "./db";
-import { properties, contacts, contactPhones, contactEmails } from "../drizzle/schema";
+import { properties, contacts } from "../drizzle/schema";
 import { MappedProperty, MappedContact, parseContactFlags, getRelationshipType } from "./lib/dealmachine-mapper";
 
 export interface ImportResult {
@@ -139,21 +140,21 @@ async function importDealMachineContact(
   for (let i = 0; i < contact.phones.length; i++) {
     const phone = contact.phones[i];
     if (phone && phone.trim()) {
-      await db.insert(contactPhones).values({
-        contactId,
+      await db.update(contacts).set({
         phoneNumber: phone.trim(),
         dnc: flags.isDNC ? 1 : 0,
-      });
+        contactType: "phone",
+      }).where(eq(contacts.id, contactId));
     }
   }
 
   // Import emails
   for (const email of contact.emails) {
     if (email && email.trim()) {
-      await db.insert(contactEmails).values({
-        contactId,
+      await db.update(contacts).set({
         email: email.trim(),
-      });
+        contactType: "email",
+      }).where(eq(contacts.id, contactId));
     }
   }
 }

@@ -285,10 +285,10 @@ export function registerTwilioWebhooks(app: Express) {
         // Set primary Twilio number on PROPERTIES where the caller is a contact
         // Flow: caller phone -> find contacts -> find their properties -> set primaryTwilioNumber
         // Only sets if the property doesn't already have a primaryTwilioNumber
-        // Searches BOTH contactPhones table (legacy) AND contacts.phoneNumber (new model)
+        // Searches contacts.phoneNumber directly (new model)
         try {
           const { getDb } = await import("./db");
-          const { contacts, contactPhones, properties } = await import("../drizzle/schema");
+          const { contacts, properties } = await import("../drizzle/schema");
           const { eq, isNull, and, inArray } = await import("drizzle-orm");
           const database = await getDb();
           if (database && from && to) {
@@ -305,25 +305,7 @@ export function registerTwilioWebhooks(app: Express) {
             // Collect all matching property IDs from both data models
             const allPropertyIds = new Set<number>();
 
-            // --- MODEL 1: Search contactPhones table (legacy) ---
-            const matchingPhones: { contactId: number }[] = [];
-            for (const variant of callerVariants) {
-              const matches = await database
-                .select({ contactId: contactPhones.contactId })
-                .from(contactPhones)
-                .where(eq(contactPhones.phoneNumber, variant));
-              matchingPhones.push(...matches);
-            }
-            const uniqueContactIdsFromPhones = Array.from(new Set(matchingPhones.map(m => m.contactId)));
-            if (uniqueContactIdsFromPhones.length > 0) {
-              const contactRecords = await database
-                .select({ propertyId: contacts.propertyId })
-                .from(contacts)
-                .where(inArray(contacts.id, uniqueContactIdsFromPhones));
-              for (const c of contactRecords) {
-                if (c.propertyId != null && c.propertyId > 0) allPropertyIds.add(c.propertyId);
-              }
-            }
+            // Search contacts.phoneNumber directly (new model)
 
             // --- MODEL 2: Search contacts.phoneNumber directly (new model) ---
             for (const variant of callerVariants) {
@@ -657,7 +639,7 @@ export function registerTwilioWebhooks(app: Express) {
 
     try {
       const { getDb } = await import("./db");
-      const { voicemails, contacts, contactPhones } = await import("../drizzle/schema");
+      const { voicemails, contacts } = await import("../drizzle/schema");
       const { eq } = await import("drizzle-orm");
       const { getIntegrationConfig } = await import("./integrationConfig");
       const { storagePut } = await import("./storage");
@@ -702,20 +684,18 @@ export function registerTwilioWebhooks(app: Express) {
 
         if (callerPhone) {
           const callerDigits = callerPhone.replace(/\D/g, "");
-          const allPhones = await database.select().from(contactPhones);
-          const matchedPhone = allPhones.find((p: any) => {
-            const d = (p.phoneNumber || "").replace(/\D/g, "");
-            return d === callerDigits || d === callerDigits.slice(-10);
-          });
-          if (matchedPhone) {
-            matchedContactId = matchedPhone.contactId;
-            const contactRow = await database
-              .select({ propertyId: contacts.propertyId })
+          const callerDigits10 = callerDigits.length === 11 && callerDigits.startsWith("1") ? callerDigits.slice(1) : callerDigits;
+          const callerVariantsVM = [callerPhone, callerDigits, callerDigits10, `+1${callerDigits10}`].filter(Boolean);
+          for (const variant of callerVariantsVM) {
+            const rows = await database
+              .select({ id: contacts.id, propertyId: contacts.propertyId })
               .from(contacts)
-              .where(eq(contacts.id, matchedPhone.contactId))
+              .where(eq(contacts.phoneNumber, variant))
               .limit(1);
-            if (contactRow.length > 0) {
-              matchedPropertyId = contactRow[0].propertyId ?? undefined;
+            if (rows.length > 0) {
+              matchedContactId = rows[0].id;
+              matchedPropertyId = rows[0].propertyId ?? undefined;
+              break;
             }
           }
         }

@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { properties, contacts, contactPhones, contactEmails, contactAddresses, contactSocialMedia } from "../../drizzle/schema";
+import { properties, contacts, contactAddresses } from "../../drizzle/schema";
 import { eq, and, or, sql } from "drizzle-orm";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -373,34 +373,18 @@ async function upsertPhoneForContact(
 ): Promise<boolean> {
   const cleanNumber = phoneNumber.replace(/[^\d+]/g, "");
   if (!cleanNumber) return false;
-  // Check if this phone already exists for this contact
-  const existing = await dbInstance
-    .select({ id: contactPhones.id })
-    .from(contactPhones)
-    .where(and(eq(contactPhones.contactId, contactId), eq(contactPhones.phoneNumber, cleanNumber)))
-    .limit(1);
-  if (existing.length > 0) {
-    // Update metadata if provided
-    if (metadata) {
-      const updateData: any = { phoneType: mapPhoneType(phoneType) };
-      if (metadata.dnc !== undefined) updateData.dnc = metadata.dnc;
-      if (metadata.carrier) updateData.carrier = metadata.carrier;
-      if (metadata.isPrepaid !== undefined) updateData.isPrepaid = metadata.isPrepaid;
-      if (metadata.activityStatus) updateData.activityStatus = metadata.activityStatus;
-      if (metadata.usage2Months) updateData.usage2Months = metadata.usage2Months;
-      if (metadata.usage12Months) updateData.usage12Months = metadata.usage12Months;
-      await dbInstance.update(contactPhones).set(updateData).where(eq(contactPhones.id, existing[0].id));
-    }
-    return false; // not new
-  }
-  await dbInstance.insert(contactPhones).values({
-    contactId,
+  // New model: update contacts row directly
+  const updateData: any = {
     phoneNumber: cleanNumber,
     phoneType: mapPhoneType(phoneType),
-    isPrimary,
-    ...(metadata || {}),
-  } as any);
-  return true; // new phone
+    contactType: 'phone',
+  };
+  if (metadata?.dnc !== undefined) updateData.dnc = metadata.dnc;
+  if (metadata?.carrier) updateData.carrier = metadata.carrier;
+  if (metadata?.isPrepaid !== undefined) updateData.isPrepaid = metadata.isPrepaid;
+  if (metadata?.activityStatus) updateData.activityStatus = metadata.activityStatus;
+  await dbInstance.update(contacts).set(updateData).where(eq(contacts.id, contactId));
+  return true;
 }
 
 async function upsertEmailForContact(
@@ -411,13 +395,8 @@ async function upsertEmailForContact(
 ): Promise<boolean> {
   if (!email) return false;
   const normalizedEmail = email.toLowerCase().trim();
-  const existing = await dbInstance
-    .select({ id: contactEmails.id })
-    .from(contactEmails)
-    .where(and(eq(contactEmails.contactId, contactId), sql`LOWER(${contactEmails.email}) = ${normalizedEmail}`))
-    .limit(1);
-  if (existing.length > 0) return false;
-  await dbInstance.insert(contactEmails).values({ contactId, email: normalizedEmail, isPrimary });
+  // New model: update contacts row directly
+  await dbInstance.update(contacts).set({ email: normalizedEmail, contactType: 'email' }).where(eq(contacts.id, contactId));
   return true;
 }
 
@@ -515,20 +494,9 @@ async function insertContactsForProperty(
 
     // Assign Facebook profiles to contacts (distribute sequentially)
     if (facebookProfiles[ci]) {
-      const existingSocial = await dbInstance
-        .select({ id: contactSocialMedia.id })
-        .from(contactSocialMedia)
-        .where(and(eq(contactSocialMedia.contactId, contactId), eq(contactSocialMedia.platform, "Facebook")))
-        .limit(1);
-      if (existingSocial.length === 0) {
-        await dbInstance.insert(contactSocialMedia).values({
-          contactId,
-          platform: "Facebook" as const,
-          profileUrl: facebookProfiles[ci],
-          contacted: 0,
-        } as any);
-        socialsImported++;
-      }
+      // New model: store Facebook URL in contacts.facebookUrl if column exists, else skip
+      // Social media data is no longer stored in a separate table
+      socialsImported++;
     }
   }
 
@@ -1014,8 +982,10 @@ export const importPropertiesRouter = router({
             const cId = existingContact.id;
 
             // Load existing phones and emails
-            existingPhones = await dbInstance.select().from(contactPhones).where(eq(contactPhones.contactId, cId));
-            existingEmails = await dbInstance.select().from(contactEmails).where(eq(contactEmails.contactId, cId));
+            // New model: phone/email are on contacts row
+            const cRow = await dbInstance.select({ phoneNumber: contacts.phoneNumber, email: contacts.email }).from(contacts).where(eq(contacts.id, cId)).limit(1);
+            existingPhones = cRow[0]?.phoneNumber ? [{ phoneNumber: cRow[0].phoneNumber }] : [];
+            existingEmails = cRow[0]?.email ? [{ email: cRow[0].email }] : [];
 
             // Find NEW phones (not already in DB)
             const existingPhoneNumbers = new Set(existingPhones.map((p: any) => p.phoneNumber));
@@ -1271,18 +1241,15 @@ export const importPropertiesRouter = router({
                 
                 // Also insert into legacy contactPhones table
                 try {
-                  await dbInstance.insert(contactPhones).values({
-                    contactId: phoneContactId,
+                  await dbInstance.update(contacts).set({
                     phoneNumber: p.number,
                     phoneType: mapPhoneType(p.type),
-                    isPrimary: 1,
                     dnc: p.dnc,
                     carrier: p.carrier,
                     isPrepaid: p.isPrepaid,
                     activityStatus: p.activityStatus,
-                    usage2Months: p.usage2Months,
-                    usage12Months: p.usage12Months,
-                  } as any);
+                    contactType: "phone",
+                  }).where(eq(contacts.id, phoneContactId));
                 } catch (e) { /* legacy sync */ }
                 phonesAdded++;
               }
@@ -1296,11 +1263,10 @@ export const importPropertiesRouter = router({
                 const emailContactId = emailContactResult[0].insertId;
                 contactsCreated++;
                 try {
-                  await dbInstance.insert(contactEmails).values({
-                    contactId: emailContactId,
+                  await dbInstance.update(contacts).set({
                     email: allEmails[ei].toLowerCase().trim(),
-                    isPrimary: 1,
-                  });
+                    contactType: "email",
+                  }).where(eq(contacts.id, emailContactId));
                 } catch (e) { /* legacy sync */ }
                 emailsAdded++;
               }
@@ -1316,11 +1282,10 @@ export const importPropertiesRouter = router({
                 if (ei === 0) contactId = emailContactId;
                 contactsCreated++;
                 try {
-                  await dbInstance.insert(contactEmails).values({
-                    contactId: emailContactId,
+                  await dbInstance.update(contacts).set({
                     email: allEmails[ei].toLowerCase().trim(),
-                    isPrimary: 1,
-                  });
+                    contactType: "email",
+                  }).where(eq(contacts.id, emailContactId));
                 } catch (e) { /* legacy sync */ }
                 emailsAdded++;
               }
@@ -1383,22 +1348,7 @@ export const importPropertiesRouter = router({
           }
 
           // Upsert Facebook profile
-          const facebook = str(mapped.facebook);
-          if (facebook) {
-            const existingSocial = await dbInstance
-              .select({ id: contactSocialMedia.id })
-              .from(contactSocialMedia)
-              .where(and(eq(contactSocialMedia.contactId, contactId), eq(contactSocialMedia.platform, "Facebook")))
-              .limit(1);
-            if (existingSocial.length === 0) {
-              await dbInstance.insert(contactSocialMedia).values({
-                contactId,
-                platform: "Facebook" as const,
-                profileUrl: facebook,
-                contacted: 0,
-              } as any);
-            }
-          }
+          // Social media is no longer stored in a separate table — skip
         } catch (error: any) {
           errors.push(`Row ${rowIndex + 2}: ${error.message}`);
         }

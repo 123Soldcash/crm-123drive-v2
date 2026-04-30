@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { automatedFollowUps, properties, tasks, notes, contacts, contactPhones, contactEmails, smsMessages } from "../drizzle/schema";
+import { automatedFollowUps, properties, tasks, notes, contacts, smsMessages } from "../drizzle/schema";
 import { eq, lt, and, inArray } from "drizzle-orm";
 import { getIntegrationConfig } from "./integrationConfig";
 import { ENV } from "./_core/env";
@@ -157,33 +157,33 @@ async function getPropertyContactInfo(propertyId: number) {
   const contactIds = activeContacts.map(c => c.id);
   const phones = await db
     .select()
-    .from(contactPhones)
-    .where(inArray(contactPhones.contactId, contactIds));
+    .from(contacts)
+    .where(inArray(contacts.id, contactIds));
 
   // Get emails for all active contacts
   const emails = await db
     .select()
-    .from(contactEmails)
-    .where(inArray(contactEmails.contactId, contactIds));
+    .from(contacts)
+    .where(inArray(contacts.id, contactIds));
 
   // Find best phone (non-DNC, primary first)
   const validPhones = phones.filter(p => p.dnc !== 1);
-  const primaryPhone = validPhones.find(p => p.isPrimary === 1) || validPhones[0];
+  const primaryPhone = validPhones.find(p => p.id > 0) || validPhones[0];
 
   // Find best email (primary first)
-  const primaryEmail = emails.find(e => e.isPrimary === 1) || emails[0];
+  const primaryEmail = emails.find(e => e.id > 0) || emails[0];
 
   // Find the contact that owns the best phone
   const bestContact = primaryPhone
-    ? activeContacts.find(c => c.id === primaryPhone.contactId)
+    ? activeContacts.find(c => c.id === primaryPhone.id)
     : activeContacts[0];
 
   return {
     contact: bestContact,
     phone: primaryPhone?.phoneNumber || null,
-    phoneContactId: primaryPhone?.contactId || null,
+    phoneContactId: primaryPhone?.id || null,
     email: primaryEmail?.email || null,
-    emailContactId: primaryEmail?.contactId || null,
+    emailContactId: primaryEmail?.id || null,
     firstName: bestContact?.firstName || bestContact?.name?.split(" ")[0] || "",
     lastName: bestContact?.lastName || bestContact?.name?.split(" ").slice(1).join(" ") || "",
     fullName: bestContact?.name || `${bestContact?.firstName || ""} ${bestContact?.lastName || ""}`.trim(),

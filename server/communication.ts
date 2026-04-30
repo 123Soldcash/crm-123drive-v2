@@ -2,17 +2,11 @@ import { eq, desc, inArray, and, ne, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   contacts,
-  contactPhones,
-  contactEmails,
   contactAddresses,
-  contactSocialMedia,
   communicationLog,
   properties,
   InsertContact,
-  InsertContactPhone,
-  InsertContactEmail,
   InsertContactAddress,
-  InsertContactSocialMedia,
   InsertCommunicationLog,
 } from "../drizzle/schema";
 
@@ -267,35 +261,6 @@ export async function createContact(contactData: any) {
   const result = await db.insert(contacts).values(contactBase);
   const contactId = result[0].insertId;
   
-  // Also insert into contactPhones for backward compat with Trestle/DNC logic
-  if (contactBase.phoneNumber) {
-    try {
-      await addPhone({
-        contactId,
-        phoneNumber: contactBase.phoneNumber,
-        phoneType: contactBase.phoneType || "Mobile",
-        isPrimary: 1,
-        dnc: contactBase.dnc || 0,
-      });
-    } catch (e) {
-      // Non-critical: contactPhones is legacy, don't fail the whole operation
-      console.error('Warning: failed to add legacy phone record:', e);
-    }
-  }
-  
-  // Also insert into contactEmails for backward compat
-  if (contactBase.email) {
-    try {
-      await addEmail({
-        contactId,
-        email: contactBase.email,
-        isPrimary: 1,
-      });
-    } catch (e) {
-      console.error('Warning: failed to add legacy email record:', e);
-    }
-  }
-  
   // Add addresses
   if (addresses && Array.isArray(addresses)) {
     for (const address of addresses) {
@@ -339,49 +304,6 @@ export async function updateContact(contactId: number, contactData: any) {
   if (Object.keys(updates).length > 0) {
     await db.update(contacts).set(updates).where(eq(contacts.id, contactId));
     
-    // Sync DNC to legacy contactPhones table
-    if ('dnc' in updates) {
-      const dncValue = updates.dnc ? 1 : 0;
-      try {
-        await db.update(contactPhones).set({ dnc: dncValue }).where(eq(contactPhones.contactId, contactId));
-      } catch (e) {
-        // Legacy table sync, non-critical
-      }
-    }
-  }
-  
-  // Sync to legacy contactPhones table
-  if (updates.phoneNumber !== undefined) {
-    try {
-      await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
-      if (updates.phoneNumber) {
-        await addPhone({
-          contactId,
-          phoneNumber: updates.phoneNumber,
-          phoneType: updates.phoneType || "Mobile",
-          isPrimary: 1,
-          dnc: updates.dnc || 0,
-        });
-      }
-    } catch (e) {
-      console.error('Warning: failed to sync legacy phone record:', e);
-    }
-  }
-  
-  // Sync to legacy contactEmails table
-  if (updates.email !== undefined) {
-    try {
-      await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
-      if (updates.email) {
-        await addEmail({
-          contactId,
-          email: updates.email,
-          isPrimary: 1,
-        });
-      }
-    } catch (e) {
-      console.error('Warning: failed to sync legacy email record:', e);
-    }
   }
   
   // Update addresses
@@ -398,10 +320,7 @@ export async function deleteContact(contactId: number) {
   if (!db) throw new Error("Database not available");
   
   // Delete related records first
-  await db.delete(contactPhones).where(eq(contactPhones.contactId, contactId));
-  await db.delete(contactEmails).where(eq(contactEmails.contactId, contactId));
   await db.delete(contactAddresses).where(eq(contactAddresses.contactId, contactId));
-  await db.delete(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
   await db.delete(communicationLog).where(eq(communicationLog.contactId, contactId));
   
   // Delete the contact
@@ -409,102 +328,119 @@ export async function deleteContact(contactId: number) {
 }
 
 /**
- * Contact Phone Functions
+ * Contact Phone/Email helper stubs (new model: data lives directly on contacts row)
+ * These are kept for backward compatibility with any callers but operate on contacts table.
  */
 
 export async function getPhonesByContact(contactId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  return await db.select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber, phoneType: contactPhones.phoneType }).from(contactPhones).where(eq(contactPhones.contactId, contactId));
+  const contact = await db.select({ id: contacts.id, phoneNumber: contacts.phoneNumber, phoneType: contacts.phoneType }).from(contacts).where(eq(contacts.id, contactId)).limit(1);
+  if (!contact[0]?.phoneNumber) return [];
+  return [{ id: contact[0].id, contactId, phoneNumber: contact[0].phoneNumber, phoneType: contact[0].phoneType || 'Mobile' }];
 }
 
-export async function addPhone(phone: InsertContactPhone) {
+
+// ─── Phone CRUD (new model: contacts table) ───────────────────────────────────
+export async function addPhone(input: {
+  contactId: number;
+  phoneNumber: string;
+  phoneType?: string;
+  isPrimary?: number;
+  dnc?: number;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  const result = await db.insert(contactPhones).values(phone);
-  return result[0].insertId;
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  await db.update(contacts).set({
+    phoneNumber: input.phoneNumber,
+    phoneType: (input.phoneType as any) || "Mobile",
+    dnc: input.dnc ?? 0,
+    contactType: "phone",
+  }).where(eq(contacts.id, input.contactId));
+  return input.contactId;
 }
-
-export async function updatePhone(phoneId: number, updates: Partial<InsertContactPhone>) {
+export async function updatePhone(phoneId: number, updates: {
+  phoneNumber?: string;
+  phoneType?: string;
+  isPrimary?: number;
+  dnc?: number;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  await db.update(contactPhones).set(updates).where(eq(contactPhones.id, phoneId));
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  const payload: Record<string, unknown> = {};
+  if (updates.phoneNumber !== undefined) payload.phoneNumber = updates.phoneNumber;
+  if (updates.phoneType !== undefined) payload.phoneType = updates.phoneType;
+  if (updates.dnc !== undefined) payload.dnc = updates.dnc;
+  if (Object.keys(payload).length > 0) {
+    await db.update(contacts).set(payload as any).where(eq(contacts.id, phoneId));
+  }
 }
-
 export async function deletePhone(phoneId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  await db.delete(contactPhones).where(eq(contactPhones.id, phoneId));
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  await db.update(contacts).set({ phoneNumber: null, contactType: "phone" }).where(eq(contacts.id, phoneId));
 }
 
-/**
- * Contact Email Functions
- */
-
-export async function getEmailsByContact(contactId: number) {
+// ─── Email CRUD (new model: contacts table) ───────────────────────────────────
+export async function addEmail(input: {
+  contactId: number;
+  email: string;
+  isPrimary?: number;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  return await db.select({ id: contactEmails.id, contactId: contactEmails.contactId, email: contactEmails.email }).from(contactEmails).where(eq(contactEmails.contactId, contactId));
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  await db.update(contacts).set({
+    email: input.email,
+    contactType: "email",
+  }).where(eq(contacts.id, input.contactId));
+  return input.contactId;
 }
-
-export async function addEmail(email: InsertContactEmail) {
+export async function updateEmail(emailId: number, updates: {
+  email?: string;
+  isPrimary?: number;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  const result = await db.insert(contactEmails).values(email);
-  return result[0].insertId;
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  if (updates.email !== undefined) {
+    await db.update(contacts).set({ email: updates.email }).where(eq(contacts.id, emailId));
+  }
 }
-
-export async function updateEmail(emailId: number, updates: Partial<InsertContactEmail>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.update(contactEmails).set(updates).where(eq(contactEmails.id, emailId));
-}
-
 export async function deleteEmail(emailId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  await db.delete(contactEmails).where(eq(contactEmails.id, emailId));
+  const { contacts } = await import("../drizzle/schema.js");
+  const { eq } = await import("drizzle-orm");
+  await db.update(contacts).set({ email: null, contactType: "email" }).where(eq(contacts.id, emailId));
 }
 
-/**
- * Contact Social Media Functions
- */
-
-export async function getSocialMediaByContact(contactId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  return await db.select({ id: contactSocialMedia.id, contactId: contactSocialMedia.contactId, platform: contactSocialMedia.platform, handle: contactSocialMedia.profileUrl }).from(contactSocialMedia).where(eq(contactSocialMedia.contactId, contactId));
+export async function getSocialMediaByContact(_contactId: number) {
+  return [];
 }
-
-export async function addSocialMedia(social: InsertContactSocialMedia) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const result = await db.insert(contactSocialMedia).values(social);
-  return result[0].insertId;
+export async function addSocialMedia(_input: {
+  contactId: number;
+  platform: string;
+  profileUrl?: string;
+  contacted?: number;
+  contactedDate?: Date;
+}) {
+  // Social media is no longer stored in a separate table
+  return null;
 }
-
-export async function updateSocialMedia(socialId: number, updates: Partial<InsertContactSocialMedia>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.update(contactSocialMedia).set(updates).where(eq(contactSocialMedia.id, socialId));
+export async function updateSocialMedia(_socialId: number, _updates: Record<string, unknown>) {
+  // Social media is no longer stored in a separate table
 }
-
-export async function deleteSocialMedia(socialId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  await db.delete(contactSocialMedia).where(eq(contactSocialMedia.id, socialId));
+export async function deleteSocialMedia(_socialId: number) {
+  // Social media is no longer stored in a separate table
 }
 
 /**
@@ -703,9 +639,6 @@ export async function bulkDeleteContacts(contactIds: number[]) {
   if (!db) throw new Error("Database not available");
   
   // Delete related records first for all contacts
-  await db.delete(contactPhones).where(inArray(contactPhones.contactId, contactIds));
-  await db.delete(contactEmails).where(inArray(contactEmails.contactId, contactIds));
-  await db.delete(contactSocialMedia).where(inArray(contactSocialMedia.contactId, contactIds));
   await db.delete(communicationLog).where(inArray(communicationLog.contactId, contactIds));
   
   // Delete all contacts
@@ -725,14 +658,6 @@ export async function togglePhoneDNC(phoneId: number, dnc: boolean) {
     .set({ dnc: dnc ? 1 : 0 })
     .where(eq(contacts.id, phoneId));
   
-  // Also sync to legacy contactPhones table
-  try {
-    await db.update(contactPhones)
-      .set({ dnc: dnc ? 1 : 0 })
-      .where(eq(contactPhones.contactId, phoneId));
-  } catch (e) {
-    // Legacy sync, non-critical
-  }
 }
 
 /**
@@ -759,10 +684,7 @@ export async function markPropertyDNC(propertyId: number) {
       .set({ dnc: 1 })
       .where(inArray(contacts.id, contactIds));
     
-    // Mark all phones of these contacts as DNC
-    await db.update(contactPhones)
-      .set({ dnc: 1 })
-      .where(inArray(contactPhones.contactId, contactIds));
+
   }
   
 // Update property desk status and desk name to DEAD
@@ -795,10 +717,7 @@ export async function unmarkPropertyDNC(propertyId: number) {
       .set({ dnc: 0 })
       .where(inArray(contacts.id, contactIds));
     
-    // Unmark all phones DNC
-    await db.update(contactPhones)
-      .set({ dnc: 0 })
-      .where(inArray(contactPhones.contactId, contactIds));
+
   }
   
   // Update property desk status to ACTIVE and reset desk name

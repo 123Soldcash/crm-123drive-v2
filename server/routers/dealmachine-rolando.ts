@@ -1,7 +1,7 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb, getNextLeadId } from "../db";
-import { properties, contacts, contactPhones, contactEmails, propertyTags } from "../../drizzle/schema";
+import { properties, contacts, propertyTags } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export const dealmachineRolandoRouter = router({
@@ -132,13 +132,12 @@ export const dealmachineRolandoRouter = router({
                 if (contactData.phones && contactData.phones.length > 0) {
                   for (const phone of contactData.phones) {
                     if (phone) {
-                      await db.insert(contactPhones).values({
-                        contactId,
+                      await db.update(contacts).set({
                         phoneNumber: phone,
                         phoneType: 'Mobile',
                         dnc: contactData.flags?.includes('DNC') ? 1 : 0,
-                        createdAt: new Date(),
-                      });
+                        contactType: "phone",
+                      }).where(eq(contacts.id, contactId));
                       phonesCreated++;
                     }
                   }
@@ -148,12 +147,10 @@ export const dealmachineRolandoRouter = router({
                 if (contactData.emails && contactData.emails.length > 0) {
                   for (const email of contactData.emails) {
                     if (email) {
-                      await db.insert(contactEmails).values({
-                        contactId,
+                      await db.update(contacts).set({
                         email,
-                        isPrimary: contactData.emails[0] === email ? 1 : 0,
-                        createdAt: new Date(),
-                      });
+                        contactType: "email",
+                      }).where(eq(contacts.id, contactId));
                       emailsCreated++;
                     }
                   }

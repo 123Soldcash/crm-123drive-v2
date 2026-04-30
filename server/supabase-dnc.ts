@@ -2,13 +2,13 @@
  * Supabase DNC Verification Service
  * Checks phone numbers against a Supabase DNC database via RPC function.
  *
- * The Supabase RPC function `check_dnc` accepts { p_number: string }
- * and returns [true] if the number IS on the DNC list, [false] if NOT.
+ * New model: all phone data lives directly on the contacts table.
+ * contactPhones / contactEmails legacy tables are no longer used.
  */
 
 import { getDb } from "./db";
-import { integrationSettings, contactPhones, contacts } from "../drizzle/schema";
-import { eq, inArray } from "drizzle-orm";
+import { integrationSettings, contacts } from "../drizzle/schema";
+import { eq, inArray, isNotNull } from "drizzle-orm";
 
 /**
  * Get Supabase DNC config from integrationSettings table
@@ -77,14 +77,8 @@ async function checkSingleDNC(
     }
 
     const data = await response.json();
-    // Response is [true] or [false]
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0] === true;
-    }
-    // Could also be a direct boolean
-    if (typeof data === "boolean") {
-      return data;
-    }
+    if (Array.isArray(data) && data.length > 0) return data[0] === true;
+    if (typeof data === "boolean") return data;
     return false;
   } catch (err) {
     console.error(`[Supabase DNC] Error checking ${normalized}:`, err);
@@ -93,9 +87,9 @@ async function checkSingleDNC(
 }
 
 /**
- * Check multiple phone numbers against Supabase DNC.
- * Returns a map of phoneId -> isDNC (true/false).
- * Also updates the contactPhones.dnc field in the database.
+ * Check multiple phone contacts against Supabase DNC.
+ * phoneRecords: array of { id: contactId, phoneNumber, contactId }
+ * Updates contacts.dnc and contacts.dncChecked directly.
  */
 export async function checkDNCForPhones(
   phoneRecords: Array<{ id: number; phoneNumber: string; contactId: number }>
@@ -123,7 +117,6 @@ export async function checkDNCForPhones(
   const results: Array<{ phoneId: number; phoneNumber: string; isDNC: boolean }> = [];
   let flagged = 0;
 
-  // Process in batches of 10 to avoid overwhelming the API
   const BATCH_SIZE = 10;
   for (let i = 0; i < phoneRecords.length; i += BATCH_SIZE) {
     const batch = phoneRecords.slice(i, i + BATCH_SIZE);
@@ -136,34 +129,22 @@ export async function checkDNCForPhones(
 
     for (const result of batchResults) {
       results.push({ phoneId: result.phoneId, phoneNumber: result.phoneNumber, isDNC: result.isDNC });
+      if (result.isDNC) flagged++;
 
-      if (result.isDNC) {
-        flagged++;
-      }
-
-      // Update the phone's DNC flag and mark as checked in the database
-      await db
-        .update(contactPhones)
-        .set({ dnc: result.isDNC ? 1 : 0, dncChecked: 1 })
-        .where(eq(contactPhones.id, result.phoneId));
-
-      // Also update the contacts table (new 1-contact-1-phone model)
-      // The phone.id in contacts-simple maps to contact.id
+      // Update contacts table directly (new model)
       await db
         .update(contacts)
         .set({ dnc: result.isDNC ? 1 : 0, dncChecked: 1 })
         .where(eq(contacts.id, result.contactId));
     }
-
-    // Contact-level DNC sync is now handled per-phone above (dnc + dncChecked)
   }
 
   return { checked: phoneRecords.length, flagged, results };
 }
 
 /**
- * Check DNC for all phone numbers of a property.
- * Fetches all contacts → phones, checks each against Supabase, updates DB.
+ * Check DNC for all phone contacts of a property.
+ * Uses contacts table directly (new model).
  */
 export async function checkDNCForProperty(propertyId: number): Promise<{
   checked: number;
@@ -176,9 +157,9 @@ export async function checkDNCForProperty(propertyId: number): Promise<{
     return { checked: 0, flagged: 0, results: [], error: "Database not available" };
   }
 
-  // Resolve property ID (could be leadId or database id)
   const { properties } = await import("../drizzle/schema");
 
+  // Resolve property ID (could be leadId or database id)
   let propertyDbId: number | null = null;
   const byLeadId = await db
     .select({ id: properties.id })
@@ -194,69 +175,40 @@ export async function checkDNCForProperty(propertyId: number): Promise<{
       .from(properties)
       .where(eq(properties.id, propertyId))
       .limit(1);
-    if (byDbId.length > 0) {
-      propertyDbId = byDbId[0].id;
-    }
+    if (byDbId.length > 0) propertyDbId = byDbId[0].id;
   }
 
   if (!propertyDbId) {
     return { checked: 0, flagged: 0, results: [], error: "Property not found" };
   }
 
-  // Get all contacts for this property
-  const contactsList = await db
-    .select({ id: contacts.id })
-    .from(contacts)
-    .where(eq(contacts.propertyId, propertyDbId));
-
-  if (contactsList.length === 0) {
-    return { checked: 0, flagged: 0, results: [] };
-  }
-
-  // Get all phones for these contacts from contactPhones table (legacy)
-  const contactIds = contactsList.map((c) => c.id);
-  const allPhones = await db
-    .select({
-      id: contactPhones.id,
-      phoneNumber: contactPhones.phoneNumber,
-      contactId: contactPhones.contactId,
-    })
-    .from(contactPhones)
-    .where(inArray(contactPhones.contactId, contactIds));
-
-  // Also get phones from contacts table (new 1-contact-1-phone model)
-  const contactsWithPhones = await db
+  // Get all phone contacts for this property from contacts table
+  const phoneContacts = await db
     .select({
       id: contacts.id,
       phoneNumber: contacts.phoneNumber,
     })
     .from(contacts)
-    .where(inArray(contacts.id, contactIds));
+    .where(eq(contacts.propertyId, propertyDbId));
 
-  // Build a set of phone numbers already in contactPhones to avoid duplicates
-  const existingPhoneNums = new Set(allPhones.map(p => normalizePhone(p.phoneNumber)));
-
-  // Add contacts-table phones that aren't already in contactPhones
-  const contactPhoneRecords = contactsWithPhones
-    .filter(c => c.phoneNumber && !existingPhoneNums.has(normalizePhone(c.phoneNumber)))
-    .map(c => ({
-      id: c.id, // contact.id used as phone.id for compatibility
+  const phoneRecords = phoneContacts
+    .filter((c) => c.phoneNumber && c.phoneNumber.trim() !== "")
+    .map((c) => ({
+      id: c.id,
       phoneNumber: c.phoneNumber!,
       contactId: c.id,
     }));
 
-  const combinedPhones = [...allPhones, ...contactPhoneRecords];
-
-  if (combinedPhones.length === 0) {
+  if (phoneRecords.length === 0) {
     return { checked: 0, flagged: 0, results: [] };
   }
 
-  return checkDNCForPhones(combinedPhones);
+  return checkDNCForPhones(phoneRecords);
 }
 
 /**
- * Check DNC for specific phone numbers (used after adding a contact).
- * Takes an array of phone IDs and checks them.
+ * Check DNC for specific contact IDs (phone contacts).
+ * phoneIds here are contact IDs in the new model.
  */
 export async function checkDNCForPhoneIds(phoneIds: number[]): Promise<{
   checked: number;
@@ -273,18 +225,26 @@ export async function checkDNCForPhoneIds(phoneIds: number[]): Promise<{
     return { checked: 0, flagged: 0, results: [], error: "Database not available" };
   }
 
-  const phones = await db
+  // Look up in contacts table (new model)
+  const phoneContacts = await db
     .select({
-      id: contactPhones.id,
-      phoneNumber: contactPhones.phoneNumber,
-      contactId: contactPhones.contactId,
+      id: contacts.id,
+      phoneNumber: contacts.phoneNumber,
     })
-    .from(contactPhones)
-    .where(inArray(contactPhones.id, phoneIds));
+    .from(contacts)
+    .where(inArray(contacts.id, phoneIds));
 
-  if (phones.length === 0) {
+  const phoneRecords = phoneContacts
+    .filter((c) => c.phoneNumber && c.phoneNumber.trim() !== "")
+    .map((c) => ({
+      id: c.id,
+      phoneNumber: c.phoneNumber!,
+      contactId: c.id,
+    }));
+
+  if (phoneRecords.length === 0) {
     return { checked: 0, flagged: 0, results: [] };
   }
 
-  return checkDNCForPhones(phones);
+  return checkDNCForPhones(phoneRecords);
 }

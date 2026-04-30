@@ -3659,14 +3659,15 @@
 - [x] Fix applies to both lookupPhone (single) and bulkLookup mutations
 - [x] Shared helper findPhoneRecord() and saveTrestleResult() handle both models cleanly
 - [x] TypeScript: 0 errors. Pre-existing test failures unchanged (31 failed before and after fix)
-## Consolidação do Modelo de Dados de Contatos (Migração)
-- [ ] Salvar checkpoint de backup antes da migração
-- [ ] Analisar dados: mapear sobreposições entre contacts e contactPhones/contactEmails
-- [ ] Criar script de migração com validação de integridade
-- [ ] Executar migração: mover dados de contactPhones → contacts.phoneNumber
-- [ ] Executar migração: mover dados de contactEmails → contacts.email
-- [ ] Validar integridade pós-migração (zero perda de dados)
-- [ ] Atualizar schema Drizzle: remover tabelas legadas
-- [ ] Atualizar routers e utilitários para usar somente o novo modelo
-- [ ] Rodar TypeScript check e testes
-- [ ] Salvar checkpoint final
+## Consolidação do Modelo de Dados de Contatos (Migração) - CONCLUÍDA ✅
+- [x] Salvar checkpoint de backup antes da migração (v6bff1884)
+- [x] Analisar dados: mapear sobreposições entre contacts e contactPhones/contactEmails
+- [x] Criar script de migração com validação de integridade
+- [x] Executar migração: mover dados de contactPhones → contacts.phoneNumber
+- [x] Executar migração: mover dados de contactEmails → contacts.email
+- [x] Validar integridade pós-migração (zero perda de dados)
+- [x] Atualizar schema Drizzle: remover tabelas legadas do código
+- [x] Atualizar routers e utilitários para usar somente o novo modelo
+- [x] TypeScript: 0 erros após consolidação
+- [x] Testes: sem regressões (118 falhas pré-existentes, igual antes da migração)
+- [x] Salvar checkpoint final

@@ -140,7 +140,7 @@ async function startServer() {
   app.post("/api/oauth/webhook/zapier/step1", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts, contactPhones, contactEmails, propertyTags } = await import("../../drizzle/schema");
+      const { properties, contacts, propertyTags } = await import("../../drizzle/schema");
       const { eq, and } = await import("drizzle-orm");
 
       const database = await getDb();
@@ -164,21 +164,19 @@ async function startServer() {
 
       // Check for duplicate by phone number
       if (phone) {
-        const existingPhones = await database
-          .select({ contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
-          .from(contactPhones);
-        
         const normalizedPhone = phone.replace(/[^\d+]/g, "");
-        const duplicate = existingPhones.find((p: any) => 
-          p.phoneNumber.replace(/[^\d+]/g, "") === normalizedPhone
-        );
+        const existingPhones = await database
+          .select({ id: contacts.id, phoneNumber: contacts.phoneNumber })
+          .from(contacts)
+          .where(sql`REPLACE(REPLACE(REPLACE(REPLACE(${contacts.phoneNumber}, '+', ''), '-', ''), ' ', ''), '(', '') LIKE ${'%' + normalizedPhone.slice(-10) + '%'}`);
+        const duplicate = existingPhones[0] ?? null;
         
         if (duplicate) {
           // Find the property linked to this contact
           const contact = await database
             .select({ propertyId: contacts.propertyId })
             .from(contacts)
-            .where(eq(contacts.id, duplicate.contactId))
+            .where(eq(contacts.id, duplicate.id))
             .limit(1);
           
           return res.status(200).json({
@@ -226,19 +224,19 @@ async function startServer() {
 
       if (contactId) {
         if (phone) {
-          await database.insert(contactPhones).values({
-            contactId,
+          // New model: update contacts row directly
+          await database.update(contacts).set({
             phoneNumber: phone,
             phoneType: "Mobile",
-            isPrimary: 1,
-          });
+            contactType: "phone",
+          }).where(eq(contacts.id, contactId));
         }
         if (email) {
-          await database.insert(contactEmails).values({
-            contactId,
+          // New model: update contacts row directly
+          await database.update(contacts).set({
             email,
-            isPrimary: 1,
-          });
+            contactType: "email",
+          }).where(eq(contacts.id, contactId));
         }
       }
 
@@ -273,7 +271,7 @@ async function startServer() {
   app.post("/api/oauth/webhook/zapier/step2", validateZapierToken, async (req, res) => {
     try {
       const { getDb } = await import("../db");
-      const { properties, contacts, contactPhones, contactEmails, notes, propertyDeepSearch, deepSearchOverview } = await import("../../drizzle/schema");
+      const { properties, contacts, notes, propertyDeepSearch, deepSearchOverview } = await import("../../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
       const database = await getDb();
@@ -291,8 +289,9 @@ async function startServer() {
 
       // Find the property by phone number
       const allPhones = await database
-        .select({ contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
-        .from(contactPhones);
+        .select({ contactId: contacts.id, phoneNumber: contacts.phoneNumber })
+        .from(contacts)
+        .where(sql`${contacts.phoneNumber} IS NOT NULL`);
 
       const normalizedPhone = phone.replace(/[^\d+]/g, "");
       const matchedPhone = allPhones.find((p: any) =>
@@ -349,18 +348,18 @@ async function startServer() {
       // Update email if provided and different
       if (email) {
         const existingEmails = await database
-          .select({ id: contactEmails.id })
-          .from(contactEmails)
-          .where(eq(contactEmails.contactId, contact[0].id));
+          .select({ id: contacts.id, email: contacts.email })
+          .from(contacts)
+          .where(eq(contacts.id, contact[0].id));
         
         if (existingEmails.length > 0) {
-          await database.update(contactEmails).set({ email }).where(eq(contactEmails.id, existingEmails[0].id));
+          await database.update(contacts).set({ email }).where(eq(contacts.id, contact[0].id));
         } else {
-          await database.insert(contactEmails).values({
-            contactId: contact[0].id,
+          // New model: update contacts row directly
+          await database.update(contacts).set({
             email,
-            isPrimary: 1,
-          });
+            contactType: "email",
+          }).where(eq(contacts.id, contact[0].id));
         }
       }
 
@@ -735,7 +734,7 @@ async function startServer() {
       const contactPhoneDigits = rawContactPhone.length > 10 ? rawContactPhone.slice(-10) : rawContactPhone;
 
       // ── Step 6: Verify property exists ──
-      const { properties, contacts, contactPhones, notes } = await import("../../drizzle/schema");
+      const { properties, contacts, notes } = await import("../../drizzle/schema");
       const { eq } = await import("drizzle-orm");
 
       const property = await database
@@ -774,9 +773,9 @@ async function startServer() {
         try {
           const { like } = await import("drizzle-orm");
           const phoneRows = await database
-            .select({ id: contactPhones.id, contactId: contactPhones.contactId, phoneNumber: contactPhones.phoneNumber })
-            .from(contactPhones)
-            .where(like(contactPhones.phoneNumber, `%${contactPhoneDigits}%`))
+            .select({ id: contacts.id, contactId: contacts.id, phoneNumber: contacts.phoneNumber })
+            .from(contacts)
+            .where(like(contacts.phoneNumber, `%${contactPhoneDigits}%`))
             .limit(5);
           if (phoneRows.length > 0) {
             matchedPhoneId = phoneRows[0].id;

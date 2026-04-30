@@ -1,9 +1,7 @@
 import { getDb } from "./db";
 import { 
-  properties, 
-  contacts, 
-  contactPhones, 
-  contactEmails,
+  properties,
+  contacts,
   notes,
   tasks,
   photos,
@@ -89,22 +87,16 @@ export async function mergeLeads(
     // Phones are already transferred when contacts are transferred
     // Just count them for reporting
     for (const contact of secondaryContacts) {
-      const phones = await tx
-        .select()
-        .from(contactPhones)
-        .where(eq(contactPhones.contactId, contact.id));
-      itemsMerged.phones += phones.length;
+      // New model: phone is on contacts row directly, count if phoneNumber exists
+      if (contact.phoneNumber) itemsMerged.phones += 1;
     }
 
     // 3. Transfer contact emails (linked via contacts)
     // Emails are already transferred when contacts are transferred
     // Just count them for reporting
     for (const contact of secondaryContacts) {
-      const emails = await tx
-        .select()
-        .from(contactEmails)
-        .where(eq(contactEmails.contactId, contact.id));
-      itemsMerged.emails += emails.length;
+      // New model: email is on contacts row directly, count if email exists
+      if (contact.email) itemsMerged.emails += 1;
     }
 
     // 4. Transfer notes
