@@ -1507,6 +1507,8 @@ export const smsMessages = mysqlTable("smsMessages", {
   errorMessage: text("errorMessage"),
   // Read tracking: 0 = unread (inbound only), 1 = read
   isRead: int("isRead").default(1).notNull(), // outbound defaults to read; inbound set to 0 on arrival
+  // Desk routing (for inbound SMS, set from property's deskName)
+  deskName: varchar("deskName", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

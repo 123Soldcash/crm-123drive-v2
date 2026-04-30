@@ -3627,3 +3627,13 @@
 - [x] Second useEffect applies desk when property/desks data loads after dialog opens
 - [x] Removed confusing 'Default: deskName' label below the Assigned To selector
 - [x] TypeScript 0 errors
+
+## Phone Number Identification Fix
+- [x] Audit all phone lookup paths (search, inbound SMS, inbound call)
+- [x] Fix property search: MySQL REPLACE() strips formatting from stored numbers before LIKE comparison
+- [x] Created shared utility server/utils/phoneToPropertyLookup.ts — single source of truth for phone→property lookup
+- [x] buildPhoneVariants() generates all variants: E.164, 10-digit, 11-digit, formatted (xxx) xxx-xxxx
+- [x] Inbound SMS handler now uses shared utility to set propertyId and deskName on every inbound message
+- [x] Added deskName column to smsMessages table (schema migrated)
+- [x] 12/12 phone identification tests passing, TypeScript 0 errors
+- [x] Checkpoint and deliver

@@ -1,0 +1,1 @@
+ALTER TABLE `smsMessages` ADD `deskName` varchar(100);

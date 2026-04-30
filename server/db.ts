@@ -257,12 +257,27 @@ export async function getProperties(filters?: {
       .from(contacts)
       .where(like(contacts.name, searchTerm));
     
-    // Search in contactPhones table
-    const phoneMatches = await db
+    // Search in contactPhones table — normalize stored numbers by stripping formatting
+    // Stored numbers may be formatted like "(904) 413-3291" but user searches "9044133291"
+    const rawSearch = filters.search.replace(/\D/g, ""); // digits only from user input
+    const phoneSearchTerm = rawSearch.length >= 7 ? rawSearch : null;
+    const phoneMatches = phoneSearchTerm ? await db
       .select({ propertyId: contacts.propertyId })
       .from(contactPhones)
       .leftJoin(contacts, eq(contactPhones.contactId, contacts.id))
-      .where(and(like(contactPhones.phoneNumber, searchTerm), isNotNull(contacts.propertyId)));
+      .where(and(
+        sql`REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${contactPhones.phoneNumber}, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ${'%' + phoneSearchTerm + '%'}`,
+        isNotNull(contacts.propertyId)
+      )) : [];
+
+    // Also search contacts.phoneNumber directly (new model)
+    const directPhoneMatches = phoneSearchTerm ? await db
+      .select({ propertyId: contacts.propertyId })
+      .from(contacts)
+      .where(and(
+        sql`REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${contacts.phoneNumber}, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ${'%' + phoneSearchTerm + '%'}`,
+        isNotNull(contacts.propertyId)
+      )) : [];
       
     // Search in contactEmails table
     const emailMatches = await db
@@ -275,11 +290,13 @@ export async function getProperties(filters?: {
     const propertyIdsFromProperties = propertyMatches.map(p => p.id);
     const propertyIdsFromContacts = contactMatches.map(c => c.propertyId);
     const propertyIdsFromPhones = phoneMatches.map(p => p.propertyId);
+    const propertyIdsFromDirectPhones = directPhoneMatches.map(p => p.propertyId);
     const propertyIdsFromEmails = emailMatches.map(e => e.propertyId);
     const searchPropertyIds = Array.from(new Set([
       ...propertyIdsFromProperties, 
       ...propertyIdsFromContacts,
       ...propertyIdsFromPhones,
+      ...propertyIdsFromDirectPhones,
       ...propertyIdsFromEmails
     ]));
     

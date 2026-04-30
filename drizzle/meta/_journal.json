@@ -428,6 +428,13 @@
       "when": 1777497336294,
       "tag": "0060_lush_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "5",
+      "when": 1777507254395,
+      "tag": "0061_confused_karen_page",
+      "breakpoints": true
     }
   ]
 }

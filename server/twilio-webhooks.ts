@@ -590,6 +590,27 @@ export function registerTwilioWebhooks(app: Express) {
             return;
           }
         }
+        // Look up property for this inbound SMS using the shared utility
+        const { lookupPropertyIdsByPhone } = await import("./utils/phoneToPropertyLookup");
+        const smsPropertyIds = await lookupPropertyIdsByPhone(from);
+        const smsPropertyId = smsPropertyIds.length > 0 ? smsPropertyIds[0] : null;
+        if (smsPropertyId) {
+          console.log(`[Twilio SMS Inbound] Linked to property ${smsPropertyId} for ${from}`);
+        } else {
+          console.log(`[Twilio SMS Inbound] No property found for ${from}`);
+        }
+
+        // Determine desk name from property
+        let smsDeskName: string | null = null;
+        if (smsPropertyId) {
+          try {
+            const { properties } = await import("../drizzle/schema");
+            const { eq: eqDesk } = await import("drizzle-orm");
+            const propRow = await database.select({ deskName: properties.deskName }).from(properties).where(eqDesk(properties.id, smsPropertyId)).limit(1);
+            smsDeskName = propRow[0]?.deskName ?? null;
+          } catch { /* ignore */ }
+        }
+
         await database.insert(smsMessages).values({
           contactPhone: from,
           twilioPhone: to,
@@ -598,8 +619,10 @@ export function registerTwilioWebhooks(app: Express) {
           twilioSid: messageSid || undefined,
           status: "received",
           isRead: 0, // Mark as unread until an agent opens the conversation
+          propertyId: smsPropertyId ?? undefined,
+          deskName: smsDeskName ?? undefined,
         });
-        console.log("[Twilio SMS Inbound] Saved inbound message from", from);
+        console.log("[Twilio SMS Inbound] Saved inbound message from", from, "property:", smsPropertyId ?? "none");
       }
       // Return empty TwiML so Twilio doesn't auto-reply
       res.set("Content-Type", "text/xml");
