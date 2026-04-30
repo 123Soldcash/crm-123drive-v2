@@ -41,9 +41,13 @@ export function buildPhoneVariants(phone: string): string[] {
 
 /**
  * Look up all property IDs associated with a given phone number.
+ * Strategy:
+ *   1. Search contactPhones table (legacy model)
+ *   2. Search contacts.phoneNumber (new model)
+ *   3. FALLBACK: Search smsMessages history for prior outbound SMS to same contactPhone
+ *      that already has a propertyId (handles replies on different Twilio numbers)
  * Returns an empty array if nothing is found or if DB is unavailable.
  */
-/** Returns { propertyId, deskName } for each matched property. */
 export async function lookupPropertiesByPhone(phone: string): Promise<{ propertyId: number; deskName: string | null }[]> {
   if (!phone || phone === "undefined" || phone.startsWith("client:")) {
     return [];
@@ -89,6 +93,31 @@ export async function lookupPropertiesByPhone(phone: string): Promise<{ property
         if (r.propertyId != null && r.propertyId > 0) allPropertyIds.add(r.propertyId);
       }
     }
+    // ── MODEL 3: Conversation history fallback ──────────────────────────────
+    // If no contact match found, look for prior SMS to/from this number that
+    // already has a propertyId. This handles cases where the contact replies
+    // on a different Twilio number than the outbound was sent from.
+    if (allPropertyIds.size === 0) {
+      const { smsMessages } = await import("../../drizzle/schema");
+      const { isNotNull, or } = await import("drizzle-orm");
+      for (const variant of variants) {
+        const historyRows = await database
+          .select({ propertyId: smsMessages.propertyId })
+          .from(smsMessages)
+          .where(
+            and(
+              eq(smsMessages.contactPhone, variant),
+              isNotNull(smsMessages.propertyId)
+            )
+          )
+          .limit(5);
+        for (const r of historyRows) {
+          if (r.propertyId != null && r.propertyId > 0) allPropertyIds.add(r.propertyId);
+        }
+        if (allPropertyIds.size > 0) break;
+      }
+    }
+
     if (allPropertyIds.size === 0) return [];
     // Fetch deskName for each matched property
     const propIds = Array.from(allPropertyIds);

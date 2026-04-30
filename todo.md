@@ -3646,3 +3646,10 @@
 - [x] Property search dialog opens when Re-link is clicked — search by address/phone/owner
 - [x] 12/12 phone identification tests passing, TypeScript 0 errors
 - [x] Checkpoint and deliver
+
+## Fix Inbound SMS Property Linking — Conversation History Fallback
+- [x] Added MODEL 3 fallback to lookupPropertiesByPhone: searches smsMessages history when contact lookup returns empty
+- [x] Handles case where contact replies on different Twilio number than outbound was sent from
+- [x] Ran retroactive fix: 74 SMS records updated across 29 phone numbers
+- [x] +19044133291 (Kenny Hill): all 7 unmatched inbound SMS now linked to property 3980039
+- [x] 12/12 tests passing, TypeScript 0 errors
