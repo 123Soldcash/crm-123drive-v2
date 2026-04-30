@@ -3637,3 +3637,12 @@
 - [x] Added deskName column to smsMessages table (schema migrated)
 - [x] 12/12 phone identification tests passing, TypeScript 0 errors
 - [x] Checkpoint and deliver
+
+## Retroactive SMS Re-link + Re-link Button in Communications
+- [x] Added backend endpoint: retroactiveRelink — links all unmatched SMS (propertyId IS NULL) to properties using phone lookup
+- [x] Added backend endpoint: relinkSingle — manually links a single SMS to a chosen property
+- [x] Added "Re-link All SMS" button in Communications header (admin only, amber color, DatabaseZap icon)
+- [x] Added Link2 icon button in Actions column for SMS records with "No property"
+- [x] Property search dialog opens when Re-link is clicked — search by address/phone/owner
+- [x] 12/12 phone identification tests passing, TypeScript 0 errors
+- [x] Checkpoint and deliver

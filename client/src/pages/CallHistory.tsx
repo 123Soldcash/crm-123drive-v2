@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { openDialer } from "@/lib/dialerEvents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   PhoneIncoming,
   PhoneOutgoing,
   Phone,
@@ -52,6 +60,9 @@ import {
   ShieldAlert,
   Store,
   HelpCircle,
+  Link2,
+  Loader2,
+  DatabaseZap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -185,6 +196,7 @@ function getSmsStatusBadge(status: string | null) {
 
 export default function CallHistory() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [commType, setCommType] = useState<CommType>("all");
   const [direction, setDirection] = useState<"all" | "Inbound" | "Outbound">("all");
   const [search, setSearch] = useState("");
@@ -193,6 +205,13 @@ export default function CallHistory() {
   const [statusFilter, setStatusFilter] = useState<"unread_sms" | "needs_callback" | "all">("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  // Re-link state
+  const [relinkDialogOpen, setRelinkDialogOpen] = useState(false);
+  const [relinkTargetSmsId, setRelinkTargetSmsId] = useState<number | null>(null);
+  const [relinkSearch, setRelinkSearch] = useState("");
+  const [relinkDebouncedSearch, setRelinkDebouncedSearch] = useState("");
+  const [relinkTimer, setRelinkTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch all Twilio numbers for the filter dropdown
   const { data: twilioNumbers } = trpc.callHistory.getTwilioNumbers.useQuery();
@@ -229,6 +248,49 @@ export default function CallHistory() {
       utils.sms.unreadCount.invalidate();
     },
   });
+
+  // Retroactive re-link mutation (admin only)
+  const retroactiveRelink = trpc.sms.retroactiveRelink.useMutation({
+    onSuccess: (result) => {
+      refetch();
+      toast.success(`Re-linked ${result.updated} SMS records`, {
+        description: `${result.skipped} could not be matched (no contact found)`,
+      });
+    },
+    onError: (err) => {
+      toast.error("Re-link failed", { description: err.message });
+    },
+  });
+
+  // Single SMS re-link mutation
+  const relinkSingle = trpc.sms.relinkSingle.useMutation({
+    onSuccess: (result) => {
+      refetch();
+      setRelinkDialogOpen(false);
+      setRelinkTargetSmsId(null);
+      setRelinkSearch("");
+      setRelinkDebouncedSearch("");
+      toast.success("SMS linked to property", {
+        description: result.deskName ? `Desk: ${result.deskName}` : undefined,
+      });
+    },
+    onError: (err) => {
+      toast.error("Re-link failed", { description: err.message });
+    },
+  });
+
+  // Property search for re-link dialog
+  const { data: relinkSearchResults } = trpc.properties.search.useQuery(
+    { query: relinkDebouncedSearch },
+    { enabled: relinkDebouncedSearch.length >= 2 }
+  );
+
+  const handleRelinkSearchChange = (val: string) => {
+    setRelinkSearch(val);
+    if (relinkTimer) clearTimeout(relinkTimer);
+    const t = setTimeout(() => setRelinkDebouncedSearch(val), 400);
+    setRelinkTimer(t);
+  };
 
   const markSmsRead = trpc.callHistory.markSingleSmsRead.useMutation({
     onSuccess: (_, variables) => {
@@ -308,10 +370,32 @@ export default function CallHistory() {
             All calls and SMS messages in one place, sorted by date
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {user?.role === "admin" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm("This will retroactively link all unmatched SMS messages to their properties. This may take a moment. Continue?")) {
+                  retroactiveRelink.mutate();
+                }
+              }}
+              disabled={retroactiveRelink.isPending}
+              className="gap-2 text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
+              {retroactiveRelink.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <DatabaseZap className="h-4 w-4" />
+              )}
+              Re-link All SMS
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -819,6 +903,28 @@ export default function CallHistory() {
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
                               </Button>
+                            ) : rec.type === "sms" ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                    onClick={() => {
+                                      setRelinkTargetSmsId(rec.id);
+                                      setRelinkSearch("");
+                                      setRelinkDebouncedSearch("");
+                                      setRelinkDialogOpen(true);
+                                    }}
+                                    title="Link to Property"
+                                  >
+                                    <Link2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="text-xs">Link to a property</p>
+                                </TooltipContent>
+                              </Tooltip>
                             ) : null}
                           </div>
                         </TableCell>
@@ -831,6 +937,65 @@ export default function CallHistory() {
           )}
         </CardContent>
       </Card>
+
+      {/* Re-link to Property Dialog */}
+      <Dialog open={relinkDialogOpen} onOpenChange={(open) => {
+        setRelinkDialogOpen(open);
+        if (!open) { setRelinkTargetSmsId(null); setRelinkSearch(""); setRelinkDebouncedSearch(""); }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-amber-600" />
+              Link SMS to Property
+            </DialogTitle>
+            <DialogDescription>
+              Search for the property to link this SMS message to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by address, phone, or owner..."
+                value={relinkSearch}
+                onChange={(e) => handleRelinkSearchChange(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            {relinkDebouncedSearch.length >= 2 && (
+              <div className="max-h-64 overflow-y-auto space-y-1 border rounded-lg p-1">
+                {!relinkSearchResults || relinkSearchResults.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No properties found</p>
+                ) : (
+                  relinkSearchResults.map((prop: any) => (
+                    <button
+                      key={prop.id}
+                      className="w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors"
+                      onClick={() => {
+                        if (relinkTargetSmsId) {
+                          relinkSingle.mutate({ smsId: relinkTargetSmsId, propertyId: prop.id });
+                        }
+                      }}
+                      disabled={relinkSingle.isPending}
+                    >
+                      <div className="font-medium text-sm">{prop.address || prop.addressLine1}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {[prop.city, prop.state].filter(Boolean).join(", ")}
+                        {prop.deskName && <span className="ml-2 text-indigo-600">· {prop.deskName}</span>}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+            {relinkDebouncedSearch.length < 2 && (
+              <p className="text-xs text-muted-foreground text-center py-2">Type at least 2 characters to search</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

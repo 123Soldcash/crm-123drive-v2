@@ -5168,10 +5168,79 @@ export const appRouter = router({
           .update(smsTable)
           .set({ isRead: 1 })
           .where(andFn(eqFn(smsTable.contactPhone, normalized), eqFn(smsTable.direction, "inbound"), eqFn(smsTable.isRead, 0)));
-        return { success: true };
+         return { success: true };
+      }),
+
+    /**
+     * Retroactively link all unmatched SMS (propertyId IS NULL) to properties.
+     * Runs the shared phone→property lookup for every unlinked message.
+     */
+    retroactiveRelink: adminProcedure
+      .mutation(async () => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const { isNull: isNullFn } = await import("drizzle-orm");
+        const { lookupPropertiesByPhone } = await import("./utils/phoneToPropertyLookup");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+
+        // Fetch all SMS with no property linked
+        const unlinked = await database
+          .select({ id: smsTable.id, contactPhone: smsTable.contactPhone })
+          .from(smsTable)
+          .where(isNullFn(smsTable.propertyId));
+
+        let updated = 0;
+        let skipped = 0;
+
+        for (const msg of unlinked) {
+          if (!msg.contactPhone) { skipped++; continue; }
+          try {
+            const matches = await lookupPropertiesByPhone(msg.contactPhone);
+            if (matches.length === 0) { skipped++; continue; }
+            const { propertyId, deskName } = matches[0];
+            await database
+              .update(smsTable)
+              .set({ propertyId, deskName: deskName ?? null })
+              .where(eq(smsTable.id, msg.id));
+            updated++;
+          } catch {
+            skipped++;
+          }
+        }
+
+        return { total: unlinked.length, updated, skipped };
+      }),
+
+    /**
+     * Manually re-link a single SMS message to a specific property.
+     */
+    relinkSingle: protectedProcedure
+      .input(z.object({
+        smsId: z.number(),
+        propertyId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { smsMessages: smsTable } = await import("../drizzle/schema");
+        const database = await getDb();
+        if (!database) throw new Error("Database not available");
+
+        // Get the property's deskName
+        const prop = await database
+          .select({ deskName: properties.deskName })
+          .from(properties)
+          .where(eq(properties.id, input.propertyId))
+          .limit(1);
+
+        const deskName = prop[0]?.deskName ?? null;
+
+        await database
+          .update(smsTable)
+          .set({ propertyId: input.propertyId, deskName })
+          .where(eq(smsTable.id, input.smsId));
+
+        return { success: true, propertyId: input.propertyId, deskName };
       }),
   }),
-
   /**
    * SMS Templates — CRUD for reusable follow-up message templates.
    */

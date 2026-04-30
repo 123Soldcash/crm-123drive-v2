@@ -43,6 +43,66 @@ export function buildPhoneVariants(phone: string): string[] {
  * Look up all property IDs associated with a given phone number.
  * Returns an empty array if nothing is found or if DB is unavailable.
  */
+/** Returns { propertyId, deskName } for each matched property. */
+export async function lookupPropertiesByPhone(phone: string): Promise<{ propertyId: number; deskName: string | null }[]> {
+  if (!phone || phone === "undefined" || phone.startsWith("client:")) {
+    return [];
+  }
+  try {
+    const { getDb } = await import("../db");
+    const { contacts, contactPhones, properties: propertiesTable } = await import("../../drizzle/schema");
+    const database = await getDb();
+    if (!database) return [];
+    const variants = buildPhoneVariants(phone);
+    const allPropertyIds = new Set<number>();
+    // ── MODEL 1: contactPhones table (legacy) ────────────────────────────────
+    const matchingPhones: { contactId: number }[] = [];
+    for (const variant of variants) {
+      const rows = await database
+        .select({ contactId: contactPhones.contactId })
+        .from(contactPhones)
+        .where(eq(contactPhones.phoneNumber, variant));
+      matchingPhones.push(...rows);
+    }
+    const uniqueContactIds = Array.from(new Set(matchingPhones.map(r => r.contactId)));
+    if (uniqueContactIds.length > 0) {
+      const contactRows = await database
+        .select({ propertyId: contacts.propertyId })
+        .from(contacts)
+        .where(inArray(contacts.id, uniqueContactIds));
+      for (const c of contactRows) {
+        if (c.propertyId != null && c.propertyId > 0) allPropertyIds.add(c.propertyId);
+      }
+    }
+    // ── MODEL 2: contacts.phoneNumber directly (new model) ───────────────────
+    for (const variant of variants) {
+      const rows = await database
+        .select({ propertyId: contacts.propertyId })
+        .from(contacts)
+        .where(
+          and(
+            eq(contacts.phoneNumber, variant),
+            eq(contacts.contactType, "phone")
+          )
+        );
+      for (const r of rows) {
+        if (r.propertyId != null && r.propertyId > 0) allPropertyIds.add(r.propertyId);
+      }
+    }
+    if (allPropertyIds.size === 0) return [];
+    // Fetch deskName for each matched property
+    const propIds = Array.from(allPropertyIds);
+    const propRows = await database
+      .select({ id: propertiesTable.id, deskName: propertiesTable.deskName })
+      .from(propertiesTable)
+      .where(inArray(propertiesTable.id, propIds));
+    return propRows.map(r => ({ propertyId: r.id, deskName: r.deskName ?? null }));
+  } catch (err) {
+    console.error("[phoneToPropertyLookup] lookupPropertiesByPhone error:", err);
+    return [];
+  }
+}
+
 export async function lookupPropertyIdsByPhone(phone: string): Promise<number[]> {
   if (!phone || phone === "undefined" || phone.startsWith("client:")) {
     return [];
