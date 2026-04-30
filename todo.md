@@ -3653,3 +3653,9 @@
 - [x] Ran retroactive fix: 74 SMS records updated across 29 phone numbers
 - [x] +19044133291 (Kenny Hill): all 7 unmatched inbound SMS now linked to property 3980039
 - [x] 12/12 tests passing, TypeScript 0 errors
+## Fix TrestleIQ "Phone record not found" — Dual Model Support
+- [x] Root cause: contacts-simple.ts returns phone.id = contact.id (new model), but trestleiq.lookupPhone only searched contactPhones table (legacy model)
+- [x] Fix: trestleiq.ts now tries contactPhones first, falls back to contacts table if not found
+- [x] Fix applies to both lookupPhone (single) and bulkLookup mutations
+- [x] Shared helper findPhoneRecord() and saveTrestleResult() handle both models cleanly
+- [x] TypeScript: 0 errors. Pre-existing test failures unchanged (31 failed before and after fix)
