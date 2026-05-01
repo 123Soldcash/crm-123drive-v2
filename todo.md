@@ -3690,3 +3690,8 @@
 - [x] Frontend: DripCampaignSection component with launch dialog, step viewer, cancel button
 - [x] Frontend: Integrated into PropertyDetail page
 - [x] TypeScript: 0 errors
+
+## Fix: Phone Search Filter (Properties Page)
+- [x] Root cause: minimum digit threshold was 7, blocking 4-digit suffix searches like "5575"
+- [x] Fix: reduced minimum from 7 to 4 digits in server/db.ts
+- [x] Validated: searching "5575" now correctly returns all matching properties

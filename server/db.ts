@@ -259,7 +259,7 @@ export async function getProperties(filters?: {
     
     // Search contacts.phoneNumber directly (new model)
     const rawSearch = filters.search.replace(/\D/g, ""); // digits only from user input
-    const phoneSearchTerm = rawSearch.length >= 7 ? rawSearch : null;
+    const phoneSearchTerm = rawSearch.length >= 4 ? rawSearch : null; // allow suffix search (e.g. last 4 digits)
     const phoneMatches: any[] = []; // legacy table removed
 
     const directPhoneMatches = phoneSearchTerm ? await db
