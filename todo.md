@@ -3671,3 +3671,22 @@
 - [x] TypeScript: 0 erros após consolidação
 - [x] Testes: sem regressões (118 falhas pré-existentes, igual antes da migração)
 - [x] Salvar checkpoint final
+
+## Fix DealMachine URL Names in Contacts
+- [x] Identified 7,044 contacts with DealMachine URLs as names
+- [x] Updated all 7,044 contacts with real names from property owner1Name
+- [x] Parsed firstName/lastName from owner1Name
+- [x] Verified: 0 contacts remaining with URL names
+
+## Drip Campaigns System
+- [x] Analyze 3 Excel files (First Contact, Offer Follow-Up, NI/CR)
+- [x] Create database schema (dripCampaigns, dripCampaignSteps, propertyDripCampaigns, propertyDripSteps)
+- [x] Seed 4 campaign templates with all steps from Excel data
+- [x] Backend: tRPC procedures (listTemplates, launch, getByProperty, getCampaignSteps, cancel, listActive)
+- [x] Backend: Drip executor with Twilio SMS integration
+- [x] Backend: Auto-cancel on inbound SMS
+- [x] Backend: Auto-cancel on inbound call
+- [x] Backend: Scheduled endpoint /api/scheduled/drip-execute
+- [x] Frontend: DripCampaignSection component with launch dialog, step viewer, cancel button
+- [x] Frontend: Integrated into PropertyDetail page
+- [x] TypeScript: 0 errors

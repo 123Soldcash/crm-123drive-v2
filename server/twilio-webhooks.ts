@@ -340,6 +340,16 @@ export function registerTwilioWebhooks(app: Express) {
                 if (result[0]?.affectedRows > 0) updatedCount++;
               }
               console.log(`[Twilio Voice] Default Caller ID: found ${propIdArray.length} property(ies) for caller ${from}, updated ${updatedCount} (skipped ${propIdArray.length - updatedCount} already set)`);
+
+              // Auto-cancel drip campaigns when lead calls back
+              for (const propId of propIdArray) {
+                try {
+                  const { cancelDripCampaignsForProperty } = await import("./drip-executor");
+                  await cancelDripCampaignsForProperty(propId);
+                } catch (dripErr) {
+                  console.error("[Drip] Auto-cancel on inbound call failed:", dripErr);
+                }
+              }
             }
           }
         } catch (primaryError) {
@@ -605,6 +615,16 @@ export function registerTwilioWebhooks(app: Express) {
           deskName: smsDeskName ?? undefined,
         });
         console.log("[Twilio SMS Inbound] Saved inbound message from", from, "property:", smsPropertyId ?? "none");
+
+        // Auto-cancel drip campaigns when lead responds
+        if (smsPropertyId) {
+          try {
+            const { cancelDripCampaignsForProperty } = await import("./drip-executor");
+            await cancelDripCampaignsForProperty(smsPropertyId);
+          } catch (dripErr) {
+            console.error("[Drip] Auto-cancel on SMS inbound failed:", dripErr);
+          }
+        }
       }
       // Return empty TwiML so Twilio doesn't auto-reply
       res.set("Content-Type", "text/xml");

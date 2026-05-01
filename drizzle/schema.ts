@@ -1777,3 +1777,86 @@ export const voicemails = mysqlTable("voicemails", {
 });
 export type Voicemail = typeof voicemails.$inferSelect;
 export type InsertVoicemail = typeof voicemails.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DRIP CAMPAIGNS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Drip campaign templates - the predefined campaign sequences.
+ * Each row is a campaign type (First Contact, Offer Follow-Up, Not Interested, Can't Reach).
+ */
+export const dripCampaignTemplates = mysqlTable("dripCampaignTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 50 }).notNull().unique(), // e.g. "first_contact"
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  totalSteps: int("totalSteps").notNull(),
+  totalDays: int("totalDays").notNull(), // max day in the sequence
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type DripCampaignTemplate = typeof dripCampaignTemplates.$inferSelect;
+export type InsertDripCampaignTemplate = typeof dripCampaignTemplates.$inferInsert;
+
+/**
+ * Steps within a drip campaign template.
+ * Each step defines: when to fire (day offset), channel, message body, etc.
+ */
+export const dripCampaignTemplateSteps = mysqlTable("dripCampaignTemplateSteps", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(), // FK → dripCampaignTemplates.id
+  sortOrder: int("sortOrder").notNull(),
+  templateName: varchar("templateName", { length: 255 }),
+  channel: mysqlEnum("channel", ["SMS Only", "Email Only", "SMS + Email"]).notNull(),
+  category: varchar("category", { length: 100 }),
+  emailSubject: text("emailSubject"),
+  messageBody: text("messageBody").notNull(),
+  phase: varchar("phase", { length: 50 }),
+  dayOffset: int("dayOffset").notNull(), // days after campaign start
+  timeOfDay: varchar("timeOfDay", { length: 10 }), // "AM", "PM", or null
+});
+export type DripCampaignTemplateStep = typeof dripCampaignTemplateSteps.$inferSelect;
+export type InsertDripCampaignTemplateStep = typeof dripCampaignTemplateSteps.$inferInsert;
+
+/**
+ * Active drip campaigns assigned to properties.
+ * When a user launches a drip campaign on a property, a row is created here.
+ */
+export const propertyDripCampaigns = mysqlTable("propertyDripCampaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  templateId: int("templateId").notNull(), // FK → dripCampaignTemplates.id
+  status: mysqlEnum("status", ["active", "completed", "cancelled"]).default("active").notNull(),
+  currentStepOrder: int("currentStepOrder").default(0).notNull(), // last completed step sortOrder
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  cancelledAt: timestamp("cancelledAt"),
+  cancelReason: varchar("cancelReason", { length: 255 }), // "manual", "inbound_contact", etc.
+  completedAt: timestamp("completedAt"),
+  launchedByUserId: int("launchedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PropertyDripCampaign = typeof propertyDripCampaigns.$inferSelect;
+export type InsertPropertyDripCampaign = typeof propertyDripCampaigns.$inferInsert;
+
+/**
+ * Execution log for each step of an active drip campaign on a property.
+ * Tracks which steps have been executed, skipped, or are pending.
+ */
+export const propertyDripSteps = mysqlTable("propertyDripSteps", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(), // FK → propertyDripCampaigns.id
+  stepId: int("stepId").notNull(), // FK → dripCampaignTemplateSteps.id
+  sortOrder: int("sortOrder").notNull(),
+  status: mysqlEnum("status", ["pending", "executed", "skipped", "cancelled"]).default("pending").notNull(),
+  scheduledFor: timestamp("scheduledFor").notNull(), // when this step should fire
+  executedAt: timestamp("executedAt"),
+  channel: mysqlEnum("channel", ["SMS Only", "Email Only", "SMS + Email"]).notNull(),
+  messageBody: text("messageBody"), // resolved message (with variables replaced)
+  emailSubject: text("emailSubject"),
+  phase: varchar("phase", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PropertyDripStep = typeof propertyDripSteps.$inferSelect;
+export type InsertPropertyDripStep = typeof propertyDripSteps.$inferInsert;

@@ -435,6 +435,13 @@
       "when": 1777507254395,
       "tag": "0061_confused_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "5",
+      "when": 1777661387557,
+      "tag": "0062_careful_komodo",
+      "breakpoints": true
     }
   ]
 }

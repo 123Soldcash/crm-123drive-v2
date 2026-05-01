@@ -43,6 +43,7 @@ import { LeadSummary } from "@/components/LeadSummary";
 import { PropertyTasks } from "@/components/PropertyTasks";
 import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { AutomatedFollowUps } from "@/components/AutomatedFollowUps";
+import { DripCampaignSection } from "@/components/DripCampaignSection";
 import { PropertyTagsManager } from "@/components/PropertyTagsManager";
 import { LeadSourceSelector } from "@/components/LeadSourceSelector";
 import { CampaignNameSelector } from "@/components/CampaignNameSelector";
@@ -508,6 +509,9 @@ export default function PropertyDetail() {
         <PropertyTasks propertyId={propertyId} />
         <AutomatedFollowUps propertyId={propertyId} />
       </div>
+      
+      {/* Drip Campaigns */}
+      <DripCampaignSection propertyId={propertyId} />
       
       {/* === SECTION ORDER: 1. General Notes, 2. Comparables, 3. Deep Search, 4. Field Visit, 5. Photos, 6. Activity Timeline, 7. Buyers === */}
 

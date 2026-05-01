@@ -34,6 +34,7 @@ import { taxUrlsRouter } from "./routers/tax-urls";
 import { notificationsRouter } from "./routers/notifications";
 import { integrationsRouter } from "./routers/integrations";
 import { trestleiqRouter } from "./routers/trestleiq";
+import { dripCampaignsRouter } from "./routers/drip-campaigns";
 
 // ─── Helper: format offer data into a readable General Note ──────────
 function formatOfferNote(offer: {
@@ -125,6 +126,7 @@ export const appRouter = router({
   notifications: notificationsRouter,
   integrations: integrationsRouter,
   trestleiq: trestleiqRouter,
+  dripCampaigns: dripCampaignsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

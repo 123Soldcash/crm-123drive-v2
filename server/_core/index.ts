@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerTwilioWebhooks } from "../twilio-webhooks";
+import { registerDripScheduledEndpoint } from "../drip-executor";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { sql } from "drizzle-orm";
@@ -97,6 +98,8 @@ async function startServer() {
   // Do NOT use /api/oauth/twilio/* — the platform only forwards the exact
   // /api/oauth/callback path, not nested paths under /api/oauth/.
   registerTwilioWebhooks(app);
+  // Drip campaign scheduled execution endpoint
+  registerDripScheduledEndpoint(app);
 
   // ─── Zapier 2-Step Webhook ──────────────────────────────────────────────
   // Uses /api/oauth/ prefix because the Manus deployment platform only
