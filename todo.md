@@ -3699,3 +3699,9 @@
 ## Fix: Include TBD leads in default Properties list
 - [x] Update db.ts default filter to include leadTemperature = TBD (6,179 TBD leads now visible)
 - [x] Verify TypeScript: 0 errors
+
+## Fix: Search finds DEAD leads by address/phone/name
+- [x] Updated db.ts: when search term is active, skip the DEAD exclusion filter
+- [x] DEAD leads are now findable by address, phone, name, or email search
+- [x] Default list (no search) still hides DEAD leads as expected
+- [x] TypeScript: 0 errors
