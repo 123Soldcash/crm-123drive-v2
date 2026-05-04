@@ -3705,3 +3705,10 @@
 - [x] DEAD leads are now findable by address, phone, name, or email search
 - [x] Default list (no search) still hides DEAD leads as expected
 - [x] TypeScript: 0 errors
+
+## Fix: Property ID filter (#) now finds DEAD leads
+- [x] Updated db.ts: DEAD exclusion filter is skipped when propertyIdFilter is active
+- [x] Searching by # (Property ID) now returns the property regardless of deskStatus
+- [x] Database audit: no duplicate tables found, only 1 properties table
+- [x] Legacy tables (contactPhones, contactEmails, contactAddresses, contactSocialMedia) still exist physically but are unused by code
+- [x] TypeScript: 0 errors

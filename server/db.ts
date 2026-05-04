@@ -222,12 +222,12 @@ export async function getProperties(filters?: {
   } else if (filters?.deskName) {
     // When filtering by a specific desk, show all leads in that desk (including DEAD status ones)
     // but still exclude leadTemperature=DEAD unless explicitly requested
-    if (!filters?.search) {
+    if (!filters?.search && !filters?.propertyIdFilter) {
       conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
     }
-  } else if (!filters?.search) {
+  } else if (!filters?.search && !filters?.propertyIdFilter) {
     // By default, exclude DEAD leads — but include TBD (website leads / new leads not yet classified)
-    // When a search term is active, skip this filter so DEAD leads can be found by address/phone/name
+    // When a search term OR a direct ID filter is active, skip this so DEAD leads can be found
     conditions.push(or(
       sql`${properties.leadTemperature} != 'DEAD'`,
       sql`${properties.leadTemperature} IS NULL`,
