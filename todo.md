@@ -3695,3 +3695,7 @@
 - [x] Root cause: minimum digit threshold was 7, blocking 4-digit suffix searches like "5575"
 - [x] Fix: reduced minimum from 7 to 4 digits in server/db.ts
 - [x] Validated: searching "5575" now correctly returns all matching properties
+
+## Fix: Include TBD leads in default Properties list
+- [x] Update db.ts default filter to include leadTemperature = TBD (6,179 TBD leads now visible)
+- [x] Verify TypeScript: 0 errors

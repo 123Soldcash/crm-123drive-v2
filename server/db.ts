@@ -224,8 +224,12 @@ export async function getProperties(filters?: {
     // but still exclude leadTemperature=DEAD unless explicitly requested
     conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
   } else {
-    // By default, exclude DEAD leads — exclude both leadTemperature=DEAD and deskStatus=DEAD
-    conditions.push(sql`${properties.leadTemperature} != 'DEAD'`);
+    // By default, exclude DEAD leads — but include TBD (website leads / new leads not yet classified)
+    conditions.push(or(
+      sql`${properties.leadTemperature} != 'DEAD'`,
+      sql`${properties.leadTemperature} IS NULL`,
+      eq(properties.leadTemperature, 'TBD' as any)
+    ));
     conditions.push(ne(properties.deskStatus, 'DEAD'));
   }
   if (filters?.ownerVerified === true) {
