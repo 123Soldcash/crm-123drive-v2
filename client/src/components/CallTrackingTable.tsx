@@ -325,7 +325,7 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setDncCheckRunning(false);
       setDncCheckDone(true);
       if (result.error) {
-        // Don't show error toast for "not configured"
+        toast.error(`DNC Check failed: ${result.error}`);
       } else if (result.flagged > 0) {
         toast.warning(`DNC Check: ${result.flagged} of ${result.checked} numbers flagged as DNC`);
       } else if (result.checked > 0) {

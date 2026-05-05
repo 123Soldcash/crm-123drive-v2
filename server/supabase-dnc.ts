@@ -8,7 +8,7 @@
 
 import { getDb } from "./db";
 import { integrationSettings, contacts } from "../drizzle/schema";
-import { eq, inArray, isNotNull } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 /**
  * Get Supabase DNC config from integrationSettings table
@@ -51,6 +51,7 @@ function normalizePhone(phone: string): string {
 /**
  * Check a single phone number against Supabase DNC.
  * Returns true if the number IS on the DNC list.
+ * Throws a descriptive Error on connection failure or HTTP error.
  */
 async function checkSingleDNC(
   config: { supabaseUrl: string; supabaseAnonKey: string; rpcFunctionName: string },
@@ -59,9 +60,11 @@ async function checkSingleDNC(
   const normalized = normalizePhone(phoneNumber);
   if (!normalized || normalized.length < 7) return false;
 
+  const url = `${config.supabaseUrl}/rest/v1/rpc/${config.rpcFunctionName}`;
+
+  let response: Response;
   try {
-    const url = `${config.supabaseUrl}/rest/v1/rpc/${config.rpcFunctionName}`;
-    const response = await fetch(url, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         apikey: config.supabaseAnonKey,
@@ -70,19 +73,28 @@ async function checkSingleDNC(
       },
       body: JSON.stringify({ p_number: normalized }),
     });
+  } catch (err: any) {
+    // Network / connection error (DNS failure, timeout, refused connection, etc.)
+    const message = err?.message || String(err);
+    console.error(`[Supabase DNC] Connection error for ${normalized}:`, message);
+    throw new Error(`DNC connection error: ${message}`);
+  }
 
-    if (!response.ok) {
-      console.error(`[Supabase DNC] HTTP ${response.status} for ${normalized}`);
-      return false;
-    }
+  if (!response.ok) {
+    let body = "";
+    try { body = await response.text(); } catch {}
+    const detail = body ? ` — ${body.slice(0, 120)}` : "";
+    console.error(`[Supabase DNC] HTTP ${response.status} for ${normalized}${detail}`);
+    throw new Error(`DNC service returned HTTP ${response.status}${detail}`);
+  }
 
+  try {
     const data = await response.json();
     if (Array.isArray(data) && data.length > 0) return data[0] === true;
     if (typeof data === "boolean") return data;
     return false;
-  } catch (err) {
-    console.error(`[Supabase DNC] Error checking ${normalized}:`, err);
-    return false;
+  } catch (err: any) {
+    throw new Error(`DNC service returned invalid JSON: ${err?.message}`);
   }
 }
 
@@ -120,12 +132,26 @@ export async function checkDNCForPhones(
   const BATCH_SIZE = 10;
   for (let i = 0; i < phoneRecords.length; i += BATCH_SIZE) {
     const batch = phoneRecords.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.all(
-      batch.map(async (phone) => {
-        const isDNC = await checkSingleDNC(config, phone.phoneNumber);
-        return { phoneId: phone.id, phoneNumber: phone.phoneNumber, contactId: phone.contactId, isDNC };
-      })
-    );
+
+    let batchResults: Array<{ phoneId: number; phoneNumber: string; contactId: number; isDNC: boolean }>;
+    try {
+      batchResults = await Promise.all(
+        batch.map(async (phone) => {
+          const isDNC = await checkSingleDNC(config, phone.phoneNumber);
+          return { phoneId: phone.id, phoneNumber: phone.phoneNumber, contactId: phone.contactId, isDNC };
+        })
+      );
+    } catch (err: any) {
+      // Propagate the first connection/HTTP error encountered in this batch
+      const message = err?.message || "Unknown DNC check error";
+      console.error("[Supabase DNC] Batch error:", message);
+      return {
+        checked: i, // how many were processed before failure
+        flagged,
+        results,
+        error: message,
+      };
+    }
 
     for (const result of batchResults) {
       results.push({ phoneId: result.phoneId, phoneNumber: result.phoneNumber, isDNC: result.isDNC });

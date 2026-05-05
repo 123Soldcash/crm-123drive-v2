@@ -3712,3 +3712,10 @@
 - [x] Database audit: no duplicate tables found, only 1 properties table
 - [x] Legacy tables (contactPhones, contactEmails, contactAddresses, contactSocialMedia) still exist physically but are unused by code
 - [x] TypeScript: 0 errors
+
+## Fix: DNC Check Error Display
+- [x] Show toast error when Supabase DNC is not configured
+- [x] Show toast error when Supabase connection fails (HTTP error, network error)
+- [x] Show toast error when property not found during DNC check
+- [x] Improve backend error messages with more detail (HTTP status, URL, body)
+- [x] TypeScript: 0 errors
