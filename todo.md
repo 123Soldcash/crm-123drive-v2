@@ -3733,3 +3733,9 @@
 - [x] 32 existing tests passing (normalization, parsing, config, URL, batch, request format)
 - [x] 21 new tests added: HTTP 401/403/500 errors, network failures, invalid JSON, short/empty phone, bigint p_number format, batch error propagation, not-configured message
 - [x] Total: 53 tests passing (0 failures)
+
+## Fix: Restore DNC check summary banner in CallTrackingTable
+- [x] Banner was removed in a previous session (checkpoint 9e2a7a8) when DNC moved to inline column
+- [x] Restored banner above the phone table: shows "Running DNC check..." while in progress, then "DNC Checked: X of Y numbers flagged as DNC" or "DNC Checked: all X numbers are clean" after completion
+- [x] Error state also shown in red if DNC check fails
+- [x] TypeScript: 0 errors
