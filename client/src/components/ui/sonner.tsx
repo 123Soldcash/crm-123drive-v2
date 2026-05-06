@@ -6,7 +6,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="light"
       position="top-right"
       richColors
-      closeButton
+      duration={5000}
       offset={16}
       style={
         {
