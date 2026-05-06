@@ -3747,3 +3747,12 @@
 - [x] onSuccess + checked = 0, no error → toast.info("DNC Check: no phone numbers found")
 - [x] onError (tRPC-level: network, server crash, auth) → toast.error("DNC Check error: ...")
 - [x] TypeScript: 0 errors
+
+## Database Cleanup - Orphan Tables Removed (2026-05-06)
+- [x] Backup completo do banco de dados (61 tabelas, 3.57MB comprimido)
+- [x] Auditoria de tabelas orphans: contactPhones (15.164 rows), contactEmails (15.325 rows), contactSocialMedia (0 rows)
+- [x] Verificação de cobertura: 99.7% dos dados já estavam inline em contacts.phoneNumber/email
+- [x] DROP das 3 tabelas orphans no banco (61 → 58 tabelas)
+- [x] Remoção das definições das 3 tabelas do drizzle/schema.ts
+- [x] Limpeza de imports e testes legados referenciando as tabelas dropadas
+- [x] Testes: 31 falhas → 31 falhas (sem regressão introduzida pelo DROP)

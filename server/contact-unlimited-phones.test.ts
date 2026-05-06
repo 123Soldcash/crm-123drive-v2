@@ -422,38 +422,29 @@ describe("Zod Schema Validation - communication.updateContact", () => {
   });
 });
 
-describe("Backend updateContact - Phone/Email Sync", () => {
-  // Simulate the backend updateContact function logic
+describe("Backend updateContact - Phone/Email Sync (inline model)", () => {
+  // contactPhones and contactEmails tables were DROPPED (2026-05-06).
+  // Phone/email data is now stored inline on contacts.phoneNumber / contacts.email.
+  // The updateContact function updates the contacts row directly.
   function simulateUpdateContact(contactId: number, contactData: any) {
     const { phones, emails, addresses, ...updates } = contactData;
-
     const operations: string[] = [];
 
-    // Update base contact info
-    if (Object.keys(updates).length > 0) {
+    // Update base contact info (including inline phoneNumber/email)
+    const allUpdates = { ...updates };
+    if (phones && Array.isArray(phones) && phones.length > 0) {
+      allUpdates.phoneNumber = phones[0].phoneNumber;
+    }
+    if (emails && Array.isArray(emails) && emails.length > 0) {
+      allUpdates.email = emails[0].email;
+    }
+    if (Object.keys(allUpdates).length > 0) {
       operations.push(`UPDATE contacts SET ... WHERE id = ${contactId}`);
     }
-
-    // Sync phones (delete all, recreate)
-    if (phones && Array.isArray(phones)) {
-      operations.push(`DELETE FROM contactPhones WHERE contactId = ${contactId}`);
-      for (const phone of phones) {
-        operations.push(`INSERT INTO contactPhones (contactId, phoneNumber, phoneType) VALUES (${contactId}, '${phone.phoneNumber}', '${phone.phoneType || "Mobile"}')`);
-      }
-    }
-
-    // Sync emails (delete all, recreate)
-    if (emails && Array.isArray(emails)) {
-      operations.push(`DELETE FROM contactEmails WHERE contactId = ${contactId}`);
-      for (const email of emails) {
-        operations.push(`INSERT INTO contactEmails (contactId, email) VALUES (${contactId}, '${email.email}')`);
-      }
-    }
-
     return operations;
   }
 
-  it("should delete and recreate all phones when phones array is provided", () => {
+  it("should update contacts row when phones array is provided", () => {
     const ops = simulateUpdateContact(123, {
       name: "Test",
       phones: [
@@ -461,58 +452,35 @@ describe("Backend updateContact - Phone/Email Sync", () => {
         { phoneNumber: "222", phoneType: "Landline" },
       ],
     });
-    expect(ops).toContain("DELETE FROM contactPhones WHERE contactId = 123");
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactPhones"))).toHaveLength(2);
-  });
-
-  it("should delete and recreate all emails when emails array is provided", () => {
-    const ops = simulateUpdateContact(123, {
-      name: "Test",
-      emails: [
-        { email: "a@b.com" },
-        { email: "c@d.com" },
-        { email: "e@f.com" },
-      ],
-    });
-    expect(ops).toContain("DELETE FROM contactEmails WHERE contactId = 123");
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactEmails"))).toHaveLength(3);
-  });
-
-  it("should handle 5+ phones in sync operation", () => {
-    const phones = [];
-    for (let i = 0; i < 7; i++) {
-      phones.push({ phoneNumber: `555000${i}`, phoneType: "Mobile" });
-    }
-    const ops = simulateUpdateContact(123, { phones });
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactPhones"))).toHaveLength(7);
-  });
-
-  it("should handle empty phones array (delete all phones)", () => {
-    const ops = simulateUpdateContact(123, { phones: [] });
-    expect(ops).toContain("DELETE FROM contactPhones WHERE contactId = 123");
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactPhones"))).toHaveLength(0);
-  });
-
-  it("should not touch phones when phones is not provided", () => {
-    const ops = simulateUpdateContact(123, { name: "Test" });
+    expect(ops).toContain("UPDATE contacts SET ... WHERE id = 123");
+    // No contactPhones table operations
     expect(ops.filter(o => o.includes("contactPhones"))).toHaveLength(0);
   });
 
-  it("should not touch emails when emails is not provided", () => {
-    const ops = simulateUpdateContact(123, { name: "Test" });
+  it("should update contacts row when emails array is provided", () => {
+    const ops = simulateUpdateContact(123, {
+      name: "Test",
+      emails: [{ email: "a@b.com" }, { email: "c@d.com" }],
+    });
+    expect(ops).toContain("UPDATE contacts SET ... WHERE id = 123");
+    // No contactEmails table operations
     expect(ops.filter(o => o.includes("contactEmails"))).toHaveLength(0);
   });
 
-  it("should handle simultaneous phone and email sync", () => {
+  it("should not touch contacts when no fields are provided", () => {
+    const ops = simulateUpdateContact(123, {});
+    expect(ops).toHaveLength(0);
+  });
+
+  it("should handle simultaneous phone and email update", () => {
     const ops = simulateUpdateContact(123, {
       name: "Test",
-      phones: [{ phoneNumber: "111" }, { phoneNumber: "222" }],
+      phones: [{ phoneNumber: "111" }],
       emails: [{ email: "a@b.com" }],
     });
-    expect(ops).toContain("DELETE FROM contactPhones WHERE contactId = 123");
-    expect(ops).toContain("DELETE FROM contactEmails WHERE contactId = 123");
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactPhones"))).toHaveLength(2);
-    expect(ops.filter(o => o.startsWith("INSERT INTO contactEmails"))).toHaveLength(1);
+    expect(ops).toContain("UPDATE contacts SET ... WHERE id = 123");
+    expect(ops.filter(o => o.includes("contactPhones"))).toHaveLength(0);
+    expect(ops.filter(o => o.includes("contactEmails"))).toHaveLength(0);
   });
 });
 

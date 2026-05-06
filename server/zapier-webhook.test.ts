@@ -72,9 +72,11 @@ describe("Step 1: Create property with basic data", () => {
     expect(indexSrc).toContain('tag: "Website Lead"');
   });
 
-  it("creates contact with phone and email", () => {
-    expect(indexSrc).toContain("contactPhones");
-    expect(indexSrc).toContain("contactEmails");
+  it("creates contact with phone and email (inline on contacts row)", () => {
+    // contactPhones and contactEmails tables dropped (2026-05-06)
+    // Phone/email now stored inline on contacts.phoneNumber / contacts.email
+    expect(indexSrc).toContain("phoneNumber");
+    expect(indexSrc).toContain("email");
   });
 
   it("returns propertyId on success for linking Step 2", () => {
@@ -123,8 +125,8 @@ describe("Step 2: Find and update property by phone", () => {
   });
 
   it("updates contact email if provided", () => {
-    // Step 2 updates or inserts email
-    expect(indexSrc).toContain("contactEmails");
+    // contactEmails table dropped (2026-05-06) — email updated inline on contacts row
+    expect(indexSrc).toContain("email");
   });
 });
 

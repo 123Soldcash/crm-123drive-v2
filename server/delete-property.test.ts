@@ -81,21 +81,9 @@ describe("Delete Property – db helper (cascading delete)", () => {
     expect(fnSection).toContain("contactIds");
   });
 
-  it("deletes contactPhones for each contact", () => {
-    const fnStart = dbContent.indexOf(
-      "export async function deleteProperty(propertyId: number)"
-    );
-    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
-    expect(fnSection).toContain("db.delete(contactPhones)");
-  });
-
-  it("deletes contactEmails for each contact", () => {
-    const fnStart = dbContent.indexOf(
-      "export async function deleteProperty(propertyId: number)"
-    );
-    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
-    expect(fnSection).toContain("db.delete(contactEmails)");
-  });
+  // contactPhones and contactEmails tables were DROPPED (2026-05-06).
+  // Phone/email data is now stored inline on contacts.phoneNumber / contacts.email.
+  // Deleting the contacts row is sufficient — no separate cleanup needed.
 
   it("deletes contactAddresses for each contact", () => {
     const fnStart = dbContent.indexOf(
@@ -105,13 +93,7 @@ describe("Delete Property – db helper (cascading delete)", () => {
     expect(fnSection).toContain("db.delete(contactAddresses)");
   });
 
-  it("deletes contactSocialMedia for each contact", () => {
-    const fnStart = dbContent.indexOf(
-      "export async function deleteProperty(propertyId: number)"
-    );
-    const fnSection = dbContent.slice(fnStart, fnStart + 2000);
-    expect(fnSection).toContain("db.delete(contactSocialMedia)");
-  });
+  // contactSocialMedia table was DROPPED (2026-05-06) — had 0 rows, never used.
 
   it("deletes contacts for the property", () => {
     const fnStart = dbContent.indexOf(

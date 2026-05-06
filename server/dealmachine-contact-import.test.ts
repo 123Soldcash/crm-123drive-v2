@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readFileSync } from "fs";
 import { getDb } from "./db";
-import { properties, contacts, contactPhones, propertyTags } from "../drizzle/schema";
+import { properties, contacts, propertyTags } from "../drizzle/schema";
 import { parseCSV, transformProperty, transformContact } from "./dealmachine-import";
 import { eq } from "drizzle-orm";
 
@@ -143,13 +143,8 @@ describe("DealMachine Contact Import", () => {
             phoneType = "Mobile";
           }
 
-          await db.insert(contactPhones).values({
-            contactId,
-            phoneNumber: parsedContact.phone,
-            phoneType,
-            dnc: parsedContact.dnc ? 1 : 0,
-            createdAt: new Date(),
-          });
+          // contactPhones dropped — phone is stored inline on contacts.phoneNumber
+          // (already set during contact creation above)
         }
 
         contactsCreated++;

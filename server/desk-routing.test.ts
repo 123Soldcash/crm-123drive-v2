@@ -40,8 +40,7 @@ vi.mock("../drizzle/schema", () => ({
   outreachLogs: {},
   communicationLog: {},
   contacts: {},
-  contactPhones: {},
-  contactEmails: {},
+  // contactPhones and contactEmails dropped (2026-05-06)
   leadAssignments: {},
   propertyAgents: {},
   propertyOffers: {},

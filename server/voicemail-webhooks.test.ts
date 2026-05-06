@@ -166,7 +166,7 @@ describe("Voicemail Webhook Flow — Structural Validation", () => {
       expect(webhooksSource).toContain("database.insert(voicemails)");
     });
 
-    it("matches caller phone to property via contactPhones", () => {
+    it("matches caller phone to property via contacts.phoneNumber (inline model)", () => {
       expect(webhooksSource).toContain("matchedPropertyId");
       expect(webhooksSource).toContain("matchedContactId");
     });

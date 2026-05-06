@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { getDb } from "./db";
-import { properties, contacts, contactPhones, contactEmails } from "../drizzle/schema";
+import { properties, contacts } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 describe("DealMachine 46-column import", () => {
@@ -29,8 +29,7 @@ describe("DealMachine 46-column import", () => {
             .where(eq(contacts.propertyId, propId));
         
           for (const contact of testContacts) {
-            await db.delete(contactPhones).where(eq(contactPhones.contactId, contact.id));
-            await db.delete(contactEmails).where(eq(contactEmails.contactId, contact.id));
+            // contactPhones/contactEmails dropped — data is inline on contacts row
             await db.delete(contacts).where(eq(contacts.id, contact.id));
           }
           

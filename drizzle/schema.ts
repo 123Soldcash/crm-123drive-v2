@@ -413,61 +413,9 @@ export const contactAddresses = mysqlTable("contactAddresses", {
 export type ContactAddress = typeof contactAddresses.$inferSelect;
 export type InsertContactAddress = typeof contactAddresses.$inferInsert;
 
-/**
- * Contact Phones table - stores multiple phone numbers per contact
- */
-export const contactPhones = mysqlTable("contactPhones", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  phoneNumber: varchar("phoneNumber", { length: 20 }).notNull(),
-  phoneType: mysqlEnum("phoneType", ["Mobile", "Landline", "Wireless", "Work", "Home", "Other"]).default("Mobile"),
-  isPrimary: int("isPrimary").default(0).notNull(),
-  dnc: int("dnc").default(0).notNull(),
-  dncChecked: int("dncChecked").default(0).notNull(), // 0=not checked yet, 1=checked
-  carrier: varchar("carrier", { length: 100 }),
-  activityStatus: varchar("activityStatus", { length: 50 }),
-  isPrepaid: int("isPrepaid").default(0).notNull(),
-  usage2Months: varchar("usage2Months", { length: 50 }),
-  usage12Months: varchar("usage12Months", { length: 50 }),
-  trestleScore: int("trestleScore"),
-  isLitigator: int("isLitigator").default(0).notNull(),
-  trestleLineType: varchar("trestleLineType", { length: 50 }),
-  trestleLastChecked: timestamp("trestleLastChecked"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ContactPhone = typeof contactPhones.$inferSelect;
-export type InsertContactPhone = typeof contactPhones.$inferInsert;
-
-/**
- * Contact Emails table - stores multiple email addresses per contact
- */
-export const contactEmails = mysqlTable("contactEmails", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  isPrimary: int("isPrimary").default(0).notNull(), // 0=NO, 1=YES
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ContactEmail = typeof contactEmails.$inferSelect;
-export type InsertContactEmail = typeof contactEmails.$inferInsert;
-
-/**
- * Contact Social Media table - stores social media profiles per contact
- */
-export const contactSocialMedia = mysqlTable("contactSocialMedia", {
-  id: int("id").autoincrement().primaryKey(),
-  contactId: int("contactId").notNull(),
-  platform: mysqlEnum("platform", ["Facebook", "Instagram", "LinkedIn", "Twitter", "Other"]).notNull(),
-  profileUrl: text("profileUrl"),
-  contacted: int("contacted").default(0).notNull(), // 0=NO, 1=YES
-  contactedDate: timestamp("contactedDate"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ContactSocialMedia = typeof contactSocialMedia.$inferSelect;
-export type InsertContactSocialMedia = typeof contactSocialMedia.$inferInsert;
+// contactPhones, contactEmails, contactSocialMedia — DROPPED (2026-05-06)
+// Data migrated to contacts.phoneNumber / contacts.email inline columns.
+// Tables had 15k+ legacy rows but zero active .from() queries in the codebase.
 
 /**
  * Communication Log table - tracks ALL communication attempts
