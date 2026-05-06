@@ -71,7 +71,7 @@ async function checkSingleDNC(
         Authorization: `Bearer ${config.supabaseAnonKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ p_number: normalized }),
+      body: JSON.stringify({ p_number: Number(normalized) }),
     });
   } catch (err: any) {
     // Network / connection error (DNS failure, timeout, refused connection, etc.)

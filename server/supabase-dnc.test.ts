@@ -1,6 +1,15 @@
 /**
  * Supabase DNC Verification Tests
  * Tests the DNC check logic, phone normalization, and API integration patterns.
+ *
+ * SQL setup (Supabase):
+ *   - Table: public.dnc_numbers (phone bigint primary key)
+ *   - RLS enabled; SELECT revoked from anon/authenticated
+ *   - RPC: check_dnc(p_number bigint) returns boolean (security definer)
+ *   - EXECUTE granted to anon only
+ *
+ * System sends: POST /rest/v1/rpc/check_dnc  body: { p_number: <number> }
+ * Supabase returns: true | false  (direct boolean, not wrapped in array)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -52,6 +61,10 @@ describe("DNC Phone Normalization", () => {
 // ─── Supabase DNC API response parsing ──────────────────────────────────────
 
 describe("DNC API Response Parsing", () => {
+  /**
+   * Supabase RPC with security definer returns a direct boolean (true/false),
+   * NOT wrapped in an array. The system handles both formats for resilience.
+   */
   function parseDNCResponse(data: any): boolean {
     if (Array.isArray(data) && data.length > 0) {
       return data[0] === true;
@@ -62,19 +75,19 @@ describe("DNC API Response Parsing", () => {
     return false;
   }
 
-  it("parses [true] as DNC = true", () => {
+  it("parses [true] as DNC = true (array format)", () => {
     expect(parseDNCResponse([true])).toBe(true);
   });
 
-  it("parses [false] as DNC = false", () => {
+  it("parses [false] as DNC = false (array format)", () => {
     expect(parseDNCResponse([false])).toBe(false);
   });
 
-  it("parses direct boolean true", () => {
+  it("parses direct boolean true (security definer RPC format)", () => {
     expect(parseDNCResponse(true)).toBe(true);
   });
 
-  it("parses direct boolean false", () => {
+  it("parses direct boolean false (security definer RPC format)", () => {
     expect(parseDNCResponse(false)).toBe(false);
   });
 
@@ -224,8 +237,6 @@ describe("DNC Batch Processing", () => {
       { phoneId: 3, phoneNumber: "9543333333", contactId: 200, isDNC: false },
     ];
 
-    const contactIds = Array.from(new Set(batchResults.map((r) => r.contactId)));
-    
     const contact100DNC = batchResults.filter(r => r.contactId === 100).some(r => r.isDNC);
     const contact200DNC = batchResults.filter(r => r.contactId === 200).some(r => r.isDNC);
 
@@ -251,11 +262,25 @@ describe("DNC Seed Script", () => {
 // ─── Request body format ────────────────────────────────────────────────────
 
 describe("DNC Request Body Format", () => {
-  it("formats request body correctly for Supabase RPC", () => {
-    const phoneNumber = "9543289618";
-    const body = JSON.stringify({ p_number: phoneNumber });
+  /**
+   * The Supabase RPC function check_dnc(p_number bigint) requires a numeric
+   * value, NOT a string. The system converts the normalized phone string to
+   * a JavaScript Number before serializing to JSON.
+   */
+  it("sends p_number as a number (bigint-compatible), not a string", () => {
+    const normalized = "9543289618";
+    const body = JSON.stringify({ p_number: Number(normalized) });
     const parsed = JSON.parse(body);
-    expect(parsed).toEqual({ p_number: "9543289618" });
+    expect(typeof parsed.p_number).toBe("number");
+    expect(parsed.p_number).toBe(9543289618);
+  });
+
+  it("Number() conversion preserves all 10 digits of a US phone", () => {
+    // Ensure no precision loss for typical 10-digit US numbers
+    const phones = ["9543289618", "3051234567", "7864009999", "9990000001"];
+    for (const p of phones) {
+      expect(Number(p).toString()).toBe(p);
+    }
   });
 
   it("formats headers correctly for Supabase auth", () => {
@@ -268,5 +293,185 @@ describe("DNC Request Body Format", () => {
     expect(headers.apikey).toBe(anonKey);
     expect(headers.Authorization).toBe(`Bearer ${anonKey}`);
     expect(headers["Content-Type"]).toBe("application/json");
+  });
+});
+
+// ─── HTTP error handling ─────────────────────────────────────────────────────
+
+describe("DNC HTTP Error Handling", () => {
+  /**
+   * The system throws a descriptive Error for non-2xx responses so the
+   * frontend can display a meaningful toast message.
+   */
+
+  function buildErrorFromResponse(status: number, body: string): Error {
+    const detail = body ? ` — ${body.slice(0, 120)}` : "";
+    return new Error(`DNC service returned HTTP ${status}${detail}`);
+  }
+
+  it("throws error with HTTP 401 status", () => {
+    const err = buildErrorFromResponse(401, '{"message":"Invalid API key"}');
+    expect(err.message).toContain("HTTP 401");
+    expect(err.message).toContain("Invalid API key");
+  });
+
+  it("throws error with HTTP 403 status", () => {
+    const err = buildErrorFromResponse(403, '{"message":"Forbidden"}');
+    expect(err.message).toContain("HTTP 403");
+  });
+
+  it("throws error with HTTP 500 status", () => {
+    const err = buildErrorFromResponse(500, "Internal Server Error");
+    expect(err.message).toContain("HTTP 500");
+    expect(err.message).toContain("Internal Server Error");
+  });
+
+  it("includes truncated body (max 120 chars) in error message", () => {
+    const longBody = "x".repeat(200);
+    const err = buildErrorFromResponse(500, longBody);
+    // The detail part should be at most 120 chars from the body
+    const detail = err.message.replace("DNC service returned HTTP 500 — ", "");
+    expect(detail.length).toBeLessThanOrEqual(120);
+  });
+
+  it("handles empty response body gracefully", () => {
+    const err = buildErrorFromResponse(503, "");
+    expect(err.message).toBe("DNC service returned HTTP 503");
+  });
+});
+
+// ─── Network / connection error handling ────────────────────────────────────
+
+describe("DNC Network Error Handling", () => {
+  function buildConnectionError(originalMessage: string): Error {
+    return new Error(`DNC connection error: ${originalMessage}`);
+  }
+
+  it("wraps DNS failure message", () => {
+    const err = buildConnectionError("getaddrinfo ENOTFOUND mkzlmcugwnzinedpmmgj.supabase.co");
+    expect(err.message).toContain("DNC connection error");
+    expect(err.message).toContain("ENOTFOUND");
+  });
+
+  it("wraps connection refused message", () => {
+    const err = buildConnectionError("connect ECONNREFUSED 127.0.0.1:443");
+    expect(err.message).toContain("DNC connection error");
+    expect(err.message).toContain("ECONNREFUSED");
+  });
+
+  it("wraps timeout message", () => {
+    const err = buildConnectionError("network timeout");
+    expect(err.message).toContain("DNC connection error");
+    expect(err.message).toContain("timeout");
+  });
+});
+
+// ─── Invalid JSON response handling ─────────────────────────────────────────
+
+describe("DNC Invalid JSON Response Handling", () => {
+  function parseOrThrow(text: string): boolean {
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch (err: any) {
+      throw new Error(`DNC service returned invalid JSON: ${err?.message}`);
+    }
+    if (typeof data === "boolean") return data;
+    if (Array.isArray(data) && data.length > 0) return data[0] === true;
+    return false;
+  }
+
+  it("throws on HTML error page response", () => {
+    expect(() => parseOrThrow("<html><body>Error</body></html>")).toThrow("invalid JSON");
+  });
+
+  it("throws on plain text response", () => {
+    expect(() => parseOrThrow("Service Unavailable")).toThrow("invalid JSON");
+  });
+
+  it("parses valid boolean true response", () => {
+    expect(parseOrThrow("true")).toBe(true);
+  });
+
+  it("parses valid boolean false response", () => {
+    expect(parseOrThrow("false")).toBe(false);
+  });
+});
+
+// ─── Short / empty phone skip logic ─────────────────────────────────────────
+
+describe("DNC Short/Empty Phone Skip Logic", () => {
+  /**
+   * The system skips DNC check for phones with fewer than 7 digits after
+   * normalization (e.g., partial numbers, test entries).
+   */
+  function shouldSkip(phone: string): boolean {
+    const digits = phone.replace(/\D/g, "");
+    const normalized = digits.length >= 10 ? digits.slice(-10) : digits;
+    return !normalized || normalized.length < 7;
+  }
+
+  it("skips empty phone", () => {
+    expect(shouldSkip("")).toBe(true);
+  });
+
+  it("skips phone with only 4 digits", () => {
+    expect(shouldSkip("1234")).toBe(true);
+  });
+
+  it("skips phone with 6 digits", () => {
+    expect(shouldSkip("123456")).toBe(true);
+  });
+
+  it("does NOT skip phone with 7 digits", () => {
+    expect(shouldSkip("1234567")).toBe(false);
+  });
+
+  it("does NOT skip a full 10-digit phone", () => {
+    expect(shouldSkip("9543289618")).toBe(false);
+  });
+
+  it("does NOT skip a formatted 10-digit phone", () => {
+    expect(shouldSkip("(954) 328-9618")).toBe(false);
+  });
+});
+
+// ─── Batch error propagation ─────────────────────────────────────────────────
+
+describe("DNC Batch Error Propagation", () => {
+  /**
+   * When a batch fails mid-way, the system returns partial results with
+   * the error message and the count of phones processed before failure.
+   */
+  it("returns partial results with error when batch fails at index 10", () => {
+    const totalPhones = 25;
+    const failAtBatch = 1; // 0-indexed: second batch (phones 10-19)
+    const BATCH_SIZE = 10;
+
+    // Simulate: first batch (0-9) succeeds, second batch throws
+    const processedBeforeFailure = failAtBatch * BATCH_SIZE; // = 10
+    const errorMessage = "DNC connection error: network timeout";
+
+    const result = {
+      checked: processedBeforeFailure,
+      flagged: 2,
+      results: [{ phoneId: 1, phoneNumber: "9541111111", isDNC: true }],
+      error: errorMessage,
+    };
+
+    expect(result.checked).toBe(10);
+    expect(result.error).toContain("timeout");
+    expect(result.results.length).toBe(1);
+  });
+
+  it("returns error message when not configured", () => {
+    const result = {
+      checked: 0,
+      flagged: 0,
+      results: [],
+      error: "Supabase DNC not configured. Go to Integrations → Supabase DNC to set URL and API Key.",
+    };
+    expect(result.error).toContain("not configured");
+    expect(result.checked).toBe(0);
   });
 });

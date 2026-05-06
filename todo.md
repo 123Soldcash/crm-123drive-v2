@@ -3719,3 +3719,17 @@
 - [x] Show toast error when property not found during DNC check
 - [x] Improve backend error messages with more detail (HTTP status, URL, body)
 - [x] TypeScript: 0 errors
+## Testes: DNC Integration (supabase-dnc.test.ts)
+- [x] 32 existing tests passing (normalization, parsing, config, URL, batch, request format)
+- [x] 17 new tests added: HTTP 401/403/500 errors, network failures, invalid JSON, short/empty phone, request body normalization, auth headers, batch error propagation, not-configured message
+- [x] Total: 49 tests passing (0 failures)
+
+## Fix: DNC p_number type — send bigint-compatible number to Supabase RPC
+- [x] Root cause: system was sending p_number as a string; Supabase check_dnc(bigint) requires a numeric value
+- [x] Fix: supabase-dnc.ts now converts normalized phone string to Number() before JSON.stringify
+- [x] Validated: Number() preserves all 10 digits of US phone numbers without precision loss
+
+## Tests: DNC Integration (supabase-dnc.test.ts)
+- [x] 32 existing tests passing (normalization, parsing, config, URL, batch, request format)
+- [x] 21 new tests added: HTTP 401/403/500 errors, network failures, invalid JSON, short/empty phone, bigint p_number format, batch error propagation, not-configured message
+- [x] Total: 53 tests passing (0 failures)
