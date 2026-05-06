@@ -1723,36 +1723,6 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
               <span>Running DNC check...</span>
             </div>
           )}
-          {!dncCheckRunning && dncCheckDone && dncCheckResult && (
-            <div className={`flex items-center gap-2 px-3 py-2 mb-3 rounded-md text-sm font-medium border ${
-              dncCheckResult.error
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : dncCheckResult.flagged > 0
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : 'bg-green-50 border-green-200 text-green-700'
-            }`}>
-              {dncCheckResult.error ? (
-                <>
-                  <ShieldAlert className="h-4 w-4 shrink-0" />
-                  <span>DNC Check failed: {dncCheckResult.error}</span>
-                </>
-              ) : dncCheckResult.flagged > 0 ? (
-                <>
-                  <ShieldAlert className="h-4 w-4 shrink-0" />
-                  <span>
-                    DNC Checked: <strong>{dncCheckResult.flagged}</strong> of <strong>{dncCheckResult.checked}</strong> number{dncCheckResult.checked !== 1 ? 's' : ''} flagged as DNC
-                  </span>
-                </>
-              ) : dncCheckResult.checked > 0 ? (
-                <>
-                  <ShieldCheck className="h-4 w-4 shrink-0" />
-                  <span>
-                    DNC Checked: all <strong>{dncCheckResult.checked}</strong> number{dncCheckResult.checked !== 1 ? 's' : ''} are clean
-                  </span>
-                </>
-              ) : null}
-            </div>
-          )}
           {/* ===== PHONE TAB TABLE ===== */}
           {contactTab === 'phones' && (
           <div className="overflow-x-auto">
