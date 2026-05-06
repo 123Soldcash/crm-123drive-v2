@@ -355,15 +355,24 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
   // Only run if there are unchecked phones (dncChecked=0 and dnc=0)
   useEffect(() => {
     if (contacts && contacts.length > 0 && !dncCheckDone && !dncCheckRunning) {
-      const hasUncheckedPhones = contacts.some((c: any) => 
-        c.phones && c.phones.some((p: any) => !p.dncChecked && !p.dnc)
-      );
+      const allPhones = contacts.flatMap((c: any) => c.phones || []);
+      const hasUncheckedPhones = allPhones.some((p: any) => !p.dncChecked && !p.dnc);
       if (hasUncheckedPhones) {
         setDncCheckRunning(true);
         checkDNCMutation.mutate({ propertyId });
       } else {
-        // All phones already checked or flagged — mark as done without running
+        // All phones already checked or flagged — summarise from local data and toast
+        const checked = allPhones.filter((p: any) => p.dncChecked || p.dnc).length;
+        const flagged = allPhones.filter((p: any) => p.dnc).length;
+        setDncCheckResult({ checked, flagged });
         setDncCheckDone(true);
+        if (flagged > 0) {
+          toast.warning(`DNC Check: ${flagged} of ${checked} number${checked !== 1 ? 's' : ''} flagged as DNC`);
+        } else if (checked > 0) {
+          toast.success(`DNC Check: all ${checked} number${checked !== 1 ? 's' : ''} are clean`);
+        } else {
+          toast.info('DNC Check: no phone numbers found for this property');
+        }
       }
     }
   }, [contacts, dncCheckDone, dncCheckRunning, propertyId]);
