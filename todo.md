@@ -3739,3 +3739,11 @@
 - [x] Restored banner above the phone table: shows "Running DNC check..." while in progress, then "DNC Checked: X of Y numbers flagged as DNC" or "DNC Checked: all X numbers are clean" after completion
 - [x] Error state also shown in red if DNC check fails
 - [x] TypeScript: 0 errors
+
+## Fix: DNC check toast notifications — all paths covered
+- [x] onSuccess + result.error → toast.error("DNC Check failed: ...")
+- [x] onSuccess + flagged > 0 → toast.warning("DNC Check: X of N numbers flagged as DNC")
+- [x] onSuccess + checked > 0, flagged = 0 → toast.success("DNC Check: all N numbers are clean")
+- [x] onSuccess + checked = 0, no error → toast.info("DNC Check: no phone numbers found")
+- [x] onError (tRPC-level: network, server crash, auth) → toast.error("DNC Check error: ...")
+- [x] TypeScript: 0 errors

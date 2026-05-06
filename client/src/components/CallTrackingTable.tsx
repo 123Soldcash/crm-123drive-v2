@@ -325,20 +325,27 @@ export function CallTrackingTable({ propertyId }: CallTrackingTableProps) {
       setDncCheckRunning(false);
       setDncCheckDone(true);
       if (result.error) {
+        // Backend returned a soft error (e.g. not configured, property not found, connection failure)
         toast.error(`DNC Check failed: ${result.error}`);
       } else if (result.flagged > 0) {
-        toast.warning(`DNC Check: ${result.flagged} of ${result.checked} numbers flagged as DNC`);
+        toast.warning(`DNC Check: ${result.flagged} of ${result.checked} number${result.checked !== 1 ? 's' : ''} flagged as DNC`);
       } else if (result.checked > 0) {
-        toast.success(`DNC Check: All ${result.checked} numbers are clean`);
+        toast.success(`DNC Check: all ${result.checked} number${result.checked !== 1 ? 's' : ''} are clean`);
+      } else {
+        // checked = 0 and no error — no phone numbers found for this property
+        toast.info('DNC Check: no phone numbers found for this property');
       }
       // ALWAYS refresh contacts after check completes (regardless of error/result)
       // This ensures dncChecked values are reflected in the UI
       utils.communication.getContactsByProperty.invalidate({ propertyId });
     },
     onError: (err) => {
-      setDncCheckResult({ checked: 0, flagged: 0, error: err.message });
+      // tRPC-level error (network failure, server crash, auth error, etc.)
+      const message = err?.message || 'Unknown error';
+      setDncCheckResult({ checked: 0, flagged: 0, error: message });
       setDncCheckRunning(false);
       setDncCheckDone(true);
+      toast.error(`DNC Check error: ${message}`);
       // Still refresh contacts even on error
       utils.communication.getContactsByProperty.invalidate({ propertyId });
     },
